@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Console de Conteúdo - VeloAcademy</title>
+    <link rel="stylesheet" href="./css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>">
+</head>
+<body>
+
+    <header>
+        <div class="container header-container">
+            <div class="logo" id="logo-container">
+                <img id="logo-image" class="logo-image" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>" alt="Console Logo">
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="#" class="nav-link" style="color: #1634FF; font-weight: 600; font-size: 1.2rem;">Console de Conteúdo</a>
+            </nav>
+
+            <div class="theme-switch-wrapper" id="theme-toggle">
+                <i class='bx bx-sun theme-icon'></i>
+                <i class='bx bx-moon theme-icon'></i>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container main-container">
+            <!-- Hero Section -->
+            <div class="hero-section">
+                <p class="hero-subtitle">Gerencie o conteúdo do VeloHub de forma simples e eficiente</p>
+            </div>
+
+            <!-- Cards de Ação -->
+            <div class="action-cards">
+                <div class="action-card" onclick="navigateTo('artigos')">
+                    <div class="card-icon">
+                        <i class="fas fa-newspaper"></i>
+                    </div>
+                    <h3>Artigos</h3>
+                    <p>Criar e gerenciar artigos do sistema</p>
+                    <div class="card-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <div class="action-card" onclick="navigateTo('velonews')">
+                    <div class="card-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <h3>Velonews</h3>
+                    <p>Publicar notícias e alertas</p>
+                    <div class="card-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <div class="action-card" onclick="navigateTo('bot-perguntas')">
+                    <div class="card-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3>Bot Perguntas</h3>
+                    <p>Configurar perguntas do chatbot</p>
+                    <div class="card-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status do Sistema -->
+            <div class="system-status">
+                <div class="status-card">
+                    <div class="status-indicator">
+                        <i class="fas fa-database"></i>
+                        <span class="status-text">MongoDB Conectado</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="./js/app.js"></script>
+</body>
+</html>
