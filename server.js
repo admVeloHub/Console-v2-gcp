@@ -1,20 +1,41 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const { MongoClient } = require('mongodb');
-const path = require('path');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3002;
 
 // Configurações
 const MONGODB_URI = process.env.MONGODB_URI;
 const DB_NAME = process.env.DB_NAME || 'console_conteudo';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
-// Middleware
-app.use(cors());
+// Middleware de segurança
+app.use(helmet());
+
+// CORS configurado para o frontend
+app.use(cors({
+    origin: FRONTEND_URL,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Rate limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 100, // limite por IP
+    message: {
+        error: 'Muitas requisições. Tente novamente em 15 minutos.'
+    }
+});
+app.use('/api/', limiter);
+
+// Middleware para parsing JSON
 app.use(express.json({ limit: '10mb' }));
-app.use(express.static('public'));
 
 // Variáveis globais para conexão persistente
 let mongoClient = null;
@@ -43,21 +64,30 @@ async function connectDB() {
     }
 }
 
-// Rotas
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.json({
+        status: 'OK',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        environment: process.env.NODE_ENV || 'development',
+        mongodb: mongoClient ? 'connected' : 'disconnected'
+    });
+});
+
+// Rota raiz - redirecionar para documentação da API
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.get('/artigos', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'artigos.html'));
-});
-
-app.get('/velonews', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'velonews.html'));
-});
-
-app.get('/bot-perguntas', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'bot-perguntas.html'));
+    res.json({
+        message: 'Console de Conteúdo - Backend API',
+        version: '2.0.0',
+        endpoints: {
+            health: 'GET /health',
+            test: 'GET /api/test',
+            submit: 'POST /api/submit',
+            data: 'GET /api/data/:collection'
+        },
+        documentation: 'Esta é uma API REST para o Console de Conteúdo'
+    });
 });
 
 // API - Inserir dados
