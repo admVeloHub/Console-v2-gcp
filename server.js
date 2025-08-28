@@ -16,16 +16,29 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static('public'));
 
-// Função para conectar ao MongoDB
+// Variáveis globais para conexão persistente
+let mongoClient = null;
+let mongoDb = null;
+
+// Função para conectar ao MongoDB (conexão persistente)
 async function connectDB() {
     try {
-        const client = new MongoClient(MONGODB_URI);
-        await client.connect();
-        const db = client.db(DB_NAME);
-        console.log('✅ MongoDB conectado');
-        return { client, db };
+        if (!mongoClient) {
+            console.log('🔗 Iniciando conexão MongoDB...');
+            mongoClient = new MongoClient(MONGODB_URI, {
+                maxPoolSize: 10,
+                serverSelectionTimeoutMS: 5000,
+                socketTimeoutMS: 45000,
+            });
+            await mongoClient.connect();
+            mongoDb = mongoClient.db(DB_NAME);
+            console.log('✅ MongoDB conectado (conexão persistente)');
+        }
+        return { client: mongoClient, db: mongoDb };
     } catch (error) {
         console.error('❌ Erro MongoDB:', error);
+        mongoClient = null;
+        mongoDb = null;
         throw error;
     }
 }
@@ -49,7 +62,6 @@ app.get('/bot-perguntas', (req, res) => {
 
 // API - Inserir dados
 app.post('/api/submit', async (req, res) => {
-    let client;
     try {
         console.log('📥 Recebendo requisição POST /api/submit');
         console.log('📋 Body da requisição:', JSON.stringify(req.body, null, 2));
@@ -61,10 +73,9 @@ app.post('/api/submit', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Dados obrigatórios não fornecidos' });
         }
 
-        console.log('🔗 Conectando ao MongoDB...');
-        // Conectar ao MongoDB
-        const { client: mongoClient, db } = await connectDB();
-        client = mongoClient;
+        console.log('🔗 Usando conexão MongoDB persistente...');
+        // Usar conexão persistente
+        const { db } = await connectDB();
 
         console.log(`📊 Inserindo na coleção: ${collection}`);
         const collectionObj = db.collection(collection);
@@ -79,23 +90,16 @@ app.post('/api/submit', async (req, res) => {
     } catch (error) {
         console.error('❌ Erro ao inserir:', error);
         res.status(500).json({ success: false, message: 'Erro interno: ' + error.message });
-    } finally {
-        if (client) {
-            console.log('🔌 Fechando conexão MongoDB');
-            await client.close();
-        }
     }
 });
 
 // API - Buscar dados
 app.get('/api/data/:collection', async (req, res) => {
-    let client;
     try {
         const { collection } = req.params;
         
-        // Conectar ao MongoDB
-        const { client: mongoClient, db } = await connectDB();
-        client = mongoClient;
+        // Usar conexão persistente
+        const { db } = await connectDB();
 
         const collectionObj = db.collection(collection);
         const data = await collectionObj.find({}).toArray();
@@ -103,10 +107,6 @@ app.get('/api/data/:collection', async (req, res) => {
     } catch (error) {
         console.error('Erro ao buscar:', error);
         res.status(500).json({ success: false, message: 'Erro interno: ' + error.message });
-    } finally {
-        if (client) {
-            await client.close();
-        }
     }
 });
 
@@ -124,17 +124,47 @@ app.get('/api/test', (req, res) => {
     });
 });
 
+// Função para fechar conexão MongoDB
+async function closeDB() {
+    if (mongoClient) {
+        console.log('🔌 Fechando conexão MongoDB...');
+        await mongoClient.close();
+        mongoClient = null;
+        mongoDb = null;
+    }
+}
+
 // Inicialização
 if (process.env.NODE_ENV !== 'production') {
     // Apenas para desenvolvimento local
     connectDB().then(() => {
-        app.listen(PORT, () => {
+        const server = app.listen(PORT, () => {
             console.log(`🚀 Servidor rodando na porta ${PORT}`);
+        });
+        
+        // Fechar conexão quando o servidor for encerrado
+        process.on('SIGINT', async () => {
+            console.log('\n🛑 Encerrando servidor...');
+            await closeDB();
+            server.close(() => {
+                console.log('✅ Servidor encerrado');
+                process.exit(0);
+            });
         });
     });
 } else {
     // Para produção (Vercel)
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
         console.log(`🚀 Servidor pronto na porta ${PORT}`);
+    });
+    
+    // Fechar conexão quando o servidor for encerrado
+    process.on('SIGINT', async () => {
+        console.log('\n🛑 Encerrando servidor...');
+        await closeDB();
+        server.close(() => {
+            console.log('✅ Servidor encerrado');
+            process.exit(0);
+        });
     });
 }
