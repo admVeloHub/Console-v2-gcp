@@ -214,18 +214,16 @@ if (process.env.NODE_ENV !== 'production') {
         });
     });
 } else {
-    // Para produção (Vercel)
-    const server = app.listen(PORT, () => {
-        console.log(`🚀 Servidor pronto na porta ${PORT}`);
-    });
+    // Para produção (Vercel) - não usar app.listen()
+    console.log('🚀 Servidor pronto para produção (Vercel)');
     
     // Fechar conexão quando o servidor for encerrado
     process.on('SIGINT', async () => {
         console.log('\n🛑 Encerrando servidor...');
         await closeDB();
-        server.close(() => {
-            console.log('✅ Servidor encerrado');
-            process.exit(0);
-        });
+        process.exit(0);
     });
 }
+
+// Exportar app para o Vercel
+module.exports = app;
