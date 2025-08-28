@@ -73,6 +73,8 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 0.5rem 0;
+    min-height: 60px;
 }
 
 /* Título centralizado das páginas */
@@ -91,8 +93,8 @@ header {
 }
 
 .logo-image {
-    height: 200px;
-    width: 200px;
+    height: 80px;
+    width: 80px;
     object-fit: contain;
 }
 
