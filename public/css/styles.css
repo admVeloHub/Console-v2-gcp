@@ -95,7 +95,7 @@ header {
 
 /* Título centralizado das páginas */
 .page-title {
-    font-size: 2.8rem;
+    font-size: 2rem;
     font-weight: 700;
     color: var(--cor-accent);
     text-align: center;
@@ -638,8 +638,8 @@ textarea.form-control {
 .error-toast {
     position: fixed;
     bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%) translateY(100px);
+    right: 30px;
+    transform: translateX(100px);
     background: linear-gradient(135deg, #ff4757 0%, #ff3742 100%);
     color: white;
     padding: 1rem 1.5rem;
@@ -653,7 +653,7 @@ textarea.form-control {
 }
 
 .error-toast.show {
-    transform: translateX(-50%) translateY(0);
+    transform: translateX(0);
     opacity: 1;
 }
 
