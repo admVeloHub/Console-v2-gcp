@@ -31,6 +31,7 @@
     gap: 0.5rem;
     flex-shrink: 0;
     justify-content: flex-end;
+    margin-right: 10px;
 }
 
 .theme-icon {
@@ -110,6 +111,7 @@ header {
     align-items: center;
     justify-content: flex-start;
     flex-shrink: 0;
+    margin-left: 20px;
 }
 
 .logo-image {
@@ -137,6 +139,7 @@ header {
 /* Main Container */
 .main-container {
     padding: 2rem 0;
+    margin-top: 120px;
 }
 
 /* Títulos */
@@ -545,12 +548,14 @@ textarea.form-control {
 
 .feedback-container {
     background: var(--cor-container);
-    border-radius: 20px;
-    padding: 3rem;
+    border-radius: 30px;
+    padding: 4rem;
     text-align: center;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
     transform: scale(0.8);
     transition: transform 0.3s ease;
+    min-width: 400px;
+    max-width: 600px;
 }
 
 .feedback-overlay.show .feedback-container {
@@ -621,12 +626,12 @@ textarea.form-control {
 
 /* GIF de sucesso */
 #success-gif {
-    width: 200px;
-    height: 200px;
-    margin: 0 auto 1.5rem;
-    border-radius: 15px;
+    width: 300px;
+    height: 300px;
+    margin: 0 auto 2rem;
+    border-radius: 20px;
     object-fit: cover;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
 }
 
 /* Toast de erro */
