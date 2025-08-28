@@ -1,87 +1,452 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="light">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Console de Conteúdo - VeloAcademy</title>
-    <link rel="stylesheet" href="/css/styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>">
+    <title>Console de Conteúdo - Backend Status</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            color: #00ff00;
+            font-family: 'Orbitron', monospace;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        .matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #000 0%, #001100 50%, #000 100%);
+            z-index: -1;
+        }
+        
+        .matrix-rain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.1;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 2rem 0;
+            border-bottom: 2px solid #00ff00;
+            margin-bottom: 2rem;
+        }
+        
+        .logo {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 1rem;
+            filter: drop-shadow(0 0 10px #00ff00);
+        }
+        
+        .title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 0 20px #00ff00;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #00cc00;
+            letter-spacing: 2px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        
+        .status-container {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
+            min-height: 60vh;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #00ff00;
+        }
+        
+        .status-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .status-time {
+            font-size: 1rem;
+            color: #00cc00;
+        }
+        
+        .status-content {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            overflow-y: auto;
+            max-height: 50vh;
+            padding: 1rem;
+            background: rgba(0, 20, 0, 0.3);
+            border: 1px solid #00ff00;
+            border-radius: 5px;
+        }
+        
+        .status-line {
+            margin-bottom: 0.5rem;
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        .status-line.request {
+            color: #00ffff;
+        }
+        
+        .status-line.response {
+            color: #00ff00;
+        }
+        
+        .status-line.error {
+            color: #ff0000;
+        }
+        
+        .status-line.info {
+            color: #ffff00;
+        }
+        
+        .api-info {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(0, 20, 0, 0.3);
+            border: 1px solid #00ff00;
+            border-radius: 5px;
+        }
+        
+        .api-endpoints {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .endpoint {
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00ff00;
+            border-radius: 5px;
+        }
+        
+        .endpoint-method {
+            font-weight: 700;
+            color: #00ffff;
+        }
+        
+        .endpoint-path {
+            color: #00ff00;
+            margin-left: 0.5rem;
+        }
+        
+        .endpoint-desc {
+            color: #00cc00;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes glow {
+            0%, 100% { text-shadow: 0 0 10px #00ff00; }
+            50% { text-shadow: 0 0 20px #00ff00, 0 0 30px #00ff00; }
+        }
+        
+        .glow {
+            animation: glow 2s ease-in-out infinite;
+        }
+        
+        .cursor {
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00ff00;
+            border-radius: 5px;
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #00ffff;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: #00cc00;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    </style>
 </head>
 <body>
-
-    <header>
-        <div class="container header-container">
-            <div class="logo" id="logo-container">
-                <img id="logo-image" class="logo-image" src="/console.png" alt="Console Logo">
+    <div class="matrix-bg"></div>
+    <div class="matrix-rain" id="matrix-rain"></div>
+    
+    <div class="container">
+        <header class="header">
+            <img src="https://via.placeholder.com/120x120/00ff00/000000?text=CONSOLE" alt="Console Logo" class="logo">
+            <h1 class="title glow">Backend</h1>
+            <p class="subtitle">API Status Monitor</p>
+        </header>
+        
+        <div class="status-container">
+            <div class="status-header">
+                <h2 class="status-title">Traffic Monitor</h2>
+                <div class="status-time" id="current-time"></div>
             </div>
             
-
-
-            <div class="theme-switch-wrapper" id="theme-toggle">
-                <i class='bx bx-sun theme-icon'></i>
-                <i class='bx bx-moon theme-icon'></i>
-            </div>
-        </div>
-    </header>
-
-    <main>
-        <div class="container main-container">
-            <!-- Hero Section -->
-            <div class="hero-section">
-                <p class="hero-subtitle">Gerencie o conteúdo do VeloHub de forma simples e eficiente</p>
-            </div>
-
-            <!-- Cards de Ação -->
-            <div class="action-cards">
-                <div class="action-card" onclick="navigateTo('artigos')">
-                    <div class="card-icon">
-                        <i class="fas fa-newspaper"></i>
-                    </div>
-                    <h3>Artigos</h3>
-                    <p>Criar e gerenciar artigos do sistema</p>
-                    <div class="card-arrow">
-                        <i class="fas fa-arrow-right"></i>
-                    </div>
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="total-requests">0</div>
+                    <div class="stat-label">Total Requests</div>
                 </div>
-
-                <div class="action-card" onclick="navigateTo('velonews')">
-                    <div class="card-icon">
-                        <i class="fas fa-bell"></i>
-                    </div>
-                    <h3>Velonews</h3>
-                    <p>Publicar notícias e alertas</p>
-                    <div class="card-arrow">
-                        <i class="fas fa-arrow-right"></i>
-                    </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="successful-requests">0</div>
+                    <div class="stat-label">Successful</div>
                 </div>
-
-                <div class="action-card" onclick="navigateTo('bot-perguntas')">
-                    <div class="card-icon">
-                        <i class="fas fa-robot"></i>
-                    </div>
-                    <h3>Bot Perguntas</h3>
-                    <p>Configurar perguntas do chatbot</p>
-                    <div class="card-arrow">
-                        <i class="fas fa-arrow-right"></i>
-                    </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="error-requests">0</div>
+                    <div class="stat-label">Errors</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="uptime">00:00:00</div>
+                    <div class="stat-label">Uptime</div>
                 </div>
             </div>
-
-            <!-- Status do Sistema -->
-            <div class="system-status">
-                <div class="status-card">
-                    <div class="status-indicator">
-                        <i class="fas fa-database"></i>
-                        <span class="status-text">MongoDB Conectado</span>
+            
+            <div class="status-content" id="status-content">
+                <div class="status-line info">[SYSTEM] Backend API initialized...</div>
+                <div class="status-line info">[SYSTEM] MongoDB connection established...</div>
+                <div class="status-line info">[SYSTEM] All endpoints ready for requests...</div>
+                <div class="status-line info">[SYSTEM] Waiting for incoming traffic...</div>
+                <div class="status-line info">[SYSTEM] <span class="cursor">_</span></div>
+            </div>
+            
+            <div class="api-info">
+                <h3 style="color: #00ffff; margin-bottom: 1rem;">Available Endpoints:</h3>
+                <div class="api-endpoints">
+                    <div class="endpoint">
+                        <span class="endpoint-method">GET</span>
+                        <span class="endpoint-path">/health</span>
+                        <div class="endpoint-desc">Server health status</div>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-method">GET</span>
+                        <span class="endpoint-path">/api/test</span>
+                        <div class="endpoint-desc">Test endpoint</div>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-method">POST</span>
+                        <span class="endpoint-path">/api/submit</span>
+                        <div class="endpoint-desc">Submit data to collections</div>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-method">GET</span>
+                        <span class="endpoint-path">/api/data/:collection</span>
+                        <div class="endpoint-desc">Retrieve collection data</div>
                     </div>
                 </div>
             </div>
         </div>
-    </main>
-
-    <script src="/js/app.js"></script>
+    </div>
+    
+    <script>
+        // Matrix rain effect
+        function createMatrixRain() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            canvas.style.position = 'fixed';
+            canvas.style.top = '0';
+            canvas.style.left = '0';
+            canvas.style.pointerEvents = 'none';
+            canvas.style.zIndex = '-1';
+            canvas.style.opacity = '0.1';
+            
+            document.body.appendChild(canvas);
+            
+            const matrix = "ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789@#$%^&*()*&^%+-/~{[|`]}";
+            const matrixArray = matrix.split("");
+            
+            const fontSize = 10;
+            const columns = canvas.width / fontSize;
+            const drops = [];
+            
+            for (let x = 0; x < columns; x++) {
+                drops[x] = 1;
+            }
+            
+            function draw() {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.fillStyle = '#0F0';
+                ctx.font = fontSize + 'px monospace';
+                
+                for (let i = 0; i < drops.length; i++) {
+                    const text = matrixArray[Math.floor(Math.random() * matrixArray.length)];
+                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                    
+                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                    drops[i]++;
+                }
+            }
+            
+            setInterval(draw, 35);
+        }
+        
+        // Update time
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            document.getElementById('current-time').textContent = timeString;
+        }
+        
+        // Fetch real stats from API
+        function fetchStats() {
+            fetch('/api/stats')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('total-requests').textContent = data.totalRequests;
+                    document.getElementById('successful-requests').textContent = data.successfulRequests;
+                    document.getElementById('error-requests').textContent = data.errorRequests;
+                    document.getElementById('uptime').textContent = data.uptime;
+                })
+                .catch(error => {
+                    console.error('Error fetching stats:', error);
+                });
+        }
+        
+        // Simulate traffic with real API calls
+        function simulateTraffic() {
+            const statusContent = document.getElementById('status-content');
+            const endpoints = ['/api/submit', '/api/data/Artigos', '/api/data/Velonews', '/health', '/api/stats'];
+            const methods = ['GET', 'POST'];
+            
+            setInterval(() => {
+                const endpoint = endpoints[Math.floor(Math.random() * endpoints.length)];
+                const method = methods[Math.floor(Math.random() * methods.length)];
+                const timestamp = new Date().toLocaleTimeString();
+                
+                // Make real API call
+                fetch(endpoint, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: method === 'POST' ? JSON.stringify({
+                        collection: 'Test',
+                        data: { test: 'data' }
+                    }) : undefined
+                })
+                .then(response => {
+                    const line = document.createElement('div');
+                    line.className = response.ok ? 'status-line response' : 'status-line error';
+                    line.textContent = `[${timestamp}] ${method} ${endpoint} - ${response.status} ${response.statusText}`;
+                    statusContent.appendChild(line);
+                    
+                    // Update stats
+                    fetchStats();
+                })
+                .catch(error => {
+                    const line = document.createElement('div');
+                    line.className = 'status-line error';
+                    line.textContent = `[${timestamp}] ${method} ${endpoint} - Connection Error`;
+                    statusContent.appendChild(line);
+                });
+                
+                // Keep only last 50 lines
+                while (statusContent.children.length > 50) {
+                    statusContent.removeChild(statusContent.firstChild);
+                }
+                
+                statusContent.scrollTop = statusContent.scrollHeight;
+            }, 5000 + Math.random() * 5000); // Random interval between 5-10 seconds
+        }
+        
+        // Update uptime
+        function updateUptime() {
+            const startTime = new Date();
+            const uptimeElement = document.getElementById('uptime');
+            
+            setInterval(() => {
+                const now = new Date();
+                const diff = now - startTime;
+                const hours = Math.floor(diff / 3600000);
+                const minutes = Math.floor((diff % 3600000) / 60000);
+                const seconds = Math.floor((diff % 60000) / 1000);
+                
+                uptimeElement.textContent = 
+                    `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            createMatrixRain();
+            updateTime();
+            setInterval(updateTime, 1000);
+            fetchStats(); // Initial stats
+            setInterval(fetchStats, 5000); // Update stats every 5 seconds
+            simulateTraffic();
+        });
+    </script>
 </body>
 </html>

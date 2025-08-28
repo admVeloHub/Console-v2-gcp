@@ -75,19 +75,12 @@ app.get('/health', (req, res) => {
     });
 });
 
-// Rota raiz - redirecionar para documentação da API
+// Middleware para servir arquivos estáticos
+app.use(express.static('public'));
+
+// Rota raiz - servir página de status do backend
 app.get('/', (req, res) => {
-    res.json({
-        message: 'Console de Conteúdo - Backend API',
-        version: '2.0.0',
-        endpoints: {
-            health: 'GET /health',
-            test: 'GET /api/test',
-            submit: 'POST /api/submit',
-            data: 'GET /api/data/:collection'
-        },
-        documentation: 'Esta é uma API REST para o Console de Conteúdo'
-    });
+    res.sendFile(__dirname + '/public/index.html');
 });
 
 // API - Inserir dados
@@ -116,9 +109,11 @@ app.post('/api/submit', async (req, res) => {
         });
 
         console.log('✅ Dados inseridos com sucesso. ID:', result.insertedId);
+        stats.successfulRequests++;
         res.json({ success: true, id: result.insertedId });
     } catch (error) {
         console.error('❌ Erro ao inserir:', error);
+        stats.errorRequests++;
         res.status(500).json({ success: false, message: 'Erro interno: ' + error.message });
     }
 });
@@ -133,9 +128,11 @@ app.get('/api/data/:collection', async (req, res) => {
 
         const collectionObj = db.collection(collection);
         const data = await collectionObj.find({}).toArray();
+        stats.successfulRequests++;
         res.json({ success: true, data });
     } catch (error) {
         console.error('Erro ao buscar:', error);
+        stats.errorRequests++;
         res.status(500).json({ success: false, message: 'Erro interno: ' + error.message });
     }
 });
@@ -151,6 +148,36 @@ app.get('/api/test', (req, res) => {
             dbName: DB_NAME,
             nodeEnv: process.env.NODE_ENV
         }
+    });
+});
+
+// Estatísticas em tempo real
+let stats = {
+    totalRequests: 0,
+    successfulRequests: 0,
+    errorRequests: 0,
+    startTime: new Date()
+};
+
+// Middleware para contar requisições
+app.use((req, res, next) => {
+    stats.totalRequests++;
+    next();
+});
+
+// Endpoint para estatísticas
+app.get('/api/stats', (req, res) => {
+    const uptime = Date.now() - stats.startTime.getTime();
+    const hours = Math.floor(uptime / 3600000);
+    const minutes = Math.floor((uptime % 3600000) / 60000);
+    const seconds = Math.floor((uptime % 60000) / 1000);
+    
+    res.json({
+        totalRequests: stats.totalRequests,
+        successfulRequests: stats.successfulRequests,
+        errorRequests: stats.errorRequests,
+        uptime: `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`,
+        mongodb: mongoClient ? 'connected' : 'disconnected'
     });
 });
 
