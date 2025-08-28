@@ -67,7 +67,7 @@ FRONTEND_URL=https://seu-frontend-url.com
 
 #### Enviar dados
 ```bash
-curl -X POST http://localhost:3002/api/submit \
+curl -X POST https://back-console.vercel.app/api/submit \
   -H "Content-Type: application/json" \
   -d '{
     "collection": "Artigos",
@@ -82,7 +82,7 @@ curl -X POST http://localhost:3002/api/submit \
 
 #### Health Check
 ```bash
-curl http://localhost:3002/health
+curl https://back-console.vercel.app/health
 ```
 
 ## 🔒 Segurança

@@ -1,3 +1,8 @@
+// Configuração da API
+const API_BASE_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:3002' 
+    : 'https://back-console.vercel.app';
+
 // Toggle de tema
 document.getElementById('theme-toggle').addEventListener('click', function() {
     const html = document.documentElement;
@@ -121,7 +126,7 @@ async function submitData(collection, data) {
         // Fade out do formulário
         setTimeout(fadeOutForm, 300);
         
-        const response = await fetch('/api/submit', {
+        const response = await fetch(`${API_BASE_URL}/api/submit`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

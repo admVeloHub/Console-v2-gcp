@@ -11,14 +11,18 @@ const PORT = process.env.PORT || 3002;
 // Configurações
 const MONGODB_URI = process.env.MONGODB_URI;
 const DB_NAME = process.env.DB_NAME || 'console_conteudo';
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://front-console.vercel.app';
 
 // Middleware de segurança
 app.use(helmet());
 
 // CORS configurado para o frontend
 app.use(cors({
-    origin: FRONTEND_URL,
+    origin: [
+        FRONTEND_URL,
+        'https://front-console.vercel.app',
+        'https://back-console.vercel.app'
+    ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization']
