@@ -66,6 +66,7 @@ header {
     background-color: var(--cor-container);
     border-bottom: 1px solid var(--cor-borda);
     padding: 1rem 0;
+    overflow: hidden;
 }
 
 .header-container {
@@ -74,9 +75,18 @@ header {
     align-items: center;
 }
 
+.logo {
+    height: 160px;
+    width: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: -60px 0;
+}
+
 .logo-image {
-    height: 40px;
-    width: 40px;
+    height: 160px;
+    width: 160px;
     object-fit: contain;
 }
 
