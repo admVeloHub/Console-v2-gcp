@@ -74,7 +74,6 @@ header {
     justify-content: space-between;
     align-items: center;
     padding: 0.5rem 0;
-    min-height: 60px;
 }
 
 /* Título centralizado das páginas */
@@ -90,11 +89,13 @@ header {
 .logo {
     position: relative;
     z-index: 10;
+    display: flex;
+    align-items: center;
 }
 
 .logo-image {
-    height: 80px;
-    width: 80px;
+    height: 120px;
+    width: 120px;
     object-fit: contain;
 }
 
