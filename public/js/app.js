@@ -39,9 +39,58 @@ function showStatus(message, type = 'success') {
     }, 5000);
 }
 
+// Função para mostrar feedback visual
+function showFeedback(type = 'loading') {
+    const overlay = document.getElementById('feedback-overlay');
+    const spinner = document.getElementById('spinner');
+    const checkmark = document.getElementById('checkmark');
+    const errorX = document.getElementById('error-x');
+    const message = document.getElementById('feedback-message');
+    const subtitle = document.getElementById('feedback-subtitle');
+    
+    // Reset todos os elementos
+    spinner.style.display = 'none';
+    checkmark.style.display = 'none';
+    errorX.style.display = 'none';
+    
+    if (type === 'loading') {
+        spinner.style.display = 'block';
+        message.textContent = 'Enviando...';
+        subtitle.textContent = 'Aguarde um momento';
+    } else if (type === 'success') {
+        checkmark.style.display = 'block';
+        message.textContent = 'Sucesso!';
+        subtitle.textContent = 'Dados salvos com sucesso';
+    } else if (type === 'error') {
+        errorX.style.display = 'block';
+        message.textContent = 'Erro!';
+        subtitle.textContent = 'Falha ao salvar dados';
+    }
+    
+    overlay.classList.add('show');
+}
+
+// Função para esconder feedback
+function hideFeedback() {
+    const overlay = document.getElementById('feedback-overlay');
+    overlay.classList.remove('show');
+}
+
+// Função para fazer fade out do formulário
+function fadeOutForm() {
+    const form = document.querySelector('.dashboard-card');
+    form.classList.add('form-fade-out');
+}
+
 // Função para enviar dados
 async function submitData(collection, data) {
     try {
+        // Mostrar loading
+        showFeedback('loading');
+        
+        // Fade out do formulário
+        setTimeout(fadeOutForm, 300);
+        
         const response = await fetch('/api/submit', {
             method: 'POST',
             headers: {
@@ -53,14 +102,53 @@ async function submitData(collection, data) {
         const result = await response.json();
         
         if (result.success) {
-            showStatus('✅ Dados salvos com sucesso!');
+            // Mostrar sucesso
+            setTimeout(() => {
+                showFeedback('success');
+            }, 1000);
+            
+            // Esconder feedback após 3 segundos
+            setTimeout(() => {
+                hideFeedback();
+                // Resetar formulário
+                const form = document.querySelector('form');
+                if (form) form.reset();
+                // Remover fade out
+                const card = document.querySelector('.dashboard-card');
+                if (card) card.classList.remove('form-fade-out');
+            }, 3000);
+            
             return true;
         } else {
-            showStatus('❌ Erro ao salvar dados: ' + result.message, 'error');
+            // Mostrar erro
+            setTimeout(() => {
+                showFeedback('error');
+            }, 1000);
+            
+            // Esconder feedback após 3 segundos
+            setTimeout(() => {
+                hideFeedback();
+                // Remover fade out
+                const card = document.querySelector('.dashboard-card');
+                if (card) card.classList.remove('form-fade-out');
+            }, 3000);
+            
             return false;
         }
     } catch (error) {
-        showStatus('❌ Erro de conexão: ' + error.message, 'error');
+        // Mostrar erro
+        setTimeout(() => {
+            showFeedback('error');
+        }, 1000);
+        
+        // Esconder feedback após 3 segundos
+        setTimeout(() => {
+            hideFeedback();
+            // Remover fade out
+            const card = document.querySelector('.dashboard-card');
+            if (card) card.classList.remove('form-fade-out');
+        }, 3000);
+        
         return false;
     }
 }

@@ -16,17 +16,17 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static('public'));
 
-// Conexão MongoDB
-let db;
-
+// Função para conectar ao MongoDB
 async function connectDB() {
     try {
         const client = new MongoClient(MONGODB_URI);
         await client.connect();
-        db = client.db(DB_NAME);
+        const db = client.db(DB_NAME);
         console.log('✅ MongoDB conectado');
+        return { client, db };
     } catch (error) {
         console.error('❌ Erro MongoDB:', error);
+        throw error;
     }
 }
 
@@ -49,13 +49,24 @@ app.get('/bot-perguntas', (req, res) => {
 
 // API - Inserir dados
 app.post('/api/submit', async (req, res) => {
+    let client;
     try {
+        console.log('📥 Recebendo requisição POST /api/submit');
+        console.log('📋 Body da requisição:', JSON.stringify(req.body, null, 2));
+        
         const { collection, data } = req.body;
         
         if (!collection || !data) {
+            console.log('❌ Dados obrigatórios não fornecidos');
             return res.status(400).json({ success: false, message: 'Dados obrigatórios não fornecidos' });
         }
 
+        console.log('🔗 Conectando ao MongoDB...');
+        // Conectar ao MongoDB
+        const { client: mongoClient, db } = await connectDB();
+        client = mongoClient;
+
+        console.log(`📊 Inserindo na coleção: ${collection}`);
         const collectionObj = db.collection(collection);
         const result = await collectionObj.insertOne({
             ...data,
@@ -63,29 +74,67 @@ app.post('/api/submit', async (req, res) => {
             updatedAt: new Date()
         });
 
+        console.log('✅ Dados inseridos com sucesso. ID:', result.insertedId);
         res.json({ success: true, id: result.insertedId });
     } catch (error) {
-        console.error('Erro ao inserir:', error);
-        res.status(500).json({ success: false, message: 'Erro interno' });
+        console.error('❌ Erro ao inserir:', error);
+        res.status(500).json({ success: false, message: 'Erro interno: ' + error.message });
+    } finally {
+        if (client) {
+            console.log('🔌 Fechando conexão MongoDB');
+            await client.close();
+        }
     }
 });
 
 // API - Buscar dados
 app.get('/api/data/:collection', async (req, res) => {
+    let client;
     try {
         const { collection } = req.params;
+        
+        // Conectar ao MongoDB
+        const { client: mongoClient, db } = await connectDB();
+        client = mongoClient;
+
         const collectionObj = db.collection(collection);
         const data = await collectionObj.find({}).toArray();
         res.json({ success: true, data });
     } catch (error) {
         console.error('Erro ao buscar:', error);
-        res.status(500).json({ success: false, message: 'Erro interno' });
+        res.status(500).json({ success: false, message: 'Erro interno: ' + error.message });
+    } finally {
+        if (client) {
+            await client.close();
+        }
     }
 });
 
-// Inicialização
-connectDB().then(() => {
-    app.listen(PORT, () => {
-        console.log(`🚀 Servidor rodando na porta ${PORT}`);
+// Rota de teste para verificar se a API está funcionando
+app.get('/api/test', (req, res) => {
+    res.json({ 
+        success: true, 
+        message: 'API funcionando!',
+        timestamp: new Date().toISOString(),
+        env: {
+            hasMongoUri: !!MONGODB_URI,
+            dbName: DB_NAME,
+            nodeEnv: process.env.NODE_ENV
+        }
     });
 });
+
+// Inicialização
+if (process.env.NODE_ENV !== 'production') {
+    // Apenas para desenvolvimento local
+    connectDB().then(() => {
+        app.listen(PORT, () => {
+            console.log(`🚀 Servidor rodando na porta ${PORT}`);
+        });
+    });
+} else {
+    // Para produção (Vercel)
+    app.listen(PORT, () => {
+        console.log(`🚀 Servidor pronto na porta ${PORT}`);
+    });
+}
