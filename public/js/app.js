@@ -39,35 +39,65 @@ function showStatus(message, type = 'success') {
     }, 5000);
 }
 
+// Função para mostrar toast de erro
+function showErrorToast(message) {
+    // Remover toast existente se houver
+    const existingToast = document.querySelector('.error-toast');
+    if (existingToast) {
+        existingToast.remove();
+    }
+    
+    // Criar novo toast
+    const toast = document.createElement('div');
+    toast.className = 'error-toast';
+    toast.innerHTML = `
+        <div class="toast-content">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Mostrar toast
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 100);
+    
+    // Remover toast após 5 segundos
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.remove();
+            }
+        }, 300);
+    }, 5000);
+}
+
 // Função para mostrar feedback visual
 function showFeedback(type = 'loading') {
     const overlay = document.getElementById('feedback-overlay');
     const spinner = document.getElementById('spinner');
-    const checkmark = document.getElementById('checkmark');
-    const errorX = document.getElementById('error-x');
+    const successGif = document.getElementById('success-gif');
     const message = document.getElementById('feedback-message');
     const subtitle = document.getElementById('feedback-subtitle');
     
     // Reset todos os elementos
     spinner.style.display = 'none';
-    checkmark.style.display = 'none';
-    errorX.style.display = 'none';
+    successGif.style.display = 'none';
     
     if (type === 'loading') {
         spinner.style.display = 'block';
         message.textContent = 'Enviando...';
         subtitle.textContent = 'Aguarde um momento';
+        overlay.classList.add('show');
     } else if (type === 'success') {
-        checkmark.style.display = 'block';
+        successGif.style.display = 'block';
         message.textContent = 'Sucesso!';
         subtitle.textContent = 'Dados salvos com sucesso';
-    } else if (type === 'error') {
-        errorX.style.display = 'block';
-        message.textContent = 'Erro!';
-        subtitle.textContent = 'Falha ao salvar dados';
+        overlay.classList.add('show');
     }
-    
-    overlay.classList.add('show');
 }
 
 // Função para esconder feedback
@@ -102,12 +132,12 @@ async function submitData(collection, data) {
         const result = await response.json();
         
         if (result.success) {
-            // Mostrar sucesso
+            // Mostrar sucesso com GIF
             setTimeout(() => {
                 showFeedback('success');
             }, 1000);
             
-            // Esconder feedback após 3 segundos
+            // Esconder feedback após 4 segundos (para dar tempo do GIF)
             setTimeout(() => {
                 hideFeedback();
                 // Resetar formulário
@@ -116,38 +146,24 @@ async function submitData(collection, data) {
                 // Remover fade out
                 const card = document.querySelector('.dashboard-card');
                 if (card) card.classList.remove('form-fade-out');
-            }, 3000);
+            }, 4000);
             
             return true;
         } else {
-            // Mostrar erro
-            setTimeout(() => {
-                showFeedback('error');
-            }, 1000);
-            
-            // Esconder feedback após 3 segundos
-            setTimeout(() => {
-                hideFeedback();
-                // Remover fade out
-                const card = document.querySelector('.dashboard-card');
-                if (card) card.classList.remove('form-fade-out');
-            }, 3000);
+            // Mostrar toast de erro
+            showErrorToast(result.message || 'Falha ao salvar dados');
+            // Remover fade out
+            const card = document.querySelector('.dashboard-card');
+            if (card) card.classList.remove('form-fade-out');
             
             return false;
         }
     } catch (error) {
-        // Mostrar erro
-        setTimeout(() => {
-            showFeedback('error');
-        }, 1000);
-        
-        // Esconder feedback após 3 segundos
-        setTimeout(() => {
-            hideFeedback();
-            // Remover fade out
-            const card = document.querySelector('.dashboard-card');
-            if (card) card.classList.remove('form-fade-out');
-        }, 3000);
+        // Mostrar toast de erro
+        showErrorToast('Erro de conexão. Tente novamente.');
+        // Remover fade out
+        const card = document.querySelector('.dashboard-card');
+        if (card) card.classList.remove('form-fade-out');
         
         return false;
     }

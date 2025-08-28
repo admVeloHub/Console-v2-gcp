@@ -587,6 +587,55 @@ textarea.form-control {
     }
 }
 
+/* GIF de sucesso */
+#success-gif {
+    width: 200px;
+    height: 200px;
+    margin: 0 auto 1.5rem;
+    border-radius: 15px;
+    object-fit: cover;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Toast de erro */
+.error-toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: linear-gradient(135deg, #ff4757 0%, #ff3742 100%);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(255, 71, 87, 0.3);
+    z-index: 10000;
+    opacity: 0;
+    transition: all 0.3s ease;
+    max-width: 400px;
+    min-width: 300px;
+}
+
+.error-toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+.toast-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 500;
+}
+
+.toast-content i {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.toast-content span {
+    line-height: 1.4;
+}
+
 /* X de erro */
 .error-x {
     width: 100%;
