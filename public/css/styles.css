@@ -71,8 +71,40 @@ header {
 
 .header-container {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
+    position: relative;
+}
+
+/* Título centralizado das páginas */
+.page-title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--cor-accent);
+    text-align: center;
+    margin: 0;
+    z-index: 5;
+}
+
+/* Botão voltar no canto esquerdo */
+.back-button {
+    position: absolute;
+    left: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--cor-texto-principal);
+    text-decoration: none;
+    transition: color 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.back-button:hover {
+    color: var(--cor-accent);
 }
 
 .logo {
@@ -81,8 +113,8 @@ header {
 }
 
 .logo-image {
-    height: 50px;
-    width: 50px;
+    height: 200px;
+    width: 200px;
     object-fit: contain;
 }
 
@@ -446,6 +478,7 @@ textarea.form-control {
 /* Form Actions */
 .form-actions {
     display: flex;
+    justify-content: center;
     gap: 1.5rem;
     margin-top: 3rem;
     padding-top: 2rem;
