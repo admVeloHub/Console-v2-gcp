@@ -23,6 +23,24 @@
     --cor-sombra: rgba(0, 0, 0, 0.4);
 }
 
+/* Theme Switch */
+.theme-switch-wrapper {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.theme-icon {
+    font-size: 1.2rem;
+    color: var(--cor-texto-principal);
+    transition: color 0.3s ease;
+}
+
+.theme-switch-wrapper:hover .theme-icon {
+    color: var(--cor-accent);
+}
+
 /* Reset e Base */
 * {
     margin: 0;
@@ -58,6 +76,8 @@ header {
 
 .logo-image {
     height: 40px;
+    width: 40px;
+    object-fit: contain;
 }
 
 .nav-menu {
