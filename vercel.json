@@ -3,11 +3,31 @@
   "name": "console-conteudo-frontend",
   "builds": [
     {
-      "src": "index.html",
+      "src": "**/*",
       "use": "@vercel/static"
     }
   ],
   "routes": [
+    {
+      "src": "/css/(.*)",
+      "dest": "/css/$1"
+    },
+    {
+      "src": "/js/(.*)",
+      "dest": "/js/$1"
+    },
+    {
+      "src": "/public/(.*)",
+      "dest": "/public/$1"
+    },
+    {
+      "src": "/igp-src/(.*)",
+      "dest": "/igp-src/$1"
+    },
+    {
+      "src": "/(.*\\.(png|jpg|jpeg|gif|ico|svg))",
+      "dest": "/$1"
+    },
     {
       "src": "/(.*)",
       "dest": "/index.html"
