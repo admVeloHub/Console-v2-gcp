@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IGP - Dashboard de Métricas</title>
+    <link rel="icon" type="image/png" href="console.png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
+    
+    <!-- VeloIGP CSS -->
+    <link href="../VeloIGP/build/static/css/main.414b41d4.css" rel="stylesheet">
+    
+    <script>
+        // Configurar token ANTES do React carregar
+        (function() {
+            const tokenSalvo = localStorage.getItem('veloigp-api-token');
+            if (!tokenSalvo) {
+                // Token padrão para demonstração
+                const tokenPadrao = 'ebd331c1-44b7-4947-aa8f-91e5df9479e3-202581414188';
+                localStorage.setItem('veloigp-api-token', tokenPadrao);
+                console.log('Token padrão da API 55PBX configurado automaticamente');
+            } else {
+                console.log('Token da API 55PBX já configurado:', tokenSalvo.substring(0, 10) + '...');
+            }
+        })();
+    </script>
+    
+    <style>
+        .back-button {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            background: var(--cor-fundo-secundario, #ffffff);
+            color: var(--cor-texto-principal, #1a1a1a);
+            border: 1px solid var(--cor-borda, #e5e7eb);
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .back-button:hover {
+            background: var(--cor-accent, #1634FF);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        /* Garantir que o VeloIGP ocupe toda a tela */
+        body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        
+        #root {
+            min-height: 100vh;
+        }
+        
+        /* Ajustar para o tema do console */
+        :root {
+            --cor-accent: #1634FF;
+            --cor-fundo-secundario: #ffffff;
+            --cor-texto-principal: #1a1a1a;
+            --cor-borda: #e5e7eb;
+        }
+        
+        [data-theme="dark"] {
+            --cor-fundo-secundario: #1f2937;
+            --cor-texto-principal: #f9fafb;
+            --cor-borda: #374151;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-button">
+        <i class="fas fa-arrow-left"></i>
+        Voltar
+    </a>
+    
+    <!-- VeloIGP React App -->
+    <div id="root"></div>
+    
+    <!-- VeloIGP JavaScript -->
+    <script defer="defer" src="../VeloIGP/build/static/js/main.ba132b7b.js"></script>
+    
+    <script>
+        // Configuração do tema
+        const themeToggle = document.querySelector('[data-theme]');
+        if (themeToggle) {
+            // Aplicar tema ao VeloIGP se necessário
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            
+            // Aguardar o React carregar e aplicar tema
+            setTimeout(() => {
+                const veloigpApp = document.querySelector('#root');
+                if (veloigpApp) {
+                    veloigpApp.setAttribute('data-theme', currentTheme);
+                }
+            }, 1000);
+        }
+
+        // Token já configurado no início da página
+    </script>
+</body>
+</html>

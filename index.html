@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Console de Conteúdo - VeloAcademy</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" type="image/png" href="console.png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
+</head>
+<body>
+    <header>
+        <div class="container header-container">
+            <div class="logo" id="logo-container">
+                <img id="logo-image" class="logo-image" src="console.png" alt="Console Logo">
+            </div>
+            
+            <h1 class="page-title">Console de Conteúdo</h1>
+
+            <div class="theme-switch-wrapper" id="theme-toggle">
+                <i class='bx bx-sun theme-icon'></i>
+                <i class='bx bx-moon theme-icon'></i>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container main-container">
+            <div class="dashboard-grid">
+                <div class="dashboard-card" onclick="navigateTo('artigos')">
+                    <div class="card-icon">
+                        <i class="fas fa-newspaper"></i>
+                    </div>
+                    <h3>Artigos</h3>
+                    <p>Criar e gerenciar artigos do sistema</p>
+                    <div class="card-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <div class="dashboard-card" onclick="navigateTo('velonews')">
+                    <div class="card-icon">
+                        <i class="fas fa-broadcast-tower"></i>
+                    </div>
+                    <h3>Velonews</h3>
+                    <p>Publicar notícias e alertas</p>
+                    <div class="card-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <div class="dashboard-card" onclick="navigateTo('bot-perguntas')">
+                    <div class="card-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3>Bot Perguntas</h3>
+                    <p>Configurar perguntas do chatbot</p>
+                    <div class="card-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <div class="dashboard-card" onclick="navigateTo('igp')">
+                    <div class="card-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3>IGP</h3>
+                    <p>Dashboard de métricas e relatórios</p>
+                    <div class="card-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="status-section">
+                <div class="status-card">
+                    <div class="status-indicator" id="mongodb-status">
+                        <i class="fas fa-circle"></i>
+                        <span>MongoDB Conectado</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Status -->
+    <div id="status"></div>
+
+    <!-- Feedback Overlay -->
+    <div id="feedback-overlay" class="feedback-overlay">
+        <div class="feedback-content">
+            <div id="spinner" class="spinner"></div>
+            <img id="success-gif" src="success.gif" alt="Success" style="display: none;">
+            <h3 id="feedback-message">Enviando...</h3>
+            <p id="feedback-subtitle">Aguarde um momento</p>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

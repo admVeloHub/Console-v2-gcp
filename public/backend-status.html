@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend Console - Status Monitor</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Orbitron', monospace;
+            background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%);
+            min-height: 100vh;
+            color: #00ff00;
+            overflow-x: hidden;
+        }
+
+        /* Header com Logo */
+        .header {
+            text-align: center;
+            padding: 2rem 0;
+            background: rgba(0, 0, 0, 0.1);
+            border-bottom: 3px solid #333;
+            position: relative;
+        }
+
+        .logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            width: 240px;
+            height: 240px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #333;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            letter-spacing: 3px;
+        }
+
+        .subtitle {
+            font-family: 'Courier New', monospace;
+            font-size: 1.2rem;
+            color: #666;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* Container Principal */
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 2rem;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            height: calc(100vh - 200px);
+        }
+
+        /* Containers de Monitoramento */
+        .monitor-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
+            border: 1px solid rgba(22, 52, 255, 0.1);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .monitor-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #1634FF, #1694FF);
+            border-radius: 20px 20px 0 0;
+        }
+
+        .monitor-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 2px solid rgba(22, 52, 255, 0.1);
+            padding-bottom: 0.5rem;
+        }
+
+        /* Container Esquerdo - Status de Transmissão */
+        .transmission-log {
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            background: linear-gradient(135deg, #f8faff 0%, #f0f4ff 100%);
+            border: 1px solid rgba(22, 52, 255, 0.1);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 0.8rem;
+            font-size: 0.9rem;
+            position: relative;
+            color: #2c3e50;
+        }
+
+        .log-entry::before {
+            content: '>';
+            color: #1634FF;
+            margin-right: 0.5rem;
+            font-weight: bold;
+        }
+
+        .log-entry.success {
+            border-color: #10b981;
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+            color: #065f46;
+        }
+
+        .log-entry.error {
+            border-color: #ef4444;
+            background: linear-gradient(135deg, #fef2f2 0%, #fef2f2 100%);
+            color: #991b1b;
+        }
+
+        .log-entry.warning {
+            border-color: #f59e0b;
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            color: #92400e;
+        }
+
+        .log-timestamp {
+            font-size: 0.7rem;
+            color: #6b7280;
+            margin-left: 1rem;
+        }
+
+        /* Container Central - Console */
+        .console-output {
+            height: 100%;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+        }
+
+        .console-line {
+            margin-bottom: 0.5rem;
+            padding: 0.8rem;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #f8faff 0%, #f0f4ff 100%);
+            border: 1px solid rgba(22, 52, 255, 0.1);
+        }
+
+        .console-line.info {
+            color: #1634FF;
+            border-color: #1634FF;
+        }
+
+        .console-line.warning {
+            color: #f59e0b;
+            border-color: #f59e0b;
+        }
+
+        .console-line.error {
+            color: #ef4444;
+            border-color: #ef4444;
+        }
+
+        .console-line.debug {
+            color: #6b7280;
+            font-size: 0.8rem;
+            border-color: #d1d5db;
+        }
+
+        /* Container Direito - Network */
+        .network-monitor {
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .network-item {
+            background: linear-gradient(135deg, #f8faff 0%, #f0f4ff 100%);
+            border: 1px solid rgba(22, 52, 255, 0.1);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .network-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .network-method {
+            background: #1634FF;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+
+        .network-status {
+            font-size: 0.8rem;
+            color: #1634FF;
+            font-weight: 600;
+        }
+
+        .network-path {
+            font-family: 'Courier New', monospace;
+            color: #2c3e50;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .network-details {
+            font-size: 0.8rem;
+            color: #6b7280;
+        }
+
+        /* Animações */
+        @keyframes pulse {
+            0%, 100% { 
+                box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+                transform: scale(1);
+            }
+            50% { 
+                box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
+                transform: scale(1.05);
+            }
+        }
+
+        @keyframes scan {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .blink {
+            animation: blink 1s infinite;
+        }
+
+        /* Scrollbar personalizada */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #1634FF;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #1e40af;
+        }
+
+        /* Responsividade */
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                height: auto;
+            }
+            
+            .monitor-container {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header com Logo -->
+    <header class="header">
+        <div class="logo-container">
+            <div class="logo">
+                <img src="console.png" alt="Console Logo">
+            </div>
+            <h1 class="title">CONSOLE DE CONTEÚDO</h1>
+            <p class="subtitle">BACKEND</p>
+        </div>
+    </header>
+
+    <!-- Container Principal -->
+    <div class="main-container">
+        <!-- Container Esquerdo - Status de Transmissão -->
+        <div class="monitor-container">
+            <h2 class="monitor-title">TRANSMISSÃO</h2>
+            <div class="transmission-log" id="transmission-log">
+                <div class="log-entry success">
+                    Sistema inicializado<span class="log-timestamp">[19:15:32]</span>
+                </div>
+                <div class="log-entry">
+                    Aguardando requisições do frontend<span class="log-timestamp">[19:15:33]</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Container Central - Console -->
+        <div class="monitor-container">
+            <h2 class="monitor-title">CONSOLE</h2>
+            <div class="console-output" id="console-output">
+                <div class="console-line info">🚀 Backend iniciado com sucesso</div>
+                <div class="console-line info">🔗 MongoDB: Conectado</div>
+                <div class="console-line info">📡 API: Online</div>
+                <div class="console-line debug">[DEBUG] Pool de conexões: 10</div>
+                <div class="console-line debug">[DEBUG] Rate limit: 100 req/15min</div>
+                <div class="console-line info">✅ Sistema pronto para receber dados</div>
+            </div>
+        </div>
+
+        <!-- Container Direito - Network -->
+        <div class="monitor-container">
+            <h2 class="monitor-title">NETWORK</h2>
+            <div class="network-monitor" id="network-monitor">
+                <div class="network-item">
+                    <div class="network-header">
+                        <span class="network-method">GET</span>
+                        <span class="network-status">200 OK</span>
+                    </div>
+                    <div class="network-path">/health</div>
+                    <div class="network-details">Health check - 15ms</div>
+                </div>
+                <div class="network-item">
+                    <div class="network-header">
+                        <span class="network-method">GET</span>
+                        <span class="network-status">200 OK</span>
+                    </div>
+                    <div class="network-path">/api/stats</div>
+                    <div class="network-details">Estatísticas - 8ms</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        let requestCounter = 0;
+
+        // Função para adicionar log de transmissão
+        function addTransmissionLog(message, type = 'info') {
+            const log = document.getElementById('transmission-log');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.innerHTML = `${message}<span class="log-timestamp">[${timestamp}]</span>`;
+            
+            log.appendChild(logEntry);
+            log.scrollTop = log.scrollHeight;
+            
+            // Manter apenas os últimos 20 logs
+            while (log.children.length > 20) {
+                log.removeChild(log.firstChild);
+            }
+        }
+
+        // Função para adicionar linha no console
+        function addConsoleLine(message, type = 'info') {
+            const console = document.getElementById('console-output');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const line = document.createElement('div');
+            line.className = `console-line ${type}`;
+            line.textContent = `[${timestamp}] ${message}`;
+            
+            console.appendChild(line);
+            console.scrollTop = console.scrollHeight;
+            
+            // Manter apenas as últimas 30 linhas
+            while (console.children.length > 30) {
+                console.removeChild(console.firstChild);
+            }
+        }
+
+        // Função para adicionar item de network
+        function addNetworkItem(method, path, status, details) {
+            const network = document.getElementById('network-monitor');
+            
+            const item = document.createElement('div');
+            item.className = 'network-item';
+            item.innerHTML = `
+                <div class="network-header">
+                    <span class="network-method">${method}</span>
+                    <span class="network-status">${status}</span>
+                </div>
+                <div class="network-path">${path}</div>
+                <div class="network-details">${details}</div>
+            `;
+            
+            network.insertBefore(item, network.firstChild);
+            
+            // Manter apenas os últimos 10 itens
+            while (network.children.length > 10) {
+                network.removeChild(network.lastChild);
+            }
+        }
+
+        // Função para atualizar status
+        async function updateStatus() {
+            try {
+                // Health check
+                const healthStart = Date.now();
+                const healthResponse = await fetch(`${API_BASE}/health`);
+                const healthTime = Date.now() - healthStart;
+                
+                addNetworkItem('GET', '/health', `${healthResponse.status}`, `Health check - ${healthTime}ms`);
+                
+                if (healthResponse.ok) {
+                    const healthData = await healthResponse.json();
+                    addConsoleLine(`Health check: ${healthData.mongodb}`, 'info');
+                }
+
+                // Stats
+                const statsStart = Date.now();
+                const statsResponse = await fetch(`${API_BASE}/api/stats`);
+                const statsTime = Date.now() - statsStart;
+                
+                addNetworkItem('GET', '/api/stats', `${statsResponse.status}`, `Estatísticas - ${statsTime}ms`);
+                
+                if (statsResponse.ok) {
+                    const statsData = await statsResponse.json();
+                    addConsoleLine(`Total requests: ${statsData.totalRequests}`, 'debug');
+                }
+
+            } catch (error) {
+                addConsoleLine(`Erro na atualização: ${error.message}`, 'error');
+                addTransmissionLog('Falha na comunicação com API', 'error');
+            }
+        }
+
+        // Simular logs de transmissão
+        function simulateTransmission() {
+            const messages = [
+                'Recebendo requisição do frontend',
+                'Validando dados de entrada',
+                'Conectando ao MongoDB',
+                'Executando operação de escrita',
+                'Confirmando transação',
+                'Enviando resposta de sucesso'
+            ];
+
+            const types = ['info', 'success', 'warning'];
+            
+            setInterval(() => {
+                const message = messages[Math.floor(Math.random() * messages.length)];
+                const type = types[Math.floor(Math.random() * types.length)];
+                addTransmissionLog(message, type);
+            }, 5000);
+        }
+
+        // Inicialização
+        addConsoleLine('Sistema de monitoramento iniciado', 'info');
+        addTransmissionLog('Monitor de transmissão ativo', 'success');
+        
+        // Atualizar status a cada 10 segundos
+        setInterval(updateStatus, 10000);
+        
+        // Simular logs de transmissão
+        simulateTransmission();
+        
+        // Atualização inicial
+        updateStatus();
+    </script>
+</body>
+</html>

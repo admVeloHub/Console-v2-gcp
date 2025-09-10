@@ -82,8 +82,21 @@ app.get('/health', (req, res) => {
 // Middleware para servir arquivos estáticos
 app.use(express.static('public'));
 
-// Rota raiz - servir página de status do backend
+// Middleware para servir arquivos estáticos do IGP
+app.use('/igp-static', express.static('igp-src/build'));
+
+// Rota raiz - servir página principal do Console
 app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/index.html');
+});
+
+// Rota para o IGP - servir aplicação React
+app.get('/igp', (req, res) => {
+    res.sendFile(__dirname + '/igp-src/build/index.html');
+});
+
+// Rota para status do backend
+app.get('/backend-status', (req, res) => {
     res.sendFile(__dirname + '/public/index.html');
 });
 
@@ -214,6 +227,7 @@ if (process.env.NODE_ENV !== 'production') {
         });
     });
 } else {
+
     // Para produção (Vercel) - não usar app.listen()
     console.log('🚀 Servidor pronto para produção (Vercel)');
     

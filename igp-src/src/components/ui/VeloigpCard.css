@@ -1,0 +1,241 @@
+/* ========================================
+   VELOHUB CARD - SEM ÍCONES, TÍTULOS ALINHADOS À ESQUERDA
+   ======================================== */
+
+/* Variáveis CSS baseadas nas guidelines oficiais */
+:root {
+  --velohub-white: #F3F7FC;
+  --velohub-gray: #272A30;
+  --velohub-blue-dark: #000058;
+  --velohub-blue-medium: #1634FF;
+  --velohub-blue-light: #1694FF;
+  --velohub-blue-opaque: #006AB9;
+  --velohub-yellow: #FCC200;
+  --velohub-green: #15A237;
+  --velohub-shadow: rgba(0, 0, 0, 0.1);
+  --velohub-border: rgba(22, 52, 255, 0.1);
+}
+
+/* ========================================
+   CARD PRINCIPAL - SEGUINDO GUIDELINES OFICIAIS
+   ======================================== */
+.veloigp-card {
+  background: #F3F7FC; /* Tom de branco oficial das guidelines */
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin: 16px 0;
+  border: 1px solid rgba(22, 52, 255, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  
+  /* Layout flexível para alinhar botões na parte inferior */
+  display: flex;
+  flex-direction: column;
+  min-height: 280px;
+}
+
+/* Container main sobrescreve o background do card */
+.veloigp-card.container-main {
+  background: #ffffff !important; /* Container principal conforme guidelines */
+  background-color: #ffffff !important; /* Força a cor de fundo */
+}
+
+/* Regra adicional para garantir que funcione */
+div.veloigp-card.container-main {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+}
+
+/* ========================================
+   TEMA ESCURO - CONFIGURAÇÕES CONFORME GUIDELINES
+   ======================================== */
+[data-theme="dark"] .veloigp-card.container-main,
+.dark .veloigp-card.container-main {
+  background: var(--cor-container-escuro) !important; /* Container principal tema escuro */
+  background-color: var(--cor-container-escuro) !important; /* Força a cor de fundo */
+}
+
+[data-theme="dark"] div.veloigp-card.container-main,
+.dark div.veloigp-card.container-main {
+  background: var(--cor-container-escuro) !important;
+  background-color: var(--cor-container-escuro) !important;
+}
+
+/* Regra ultra específica para tema escuro */
+[data-theme="dark"] html body #root .veloigp-app .veloigp-card.container-main,
+.dark html body #root .veloigp-app .veloigp-card.container-main {
+  background: var(--cor-container-escuro) !important;
+  background-color: var(--cor-container-escuro) !important;
+}
+
+/* Regra ainda mais específica com cor direta */
+html[data-theme="dark"] body #root .veloigp-app .veloigp-card.container-main {
+  background: #323a42 !important;
+  background-color: #323a42 !important;
+}
+
+/* Regra para qualquer card com container-main no tema escuro */
+html[data-theme="dark"] .veloigp-card.container-main {
+  background: #323a42 !important;
+  background-color: #323a42 !important;
+}
+
+/* Regra para divs com container-main no tema escuro */
+html[data-theme="dark"] div.veloigp-card.container-main {
+  background: #323a42 !important;
+  background-color: #323a42 !important;
+}
+
+/* ========================================
+   VARIAÇÕES DO CARD - APENAS HOVER E CLICK
+   ======================================== */
+
+/* Card com hover */
+.veloigp-card--hoverable:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px var(--velohub-shadow);
+  border-color: var(--velohub-blue-medium);
+}
+
+/* Card clicável */
+.veloigp-card--clickable {
+  cursor: pointer;
+}
+
+.veloigp-card--clickable:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px var(--velohub-shadow);
+}
+
+/* ========================================
+   TÍTULOS E CONTEÚDO
+   ======================================== */
+
+/* Título do card - ALINHADO DIRETAMENTE À ESQUERDA DO CARD */
+.veloigp-card__title {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 1.25rem; /* 20px */
+  color: var(--velohub-blue-opaque);
+  margin: 0 0 8px 0;
+  padding: 0;
+  line-height: 1.3;
+  text-align: left;
+  /* Alinhamento direto à esquerda do card */
+  align-self: flex-start;
+  width: 100%;
+}
+
+/* Subtítulo do card */
+.veloigp-card__subtitle {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 400;
+  font-size: 0.9rem; /* 14px */
+  color: var(--velohub-gray);
+  margin: 0 0 16px 0;
+  padding: 0;
+  line-height: 1.4;
+  text-align: left;
+  align-self: flex-start;
+  width: 100%;
+}
+
+/* Conteúdo do card */
+.veloigp-card__content {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 400;
+  font-size: 1rem; /* 16px */
+  color: var(--velohub-gray);
+  line-height: 1.6;
+  margin: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Parágrafos dentro do conteúdo */
+.veloigp-card__content p {
+  margin: 0 0 16px 0;
+  flex: 1;
+}
+
+/* Botões dentro do conteúdo - sempre na parte inferior */
+.veloigp-card__content .veloigp-btn {
+  margin-top: auto;
+  align-self: flex-start;
+}
+
+/* ========================================
+   RESPONSIVIDADE
+   ======================================== */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .veloigp-card {
+    padding: 16px;
+    margin: 12px 0;
+    min-height: 260px;
+  }
+  
+  .veloigp-card__title {
+    font-size: 1.1rem; /* 18px */
+  }
+  
+  .veloigp-card__subtitle {
+    font-size: 0.85rem; /* 14px */
+  }
+  
+  .veloigp-card__content {
+    font-size: 0.9rem; /* 14px */
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .veloigp-card {
+    padding: 12px;
+    margin: 8px 0;
+    min-height: 240px;
+  }
+  
+  .veloigp-card__title {
+    font-size: 1rem; /* 16px */
+  }
+  
+  .veloigp-card__subtitle {
+    font-size: 0.8rem; /* 13px */
+  }
+  
+  .veloigp-card__content {
+    font-size: 0.85rem; /* 14px */
+  }
+}
+
+/* ========================================
+   ANIMAÇÕES
+   ======================================== */
+
+/* Animação de entrada */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.veloigp-card {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+/* ========================================
+   ESTADOS ESPECIAIS
+   ======================================== */
+
+/* Todos os cards seguem o padrão oficial VeloHub */

@@ -241,14 +241,14 @@
             <img src="https://via.placeholder.com/120x120/00ff00/000000?text=CONSOLE" alt="Console Logo" class="logo">
             <h1 class="title glow">Backend</h1>
             <p class="subtitle">API Status Monitor</p>
-        </header>
-        
+    </header>
+
         <div class="status-container">
             <div class="status-header">
                 <h2 class="status-title">Traffic Monitor</h2>
                 <div class="status-time" id="current-time"></div>
             </div>
-            
+
             <div class="stats">
                 <div class="stat-card">
                     <div class="stat-number" id="total-requests">0</div>
@@ -261,21 +261,21 @@
                 <div class="stat-card">
                     <div class="stat-number" id="error-requests">0</div>
                     <div class="stat-label">Errors</div>
-                </div>
+                    </div>
                 <div class="stat-card">
                     <div class="stat-number" id="uptime">00:00:00</div>
                     <div class="stat-label">Uptime</div>
+                    </div>
                 </div>
-            </div>
-            
+
             <div class="status-content" id="status-content">
                 <div class="status-line info">[SYSTEM] Backend API initialized...</div>
                 <div class="status-line info">[SYSTEM] MongoDB connection established...</div>
                 <div class="status-line info">[SYSTEM] All endpoints ready for requests...</div>
                 <div class="status-line info">[SYSTEM] Waiting for incoming traffic...</div>
                 <div class="status-line info">[SYSTEM] <span class="cursor">_</span></div>
-            </div>
-            
+                </div>
+
             <div class="api-info">
                 <h3 style="color: #00ffff; margin-bottom: 1rem;">Available Endpoints:</h3>
                 <div class="api-endpoints">
@@ -293,7 +293,7 @@
                         <span class="endpoint-method">POST</span>
                         <span class="endpoint-path">/api/submit</span>
                         <div class="endpoint-desc">Submit data to collections</div>
-                    </div>
+                </div>
                     <div class="endpoint">
                         <span class="endpoint-method">GET</span>
                         <span class="endpoint-path">/api/data/:collection</span>

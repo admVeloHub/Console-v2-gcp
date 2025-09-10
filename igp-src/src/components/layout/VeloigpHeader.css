@@ -1,0 +1,341 @@
+/* Header VeloIGP - Conforme Layout Guidelines */
+.veloigp-header {
+  background-color: #ffffff !important;
+  border-bottom: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  padding: 16px 24px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: none;
+  width: 100%;
+  position: relative;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex: 0 0 auto;
+}
+
+
+
+/* Logo */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-image {
+  height: 57.5px;
+  width: auto;
+  transition: all 0.3s ease;
+}
+
+.logo-fallback {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--blue-medium);
+  font-weight: 600;
+  font-size: 1.25rem;
+  font-family: 'Poppins', sans-serif;
+}
+
+.logo-fallback i {
+  font-size: 1.5rem;
+}
+
+/* Navegação - Conforme Layout Guidelines */
+.nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+  background-color: var(--cor-container);
+  border-radius: 6px;
+  padding: 2px 4px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+}
+
+.nav-link {
+  color: var(--blue-medium);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 1.1rem;
+  font-family: 'Poppins', sans-serif;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.nav-link:hover {
+  color: var(--blue-dark);
+  background-color: rgba(22, 52, 255, 0.1);
+}
+
+.nav-link.active {
+  color: var(--blue-dark);
+  background-color: rgba(22, 52, 255, 0.1);
+  font-weight: 600;
+}
+
+.nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 2px;
+  background-color: var(--blue-dark);
+  border-radius: 1px;
+}
+
+/* Toggle de Tema - Conforme Layout Guidelines */
+.theme-switch-wrapper {
+  cursor: pointer;
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--cor-fundo);
+  border: 1px solid var(--cor-borda);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.theme-switch-wrapper:hover {
+  background: var(--cor-borda);
+  transform: translateY(-50%) scale(1.05);
+}
+
+.theme-icon {
+  font-size: 1.4rem;
+  transition: all 0.3s ease;
+  display: block;
+  line-height: 1;
+}
+
+.theme-icon.active {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* Botão de Usuário Logado - Conforme Layout Guidelines */
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background-color: var(--cor-container);
+  border: 1px solid var(--cor-borda);
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  position: absolute;
+  right: 70px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+}
+
+.user-info:hover {
+  background-color: var(--cor-borda);
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-name {
+  color: var(--cor-texto);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  color: var(--cor-texto-secundario);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.logout-btn:hover {
+  background: var(--cor-borda);
+  color: var(--cor-accent);
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .header-container {
+    padding: 12px 16px;
+  }
+  
+  .nav-menu {
+    gap: 16px;
+  }
+  
+  .nav-link {
+    padding: 6px 12px;
+    font-size: 0.9rem;
+  }
+  
+  .logo-image {
+    height: 32px;
+  }
+  
+  .logo-fallback {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-menu {
+    gap: 8px;
+  }
+  
+  .nav-link {
+    padding: 4px 8px;
+    font-size: 0.85rem;
+  }
+  
+  .theme-switch-wrapper {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .theme-icon {
+    font-size: 1rem;
+  }
+}
+
+/* Animações */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.veloigp-header {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Estados de foco para acessibilidade */
+.nav-link:focus,
+.theme-switch-wrapper:focus {
+  outline: 2px solid var(--cor-accent);
+  outline-offset: 2px;
+}
+
+/* Transições suaves para mudanças de tema */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* ========================================
+   TEMA ESCURO - CONFIGURAÇÕES CONFORME GUIDELINES
+   ======================================== */
+[data-theme="dark"] .veloigp-header {
+  background-color: var(--blue-opaque);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 102, 171, 0.3);
+}
+
+[data-theme="dark"] .theme-switch-wrapper {
+  background: var(--cor-fundo-escuro);
+  border-color: var(--borda-escura);
+}
+
+[data-theme="dark"] .theme-switch-wrapper:hover {
+  background: var(--borda-escura);
+}
+
+
+[data-theme="dark"] .logo-fallback {
+  color: var(--white);
+}
+
+
+[data-theme="dark"] .user-info {
+  background-color: var(--cor-container-escuro);
+  border-color: var(--borda-escura);
+}
+
+[data-theme="dark"] .user-info:hover {
+  background-color: var(--borda-escura);
+}
+
+[data-theme="dark"] .user-name {
+  color: var(--texto-principal-escuro);
+}
+
+[data-theme="dark"] .logout-btn {
+  color: var(--texto-secundario-escuro);
+}
+
+[data-theme="dark"] .logout-btn:hover {
+  background: var(--borda-escura);
+  color: var(--texto-destaque-escuro);
+}
+
+[data-theme="dark"] .nav-link {
+  color: var(--white);
+}
+
+[data-theme="dark"] .nav-link:hover {
+  color: var(--blue-light);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .nav-link.active {
+  color: var(--blue-light);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .nav-menu {
+  background-color: var(--cor-container-escuro);
+}
+
+[data-theme="dark"] .theme-switch-wrapper {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .theme-switch-wrapper:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .theme-icon {
+  color: var(--white);
+}
