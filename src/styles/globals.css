@@ -1,0 +1,164 @@
+/* VERSION: v3.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team */
+
+/* Importar fontes VeloHub */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Anton&display=swap');
+
+/* Variáveis CSS - VeloHub */
+:root {
+  /* PALETA OFICIAL VELOHUB */
+  --white: #F3F7FC;
+  --gray: #272A30;
+  --blue-dark: #000058;
+  --blue-medium: #1634FF;
+  --blue-light: #1694FF;
+  --blue-opaque: #006AB9;
+  --yellow: #FCC200;
+  --green: #15A237;
+
+  /* CORES DE FUNDO E CONTAINERS */
+  --cor-fundo: #f0f4f8;
+  --cor-container: #F3F7FC;
+  --cor-card: #F3F7FC;
+  
+  /* CORES DO TEMA ESCURO */
+  --cor-fundo-escuro: #272A30;
+  --cor-container-escuro: #323a42;
+  --cor-card-escuro: #323a42;
+  --cor-header-escuro: #006AB9;
+  
+  /* TEXTOS NO TEMA ESCURO */
+  --texto-principal-escuro: #F3F7FC;
+  --texto-secundario-escuro: #B0BEC5;
+  --texto-destaque-escuro: #1694FF;
+  
+  /* BORDAS E SOMBRAS */
+  --borda-escura: rgba(255, 255, 255, 0.1);
+  --divisoria-escura: rgba(255, 255, 255, 0.2);
+  --sombra-escura: rgba(0, 0, 0, 0.3);
+  --sombra-header-escura: rgba(0, 102, 171, 0.3);
+}
+
+/* Tema escuro */
+.dark {
+  --cor-fundo: var(--cor-fundo-escuro);
+  --cor-container: var(--cor-container-escuro);
+  --cor-card: var(--cor-card-escuro);
+}
+
+/* Reset e Base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: var(--cor-fundo);
+  color: var(--gray);
+  line-height: 1.6;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Aplicar tema escuro no body */
+.dark body {
+  background-color: var(--cor-fundo-escuro);
+  color: var(--texto-principal-escuro);
+}
+
+/* Transições suaves */
+* {
+  transition: all 0.3s ease;
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--cor-fundo);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--blue-medium);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--blue-dark);
+}
+
+/* Animações */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Classes utilitárias */
+.velohub-container {
+  background-color: var(--cor-container);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  margin: 16px;
+  transition: all 0.3s ease;
+}
+
+.velohub-card {
+  background-color: var(--cor-card);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin: 16px 0;
+  border: 1px solid rgba(22, 52, 255, 0.1);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.velohub-card:hover {
+  transform: translateY(-12px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  border-color: var(--blue-light);
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .velohub-container {
+    margin: 8px;
+    padding: 16px;
+  }
+  
+  .velohub-card {
+    margin: 8px 0;
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .velohub-container {
+    margin: 4px;
+    padding: 12px;
+  }
+  
+  .velohub-card {
+    padding: 12px;
+  }
+}
