@@ -1,5 +1,5 @@
-// VERSION: v3.1.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
-import React, { useState } from 'react';
+// VERSION: v3.1.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+import React, { useState, useMemo } from 'react';
 import { 
   Container, 
   Typography, 
@@ -38,8 +38,8 @@ const ArtigosPage = () => {
     severity: 'success'
   });
 
-  // Categorias conforme especificado
-  const categories = [
+  // Categorias conforme especificado - usando useMemo para evitar re-criação
+  const categories = useMemo(() => [
     { categoria_id: '01_Crédito', categoria_titulo: 'Crédito' },
     { categoria_id: '02_restituição', categoria_titulo: 'Restituição e Declaração' },
     { categoria_id: '03_Calculadora e Darf', categoria_titulo: 'DARF e Calculadora' },
@@ -47,7 +47,7 @@ const ArtigosPage = () => {
     { categoria_id: '05_POP', categoria_titulo: 'POPs B2C' },
     { categoria_id: '06_ferramentas', categoria_titulo: 'Ferramentas do Agente' },
     { categoria_id: '07_manual de voz', categoria_titulo: 'Manual de Voz e Estilo' }
-  ];
+  ], []);
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);

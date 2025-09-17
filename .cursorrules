@@ -1,8 +1,4 @@
-# Diretrizes de Trabalho
-<!-- VERSION: v1.0.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
-
 ## Orientações Obrigatórias
-
 - As orientações são para serem seguidas de forma direta e especifica.
 - Quando eu fizer perguntas, pedir para traçar um plano ou questionar como algo deve ser feito, responda as perguntas. Me de as informações para que eu tome as decisões. Se eu perguntei "como fazer isso?" não comece a fazer imediatamente por conta própria
 - Não quero a criação de processos, passos e modificações de arquitetura sem aprovação
@@ -20,3 +16,9 @@
 - Sempre que houver um deploy real para GCP ou push real para GitHub, atualize o DEPLOY_LOG.md com as informações precisas: data/hora, tipo, versão, arquivos modificados e descrição. Use os templates específicos para GCP e GitHub. Não registre configurações ou setups como deploys.
 - não realizar deploy do projeto, ou push no GitHub sem solicitar confirmação dessa ação. 
 - o nome Index.html deve ser evitado para que parem de ocorrer erros de integrações e redirecionamentos das paginas criadas. os nomes deverão refletir os trechos trabalhados.
+- Sempre certifique-se de estar fazendo o deploy ou o push para o destino correto.Pushes do git jamais deverão ser trocados de reporitório acidentalmente e deploys no vercel ou no GCP deverão ocorrer com precisão.
+- Se a solicitação feita para uma tarefa ser excutada depende de mais informações, de confirmações de dados ou mais recursos, solicite essas informações antes de iniciar a tarefa.Mantenha o compliance com a diretiva nro 4 e não crie aleatóriamente dados adicionais para completar as tarefas.
+- Ao final da leitura das diretrizes, leia o arquivo DEPLOY_LOG.md e o arquivo CLEANUP_REPO.md se houver, e o layout guidelines s ehouver. a ter uma visão geral do projeto e das alterações realizadas.
+
+# Diretrizes de Trabalho
+<!-- VERSION: v1.1.0 | DATE: 2025-09-17 | AUTHOR:Lucas Gravina - VeloHub Development Team

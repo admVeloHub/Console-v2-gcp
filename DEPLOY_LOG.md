@@ -77,4 +77,52 @@
 - Estrutura de projeto modernizada e unificada
 
 ---
+
+## GitHub Push - 2024-12-19 20:10
+
+### Informações do Deploy
+- **Tipo:** GitHub Push
+- **Data/Hora:** 2024-12-19 20:10 BRT
+- **Versão:** v3.1.0
+- **Branch:** master
+- **Repositório:** https://github.com/admVeloHub/back-console.git
+- **Commit Hash:** 86b53b1
+
+### Arquivos Modificados
+- ✅ **Arquivos atualizados:**
+  - `src/pages/ArtigosPage.jsx` - Sistema de abas e categorias corretas
+  - `src/pages/DashboardPage.jsx` - Reordenação dos cards
+  - `src/pages/VelonewsPage.jsx` - Adicionado botão voltar
+  - `src/pages/BotPerguntasPage.jsx` - Adicionado botão voltar
+  - `src/pages/IGPPage.jsx` - Desconectado da API, botão voltar
+  - `src/services/api.js` - URL atualizada para produção
+  - `.cursorrules` - Atualizado
+
+- ✅ **Novos arquivos criados:**
+  - `src/components/common/BackButton.jsx` - Componente botão voltar
+  - `backend-deploy/` - Pasta para deploy separado do backend
+
+### Descrição das Alterações
+**Melhorias de UX e funcionalidades:**
+- ✅ Sistema de abas na página Artigos (Adicionar/Gerenciar)
+- ✅ Botão "Voltar" em todas as páginas
+- ✅ Categorias de artigos corrigidas conforme especificação
+- ✅ Reordenação do dashboard (IGP por último)
+- ✅ URL da API atualizada para produção
+- ✅ IGP desconectado da API (dados locais)
+- ✅ Pasta backend-deploy criada para deploy separado
+
+### Status do Deploy
+- **Status:** ✅ Sucesso
+- **Arquivos enviados:** 1111 objetos (7.91 MiB)
+- **Compressão:** Delta compression com 4 threads
+- **Tempo:** ~5 segundos
+- **Tipo:** Force push (históricos não relacionados)
+
+### Observações
+- Push forçado devido a conflitos de histórico não relacionados
+- Todas as funcionalidades implementadas conforme solicitado
+- Frontend pronto para deploy automático no Vercel
+
+---
 **Próximo deploy:** Aguardando próximas alterações

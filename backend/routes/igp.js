@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 // VERSION: v3.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+=======
+// VERSION: v3.1.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+>>>>>>> bdce0b48cb5cbb7b2cf78af9d0929933c5816780
 const express = require('express');
 const router = express.Router();
 
@@ -19,6 +23,7 @@ let metrics = {
 // GET /api/igp/metrics - Obter métricas
 router.get('/metrics', (req, res) => {
   try {
+<<<<<<< HEAD
     res.json({ 
       success: true, 
       data: {
@@ -33,6 +38,33 @@ router.get('/metrics', (req, res) => {
       }
     });
   } catch (error) {
+=======
+    global.emitTraffic('IGP', 'received', 'Entrada recebida - GET /api/igp/metrics');
+    global.emitLog('info', 'GET /api/igp/metrics - Obtendo métricas do sistema');
+    
+    const metricsData = {
+      counts: {
+        artigos: metrics.totalArtigos,
+        velonews: metrics.totalVelonews,
+        botPerguntas: metrics.totalBotPerguntas
+      },
+      performance: metrics.performance,
+      systemHealth: metrics.systemHealth,
+      lastUpdated: new Date().toISOString()
+    };
+    
+    global.emitTraffic('IGP', 'completed', 'Concluído - Métricas obtidas com sucesso');
+    global.emitLog('success', 'GET /api/igp/metrics - Métricas obtidas com sucesso');
+    global.emitJson({ success: true, data: metricsData });
+    
+    res.json({ 
+      success: true, 
+      data: metricsData
+    });
+  } catch (error) {
+    global.emitTraffic('IGP', 'error', 'Erro ao obter métricas');
+    global.emitLog('error', `GET /api/igp/metrics - Erro: ${error.message}`);
+>>>>>>> bdce0b48cb5cbb7b2cf78af9d0929933c5816780
     res.status(500).json({ 
       success: false, 
       error: 'Erro ao obter métricas' 
@@ -45,6 +77,13 @@ router.get('/reports', (req, res) => {
   try {
     const { startDate, endDate, type } = req.query;
     
+<<<<<<< HEAD
+=======
+    global.emitTraffic('IGP', 'received', 'Entrada recebida - GET /api/igp/reports');
+    global.emitLog('info', 'GET /api/igp/reports - Obtendo relatórios');
+    global.emitJson({ startDate, endDate, type });
+    
+>>>>>>> bdce0b48cb5cbb7b2cf78af9d0929933c5816780
     // Simular dados de relatórios
     const reports = [
       {
@@ -71,11 +110,23 @@ router.get('/reports', (req, res) => {
       }
     ];
 
+<<<<<<< HEAD
+=======
+    global.emitTraffic('IGP', 'completed', 'Concluído - Relatórios obtidos com sucesso');
+    global.emitLog('success', `GET /api/igp/reports - ${reports.length} relatórios encontrados`);
+    global.emitJson({ success: true, data: reports });
+
+>>>>>>> bdce0b48cb5cbb7b2cf78af9d0929933c5816780
     res.json({ 
       success: true, 
       data: reports 
     });
   } catch (error) {
+<<<<<<< HEAD
+=======
+    global.emitTraffic('IGP', 'error', 'Erro ao obter relatórios');
+    global.emitLog('error', `GET /api/igp/reports - Erro: ${error.message}`);
+>>>>>>> bdce0b48cb5cbb7b2cf78af9d0929933c5816780
     res.status(500).json({ 
       success: false, 
       error: 'Erro ao obter relatórios' 
@@ -89,13 +140,28 @@ router.post('/export/:format', (req, res) => {
     const { format } = req.params;
     const { data, filename } = req.body;
     
+<<<<<<< HEAD
     if (!format || !['pdf', 'excel', 'csv'].includes(format)) {
+=======
+    global.emitTraffic('IGP', 'received', `Entrada recebida - POST /api/igp/export/${format}`);
+    global.emitLog('info', `POST /api/igp/export/${format} - Exportando dados`);
+    global.emitJson({ format, data, filename });
+    
+    if (!format || !['pdf', 'excel', 'csv'].includes(format)) {
+      global.emitTraffic('IGP', 'error', 'Formato de exportação inválido');
+      global.emitLog('error', `POST /api/igp/export/${format} - Formato inválido`);
+>>>>>>> bdce0b48cb5cbb7b2cf78af9d0929933c5816780
       return res.status(400).json({ 
         success: false, 
         error: 'Formato de exportação inválido' 
       });
     }
 
+<<<<<<< HEAD
+=======
+    global.emitTraffic('IGP', 'processing', 'Gerando arquivo de exportação');
+    
+>>>>>>> bdce0b48cb5cbb7b2cf78af9d0929933c5816780
     // Simular exportação
     const exportData = {
       format,
@@ -104,12 +170,24 @@ router.post('/export/:format', (req, res) => {
       exportedAt: new Date().toISOString()
     };
 
+<<<<<<< HEAD
+=======
+    global.emitTraffic('IGP', 'completed', `Concluído - Arquivo ${format.toUpperCase()} gerado com sucesso`);
+    global.emitLog('success', `POST /api/igp/export/${format} - Exportação concluída`);
+    global.emitJson({ success: true, data: exportData });
+
+>>>>>>> bdce0b48cb5cbb7b2cf78af9d0929933c5816780
     res.json({ 
       success: true, 
       data: exportData,
       message: `Dados exportados em formato ${format.toUpperCase()} com sucesso`
     });
   } catch (error) {
+<<<<<<< HEAD
+=======
+    global.emitTraffic('IGP', 'error', 'Erro ao exportar dados');
+    global.emitLog('error', `POST /api/igp/export/:format - Erro: ${error.message}`);
+>>>>>>> bdce0b48cb5cbb7b2cf78af9d0929933c5816780
     res.status(500).json({ 
       success: false, 
       error: 'Erro ao exportar dados' 

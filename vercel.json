@@ -1,5 +1,6 @@
 {
   "version": 2,
+<<<<<<< HEAD
   "name": "console-conteudo-velohub",
   "buildCommand": "npm run build",
   "outputDirectory": "build",
@@ -23,4 +24,22 @@
       "dest": "/index.html"
     }
   ]
+=======
+  "name": "console-conteudo-backend",
+  "builds": [
+    {
+      "src": "backend/server.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "backend/server.js"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
+>>>>>>> bdce0b48cb5cbb7b2cf78af9d0929933c5816780
 }

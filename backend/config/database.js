@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 // VERSION: v3.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+=======
+// VERSION: v3.1.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+>>>>>>> bdce0b48cb5cbb7b2cf78af9d0929933c5816780
 const { MongoClient } = require('mongodb');
 
 // Configuração do MongoDB

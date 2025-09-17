@@ -1,4 +1,4 @@
-// VERSION: v3.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.1.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { AppBar, Toolbar, Typography, IconButton, Box } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -63,15 +63,22 @@ const Header = () => {
       }}
     >
       <Toolbar>
-        <IconButton
-          edge="start"
-          color="inherit"
-          aria-label="dashboard"
+        <Box
+          component="img"
+          src="/console.png"
+          alt="VeloHub Logo"
           onClick={() => navigate('/')}
-          sx={{ mr: 2 }}
-        >
-          <Dashboard />
-        </IconButton>
+          sx={{
+            height: 40,
+            width: 'auto',
+            cursor: 'pointer',
+            mr: 2,
+            transition: 'opacity 0.3s ease',
+            '&:hover': {
+              opacity: 0.8
+            }
+          }}
+        />
         
         <Typography 
           variant="h6" 

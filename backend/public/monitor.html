@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor Skynet - Console de Conteúdo VeloHub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #000;
+            color: #00ff00;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(90deg, #000, #1a1a1a, #000);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 2px solid #00ff00;
+        }
+
+        .header h1 {
+            font-family: 'Anton', sans-serif;
+            font-size: 3rem;
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00;
+            letter-spacing: 3px;
+        }
+
+        .container {
+            display: flex;
+            height: calc(100vh - 120px);
+            gap: 10px;
+            padding: 10px;
+        }
+
+        .panel {
+            flex: 1;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .panel h2 {
+            color: #00ff00;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            text-align: center;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .console-log {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 5px;
+            border-left: 3px solid #333;
+            padding-left: 10px;
+        }
+
+        .log-info { border-left-color: #00ff00; }
+        .log-warn { border-left-color: #ffff00; }
+        .log-error { border-left-color: #ff0000; }
+        .log-success { border-left-color: #00ffff; }
+
+        .api-traffic {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+
+        .traffic-entry {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .traffic-entry.received { border-left: 4px solid #00ff00; }
+        .traffic-entry.processing { border-left: 4px solid #ffff00; }
+        .traffic-entry.completed { border-left: 4px solid #00ffff; }
+        .traffic-entry.error { border-left: 4px solid #ff0000; }
+
+        .traffic-time {
+            color: #888;
+            font-size: 10px;
+        }
+
+        .traffic-origin {
+            color: #00ff00;
+            font-weight: bold;
+        }
+
+        .traffic-status {
+            color: #ffff00;
+            margin: 5px 0;
+        }
+
+        .traffic-status.completed {
+            color: #00ffff;
+        }
+
+        .traffic-status.error {
+            color: #ff0000;
+        }
+
+        .json-display {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 10px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .status-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ff0000;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.connected {
+            background: #00ff00;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .clear-btn {
+            position: absolute;
+            top: 10px;
+            right: 30px;
+            background: #333;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 10px;
+        }
+
+        .clear-btn:hover {
+            background: #00ff00;
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MONITOR SKYNET</h1>
+        <div class="status-indicator" id="statusIndicator"></div>
+    </div>
+
+    <div class="container">
+        <!-- Console Panel -->
+        <div class="panel">
+            <h2>CONSOLE LOG</h2>
+            <button class="clear-btn" onclick="clearConsole()">CLEAR</button>
+            <div class="console-log" id="consoleLog"></div>
+        </div>
+
+        <!-- API Traffic Panel -->
+        <div class="panel">
+            <h2>API TRAFFIC</h2>
+            <button class="clear-btn" onclick="clearTraffic()">CLEAR</button>
+            <div class="api-traffic" id="apiTraffic"></div>
+        </div>
+
+        <!-- JSON Panel -->
+        <div class="panel">
+            <h2>CURRENT JSON</h2>
+            <button class="clear-btn" onclick="clearJson()">CLEAR</button>
+            <div class="json-display" id="jsonDisplay">Aguardando dados...</div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // Conectar ao WebSocket
+        const socket = io();
+        const statusIndicator = document.getElementById('statusIndicator');
+        const consoleLog = document.getElementById('consoleLog');
+        const apiTraffic = document.getElementById('apiTraffic');
+        const jsonDisplay = document.getElementById('jsonDisplay');
+
+        // Status da conexão
+        socket.on('connect', () => {
+            statusIndicator.classList.add('connected');
+            addConsoleLog('info', 'Conectado ao Monitor Skynet');
+        });
+
+        socket.on('disconnect', () => {
+            statusIndicator.classList.remove('connected');
+            addConsoleLog('error', 'Desconectado do Monitor Skynet');
+        });
+
+        // Escutar logs do console
+        socket.on('console-log', (data) => {
+            addConsoleLog(data.level, data.message, data.timestamp);
+        });
+
+        // Escutar tráfego da API
+        socket.on('api-traffic', (data) => {
+            addTrafficEntry(data);
+        });
+
+        // Escutar JSON atual
+        socket.on('current-json', (data) => {
+            updateJsonDisplay(data);
+        });
+
+        // Funções para adicionar logs
+        function addConsoleLog(level, message, timestamp = new Date()) {
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${level}`;
+            logEntry.innerHTML = `
+                <span style="color: #888;">[${timestamp}]</span>
+                <span style="color: #00ff00;">[${level.toUpperCase()}]</span>
+                ${message}
+            `;
+            consoleLog.appendChild(logEntry);
+            consoleLog.scrollTop = consoleLog.scrollHeight;
+        }
+
+        function addTrafficEntry(data) {
+            const trafficEntry = document.createElement('div');
+            trafficEntry.className = `traffic-entry ${data.status}`;
+            trafficEntry.innerHTML = `
+                <div class="traffic-time">${data.timestamp}</div>
+                <div class="traffic-origin">Origem: ${data.origin}</div>
+                <div class="traffic-status ${data.status}">${data.message}</div>
+                ${data.details ? `<div style="color: #888; font-size: 10px;">${data.details}</div>` : ''}
+            `;
+            apiTraffic.insertBefore(trafficEntry, apiTraffic.firstChild);
+            
+            // Manter apenas os últimos 50 entries
+            while (apiTraffic.children.length > 50) {
+                apiTraffic.removeChild(apiTraffic.lastChild);
+            }
+        }
+
+        function updateJsonDisplay(data) {
+            jsonDisplay.textContent = JSON.stringify(data, null, 2);
+        }
+
+        // Funções de limpeza
+        function clearConsole() {
+            consoleLog.innerHTML = '';
+        }
+
+        function clearTraffic() {
+            apiTraffic.innerHTML = '';
+        }
+
+        function clearJson() {
+            jsonDisplay.textContent = 'Aguardando dados...';
+        }
+
+        // Log inicial
+        addConsoleLog('info', 'Monitor Skynet inicializado');
+        addConsoleLog('info', 'Aguardando conexões da API...');
+    </script>
+</body>
+</html>
