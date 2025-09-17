@@ -1,7 +1,6 @@
 {
-<<<<<<< HEAD
   "name": "console-conteudo-unified",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Console de Conteúdo VeloHub - Aplicação React Unificada com IGP Integrado",
   "private": true,
   "main": "src/index.js",
@@ -40,33 +39,11 @@
     "styled-components": "^5.3.6",
     "framer-motion": "^8.5.0",
     
-=======
-  "name": "console-conteudo-backend",
-  "version": "3.1.0",
-  "description": "Backend API para Console de Conteúdo VeloHub",
-  "main": "backend/server.js",
-  "scripts": {
-    "start": "node backend/server.js",
-    "dev": "nodemon backend/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [
-    "velohub",
-    "api",
-    "backend",
-    "mongodb",
-    "express"
-  ],
-  "author": "VeloHub Development Team",
-  "license": "MIT",
-  "dependencies": {
->>>>>>> bdce0b48cb5cbb7b2cf78af9d0929933c5816780
     "express": "^4.18.2",
     "cors": "^2.8.5",
     "helmet": "^6.0.1",
     "express-rate-limit": "^6.7.0",
     "dotenv": "^16.0.3",
-<<<<<<< HEAD
     "mongodb": "^4.13.0"
   },
   "devDependencies": {
@@ -86,22 +63,10 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-=======
-    "mongodb": "^4.13.0",
-    "socket.io": "^4.7.2"
-  },
-  "devDependencies": {
-    "nodemon": "^2.0.20"
->>>>>>> bdce0b48cb5cbb7b2cf78af9d0929933c5816780
   },
   "engines": {
     "node": ">=16.0.0",
     "npm": ">=8.0.0"
-<<<<<<< HEAD
   },
   "proxy": "http://localhost:3001"
 }
-=======
-  }
-}
->>>>>>> bdce0b48cb5cbb7b2cf78af9d0929933c5816780
