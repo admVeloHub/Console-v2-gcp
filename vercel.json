@@ -1,32 +1,22 @@
 {
   "version": 2,
-  "name": "console-conteudo-frontend",
-  "builds": [
-    {
-      "src": "**/*",
-      "use": "@vercel/static"
-    }
-  ],
+  "name": "console-conteudo-velohub",
+  "buildCommand": "npm run build",
+  "outputDirectory": "build",
+  "installCommand": "npm install",
+  "framework": "create-react-app",
   "routes": [
     {
-      "src": "/css/(.*)",
-      "dest": "/css/$1"
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
     },
     {
-      "src": "/js/(.*)",
-      "dest": "/js/$1"
+      "src": "/favicon.ico",
+      "dest": "/favicon.ico"
     },
     {
-      "src": "/public/(.*)",
-      "dest": "/public/$1"
-    },
-    {
-      "src": "/igp-src/(.*)",
-      "dest": "/igp-src/$1"
-    },
-    {
-      "src": "/(.*\\.(png|jpg|jpeg|gif|ico|svg))",
-      "dest": "/$1"
+      "src": "/manifest.json",
+      "dest": "/manifest.json"
     },
     {
       "src": "/(.*)",
