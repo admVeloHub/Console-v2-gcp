@@ -1,4 +1,4 @@
-// VERSION: v3.1.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.1.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { AppBar, Toolbar, Typography, IconButton, Box } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -35,22 +35,6 @@ const Header = () => {
     }
   };
 
-  const getPageTitle = () => {
-    switch (location.pathname) {
-      case '/':
-        return 'Console de Conteúdo';
-      case '/igp':
-        return 'Dashboard IGP';
-      case '/artigos':
-        return 'Gerenciar Artigos';
-      case '/velonews':
-        return 'Velonews';
-      case '/bot-perguntas':
-        return 'Bot Perguntas';
-      default:
-        return 'Console de Conteúdo';
-    }
-  };
 
   return (
     <AppBar 
@@ -65,7 +49,7 @@ const Header = () => {
       <Toolbar>
         <Box
           component="img"
-          src="/console.png"
+          src={`${process.env.PUBLIC_URL}/console.png`}
           alt="VeloHub Logo"
           onClick={() => navigate('/')}
           sx={{
@@ -80,17 +64,7 @@ const Header = () => {
           }}
         />
         
-        <Typography 
-          variant="h6" 
-          component="div" 
-          sx={{ 
-            flexGrow: 1,
-            fontFamily: 'Poppins',
-            fontWeight: 600
-          }}
-        >
-          {getPageTitle()}
-        </Typography>
+        <Box sx={{ flexGrow: 1 }} />
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <IconButton

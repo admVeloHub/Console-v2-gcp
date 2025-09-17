@@ -1,5 +1,5 @@
-// VERSION: v3.1.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
-import React, { useState, useMemo } from 'react';
+// VERSION: v3.1.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+import React, { useState, useMemo, useCallback } from 'react';
 import { 
   Container, 
   Typography, 
@@ -53,21 +53,21 @@ const ArtigosPage = () => {
     setActiveTab(newValue);
   };
 
-  const handleInputChange = (field) => (event) => {
+  const handleInputChange = useCallback((field) => (event) => {
     if (field === 'categoria_id') {
       const selectedCategory = categories.find(cat => cat.categoria_id === event.target.value);
-      setFormData({
-        ...formData,
+      setFormData(prev => ({
+        ...prev,
         categoria_id: event.target.value,
         categoria_titulo: selectedCategory ? selectedCategory.categoria_titulo : ''
-      });
+      }));
     } else {
-      setFormData({
-        ...formData,
+      setFormData(prev => ({
+        ...prev,
         [field]: event.target.value
-      });
+      }));
     }
-  };
+  }, [categories]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
