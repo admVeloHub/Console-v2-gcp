@@ -1,4 +1,4 @@
-// VERSION: v3.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.1.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState } from 'react';
 import { 
   Container, 
@@ -13,19 +13,22 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Chip,
   Alert,
-  Snackbar
+  Snackbar,
+  Tabs,
+  Tab
 } from '@mui/material';
-import { Save, Add } from '@mui/icons-material';
+import { Save, Construction } from '@mui/icons-material';
 import { artigosAPI } from '../services/api';
+import BackButton from '../components/common/BackButton';
 
 const ArtigosPage = () => {
+  const [activeTab, setActiveTab] = useState(0);
   const [formData, setFormData] = useState({
-    title: '',
-    content: '',
-    category: '',
-    keywords: ''
+    artigo_titulo: '',
+    artigo_conteudo: '',
+    categoria_id: '',
+    categoria_titulo: ''
   });
 
   const [loading, setLoading] = useState(false);
@@ -35,19 +38,35 @@ const ArtigosPage = () => {
     severity: 'success'
   });
 
+  // Categorias conforme especificado
   const categories = [
-    { value: 'tecnologia', label: 'Tecnologia' },
-    { value: 'negocios', label: 'Negócios' },
-    { value: 'educacao', label: 'Educação' },
-    { value: 'saude', label: 'Saúde' },
-    { value: 'entretenimento', label: 'Entretenimento' }
+    { categoria_id: '01_Crédito', categoria_titulo: 'Crédito' },
+    { categoria_id: '02_restituição', categoria_titulo: 'Restituição e Declaração' },
+    { categoria_id: '03_Calculadora e Darf', categoria_titulo: 'DARF e Calculadora' },
+    { categoria_id: '04_Conta', categoria_titulo: 'Conta e Planos' },
+    { categoria_id: '05_POP', categoria_titulo: 'POPs B2C' },
+    { categoria_id: '06_ferramentas', categoria_titulo: 'Ferramentas do Agente' },
+    { categoria_id: '07_manual de voz', categoria_titulo: 'Manual de Voz e Estilo' }
   ];
 
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+  };
+
   const handleInputChange = (field) => (event) => {
-    setFormData({
-      ...formData,
-      [field]: event.target.value
-    });
+    if (field === 'categoria_id') {
+      const selectedCategory = categories.find(cat => cat.categoria_id === event.target.value);
+      setFormData({
+        ...formData,
+        categoria_id: event.target.value,
+        categoria_titulo: selectedCategory ? selectedCategory.categoria_titulo : ''
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [field]: event.target.value
+      });
+    }
   };
 
   const handleSubmit = async (event) => {
@@ -55,28 +74,24 @@ const ArtigosPage = () => {
     setLoading(true);
 
     try {
-      // Enviar dados para API
-      const response = await artigosAPI.create(formData);
-      
-      // Reset form
-      setFormData({
-        title: '',
-        content: '',
-        category: '',
-        keywords: ''
-      });
-
-      // Mostrar sucesso
+      await artigosAPI.create(formData);
       setSnackbar({
         open: true,
-        message: response.message || 'Artigo criado com sucesso!',
+        message: 'Artigo criado com sucesso!',
         severity: 'success'
       });
+      
+      // Limpar formulário
+      setFormData({
+        artigo_titulo: '',
+        artigo_conteudo: '',
+        categoria_id: '',
+        categoria_titulo: ''
+      });
     } catch (error) {
-      // Mostrar erro
       setSnackbar({
         open: true,
-        message: error.message || 'Erro ao criar artigo. Tente novamente.',
+        message: error.message || 'Erro ao criar artigo',
         severity: 'error'
       });
     } finally {
@@ -88,143 +103,202 @@ const ArtigosPage = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
+  const TabPanel = ({ children, value, index }) => (
+    <div hidden={value !== index}>
+      {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
+    </div>
+  );
+
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Box sx={{ mb: 4 }}>
-        <Typography 
-          variant="h4" 
-          component="h1" 
-          gutterBottom
-          sx={{ 
-            fontFamily: 'Poppins',
-            fontWeight: 700,
-            color: 'var(--blue-dark)'
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <BackButton />
+      
+      {/* Títulos das Abas */}
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        mb: 3,
+        borderBottom: '1px solid #e0e0e0'
+      }}>
+        <Typography
+          variant="h4"
+          component="h1"
+          sx={{
+            color: activeTab === 0 ? 'var(--blue-medium)' : 'var(--gray)',
+            opacity: activeTab === 0 ? 1 : 0.6,
+            cursor: 'pointer',
+            fontWeight: 600,
+            transition: 'all 0.3s ease'
           }}
+          onClick={() => setActiveTab(0)}
+        >
+          Adicionar Artigo
+        </Typography>
+        
+        <Typography
+          variant="h4"
+          component="h1"
+          sx={{
+            color: activeTab === 1 ? 'var(--blue-medium)' : 'var(--gray)',
+            opacity: activeTab === 1 ? 1 : 0.6,
+            cursor: 'pointer',
+            fontWeight: 600,
+            transition: 'all 0.3s ease'
+          }}
+          onClick={() => setActiveTab(1)}
         >
           Gerenciar Artigos
         </Typography>
-        <Typography 
-          variant="subtitle1" 
-          color="text.secondary"
-          sx={{ fontFamily: 'Poppins' }}
-        >
-          Criar e gerenciar artigos do sistema VeloHub
-        </Typography>
       </Box>
 
-      <Card sx={{ backgroundColor: 'var(--cor-container)' }}>
-        <CardContent>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-            <Add sx={{ mr: 1, color: 'var(--blue-medium)' }} />
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                fontFamily: 'Poppins',
-                fontWeight: 600,
-                color: 'var(--blue-dark)'
-              }}
-            >
+      {/* Conteúdo das Abas */}
+      <TabPanel value={activeTab} index={0}>
+        <Card sx={{ 
+          background: 'var(--cor-container)',
+          borderRadius: '12px',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
+        }}>
+          <CardContent sx={{ p: 4 }}>
+            <Typography variant="h5" component="h2" sx={{ mb: 3, color: 'var(--blue-dark)' }}>
               Novo Artigo
             </Typography>
-          </Box>
+            
+            <form onSubmit={handleSubmit}>
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Título do Artigo"
+                    value={formData.artigo_titulo}
+                    onChange={handleInputChange('artigo_titulo')}
+                    required
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        '& fieldset': {
+                          borderColor: 'var(--blue-dark)',
+                        },
+                        '&:hover fieldset': {
+                          borderColor: 'var(--blue-medium)',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: 'var(--blue-medium)',
+                        },
+                      },
+                    }}
+                  />
+                </Grid>
 
-          <form onSubmit={handleSubmit}>
-            <Grid container spacing={3}>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Título do Artigo"
-                  value={formData.title}
-                  onChange={handleInputChange('title')}
-                  required
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      fontFamily: 'Poppins'
-                    }
-                  }}
-                />
-              </Grid>
+                <Grid item xs={12} md={6}>
+                  <FormControl fullWidth required>
+                    <InputLabel>Categoria</InputLabel>
+                    <Select
+                      value={formData.categoria_id}
+                      onChange={handleInputChange('categoria_id')}
+                      label="Categoria"
+                      sx={{
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'var(--blue-dark)',
+                        },
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'var(--blue-medium)',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'var(--blue-medium)',
+                        },
+                      }}
+                    >
+                      {categories.map((category) => (
+                        <MenuItem key={category.categoria_id} value={category.categoria_id}>
+                          {category.categoria_titulo}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
 
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth required>
-                  <InputLabel sx={{ fontFamily: 'Poppins' }}>Categoria</InputLabel>
-                  <Select
-                    value={formData.category}
-                    onChange={handleInputChange('category')}
-                    label="Categoria"
-                    sx={{ fontFamily: 'Poppins' }}
-                  >
-                    {categories.map((category) => (
-                      <MenuItem 
-                        key={category.value} 
-                        value={category.value}
-                        sx={{ fontFamily: 'Poppins' }}
-                      >
-                        {category.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={8}
+                    label="Conteúdo do Artigo"
+                    value={formData.artigo_conteudo}
+                    onChange={handleInputChange('artigo_conteudo')}
+                    required
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        '& fieldset': {
+                          borderColor: 'var(--blue-dark)',
+                        },
+                        '&:hover fieldset': {
+                          borderColor: 'var(--blue-medium)',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: 'var(--blue-medium)',
+                        },
+                      },
+                    }}
+                  />
+                </Grid>
 
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Palavras-chave (separadas por vírgula)"
-                  value={formData.keywords}
-                  onChange={handleInputChange('keywords')}
-                  placeholder="ex: tecnologia, inovação, futuro"
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      fontFamily: 'Poppins'
-                    }
-                  }}
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Conteúdo do Artigo"
-                  value={formData.content}
-                  onChange={handleInputChange('content')}
-                  multiline
-                  rows={8}
-                  required
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      fontFamily: 'Poppins'
-                    }
-                  }}
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                <Grid item xs={12}>
                   <Button
                     type="submit"
                     variant="contained"
+                    size="large"
                     startIcon={<Save />}
                     disabled={loading}
                     sx={{
                       backgroundColor: 'var(--blue-medium)',
-                      fontFamily: 'Poppins',
-                      fontWeight: 600,
                       '&:hover': {
-                        backgroundColor: 'var(--blue-dark)'
-                      }
+                        backgroundColor: 'var(--blue-dark)',
+                      },
+                      px: 4,
+                      py: 1.5
                     }}
                   >
                     {loading ? 'Salvando...' : 'Salvar Artigo'}
                   </Button>
-                </Box>
+                </Grid>
               </Grid>
-            </Grid>
-          </form>
-        </CardContent>
-      </Card>
+            </form>
+          </CardContent>
+        </Card>
+      </TabPanel>
 
-      {/* Snackbar para feedback */}
+      <TabPanel value={activeTab} index={1}>
+        <Card sx={{ 
+          background: 'var(--cor-container)',
+          borderRadius: '12px',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+          minHeight: '400px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <CardContent sx={{ textAlign: 'center' }}>
+            <Construction sx={{ 
+              fontSize: 80, 
+              color: 'var(--blue-medium)', 
+              mb: 2 
+            }} />
+            <Typography variant="h5" sx={{ 
+              color: 'var(--blue-dark)',
+              mb: 1
+            }}>
+              Em Construção
+            </Typography>
+            <Typography variant="body1" sx={{ 
+              color: 'var(--gray)',
+              opacity: 0.7
+            }}>
+              Esta funcionalidade estará disponível em breve
+            </Typography>
+          </CardContent>
+        </Card>
+      </TabPanel>
+
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}

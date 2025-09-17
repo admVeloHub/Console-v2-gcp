@@ -9,13 +9,6 @@ const DashboardPage = () => {
 
   const cards = [
     {
-      title: 'IGP',
-      description: 'Dashboard de métricas e relatórios',
-      icon: '📊',
-      path: '/igp',
-      color: 'primary'
-    },
-    {
       title: 'Artigos',
       description: 'Criar e gerenciar artigos do sistema',
       icon: '📝',
@@ -35,6 +28,13 @@ const DashboardPage = () => {
       icon: '🤖',
       path: '/bot-perguntas',
       color: 'warning'
+    },
+    {
+      title: 'IGP',
+      description: 'Dashboard de métricas e relatórios',
+      icon: '📊',
+      path: '/igp',
+      color: 'primary'
     }
   ];
 

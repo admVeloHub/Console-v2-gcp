@@ -1,8 +1,9 @@
-// VERSION: v3.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.1.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { Container, Typography, Box, Grid, Card, CardContent, CircularProgress, Alert, Snackbar } from '@mui/material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
-import { igpAPI } from '../services/api';
+// import { igpAPI } from '../services/api'; // Removido - usando dados locais
+import BackButton from '../components/common/BackButton';
 
 const IGPPage = () => {
   const [metrics, setMetrics] = useState(null);
@@ -10,32 +11,25 @@ const IGPPage = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const loadMetrics = async () => {
-      try {
-        setLoading(true);
-        const response = await igpAPI.getMetrics();
-        setMetrics(response.data);
-        setError(null);
-      } catch (err) {
-        setError(err.message);
-        // Fallback para dados simulados em caso de erro
-        setMetrics({
-          counts: {
-            artigos: 45,
-            velonews: 12,
-            botPerguntas: 28
-          },
-          performance: {
-            responseTime: 120,
-            uptime: 99.9,
-            errorRate: 0.1
-          },
-          systemHealth: 'healthy',
-          lastUpdated: new Date().toISOString()
-        });
-      } finally {
-        setLoading(false);
-      }
+    const loadMetrics = () => {
+      setLoading(true);
+      // Usar dados simulados locais (sem chamada para API)
+      setMetrics({
+        counts: {
+          artigos: 45,
+          velonews: 12,
+          botPerguntas: 28
+        },
+        performance: {
+          responseTime: 120,
+          uptime: 99.9,
+          errorRate: 0.1
+        },
+        systemHealth: 'healthy',
+        lastUpdated: new Date().toISOString()
+      });
+      setError(null);
+      setLoading(false);
     };
 
     loadMetrics();
@@ -69,6 +63,7 @@ const IGPPage = () => {
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+      <BackButton />
       <Box sx={{ mb: 4 }}>
         <Typography 
           variant="h4" 

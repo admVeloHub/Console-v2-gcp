@@ -19,4 +19,4 @@
 - Insira alguma forma de identificação clara nos aqrquivos que compoe indicando a versao atual de cada um e criando um rastro de versao para cada arquivo. lembre-se de incrementar a versao de cada arquivo cada vez que uma alteração for considerada de sucesso. Siga o molde vX.Y.Z, onde X é a versao maior, Y é a versao menor e Z é a versao de correção.
 - Sempre que houver um deploy real para GCP ou push real para GitHub, atualize o DEPLOY_LOG.md com as informações precisas: data/hora, tipo, versão, arquivos modificados e descrição. Use os templates específicos para GCP e GitHub. Não registre configurações ou setups como deploys.
 - não realizar deploy do projeto, ou push no GitHub sem solicitar confirmação dessa ação. 
-- o nome Index.html deve ser evitado para que nparem de ocorrer erros de integrações e redirecionamentos das paginas criadas. os nomes deverão refletir os trechos trabalhados.
+- o nome Index.html deve ser evitado para que parem de ocorrer erros de integrações e redirecionamentos das paginas criadas. os nomes deverão refletir os trechos trabalhados.

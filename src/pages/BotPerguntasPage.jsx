@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import { Save, Add, SmartToy } from '@mui/icons-material';
 import { botPerguntasAPI } from '../services/api';
+import BackButton from '../components/common/BackButton';
 
 const BotPerguntasPage = () => {
   const [formData, setFormData] = useState({
@@ -79,6 +80,7 @@ const BotPerguntasPage = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <BackButton />
       <Box sx={{ mb: 4 }}>
         <Typography 
           variant="h4" 

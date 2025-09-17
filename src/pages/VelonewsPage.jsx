@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import { Save, Add, Warning } from '@mui/icons-material';
 import { velonewsAPI } from '../services/api';
+import BackButton from '../components/common/BackButton';
 
 const VelonewsPage = () => {
   const [formData, setFormData] = useState({
@@ -78,6 +79,7 @@ const VelonewsPage = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <BackButton />
       <Box sx={{ mb: 4 }}>
         <Typography 
           variant="h4" 
