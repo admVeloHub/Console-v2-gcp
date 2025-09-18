@@ -125,4 +125,42 @@
 - Frontend pronto para deploy automático no Vercel
 
 ---
+
+## GitHub Push - 2024-12-19 21:45
+
+### Informações do Deploy
+- **Tipo:** GitHub Push
+- **Data/Hora:** 2024-12-19 21:45 BRT
+- **Versão:** v3.1.6
+- **Branch:** master
+- **Repositório:** https://github.com/admVeloHub/front-console.git
+- **Commit Hash:** 98f795e
+
+### Arquivos Modificados
+- ✅ **Arquivos atualizados:**
+  - `src/pages/ArtigosPage.jsx` - Correção definitiva da perda de foco
+  - `src/styles/globals.css` - Otimização de transições CSS
+
+### Descrição das Alterações
+**Correção crítica da perda de foco:**
+- ✅ Removido TabPanel customizado que causava re-renderizações
+- ✅ Implementada renderização condicional direta
+- ✅ Otimizadas transições CSS globais
+- ✅ Desabilitados efeitos hover nos Cards do formulário
+- ✅ Estabilizadas referências de funções com useCallback
+- ✅ Problema de perda de foco no campo título RESOLVIDO
+
+### Status do Deploy
+- **Status:** ✅ Sucesso
+- **Arquivos enviados:** 17 objetos (3.44 KiB)
+- **Compressão:** Delta compression com 4 threads
+- **Tempo:** ~2 segundos
+
+### Observações
+- Correção definitiva do problema de perda de foco
+- Múltiplas tentativas de otimização aplicadas
+- Solução final: renderização condicional simples
+- Campo de título agora mantém foco durante digitação
+
+---
 **Próximo deploy:** Aguardando próximas alterações
