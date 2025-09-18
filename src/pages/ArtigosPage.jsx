@@ -1,5 +1,5 @@
-// VERSION: v3.1.4 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
-import React, { useState, useMemo, useCallback } from 'react';
+// VERSION: v3.1.5 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+import React, { useState, useMemo, useCallback, memo } from 'react';
 import { 
   Container, 
   Typography, 
@@ -49,9 +49,9 @@ const ArtigosPage = () => {
     { categoria_id: '07_manual de voz', categoria_titulo: 'Manual de Voz e Estilo' }
   ], []);
 
-  const handleTabChange = (event, newValue) => {
+  const handleTabChange = useCallback((event, newValue) => {
     setActiveTab(newValue);
-  };
+  }, []);
 
   const handleInputChange = useCallback((field) => (event) => {
     if (field === 'categoria_id') {
@@ -99,12 +99,12 @@ const ArtigosPage = () => {
     }
   };
 
-  const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
-  };
+  const handleCloseSnackbar = useCallback(() => {
+    setSnackbar(prev => ({ ...prev, open: false }));
+  }, []);
 
-  // TabPanel otimizado do Material-UI
-  const TabPanel = ({ children, value, index, ...other }) => (
+  // TabPanel otimizado com memo para evitar re-renderizações
+  const TabPanel = memo(({ children, value, index, ...other }) => (
     <div
       role="tabpanel"
       hidden={value !== index}
@@ -114,7 +114,7 @@ const ArtigosPage = () => {
     >
       {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
     </div>
-  );
+  ));
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
