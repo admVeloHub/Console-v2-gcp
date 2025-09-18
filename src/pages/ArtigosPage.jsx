@@ -1,5 +1,5 @@
-// VERSION: v3.1.5 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
-import React, { useState, useMemo, useCallback, memo } from 'react';
+// VERSION: v3.1.6 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+import React, { useState, useMemo, useCallback } from 'react';
 import { 
   Container, 
   Typography, 
@@ -103,18 +103,6 @@ const ArtigosPage = () => {
     setSnackbar(prev => ({ ...prev, open: false }));
   }, []);
 
-  // TabPanel otimizado com memo para evitar re-renderizações
-  const TabPanel = memo(({ children, value, index, ...other }) => (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`artigos-tabpanel-${index}`}
-      aria-labelledby={`artigos-tab-${index}`}
-      {...other}
-    >
-      {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
-    </div>
-  ));
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -163,160 +151,164 @@ const ArtigosPage = () => {
         </Tabs>
       </Box>
 
-      {/* Conteúdo das Abas */}
-      <TabPanel value={activeTab} index={0}>
-        <Card sx={{ 
-          background: 'var(--cor-container)',
-          borderRadius: '12px',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-          '&:hover': {
-            transform: 'none',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
-          }
-        }}>
-          <CardContent sx={{ p: 4 }}>
-            <Typography variant="h5" component="h2" sx={{ mb: 3, color: 'var(--blue-dark)' }}>
-              Novo Artigo
-            </Typography>
-            
-            <form onSubmit={handleSubmit}>
-              <Grid container spacing={3}>
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Título do Artigo"
-                    value={formData.artigo_titulo}
-                    onChange={handleInputChange('artigo_titulo')}
-                    required
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        '& fieldset': {
-                          borderColor: 'var(--blue-dark)',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: 'var(--blue-medium)',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: 'var(--blue-medium)',
-                        },
-                      },
-                    }}
-                  />
-                </Grid>
-
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth required>
-                    <InputLabel>Categoria</InputLabel>
-                    <Select
-                      value={formData.categoria_id}
-                      onChange={handleInputChange('categoria_id')}
-                      label="Categoria"
+      {/* Conteúdo das Abas - Renderização Condicional Direta */}
+      {activeTab === 0 && (
+        <Box sx={{ pt: 3 }}>
+          <Card sx={{ 
+            background: 'var(--cor-container)',
+            borderRadius: '12px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+            '&:hover': {
+              transform: 'none',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
+            }
+          }}>
+            <CardContent sx={{ p: 4 }}>
+              <Typography variant="h5" component="h2" sx={{ mb: 3, color: 'var(--blue-dark)' }}>
+                Novo Artigo
+              </Typography>
+              
+              <form onSubmit={handleSubmit}>
+                <Grid container spacing={3}>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Título do Artigo"
+                      value={formData.artigo_titulo}
+                      onChange={handleInputChange('artigo_titulo')}
+                      required
                       sx={{
-                        '& .MuiOutlinedInput-notchedOutline': {
-                          borderColor: 'var(--blue-dark)',
-                        },
-                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                          borderColor: 'var(--blue-medium)',
-                        },
-                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                          borderColor: 'var(--blue-medium)',
+                        '& .MuiOutlinedInput-root': {
+                          '& fieldset': {
+                            borderColor: 'var(--blue-dark)',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: 'var(--blue-medium)',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: 'var(--blue-medium)',
+                          },
                         },
                       }}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <FormControl fullWidth required>
+                      <InputLabel>Categoria</InputLabel>
+                      <Select
+                        value={formData.categoria_id}
+                        onChange={handleInputChange('categoria_id')}
+                        label="Categoria"
+                        sx={{
+                          '& .MuiOutlinedInput-notchedOutline': {
+                            borderColor: 'var(--blue-dark)',
+                          },
+                          '&:hover .MuiOutlinedInput-notchedOutline': {
+                            borderColor: 'var(--blue-medium)',
+                          },
+                          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                            borderColor: 'var(--blue-medium)',
+                          },
+                        }}
+                      >
+                        {categories.map((category) => (
+                          <MenuItem key={category.categoria_id} value={category.categoria_id}>
+                            {category.categoria_titulo}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      multiline
+                      rows={8}
+                      label="Conteúdo do Artigo"
+                      value={formData.artigo_conteudo}
+                      onChange={handleInputChange('artigo_conteudo')}
+                      required
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          '& fieldset': {
+                            borderColor: 'var(--blue-dark)',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: 'var(--blue-medium)',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: 'var(--blue-medium)',
+                          },
+                        },
+                      }}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      size="large"
+                      startIcon={<Save />}
+                      disabled={loading}
+                      sx={{
+                        backgroundColor: 'var(--blue-medium)',
+                        '&:hover': {
+                          backgroundColor: 'var(--blue-dark)',
+                        },
+                        px: 4,
+                        py: 1.5
+                      }}
                     >
-                      {categories.map((category) => (
-                        <MenuItem key={category.categoria_id} value={category.categoria_id}>
-                          {category.categoria_titulo}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                      {loading ? 'Salvando...' : 'Salvar Artigo'}
+                    </Button>
+                  </Grid>
                 </Grid>
+              </form>
+            </CardContent>
+          </Card>
+        </Box>
+      )}
 
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    multiline
-                    rows={8}
-                    label="Conteúdo do Artigo"
-                    value={formData.artigo_conteudo}
-                    onChange={handleInputChange('artigo_conteudo')}
-                    required
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        '& fieldset': {
-                          borderColor: 'var(--blue-dark)',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: 'var(--blue-medium)',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: 'var(--blue-medium)',
-                        },
-                      },
-                    }}
-                  />
-                </Grid>
-
-                <Grid item xs={12}>
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    size="large"
-                    startIcon={<Save />}
-                    disabled={loading}
-                    sx={{
-                      backgroundColor: 'var(--blue-medium)',
-                      '&:hover': {
-                        backgroundColor: 'var(--blue-dark)',
-                      },
-                      px: 4,
-                      py: 1.5
-                    }}
-                  >
-                    {loading ? 'Salvando...' : 'Salvar Artigo'}
-                  </Button>
-                </Grid>
-              </Grid>
-            </form>
-          </CardContent>
-        </Card>
-      </TabPanel>
-
-      <TabPanel value={activeTab} index={1}>
-        <Card sx={{ 
-          background: 'var(--cor-container)',
-          borderRadius: '12px',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-          minHeight: '400px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          '&:hover': {
-            transform: 'none',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
-          }
-        }}>
-          <CardContent sx={{ textAlign: 'center' }}>
-            <Construction sx={{ 
-              fontSize: 80, 
-              color: 'var(--blue-medium)', 
-              mb: 2 
-            }} />
-            <Typography variant="h5" sx={{ 
-              color: 'var(--blue-dark)',
-              mb: 1
-            }}>
-              Em Construção
-            </Typography>
-            <Typography variant="body1" sx={{ 
-              color: 'var(--gray)',
-              opacity: 0.7
-            }}>
-              Esta funcionalidade estará disponível em breve
-            </Typography>
-          </CardContent>
-        </Card>
-      </TabPanel>
+      {activeTab === 1 && (
+        <Box sx={{ pt: 3 }}>
+          <Card sx={{ 
+            background: 'var(--cor-container)',
+            borderRadius: '12px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+            minHeight: '400px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            '&:hover': {
+              transform: 'none',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
+            }
+          }}>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Construction sx={{ 
+                fontSize: 80, 
+                color: 'var(--blue-medium)', 
+                mb: 2 
+              }} />
+              <Typography variant="h5" sx={{ 
+                color: 'var(--blue-dark)',
+                mb: 1
+              }}>
+                Em Construção
+              </Typography>
+              <Typography variant="body1" sx={{ 
+                color: 'var(--gray)',
+                opacity: 0.7
+              }}>
+                Esta funcionalidade estará disponível em breve
+              </Typography>
+            </CardContent>
+          </Card>
+        </Box>
+      )}
 
       <Snackbar
         open={snackbar.open}
