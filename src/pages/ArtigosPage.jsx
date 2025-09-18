@@ -1,4 +1,4 @@
-// VERSION: v3.1.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.1.4 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useMemo, useCallback } from 'react';
 import { 
   Container, 
@@ -103,8 +103,15 @@ const ArtigosPage = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  const TabPanel = ({ children, value, index }) => (
-    <div hidden={value !== index}>
+  // TabPanel otimizado do Material-UI
+  const TabPanel = ({ children, value, index, ...other }) => (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`artigos-tabpanel-${index}`}
+      aria-labelledby={`artigos-tab-${index}`}
+      {...other}
+    >
       {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
     </div>
   );
@@ -113,43 +120,47 @@ const ArtigosPage = () => {
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <BackButton />
       
-      {/* Títulos das Abas */}
+      {/* Tabs do Material-UI */}
       <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        mb: 3,
-        borderBottom: '1px solid #e0e0e0'
+        borderBottom: 1, 
+        borderColor: 'divider',
+        mb: 3
       }}>
-        <Typography
-          variant="h4"
-          component="h1"
+        <Tabs 
+          value={activeTab} 
+          onChange={handleTabChange}
+          aria-label="artigos tabs"
           sx={{
-            color: activeTab === 0 ? 'var(--blue-medium)' : 'var(--gray)',
-            opacity: activeTab === 0 ? 1 : 0.6,
-            cursor: 'pointer',
-            fontWeight: 600,
-            transition: 'all 0.3s ease'
+            '& .MuiTab-root': {
+              fontSize: '1.25rem',
+              fontWeight: 600,
+              textTransform: 'none',
+              minHeight: 48,
+              '&.Mui-selected': {
+                color: 'var(--blue-medium)',
+              },
+              '&:not(.Mui-selected)': {
+                color: 'var(--gray)',
+                opacity: 0.6,
+              }
+            },
+            '& .MuiTabs-indicator': {
+              backgroundColor: 'var(--blue-medium)',
+              height: 3,
+            }
           }}
-          onClick={() => setActiveTab(0)}
         >
-          Adicionar Artigo
-        </Typography>
-        
-        <Typography
-          variant="h4"
-          component="h1"
-          sx={{
-            color: activeTab === 1 ? 'var(--blue-medium)' : 'var(--gray)',
-            opacity: activeTab === 1 ? 1 : 0.6,
-            cursor: 'pointer',
-            fontWeight: 600,
-            transition: 'all 0.3s ease'
-          }}
-          onClick={() => setActiveTab(1)}
-        >
-          Gerenciar Artigos
-        </Typography>
+          <Tab 
+            label="Adicionar Artigo" 
+            id="artigos-tab-0"
+            aria-controls="artigos-tabpanel-0"
+          />
+          <Tab 
+            label="Gerenciar Artigos" 
+            id="artigos-tab-1"
+            aria-controls="artigos-tabpanel-1"
+          />
+        </Tabs>
       </Box>
 
       {/* Conteúdo das Abas */}
@@ -157,7 +168,11 @@ const ArtigosPage = () => {
         <Card sx={{ 
           background: 'var(--cor-container)',
           borderRadius: '12px',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+          '&:hover': {
+            transform: 'none',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
+          }
         }}>
           <CardContent sx={{ p: 4 }}>
             <Typography variant="h5" component="h2" sx={{ mb: 3, color: 'var(--blue-dark)' }}>
@@ -275,7 +290,11 @@ const ArtigosPage = () => {
           minHeight: '400px',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          '&:hover': {
+            transform: 'none',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
+          }
         }}>
           <CardContent sx={{ textAlign: 'center' }}>
             <Construction sx={{ 
