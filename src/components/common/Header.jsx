@@ -1,8 +1,9 @@
-// VERSION: v3.1.3 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.1.4 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { AppBar, Toolbar, Typography, IconButton, Box } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Brightness4, Brightness7, Dashboard } from '@mui/icons-material';
+import consoleLogo from '../../assets/console.png';
 
 const Header = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -49,7 +50,7 @@ const Header = () => {
       <Toolbar>
         <Box
           component="img"
-          src="/console.png"
+          src={consoleLogo}
           alt="VeloHub Logo"
           onClick={() => navigate('/')}
           sx={{
