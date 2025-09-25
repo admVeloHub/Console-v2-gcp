@@ -163,4 +163,70 @@
 - Campo de título agora mantém foco durante digitação
 
 ---
+
+## GitHub Push - 2024-12-19 22:15
+
+### Informações do Deploy
+- **Tipo:** GitHub Push
+- **Data/Hora:** 2024-12-19 22:15 BRT
+- **Versão:** v3.3.5
+- **Branch:** master
+- **Repositório:** https://github.com/admVeloHub/front-console.git
+- **Commit Hash:** 5e754f7
+
+### Arquivos Modificados
+- ✅ **Arquivos atualizados:**
+  - `src/pages/DashboardPage.jsx` - Sistema de filtro de cards baseado em permissões
+  - `src/components/common/Header.jsx` - Avatar do usuário com fallback e contorno correto
+  - `src/contexts/AuthContext.jsx` - Funções de verificação de permissões
+  - `src/pages/LoginPage.jsx` - Integração Google SSO com captura de foto
+  - `src/App.jsx` - Proteção de rotas com ProtectedRoute
+  - `src/components/common/Footer.jsx` - Status da API em tempo real
+  - `src/components/Dashboard/DashboardCard.jsx` - Ajustes de layout e hover
+  - `src/pages/ArtigosPage.jsx` - Padding para footer fixo
+  - `src/pages/BotPerguntasPage.jsx` - Padding para footer fixo
+  - `src/pages/IGPPage.jsx` - Padding para footer fixo
+  - `src/pages/VelonewsPage.jsx` - Padding para footer fixo
+  - `package.json` - Dependência @react-oauth/google
+  - `package-lock.json` - Lock atualizado
+  - `env.example` - Configuração Google OAuth
+  - `LAYOUT_GUIDELINES.md` - Especificações do sistema de usuário
+  - `.cursorrules` - Diretrizes atualizadas
+
+- ✅ **Novos arquivos criados:**
+  - `src/config/google.js` - Configuração Google OAuth
+  - `src/pages/ChamadosInternosPage.jsx` - Sistema de tickets internos
+  - `src/pages/ConfigPage.jsx` - Gerenciamento de usuários e permissões
+  - `src/pages/LoginPage.jsx` - Página de login com Google SSO
+  - `GOOGLE_OAUTH_SETUP.md` - Documentação OAuth
+  - `GOOGLE_CONSOLE_SETUP.md` - Configuração Google Console
+
+### Descrição das Alterações
+**Sistema completo de autenticação e permissões:**
+- ✅ Sistema de filtro de cards no dashboard baseado em permissões
+- ✅ Cards sem permissão não são mais visíveis na tela inicial
+- ✅ Renderização condicional dos grids com layout adaptativo
+- ✅ Mensagem de fallback para usuários sem permissões
+- ✅ Integração Google SSO com captura de foto do usuário
+- ✅ Botão de usuário logado com avatar, nome e logout
+- ✅ Proteção de rotas com ProtectedRoute
+- ✅ Sistema de tickets internos com status coloridos
+- ✅ Página de configuração para gerenciar usuários e permissões
+- ✅ Footer com status da API em tempo real
+- ✅ Sistema de permissões granular para cards e tipos de tickets
+
+### Status do Deploy
+- **Status:** ✅ Sucesso
+- **Arquivos enviados:** 40 objetos (28.64 KiB)
+- **Compressão:** Delta compression com 4 threads
+- **Tempo:** ~3 segundos
+
+### Observações
+- Sistema de permissões implementado completamente
+- Interface adaptativa baseada nas permissões do usuário
+- Google SSO funcional com captura de dados do usuário
+- Sistema de tickets com categorização e status visuais
+- Gerenciamento completo de usuários e permissões
+
+---
 **Próximo deploy:** Aguardando próximas alterações

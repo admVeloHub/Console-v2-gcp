@@ -1,4 +1,4 @@
-// VERSION: v3.2.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.3.8 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState } from 'react';
 import {
   Container,
@@ -40,92 +40,18 @@ import {
   PersonAdd,
   Security
 } from '@mui/icons-material';
+import { useAuth } from '../contexts/AuthContext';
 import BackButton from '../components/common/BackButton';
+import { 
+  getAllAuthorizedUsers, 
+  addAuthorizedUser, 
+  updateAuthorizedUser, 
+  removeAuthorizedUser 
+} from '../services/userService';
 
 const ConfigPage = () => {
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      email: 'lucas.gravina@velotax.com.br',
-      nome: 'Lucas Gravina',
-      funcao: 'Administrador',
-      permissoes: {
-        artigos: true,
-        velonews: true,
-        botPerguntas: true,
-        chamadosInternos: true,
-        igp: true,
-        qualidade: true,
-        capacity: true,
-        config: true
-      },
-      tiposTickets: {
-        artigos: true,
-        processos: true,
-        roteiros: true,
-        treinamentos: true,
-        funcionalidades: true,
-        recursos: true,
-        gestao: true,
-        rhFin: true,
-        facilities: true
-      }
-    },
-    {
-      id: 2,
-      email: 'editor@velohub.com',
-      nome: 'Editor de Conteúdo',
-      funcao: 'Editor',
-      permissoes: {
-        artigos: true,
-        velonews: true,
-        botPerguntas: false,
-        chamadosInternos: true,
-        igp: false,
-        qualidade: false,
-        capacity: false,
-        config: false
-      },
-      tiposTickets: {
-        artigos: true,
-        processos: false,
-        roteiros: true,
-        treinamentos: false,
-        funcionalidades: false,
-        recursos: false,
-        gestao: false,
-        rhFin: false,
-        facilities: false
-      }
-    },
-    {
-      id: 3,
-      email: 'suporte@velohub.com',
-      nome: 'Suporte Técnico',
-      funcao: 'Suporte',
-      permissoes: {
-        artigos: false,
-        velonews: false,
-        botPerguntas: true,
-        chamadosInternos: true,
-        igp: false,
-        qualidade: false,
-        capacity: false,
-        config: false
-      },
-      tiposTickets: {
-        artigos: false,
-        processos: true,
-        roteiros: false,
-        treinamentos: true,
-        funcionalidades: true,
-        recursos: true,
-        gestao: false,
-        rhFin: false,
-        facilities: true
-      }
-    }
-  ]);
+  const { user: currentUser, updateUser } = useAuth();
+  const [users, setUsers] = useState(getAllAuthorizedUsers());
 
   const [openUserModal, setOpenUserModal] = useState(false);
   const [openPermissionsModal, setOpenPermissionsModal] = useState(false);
@@ -204,15 +130,13 @@ const ConfigPage = () => {
   const handleSaveUser = () => {
     if (editingUser) {
       // Editar usuário existente
-      setUsers(users.map(user => 
-        user.id === editingUser.id 
-          ? { ...user, ...formData }
-          : user
-      ));
+      const updatedUser = updateAuthorizedUser(editingUser.email, formData);
+      if (updatedUser) {
+        setUsers(getAllAuthorizedUsers());
+      }
     } else {
       // Adicionar novo usuário
       const newUser = {
-        id: Date.now(),
         ...formData,
         permissoes: {
           artigos: false,
@@ -236,13 +160,18 @@ const ConfigPage = () => {
           facilities: false
         }
       };
-      setUsers([...users, newUser]);
+      addAuthorizedUser(newUser);
+      setUsers(getAllAuthorizedUsers());
     }
     handleCloseUserModal();
   };
 
   const handleDeleteUser = (userId) => {
-    setUsers(users.filter(user => user.id !== userId));
+    const userToDelete = users.find(user => user.id === userId);
+    if (userToDelete) {
+      removeAuthorizedUser(userToDelete.email);
+      setUsers(getAllAuthorizedUsers());
+    }
   };
 
   const handlePermissionChange = (permission, checked) => {
@@ -258,10 +187,14 @@ const ConfigPage = () => {
       // Atualizar o selectedUser para refletir imediatamente no modal
       setSelectedUser(updatedUser);
       
-      // Atualizar o array de usuários
-      setUsers(users.map(user => 
-        user.id === selectedUser.id ? updatedUser : user
-      ));
+      // Atualizar no serviço de usuários
+      updateAuthorizedUser(selectedUser.email, updatedUser);
+      setUsers(getAllAuthorizedUsers());
+
+      // Se é o usuário logado, atualizar o AuthContext e localStorage
+      if (currentUser && currentUser.email === selectedUser.email) {
+        updateUser(updatedUser);
+      }
     }
   };
 
@@ -278,10 +211,14 @@ const ConfigPage = () => {
       // Atualizar o selectedUser para refletir imediatamente no modal
       setSelectedUser(updatedUser);
       
-      // Atualizar o array de usuários
-      setUsers(users.map(user => 
-        user.id === selectedUser.id ? updatedUser : user
-      ));
+      // Atualizar no serviço de usuários
+      updateAuthorizedUser(selectedUser.email, updatedUser);
+      setUsers(getAllAuthorizedUsers());
+
+      // Se é o usuário logado, atualizar o AuthContext e localStorage
+      if (currentUser && currentUser.email === selectedUser.email) {
+        updateUser(updatedUser);
+      }
     }
   };
 

@@ -1,4 +1,4 @@
-// VERSION: v3.3.4 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.3.8 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState } from 'react';
 import {
   Box,
@@ -14,6 +14,7 @@ import { GoogleLogin } from '@react-oauth/google';
 import consoleLogo from '../assets/console.png';
 import { AUTHORIZED_EMAILS, GOOGLE_CLIENT_ID } from '../config/google';
 import { useAuth } from '../contexts/AuthContext';
+import { isUserAuthorized, getAuthorizedUser } from '../services/userService';
 
 const LoginPage = () => {
   const { login } = useAuth();
@@ -41,40 +42,22 @@ const LoginPage = () => {
         picture: userInfo.picture
       });
       
-      // Verificar se é um email autorizado
-      if (AUTHORIZED_EMAILS.includes(userInfo.email)) {
+      // Verificar se o usuário está registrado no sistema
+      if (isUserAuthorized(userInfo.email)) {
+        // Obter dados do usuário registrado
+        const registeredUser = getAuthorizedUser(userInfo.email);
+        
+        // Atualizar com dados do Google (nome e foto)
         const user = {
-          email: userInfo.email,
+          ...registeredUser,
           nome: userInfo.name,
-          picture: userInfo.picture,
-          funcao: 'Administrador',
-          permissoes: {
-            artigos: true,
-            velonews: true,
-            botPerguntas: true,
-            chamadosInternos: true,
-            igp: true,
-            qualidade: true,
-            capacity: true,
-            config: true
-          },
-          tiposTickets: {
-            artigos: true,
-            processos: true,
-            roteiros: true,
-            treinamentos: true,
-            funcionalidades: true,
-            recursos: true,
-            gestao: true,
-            rhFin: true,
-            facilities: true
-          }
+          picture: userInfo.picture
         };
         
         // Fazer login via AuthContext
         login(user);
       } else {
-        setError('Acesso não autorizado. Use sua conta corporativa.');
+        setError('Usuário não registrado no sistema. Entre em contato com o administrador para solicitar acesso.');
       }
       
     } catch (err) {
@@ -99,36 +82,20 @@ const LoginPage = () => {
       // Simular processo de login para desenvolvimento
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      const user = {
-        email: 'lucas.gravina@velotax.com.br',
-        nome: 'Lucas Gravina',
-        picture: 'https://ui-avatars.com/api/?name=Lucas+Gravina&background=1634FF&color=fff&size=32&bold=true',
-        funcao: 'Administrador',
-        permissoes: {
-          artigos: true,
-          velonews: true,
-          botPerguntas: true,
-          chamadosInternos: true,
-          igp: true,
-          qualidade: true,
-          capacity: true,
-          config: true
-        },
-        tiposTickets: {
-          artigos: true,
-          processos: true,
-          roteiros: true,
-          treinamentos: true,
-          funcionalidades: true,
-          recursos: true,
-          gestao: true,
-          rhFin: true,
-          facilities: true
-        }
-      };
+      const devEmail = 'lucas.gravina@velotax.com.br';
       
-      // Fazer login via AuthContext
-      login(user);
+      // Verificar se o usuário de desenvolvimento está registrado
+      if (isUserAuthorized(devEmail)) {
+        const registeredUser = getAuthorizedUser(devEmail);
+        const user = {
+          ...registeredUser,
+          nome: 'Lucas Gravina',
+          picture: 'https://ui-avatars.com/api/?name=Lucas+Gravina&background=1634FF&color=fff&size=32&bold=true'
+        };
+        login(user);
+      } else {
+        setError('Usuário de desenvolvimento não registrado no sistema.');
+      }
       
     } catch (err) {
       setError('Erro ao fazer login. Tente novamente.');
@@ -177,7 +144,13 @@ const LoginPage = () => {
           />
 
           {/* Botão de Login */}
-          <Box sx={{ mb: 3 }}>
+          <Box sx={{ 
+            mb: 3, 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center',
+            flexDirection: 'column'
+          }}>
             {loading ? (
               <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 2 }}>
                 <CircularProgress size={24} />
@@ -186,17 +159,19 @@ const LoginPage = () => {
                 </Typography>
               </Box>
             ) : isOAuthConfigured ? (
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={handleGoogleError}
-                theme="outline"
-                size="large"
-                text="signin_with"
-                shape="rectangular"
-                logo_alignment="left"
-                width="280"
-                useOneTap={false}
-              />
+              <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleError}
+                  theme="outline"
+                  size="large"
+                  text="signin_with"
+                  shape="rectangular"
+                  logo_alignment="left"
+                  width="280"
+                  useOneTap={false}
+                />
+              </Box>
             ) : (
               <Box sx={{ textAlign: 'center' }}>
                 <Button

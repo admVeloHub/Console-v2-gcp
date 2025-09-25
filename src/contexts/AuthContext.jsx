@@ -1,4 +1,4 @@
-// VERSION: v3.3.4 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.3.8 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext();
@@ -64,6 +64,17 @@ export const AuthProvider = ({ children }) => {
     return user.tiposTickets[ticketType] === true;
   };
 
+  const updateUser = (updatedUserData) => {
+    if (user && user.email === updatedUserData.email) {
+      // Se é o usuário logado, atualizar o contexto e localStorage
+      const newUserData = { ...user, ...updatedUserData };
+      setUser(newUserData);
+      localStorage.setItem('user', JSON.stringify(newUserData));
+      return true; // Indica que a atualização foi feita
+    }
+    return false; // Indica que não foi o usuário logado
+  };
+
   const value = {
     user,
     isAuthenticated,
@@ -71,7 +82,8 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     hasPermission,
-    canViewTicketType
+    canViewTicketType,
+    updateUser
   };
 
   return (
