@@ -1,50 +1,88 @@
-// VERSION: v3.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.3.4 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React from 'react';
 import { Card, CardContent, Typography, Box, IconButton } from '@mui/material';
 import { ArrowForward } from '@mui/icons-material';
 
 const DashboardCard = ({ title, description, icon, color, onClick }) => {
-  const getColorValue = (color) => {
+  const getArrowGradient = (color) => {
     switch (color) {
       case 'primary':
-        return 'var(--blue-medium)';
+        // IGP - Gradiente Azul Médio → Azul Claro (ESSENCIAL)
+        return 'linear-gradient(135deg, var(--blue-medium) 0%, var(--blue-medium) 60%, var(--blue-light) 100%)';
       case 'secondary':
-        return 'var(--blue-opaque)';
+        // Artigos/Config - Gradiente Azul Escuro → Azul Opaco (OPCIONAL)
+        return 'linear-gradient(135deg, var(--blue-dark) 0%, var(--blue-dark) 60%, var(--blue-opaque) 100%)';
       case 'success':
-        return 'var(--green)';
+        // Velonews/Qualidade - Gradiente Amarelo → Azul Médio (RECICLAGEM)
+        return 'linear-gradient(135deg, var(--yellow) 0%, var(--yellow) 60%, var(--blue-medium) 100%)';
       case 'warning':
-        return 'var(--yellow)';
+        // Bot Perguntas - Gradiente Azul Escuro → Amarelo (ATUALIZAÇÃO)
+        return 'linear-gradient(135deg, var(--blue-dark) 0%, var(--blue-dark) 60%, var(--yellow) 100%)';
+      case 'info':
+        // Capacity - Gradiente Azul Médio → Azul Claro (ESSENCIAL)
+        return 'linear-gradient(135deg, var(--blue-medium) 0%, var(--blue-medium) 60%, var(--blue-light) 100%)';
+      case 'error':
+        // Chamados Internos - Gradiente Azul Escuro → Azul Opaco (OPCIONAL)
+        return 'linear-gradient(135deg, var(--blue-dark) 0%, var(--blue-dark) 60%, var(--blue-opaque) 100%)';
       default:
-        return 'var(--blue-medium)';
+        return 'linear-gradient(135deg, var(--blue-medium) 0%, var(--blue-medium) 60%, var(--blue-light) 100%)';
     }
   };
 
   return (
     <Card
+      className="velohub-card"
       sx={{
-        height: '100%',
+        height: '220px', // Altura aumentada para melhor proporção
         display: 'flex',
         flexDirection: 'column',
         cursor: 'pointer',
-        transition: 'all 0.3s ease',
-        border: `2px solid transparent`,
+        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        border: '1px solid rgba(22, 52, 255, 0.1)',
+        borderRadius: '12px',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+        position: 'relative',
+        overflow: 'hidden',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '4px',
+          background: getArrowGradient(color),
+          transform: 'scaleX(0)',
+          transition: 'transform 0.3s ease',
+        },
         '&:hover': {
-          transform: 'translateY(-8px)',
-          boxShadow: '0 12px 40px rgba(0, 0, 0, 0.15)',
-          borderColor: getColorValue(color),
+          transform: 'translateY(-12px) scale(1.02)',
+          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
+          borderColor: 'var(--blue-medium)',
+          '&::before': {
+            transform: 'scaleX(1)',
+          },
         },
       }}
       onClick={onClick}
     >
-      <CardContent sx={{ flexGrow: 1, textAlign: 'center', p: 3 }}>
+      <CardContent sx={{ 
+        flexGrow: 1, 
+        textAlign: 'center', 
+        p: 3,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100%'
+      }}>
         <Box
           sx={{
-            fontSize: '3rem',
             mb: 2,
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
             height: '80px',
+            color: 'var(--blue-opaque)',
           }}
         >
           {icon}
@@ -53,38 +91,31 @@ const DashboardCard = ({ title, description, icon, color, onClick }) => {
         <Typography
           variant="h5"
           component="h3"
-          gutterBottom
           sx={{
             fontFamily: 'Poppins',
             fontWeight: 600,
             color: 'var(--blue-dark)',
-            mb: 1,
-          }}
-        >
-          {title}
-        </Typography>
-        
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{
-            fontFamily: 'Poppins',
-            lineHeight: 1.6,
+            fontSize: '1.3rem',
             mb: 2,
           }}
         >
-          {description}
+          {title}
         </Typography>
 
         <Box sx={{ display: 'flex', justifyContent: 'center' }}>
           <IconButton
             sx={{
-              backgroundColor: getColorValue(color),
+              background: getArrowGradient(color),
               color: 'white',
+              width: 40,
+              height: 40,
+              borderRadius: '20px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
               '&:hover': {
-                backgroundColor: getColorValue(color),
-                opacity: 0.9,
+                transform: 'scale(1.05)',
+                boxShadow: '0 6px 16px rgba(0, 0, 0, 0.2)',
               },
+              transition: 'all 0.3s ease',
             }}
           >
             <ArrowForward />

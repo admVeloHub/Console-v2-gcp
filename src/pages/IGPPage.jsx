@@ -52,7 +52,7 @@ const IGPPage = () => {
 
   if (loading) {
     return (
-      <Container maxWidth="xl" sx={{ mt: 4, mb: 4, textAlign: 'center' }}>
+      <Container maxWidth="xl" sx={{ mt: 4, mb: 8, pb: 4, textAlign: 'center' }}>
         <CircularProgress size={60} />
         <Typography variant="h6" sx={{ mt: 2, fontFamily: 'Poppins' }}>
           Carregando métricas...
@@ -62,7 +62,7 @@ const IGPPage = () => {
   }
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 8, pb: 4 }}>
       <BackButton />
       <Box sx={{ mb: 4 }}>
         <Typography 

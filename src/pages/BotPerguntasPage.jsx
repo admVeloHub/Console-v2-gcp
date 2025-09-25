@@ -79,7 +79,7 @@ const BotPerguntasPage = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 8, pb: 4 }}>
       <BackButton />
       <Box sx={{ mb: 4 }}>
         <Typography 

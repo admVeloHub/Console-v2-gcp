@@ -105,7 +105,7 @@ const ArtigosPage = () => {
 
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: 4, mb: 8, pb: 4 }}>
       <BackButton />
       
       {/* Tabs do Material-UI */}
