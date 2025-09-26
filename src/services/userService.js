@@ -25,11 +25,8 @@ export const isUserAuthorized = async (email) => {
     const response = await usersAPI.isAuthorized(email);
     console.log('Resposta da verificação:', response);
     
-    // Extrair resultado da resposta
-    const result = response.data || response;
-    console.log('Resultado extraído:', result);
-    
-    const isAuthorized = result.authorized;
+    // O campo 'authorized' está no nível raiz da resposta
+    const isAuthorized = response.authorized;
     console.log('Usuário autorizado?', isAuthorized);
     
     return isAuthorized;
