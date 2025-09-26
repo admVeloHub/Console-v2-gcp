@@ -21,10 +21,18 @@ const clearCache = () => {
 // Função para verificar se um email está autorizado
 export const isUserAuthorized = async (email) => {
   try {
+    console.log('Verificando autorização para email:', email);
     const response = await usersAPI.isAuthorized(email);
+    console.log('Resposta da verificação:', response);
+    
     // Extrair resultado da resposta
     const result = response.data || response;
-    return result.authorized;
+    console.log('Resultado extraído:', result);
+    
+    const isAuthorized = result.authorized;
+    console.log('Usuário autorizado?', isAuthorized);
+    
+    return isAuthorized;
   } catch (error) {
     console.error('Erro ao verificar autorização do usuário:', error);
     return false;
