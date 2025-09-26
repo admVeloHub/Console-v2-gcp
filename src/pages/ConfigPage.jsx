@@ -1,4 +1,4 @@
-// VERSION: v3.4.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.4.3 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -62,10 +62,13 @@ const ConfigPage = () => {
   const loadUsers = async () => {
     try {
       setLoading(true);
+      console.log('Carregando usuários...');
       const usersData = await getAllAuthorizedUsers();
-      setUsers(usersData);
+      console.log('Usuários carregados:', usersData);
+      setUsers(usersData || []);
     } catch (error) {
       console.error('Erro ao carregar usuários:', error);
+      setUsers([]);
     } finally {
       setLoading(false);
     }
@@ -137,6 +140,30 @@ const ConfigPage = () => {
         email: user._userMail,
         nome: user._userId,
         funcao: user._userRole
+      });
+      // Carregar permissões atuais do usuário para edição
+      setPermissionsData({
+        permissoes: user._userClearance || {
+          artigos: false,
+          velonews: false,
+          botPerguntas: false,
+          chamadosInternos: false,
+          igp: false,
+          qualidade: false,
+          capacity: false,
+          config: false
+        },
+        tiposTickets: user._userTickets || {
+          artigos: false,
+          processos: false,
+          roteiros: false,
+          treinamentos: false,
+          funcionalidades: false,
+          recursos: false,
+          gestao: false,
+          rhFin: false,
+          facilities: false
+        }
       });
       setModalStep(1); // Para edição, sempre começar na etapa 1
     } else {
@@ -229,8 +256,12 @@ const ConfigPage = () => {
   const handleSaveUser = async () => {
     try {
       if (editingUser) {
-        // Editar usuário existente
-        await updateAuthorizedUser(editingUser._userMail, formData);
+        // Editar usuário existente - incluir permissões se estiver na etapa 2
+        const updateData = modalStep === 2 ? {
+          ...formData,
+          ...permissionsData
+        } : formData;
+        await updateAuthorizedUser(editingUser._userMail, updateData);
       } else {
         // Adicionar novo usuário
         const newUser = {
@@ -245,7 +276,7 @@ const ConfigPage = () => {
       handleCloseUserModal();
     } catch (error) {
       console.error('Erro ao salvar usuário:', error);
-      // Aqui você pode adicionar um toast ou alert para mostrar o erro
+      alert(`Erro: ${error.message}`);
     }
   };
 

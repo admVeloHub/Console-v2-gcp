@@ -1,4 +1,4 @@
-// VERSION: v3.4.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.4.3 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 import { usersAPI } from './api';
 
@@ -82,11 +82,14 @@ export const getAllAuthorizedUsers = async () => {
   try {
     // Verificar cache primeiro
     if (isCacheValid()) {
+      console.log('Retornando usuários do cache:', usersCache);
       return usersCache;
     }
 
+    console.log('Buscando usuários do backend...');
     // Buscar do backend
     const mongoUsers = await usersAPI.getAll();
+    console.log('Usuários recebidos do backend:', mongoUsers);
     
     // Atualizar cache
     usersCache = mongoUsers;
