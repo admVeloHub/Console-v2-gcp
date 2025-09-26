@@ -1,4 +1,4 @@
-// VERSION: v3.4.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.4.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -75,10 +75,34 @@ const ConfigPage = () => {
   const [openPermissionsModal, setOpenPermissionsModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
+  const [modalStep, setModalStep] = useState(1); // 1 = dados básicos, 2 = permissões
   const [formData, setFormData] = useState({
     email: '',
     nome: '',
     funcao: ''
+  });
+  const [permissionsData, setPermissionsData] = useState({
+    permissoes: {
+      artigos: false,
+      velonews: false,
+      botPerguntas: false,
+      chamadosInternos: false,
+      igp: false,
+      qualidade: false,
+      capacity: false,
+      config: false
+    },
+    tiposTickets: {
+      artigos: false,
+      processos: false,
+      roteiros: false,
+      treinamentos: false,
+      funcionalidades: false,
+      recursos: false,
+      gestao: false,
+      rhFin: false,
+      facilities: false
+    }
   });
 
   // Mapeamento dos cards da tela inicial
@@ -114,6 +138,7 @@ const ConfigPage = () => {
         nome: user._userId,
         funcao: user._userRole
       });
+      setModalStep(1); // Para edição, sempre começar na etapa 1
     } else {
       setEditingUser(null);
       setFormData({
@@ -121,6 +146,30 @@ const ConfigPage = () => {
         nome: '',
         funcao: ''
       });
+      setPermissionsData({
+        permissoes: {
+          artigos: false,
+          velonews: false,
+          botPerguntas: false,
+          chamadosInternos: false,
+          igp: false,
+          qualidade: false,
+          capacity: false,
+          config: false
+        },
+        tiposTickets: {
+          artigos: false,
+          processos: false,
+          roteiros: false,
+          treinamentos: false,
+          funcionalidades: false,
+          recursos: false,
+          gestao: false,
+          rhFin: false,
+          facilities: false
+        }
+      });
+      setModalStep(1); // Para novo usuário, começar na etapa 1
     }
     setOpenUserModal(true);
   };
@@ -128,10 +177,34 @@ const ConfigPage = () => {
   const handleCloseUserModal = () => {
     setOpenUserModal(false);
     setEditingUser(null);
+    setModalStep(1);
     setFormData({
       email: '',
       nome: '',
       funcao: ''
+    });
+    setPermissionsData({
+      permissoes: {
+        artigos: false,
+        velonews: false,
+        botPerguntas: false,
+        chamadosInternos: false,
+        igp: false,
+        qualidade: false,
+        capacity: false,
+        config: false
+      },
+      tiposTickets: {
+        artigos: false,
+        processos: false,
+        roteiros: false,
+        treinamentos: false,
+        funcionalidades: false,
+        recursos: false,
+        gestao: false,
+        rhFin: false,
+        facilities: false
+      }
     });
   };
 
@@ -145,36 +218,24 @@ const ConfigPage = () => {
     setSelectedUser(null);
   };
 
+  const handleNextStep = () => {
+    setModalStep(2);
+  };
+
+  const handlePrevStep = () => {
+    setModalStep(1);
+  };
+
   const handleSaveUser = async () => {
     try {
       if (editingUser) {
         // Editar usuário existente
-        await updateAuthorizedUser(editingUser.email, formData);
+        await updateAuthorizedUser(editingUser._userMail, formData);
       } else {
         // Adicionar novo usuário
         const newUser = {
           ...formData,
-          permissoes: {
-            artigos: false,
-            velonews: false,
-            botPerguntas: false,
-            chamadosInternos: false,
-            igp: false,
-            qualidade: false,
-            capacity: false,
-            config: false
-          },
-          tiposTickets: {
-            artigos: false,
-            processos: false,
-            roteiros: false,
-            treinamentos: false,
-            funcionalidades: false,
-            recursos: false,
-            gestao: false,
-            rhFin: false,
-            facilities: false
-          }
+          ...permissionsData
         };
         await addAuthorizedUser(newUser);
       }
@@ -201,6 +262,26 @@ const ConfigPage = () => {
     }
   };
 
+  const handleModalPermissionChange = (permission, checked) => {
+    setPermissionsData(prev => ({
+      ...prev,
+      permissoes: {
+        ...prev.permissoes,
+        [permission]: checked
+      }
+    }));
+  };
+
+  const handleModalTicketTypeChange = (ticketType, checked) => {
+    setPermissionsData(prev => ({
+      ...prev,
+      tiposTickets: {
+        ...prev.tiposTickets,
+        [ticketType]: checked
+      }
+    }));
+  };
+
   const handlePermissionChange = async (permission, checked) => {
     if (selectedUser) {
       try {
@@ -216,11 +297,11 @@ const ConfigPage = () => {
         setSelectedUser(updatedUser);
         
         // Atualizar no serviço de usuários
-        await updateAuthorizedUser(selectedUser.email, updatedUser);
+        await updateAuthorizedUser(selectedUser._userMail, updatedUser);
         await loadUsers(); // Recarregar lista de usuários
 
         // Se é o usuário logado, atualizar o AuthContext e localStorage
-        if (currentUser && currentUser.email === selectedUser.email) {
+        if (currentUser && currentUser.email === selectedUser._userMail) {
           updateUser(updatedUser);
         }
       } catch (error) {
@@ -246,11 +327,11 @@ const ConfigPage = () => {
         setSelectedUser(updatedUser);
         
         // Atualizar no serviço de usuários
-        await updateAuthorizedUser(selectedUser.email, updatedUser);
+        await updateAuthorizedUser(selectedUser._userMail, updatedUser);
         await loadUsers(); // Recarregar lista de usuários
 
         // Se é o usuário logado, atualizar o AuthContext e localStorage
-        if (currentUser && currentUser.email === selectedUser.email) {
+        if (currentUser && currentUser.email === selectedUser._userMail) {
           updateUser(updatedUser);
         }
       } catch (error) {
@@ -374,7 +455,7 @@ const ConfigPage = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {users.map((user) => (
+                {users && Array.isArray(users) ? users.map((user) => (
                   <TableRow 
                     key={user._id}
                     hover
@@ -472,18 +553,24 @@ const ConfigPage = () => {
                       </Box>
                     </TableCell>
                   </TableRow>
-                ))}
+                )) : (
+                  <TableRow>
+                    <TableCell colSpan={4} sx={{ textAlign: 'center', fontFamily: 'Poppins' }}>
+                      {loading ? 'Carregando usuários...' : 'Nenhum usuário encontrado'}
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </TableContainer>
         </CardContent>
       </Card>
 
-      {/* Modal de Usuário */}
+      {/* Modal de Usuário - 2 Etapas */}
       <Dialog 
         open={openUserModal} 
         onClose={handleCloseUserModal}
-        maxWidth="sm"
+        maxWidth={modalStep === 1 ? "sm" : "md"}
         fullWidth
       >
         <DialogTitle sx={{ 
@@ -491,7 +578,7 @@ const ConfigPage = () => {
           fontWeight: 600,
           color: 'var(--blue-dark)'
         }}>
-          {editingUser ? 'Editar Usuário' : 'Novo Usuário'}
+          {editingUser ? 'Editar Usuário' : 'Novo Usuário'} - Etapa {modalStep} de 2
           <IconButton
             aria-label="close"
             onClick={handleCloseUserModal}
@@ -506,55 +593,140 @@ const ConfigPage = () => {
           </IconButton>
         </DialogTitle>
         <DialogContent>
-          <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <TextField
-              label="Email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              fullWidth
-              required
-              sx={{ fontFamily: 'Poppins' }}
-            />
-            <TextField
-              label="Nome Completo"
-              value={formData.nome}
-              onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-              fullWidth
-              required
-              sx={{ fontFamily: 'Poppins' }}
-            />
-            <FormControl fullWidth>
-              <InputLabel>Função</InputLabel>
-              <Select
-                value={formData.funcao}
-                label="Função"
-                onChange={(e) => setFormData({ ...formData, funcao: e.target.value })}
+          {modalStep === 1 ? (
+            // ETAPA 1: Dados Básicos
+            <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <TextField
+                label="Email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                fullWidth
+                required
                 sx={{ fontFamily: 'Poppins' }}
-              >
-                <MenuItem value="Administrador">Administrador</MenuItem>
-                <MenuItem value="Gestão">Gestão</MenuItem>
-                <MenuItem value="Editor">Editor</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
+              />
+              <TextField
+                label="Nome Completo"
+                value={formData.nome}
+                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                fullWidth
+                required
+                sx={{ fontFamily: 'Poppins' }}
+              />
+              <FormControl fullWidth>
+                <InputLabel>Função</InputLabel>
+                <Select
+                  value={formData.funcao}
+                  label="Função"
+                  onChange={(e) => setFormData({ ...formData, funcao: e.target.value })}
+                  sx={{ fontFamily: 'Poppins' }}
+                >
+                  <MenuItem value="Administrador">Administrador</MenuItem>
+                  <MenuItem value="Gestão">Gestão</MenuItem>
+                  <MenuItem value="Editor">Editor</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+          ) : (
+            // ETAPA 2: Permissões
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="h6" sx={{ fontFamily: 'Poppins', fontWeight: 600, mb: 2 }}>
+                Módulos Disponíveis
+              </Typography>
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                {cardPermissions.map((permission) => (
+                  <Grid item xs={12} sm={6} key={permission.key}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={permissionsData.permissoes[permission.key] || false}
+                          onChange={(e) => handleModalPermissionChange(permission.key, e.target.checked)}
+                        />
+                      }
+                      label={
+                        <Box>
+                          <Typography sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
+                            {permission.label}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'Poppins' }}>
+                            {permission.description}
+                          </Typography>
+                        </Box>
+                      }
+                    />
+                  </Grid>
+                ))}
+              </Grid>
+
+              <Typography variant="h6" sx={{ fontFamily: 'Poppins', fontWeight: 600, mb: 2 }}>
+                Tipos de Tickets Liberados
+              </Typography>
+              <Grid container spacing={2}>
+                {ticketTypes.map((ticketType) => (
+                  <Grid item xs={12} sm={6} key={ticketType.key}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={permissionsData.tiposTickets[ticketType.key] || false}
+                          onChange={(e) => handleModalTicketTypeChange(ticketType.key, e.target.checked)}
+                        />
+                      }
+                      label={
+                        <Box>
+                          <Typography sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
+                            {ticketType.label}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'Poppins' }}>
+                            {ticketType.description}
+                          </Typography>
+                        </Box>
+                      }
+                    />
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseUserModal} sx={{ color: 'var(--blue-dark)' }}>
             Cancelar
           </Button>
-          <Button 
-            onClick={handleSaveUser}
-            variant="contained"
-            sx={{
-              backgroundColor: 'var(--blue-medium)',
-              '&:hover': {
-                backgroundColor: 'var(--blue-dark)'
-              }
-            }}
-          >
-            {editingUser ? 'Atualizar' : 'Criar'}
-          </Button>
+          {modalStep === 1 ? (
+            <>
+              <Button 
+                onClick={handleNextStep}
+                variant="contained"
+                disabled={!formData.email || !formData.nome || !formData.funcao}
+                sx={{
+                  backgroundColor: 'var(--blue-medium)',
+                  '&:hover': {
+                    backgroundColor: 'var(--blue-dark)'
+                  }
+                }}
+              >
+                Próximo
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button onClick={handlePrevStep} sx={{ color: 'var(--blue-dark)' }}>
+                Voltar
+              </Button>
+              <Button 
+                onClick={handleSaveUser}
+                variant="contained"
+                sx={{
+                  backgroundColor: 'var(--blue-medium)',
+                  '&:hover': {
+                    backgroundColor: 'var(--blue-dark)'
+                  }
+                }}
+              >
+                {editingUser ? 'Atualizar' : 'Criar'}
+              </Button>
+            </>
+          )}
         </DialogActions>
       </Dialog>
 
