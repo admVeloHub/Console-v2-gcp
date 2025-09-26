@@ -1,4 +1,4 @@
-// VERSION: v3.4.3 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.4.4 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 import { usersAPI } from './api';
 
@@ -21,7 +21,9 @@ const clearCache = () => {
 // Função para verificar se um email está autorizado
 export const isUserAuthorized = async (email) => {
   try {
-    const result = await usersAPI.isAuthorized(email);
+    const response = await usersAPI.isAuthorized(email);
+    // Extrair resultado da resposta
+    const result = response.data || response;
     return result.authorized;
   } catch (error) {
     console.error('Erro ao verificar autorização do usuário:', error);
@@ -32,7 +34,9 @@ export const isUserAuthorized = async (email) => {
 // Função para obter dados do usuário autorizado
 export const getAuthorizedUser = async (email) => {
   try {
-    const mongoUser = await usersAPI.getByEmail(email);
+    const response = await usersAPI.getByEmail(email);
+    // Extrair dados do usuário da resposta
+    const mongoUser = response.data || response;
     return mongoUser; // Retorna dados diretamente do MongoDB
   } catch (error) {
     console.error('Erro ao obter dados do usuário:', error);
@@ -88,8 +92,12 @@ export const getAllAuthorizedUsers = async () => {
 
     console.log('Buscando usuários do backend...');
     // Buscar do backend
-    const mongoUsers = await usersAPI.getAll();
-    console.log('Usuários recebidos do backend:', mongoUsers);
+    const response = await usersAPI.getAll();
+    console.log('Resposta do backend:', response);
+    
+    // Extrair o array de usuários da resposta
+    const mongoUsers = response.data || response;
+    console.log('Usuários extraídos:', mongoUsers);
     
     // Atualizar cache
     usersCache = mongoUsers;

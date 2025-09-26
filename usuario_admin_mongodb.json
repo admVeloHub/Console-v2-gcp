@@ -1,0 +1,26 @@
+{
+  "_userMail": "lucas.gravina@velotax.com.br",
+  "_userId": "Lucas Gravina",
+  "_userRole": "Administrador",
+  "_userClearance": {
+    "artigos": true,
+    "velonews": true,
+    "botPerguntas": true,
+    "chamadosInternos": true,
+    "igp": true,
+    "qualidade": true,
+    "capacity": true,
+    "config": true
+  },
+  "_userTickets": {
+    "artigos": true,
+    "processos": true,
+    "roteiros": true,
+    "treinamentos": true,
+    "funcionalidades": true,
+    "recursos": true,
+    "gestao": true,
+    "rhFin": true,
+    "facilities": true
+  }
+}
