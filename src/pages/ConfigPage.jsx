@@ -211,27 +211,27 @@ const ConfigPage = () => {
       funcao: ''
     });
     setPermissionsData({
-      permissoes: {
-        artigos: false,
-        velonews: false,
-        botPerguntas: false,
-        chamadosInternos: false,
-        igp: false,
-        qualidade: false,
-        capacity: false,
-        config: false
-      },
-      tiposTickets: {
-        artigos: false,
-        processos: false,
-        roteiros: false,
-        treinamentos: false,
-        funcionalidades: false,
-        recursos: false,
-        gestao: false,
-        rhFin: false,
-        facilities: false
-      }
+        permissoes: {
+          artigos: false,
+          velonews: false,
+          botPerguntas: false,
+          chamadosInternos: false,
+          igp: false,
+          qualidade: false,
+          capacity: false,
+          config: false
+        },
+        tiposTickets: {
+          artigos: false,
+          processos: false,
+          roteiros: false,
+          treinamentos: false,
+          funcionalidades: false,
+          recursos: false,
+          gestao: false,
+          rhFin: false,
+          facilities: false
+        }
     });
   };
 
@@ -273,7 +273,7 @@ const ConfigPage = () => {
       
       // Recarregar lista de usuários
       await loadUsers();
-      handleCloseUserModal();
+    handleCloseUserModal();
     } catch (error) {
       console.error('Erro ao salvar usuário:', error);
       alert(`Erro: ${error.message}`);
@@ -283,7 +283,7 @@ const ConfigPage = () => {
   const handleDeleteUser = async (userId) => {
     try {
       const userToDelete = users.find(user => user._id === userId);
-      if (userToDelete) {
+    if (userToDelete) {
         await removeAuthorizedUser(userToDelete._userMail);
         await loadUsers(); // Recarregar lista de usuários
       }
@@ -316,24 +316,24 @@ const ConfigPage = () => {
   const handlePermissionChange = async (permission, checked) => {
     if (selectedUser) {
       try {
-        const updatedUser = {
-          ...selectedUser,
+      const updatedUser = {
+        ...selectedUser,
           _userClearance: {
             ...selectedUser._userClearance,
-            [permission]: checked
-          }
-        };
-        
-        // Atualizar o selectedUser para refletir imediatamente no modal
-        setSelectedUser(updatedUser);
-        
-        // Atualizar no serviço de usuários
+          [permission]: checked
+        }
+      };
+      
+      // Atualizar o selectedUser para refletir imediatamente no modal
+      setSelectedUser(updatedUser);
+      
+      // Atualizar no serviço de usuários
         await updateAuthorizedUser(selectedUser._userMail, updatedUser);
         await loadUsers(); // Recarregar lista de usuários
 
-        // Se é o usuário logado, atualizar o AuthContext e localStorage
+      // Se é o usuário logado, atualizar o AuthContext e localStorage
         if (currentUser && currentUser.email === selectedUser._userMail) {
-          updateUser(updatedUser);
+        updateUser(updatedUser);
         }
       } catch (error) {
         console.error('Erro ao atualizar permissão:', error);
@@ -346,24 +346,24 @@ const ConfigPage = () => {
   const handleTicketTypeChange = async (ticketType, checked) => {
     if (selectedUser) {
       try {
-        const updatedUser = {
-          ...selectedUser,
+      const updatedUser = {
+        ...selectedUser,
           _userTickets: {
             ...selectedUser._userTickets,
-            [ticketType]: checked
-          }
-        };
-        
-        // Atualizar o selectedUser para refletir imediatamente no modal
-        setSelectedUser(updatedUser);
-        
-        // Atualizar no serviço de usuários
+          [ticketType]: checked
+        }
+      };
+      
+      // Atualizar o selectedUser para refletir imediatamente no modal
+      setSelectedUser(updatedUser);
+      
+      // Atualizar no serviço de usuários
         await updateAuthorizedUser(selectedUser._userMail, updatedUser);
         await loadUsers(); // Recarregar lista de usuários
 
-        // Se é o usuário logado, atualizar o AuthContext e localStorage
+      // Se é o usuário logado, atualizar o AuthContext e localStorage
         if (currentUser && currentUser.email === selectedUser._userMail) {
-          updateUser(updatedUser);
+        updateUser(updatedUser);
         }
       } catch (error) {
         console.error('Erro ao atualizar tipo de ticket:', error);
@@ -626,38 +626,38 @@ const ConfigPage = () => {
         <DialogContent>
           {modalStep === 1 ? (
             // ETAPA 1: Dados Básicos
-            <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <TextField
-                label="Email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                fullWidth
-                required
+          <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              label="Email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              fullWidth
+              required
+              sx={{ fontFamily: 'Poppins' }}
+            />
+            <TextField
+              label="Nome Completo"
+              value={formData.nome}
+              onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+              fullWidth
+              required
+              sx={{ fontFamily: 'Poppins' }}
+            />
+            <FormControl fullWidth>
+              <InputLabel>Função</InputLabel>
+              <Select
+                value={formData.funcao}
+                label="Função"
+                onChange={(e) => setFormData({ ...formData, funcao: e.target.value })}
                 sx={{ fontFamily: 'Poppins' }}
-              />
-              <TextField
-                label="Nome Completo"
-                value={formData.nome}
-                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                fullWidth
-                required
-                sx={{ fontFamily: 'Poppins' }}
-              />
-              <FormControl fullWidth>
-                <InputLabel>Função</InputLabel>
-                <Select
-                  value={formData.funcao}
-                  label="Função"
-                  onChange={(e) => setFormData({ ...formData, funcao: e.target.value })}
-                  sx={{ fontFamily: 'Poppins' }}
-                >
-                  <MenuItem value="Administrador">Administrador</MenuItem>
-                  <MenuItem value="Gestão">Gestão</MenuItem>
-                  <MenuItem value="Editor">Editor</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
+              >
+                <MenuItem value="Administrador">Administrador</MenuItem>
+                <MenuItem value="Gestão">Gestão</MenuItem>
+                <MenuItem value="Editor">Editor</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
           ) : (
             // ETAPA 2: Permissões
             <Box sx={{ mt: 2 }}>
@@ -743,19 +743,19 @@ const ConfigPage = () => {
             <>
               <Button onClick={handlePrevStep} sx={{ color: 'var(--blue-dark)' }}>
                 Voltar
-              </Button>
-              <Button 
-                onClick={handleSaveUser}
-                variant="contained"
-                sx={{
-                  backgroundColor: 'var(--blue-medium)',
-                  '&:hover': {
-                    backgroundColor: 'var(--blue-dark)'
-                  }
-                }}
-              >
-                {editingUser ? 'Atualizar' : 'Criar'}
-              </Button>
+          </Button>
+          <Button 
+            onClick={handleSaveUser}
+            variant="contained"
+            sx={{
+              backgroundColor: 'var(--blue-medium)',
+              '&:hover': {
+                backgroundColor: 'var(--blue-dark)'
+              }
+            }}
+          >
+            {editingUser ? 'Atualizar' : 'Criar'}
+          </Button>
             </>
           )}
         </DialogActions>
