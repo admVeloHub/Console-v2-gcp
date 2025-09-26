@@ -1,5 +1,32 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.2.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.2.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+
+## GitHub Push - Correção Modal de Permissões - 2024-12-19 23:45
+
+### Informações do Push
+- **Tipo:** GitHub Push
+- **Data/Hora:** 2024-12-19 23:45 BRT
+- **Versão:** v3.6.2
+- **Commit:** c0f5c3b
+- **Descrição:** Correção do modal 'Gerenciar Permissões' para enviar atualizações ao banco
+
+### Arquivos Modificados
+- ✅ **src/services/userService.js** (v3.4.5) - Detecção automática de formato de dados
+- ✅ **src/pages/ConfigPage.jsx** (v3.4.4) - Correção campos MongoDB no modal
+
+### Correções Implementadas
+- **Modal de Permissões:** Corrigir referências de 'permissoes' para '_userClearance'
+- **Modal de Tickets:** Corrigir referências de 'tiposTickets' para '_userTickets'
+- **Funções de Atualização:** Usar campos corretos do MongoDB
+- **Detecção de Formato:** Usar dados diretamente se já estão no formato MongoDB
+- **Logs de Debug:** Adicionar logs para rastreamento de atualizações
+
+### Problemas Resolvidos
+- ❌ **Erro:** Cannot read properties of undefined (reading 'artigos')
+- ❌ **Problema:** Modal de permissões não enviava atualizações ao banco
+- ❌ **Inconsistência:** Mapeamento incorreto entre frontend e MongoDB
+
+---
 
 ## GitHub Push - Sistema de Usuários MongoDB - 2024-12-19 23:15
 
