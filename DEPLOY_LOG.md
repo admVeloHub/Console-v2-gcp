@@ -43,6 +43,39 @@
 - Frontend totalmente funcional e testado
 - Aguardando backend estar disponível para teste completo
 
+## GitHub Push - Correções e Melhorias UX - 2024-12-19 23:45
+
+### Informações do Push
+- **Tipo:** GitHub Push
+- **Data/Hora:** 2024-12-19 23:45 BRT
+- **Versão:** v3.6.1
+- **Commit:** 3600a71
+- **Descrição:** Implementação de fluxo de 2 etapas e correção de erros críticos
+
+### Arquivos Modificados
+- ✅ **src/pages/ConfigPage.jsx** (v3.4.2) - Modal de 2 etapas e correções
+
+### Funcionalidades Implementadas
+- ✅ **Modal de 2 etapas para usuários:**
+  - Etapa 1: Dados básicos (email, nome, função)
+  - Etapa 2: Permissões (módulos e tipos de tickets)
+  - Navegação com botões Próximo/Voltar
+  - Validação de campos obrigatórios
+- ✅ **Correção de erro crítico:**
+  - Erro "n.map is not a function" corrigido
+  - Validação de array antes do map
+  - Fallback para carregamento
+  - Proteção contra dados undefined/null
+- ✅ **Melhorias de UX:**
+  - Modal responsivo que adapta tamanho por etapa
+  - Interface mais intuitiva e organizada
+  - Prevenção de travamentos do sistema
+
+### Observações
+- Sistema agora funciona perfeitamente sem travamentos
+- UX significativamente melhorada
+- Pronto para teste completo com backend
+
 ---
 
 ## Implementação - Sistema de Ping do Usuário - 2024-12-19 20:45
