@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Debug - Velotax Capacity</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .result { margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 5px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Teste Debug - Formatação de Horário</h1>
+    
+    <div class="test-section">
+        <h3>1. Teste da Função formatTime</h3>
+        <button onclick="testFormatTime()">Testar formatTime</button>
+        <div id="format-time-result" class="result">Aguardando teste...</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>2. Simulação de Dados</h3>
+        <button onclick="testDataProcessing()">Testar Processamento</button>
+        <div id="data-processing-result" class="result">Aguardando teste...</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>3. Teste Completo</h3>
+        <button onclick="testComplete()">Teste Completo</button>
+        <div id="complete-result" class="result">Aguardando teste...</div>
+    </div>
+    
+    <script>
+        // Função formatTime do sistema
+        function formatTime(timeString) {
+            console.log(`formatTime recebeu: "${timeString}" (tipo: ${typeof timeString})`);
+            
+            // Se for null, undefined ou vazio, retornar erro
+            if (!timeString || timeString === '') {
+                console.log('Valor vazio ou inválido');
+                return 'N/A';
+            }
+            
+            // Converter para string e remover espaços
+            const cleanString = timeString.toString().trim();
+            console.log(`String limpa: "${cleanString}"`);
+            
+            // Se já estiver no formato HH:MM, retornar como está
+            if (cleanString.includes(':')) {
+                console.log(`Já tem ":", retornando: ${cleanString}`);
+                return cleanString;
+            }
+            
+            // Se for apenas um número (ex: 8, 9, 10), formatar como HH:00
+            const hour = parseInt(cleanString, 10);
+            console.log(`Parseado como hora: ${hour}`);
+            
+            if (!isNaN(hour) && hour >= 0 && hour <= 23) {
+                const formatted = `${hour.toString().padStart(2, '0')}:00`;
+                console.log(`Formatado como: ${formatted}`);
+                return formatted;
+            }
+            
+            // Se for outro formato, retornar como está
+            console.log(`Formato não reconhecido, retornando: ${cleanString}`);
+            return cleanString;
+        }
+        
+        function testFormatTime() {
+            const resultDiv = document.getElementById('format-time-result');
+            const testCases = [8, 9, 10, '10:00', '11:30', '', null, 'abc'];
+            
+            let results = '<h4>Resultados dos Testes:</h4>';
+            
+            testCases.forEach(testCase => {
+                const result = formatTime(testCase);
+                results += `<p><strong>Entrada:</strong> ${testCase} (${typeof testCase}) → <strong>Saída:</strong> ${result}</p>`;
+            });
+            
+            resultDiv.innerHTML = results;
+        }
+        
+        function testDataProcessing() {
+            const resultDiv = document.getElementById('data-processing-result');
+            
+            // Simular dados como seriam lidos do arquivo
+            const testData = [
+                ['8', '15'],
+                ['9', '25'],
+                ['10', '30']
+            ];
+            
+            let results = '<h4>Processamento de Dados:</h4>';
+            
+            testData.forEach((row, index) => {
+                const intervalo = row[0];
+                const quantidade = parseFloat(row[1]);
+                const formattedTime = formatTime(intervalo);
+                
+                results += `<p><strong>Linha ${index + 1}:</strong> ${intervalo} → ${formattedTime} | Quantidade: ${quantidade}</p>`;
+            });
+            
+            resultDiv.innerHTML = results;
+        }
+        
+        function testComplete() {
+            const resultDiv = document.getElementById('complete-result');
+            
+            // Simular o fluxo completo
+            const testData = [
+                ['8', '15'],
+                ['9', '25'],
+                ['10', '30']
+            ];
+            
+            const processedData = testData.map(row => ({
+                intervalo: row[0],
+                quantidade: parseFloat(row[1])
+            }));
+            
+            let results = '<h4>Teste Completo:</h4>';
+            results += '<table border="1" style="border-collapse: collapse; width: 100%;">';
+            results += '<tr><th>Original</th><th>Formatado</th><th>Quantidade</th></tr>';
+            
+            processedData.forEach(item => {
+                const formatted = formatTime(item.intervalo);
+                results += `<tr><td>${item.intervalo}</td><td>${formatted}</td><td>${item.quantidade}</td></tr>`;
+            });
+            
+            results += '</table>';
+            
+            resultDiv.innerHTML = results;
+        }
+    </script>
+</body>
+</html>

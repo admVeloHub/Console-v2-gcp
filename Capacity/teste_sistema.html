@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste do Sistema - Velotax Capacity</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Teste do Sistema Velotax Capacity</h1>
+    
+    <div class="test-section">
+        <h3>1. Verificação de Dependências</h3>
+        <div id="deps-check">Verificando...</div>
+        <button onclick="checkDependencies()">Verificar Dependências</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>2. Teste de Funções JavaScript</h3>
+        <div id="js-test">Aguardando teste...</div>
+        <button onclick="testJavaScript()">Testar JavaScript</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>3. Simulação de Cálculo</h3>
+        <div id="calc-test">Aguardando simulação...</div>
+        <button onclick="testCalculation()">Simular Cálculo</button>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="script.js"></script>
+    <script>
+        function checkDependencies() {
+            const depsDiv = document.getElementById('deps-check');
+            
+            try {
+                // Verificar SheetJS
+                if (typeof XLSX !== 'undefined') {
+                    depsDiv.innerHTML = '<div class="success">✅ SheetJS carregado com sucesso</div>';
+                } else {
+                    depsDiv.innerHTML = '<div class="error">❌ SheetJS não encontrado</div>';
+                }
+            } catch (error) {
+                depsDiv.innerHTML = '<div class="error">❌ Erro ao verificar dependências: ' + error.message + '</div>';
+            }
+        }
+        
+        function testJavaScript() {
+            const jsDiv = document.getElementById('js-test');
+            
+            try {
+                // Testar funções principais
+                if (typeof handleFileUpload === 'function') {
+                    jsDiv.innerHTML = '<div class="success">✅ Função handleFileUpload encontrada</div>';
+                } else {
+                    jsDiv.innerHTML = '<div class="error">❌ Função handleFileUpload não encontrada</div>';
+                }
+                
+                if (typeof calculateHCsForVolume === 'function') {
+                    jsDiv.innerHTML += '<div class="success">✅ Função calculateHCsForVolume encontrada</div>';
+                } else {
+                    jsDiv.innerHTML += '<div class="error">❌ Função calculateHCsForVolume não encontrada</div>';
+                }
+                
+            } catch (error) {
+                jsDiv.innerHTML = '<div class="error">❌ Erro ao testar JavaScript: ' + error.message + '</div>';
+            }
+        }
+        
+        function testCalculation() {
+            const calcDiv = document.getElementById('calc-test');
+            
+            try {
+                // Simular dados de teste
+                const testData = [
+                    { intervalo: '8:00', quantidade: 15 },
+                    { intervalo: '9:00', quantidade: 25 },
+                    { intervalo: '10:00', quantidade: 30 }
+                ];
+                
+                // Testar cálculo
+                const results = calculateNewDimensioning(testData);
+                
+                if (results && results.length > 0) {
+                    calcDiv.innerHTML = '<div class="success">✅ Cálculo funcionando! Resultados: ' + 
+                        results.map(r => `${r.intervalo}: ${r.hcs} pessoas`).join(', ') + '</div>';
+                } else {
+                    calcDiv.innerHTML = '<div class="error">❌ Cálculo não retornou resultados</div>';
+                }
+                
+            } catch (error) {
+                calcDiv.innerHTML = '<div class="error">❌ Erro no cálculo: ' + error.message + '</div>';
+            }
+        }
+        
+        // Executar verificações automáticas
+        window.onload = function() {
+            checkDependencies();
+            testJavaScript();
+        };
+    </script>
+</body>
+</html>

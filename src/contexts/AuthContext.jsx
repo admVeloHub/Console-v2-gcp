@@ -1,5 +1,6 @@
-// VERSION: v3.3.8 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.4.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { sendUserPing, debugUserPermissions } from '../services/userPingService';
 
 const AuthContext = createContext();
 
@@ -40,11 +41,35 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  const login = (userData) => {
+  const login = async (userData) => {
     setUser(userData);
     setIsAuthenticated(true);
     localStorage.setItem('user', JSON.stringify(userData));
     localStorage.setItem('isAuthenticated', 'true');
+
+    // Enviar ping para o backend após login bem-sucedido
+    try {
+      // Debug das permissões (apenas em desenvolvimento)
+      if (process.env.NODE_ENV === 'development') {
+        debugUserPermissions(userData);
+      }
+
+      // Enviar ping para o backend
+      const pingResult = await sendUserPing(userData);
+      
+      if (pingResult.success) {
+        if (pingResult.skipped) {
+          console.log('⏭️ Ping do usuário pulado:', pingResult.reason);
+        } else {
+          console.log('✅ Ping do usuário enviado com sucesso para o backend');
+        }
+      } else {
+        console.warn('⚠️ Falha ao enviar ping do usuário:', pingResult.error);
+      }
+    } catch (error) {
+      console.error('❌ Erro ao processar ping do usuário:', error);
+      // Não interromper o login por falha no ping
+    }
   };
 
   const logout = () => {

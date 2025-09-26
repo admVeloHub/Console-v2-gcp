@@ -1,0 +1,8 @@
+Acessos Disponíveis:
+Local: http://localhost:8080
+
+Rede: http://[SEU_IP]:8080
+
+Porta: 8080 (configurável)
+
+Senha: velotax2024

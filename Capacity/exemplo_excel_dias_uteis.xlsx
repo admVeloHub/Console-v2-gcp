@@ -1,0 +1,36 @@
+Este arquivo é um placeholder para um arquivo Excel de exemplo.
+
+Para criar um arquivo Excel de exemplo para dias úteis:
+
+1. Abra o Excel ou Google Sheets
+2. Crie uma planilha com 2 colunas:
+   - Coluna A: "Intervalo de ligações"
+   - Coluna B: "Quantidade média de ligações recebidas por intervalo"
+
+3. Adicione os dados:
+   A1: Intervalo de ligações
+   B1: Quantidade média de ligações recebidas por intervalo
+   A2: 8
+   B2: 30
+   A3: 9
+   B3: 45
+   A4: 10
+   B4: 60
+   A5: 11
+   B5: 50
+   A6: 12
+   B6: 70
+   A7: 13
+   B7: 45
+   A8: 14
+   B8: 35
+   A9: 15
+   B9: 30
+   A10: 16
+   B10: 25
+   A11: 17
+   B11: 20
+
+4. Salve como "exemplo_excel_dias_uteis.xlsx"
+
+O sistema agora aceita arquivos XLS, XLSX e CSV!

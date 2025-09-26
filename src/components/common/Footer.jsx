@@ -100,6 +100,11 @@ const Footer = () => {
                 borderRadius: '50%',
                 backgroundColor: getStatusColor(),
                 transition: 'background-color 0.3s ease',
+                '@keyframes pulse': {
+                  '0%': { opacity: 1 },
+                  '50%': { opacity: 0.5 },
+                  '100%': { opacity: 1 }
+                },
                 animation: apiStatus.loading ? 'pulse 1.5s infinite' : 'none'
               }}
             />
@@ -128,14 +133,6 @@ const Footer = () => {
           v{apiStatus.version}
         </Typography>
       </Box>
-      
-      <style jsx>{`
-        @keyframes pulse {
-          0% { opacity: 1; }
-          50% { opacity: 0.5; }
-          100% { opacity: 1; }
-        }
-      `}</style>
     </Box>
   );
 };

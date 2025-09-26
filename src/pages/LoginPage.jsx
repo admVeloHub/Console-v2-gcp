@@ -1,4 +1,4 @@
-// VERSION: v3.3.8 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.4.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState } from 'react';
 import {
   Box,
@@ -21,7 +21,7 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const handleGoogleSuccess = (credentialResponse) => {
+  const handleGoogleSuccess = async (credentialResponse) => {
     setLoading(true);
     setError(null);
     
@@ -54,8 +54,8 @@ const LoginPage = () => {
           picture: userInfo.picture
         };
         
-        // Fazer login via AuthContext
-        login(user);
+        // Fazer login via AuthContext (agora assíncrono)
+        await login(user);
       } else {
         setError('Usuário não registrado no sistema. Entre em contato com o administrador para solicitar acesso.');
       }
@@ -92,7 +92,7 @@ const LoginPage = () => {
           nome: 'Lucas Gravina',
           picture: 'https://ui-avatars.com/api/?name=Lucas+Gravina&background=1634FF&color=fff&size=32&bold=true'
         };
-        login(user);
+        await login(user);
       } else {
         setError('Usuário de desenvolvimento não registrado no sistema.');
       }

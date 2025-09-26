@@ -1,5 +1,78 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.1.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+
+## Implementação - Sistema de Ping do Usuário - 2024-12-19 20:45
+
+### Informações da Implementação
+- **Tipo:** Nova Funcionalidade
+- **Data/Hora:** 2024-12-19 20:45 BRT
+- **Versão:** v3.4.0
+- **Descrição:** Sistema automático de ping do usuário para o backend
+
+### Arquivos Criados/Modificados
+- ✅ **Novos arquivos:**
+  - `src/services/userPingService.js` - Serviço de ping do usuário
+  - `USER_PING_SYSTEM.md` - Documentação do sistema de ping
+
+- ✅ **Arquivos modificados:**
+  - `src/contexts/AuthContext.jsx` - Integração do ping no login (v3.4.0)
+  - `src/pages/LoginPage.jsx` - Login assíncrono com ping (v3.4.0)
+
+### Funcionalidades Implementadas
+- ✅ **Geração automática de userId** no formato `nome_sobrenome`
+- ✅ **Determinação inteligente de collectionId** baseado em permissões:
+  - `tk_conteudos` - Acesso a artigos, processos, roteiros, treinamentos, recursos
+  - `tk_gestão` - Acesso a funcionalidades, gestão, RH&Fin, facilities
+  - `console_chamados` - Acesso a ambos os tipos
+- ✅ **Ping automático** após login bem-sucedido
+- ✅ **Tratamento de erros** sem interromper o processo de login
+- ✅ **Debug em desenvolvimento** com logs detalhados
+- ✅ **Compatibilidade** com Google OAuth e login de desenvolvimento
+
+### Endpoint do Backend
+- **URL:** `POST /api/user-ping`
+- **Payload:** `{"_userId": "string", "_collectionId": "string"}`
+- **Headers:** `Content-Type: application/json`
+
+### Testes Realizados
+- ✅ Teste com usuário completo (Lucas Gravina) → `console_chamados`
+- ✅ Teste com apenas conteúdos → `tk_conteudos`
+- ✅ Teste com apenas gestão → `tk_gestão`
+- ✅ Teste com ambos os tipos → `console_chamados`
+- ✅ **Teste com usuário sem permissões** → `null` (ping pulado)
+- ✅ **Teste com dados inválidos** → `null` (ping pulado)
+- ✅ Geração de userId em diferentes formatos
+
+---
+
+## Atualização - Ping Pulado para Usuários sem Permissões - 2024-12-19 21:00
+
+### Informações da Atualização
+- **Tipo:** Melhoria de Funcionalidade
+- **Data/Hora:** 2024-12-19 21:00 BRT
+- **Versão:** v3.4.1
+- **Descrição:** Implementação de ping pulado para usuários sem permissões para collections
+
+### Arquivos Modificados
+- ✅ **Arquivos atualizados:**
+  - `src/services/userPingService.js` - Lógica de ping pulado (v1.1.0)
+  - `src/contexts/AuthContext.jsx` - Tratamento de ping pulado (v3.4.1)
+  - `USER_PING_SYSTEM.md` - Documentação atualizada (v1.1.0)
+
+### Melhorias Implementadas
+- ✅ **CollectionId `null`** para usuários sem permissões
+- ✅ **Ping automaticamente pulado** quando collectionId é null
+- ✅ **Logs específicos** para ping pulado vs ping enviado
+- ✅ **Debug aprimorado** mostrando quando ping é pulado
+- ✅ **Tratamento de dados inválidos** retornando null
+
+### Comportamento Atualizado
+- ✅ **Usuário com permissões** → Ping enviado para backend
+- ✅ **Usuário sem permissões** → Ping pulado, log informativo
+- ✅ **Dados inválidos** → Ping pulado, log informativo
+- ✅ **Falha de rede** → Log de erro, login continua normalmente
+
+---
 
 ## GitHub Push - 2024-12-19 19:30
 
@@ -227,6 +300,51 @@
 - Google SSO funcional com captura de dados do usuário
 - Sistema de tickets com categorização e status visuais
 - Gerenciamento completo de usuários e permissões
+
+---
+
+## GitHub Push - 2024-12-19 22:45
+
+### Informações do Deploy
+- **Tipo:** GitHub Push
+- **Data/Hora:** 2024-12-19 22:45 BRT
+- **Versão:** v3.3.8
+- **Branch:** master
+- **Repositório:** https://github.com/admVeloHub/front-console.git
+- **Commit Hash:** 9025920
+
+### Arquivos Modificados
+- ✅ **Arquivos atualizados:**
+  - `src/pages/LoginPage.jsx` - Verificação de usuários registrados e centralização do botão Google
+  - `src/pages/ConfigPage.jsx` - Integração com serviço de usuários e persistência de permissões
+  - `src/contexts/AuthContext.jsx` - Função updateUser para persistir alterações no localStorage
+  - `DEPLOY_LOG.md` - Log das alterações
+
+- ✅ **Novos arquivos criados:**
+  - `src/services/userService.js` - Serviço centralizado de gerenciamento de usuários
+
+### Descrição das Alterações
+**Sistema completo de controle de acesso e persistência:**
+- ✅ Sistema de usuários registrados - apenas usuários cadastrados na Config podem fazer login
+- ✅ Verificação de autorização antes do login SSO do Google
+- ✅ Persistência automática de permissões no AuthContext e localStorage
+- ✅ Centralização do botão Google na tela de login
+- ✅ Integração completa entre ConfigPage e serviço de usuários
+- ✅ Sincronização em tempo real de alterações de permissões
+- ✅ Mensagens específicas para usuários não registrados
+- ✅ Controle centralizado de acesso ao sistema
+
+### Status do Deploy
+- **Status:** ✅ Sucesso
+- **Arquivos enviados:** 11 objetos (4.08 KiB)
+- **Compressão:** Delta compression com 4 threads
+- **Tempo:** ~2 segundos
+
+### Observações
+- Sistema de controle de acesso implementado completamente
+- Persistência de permissões funcionando em tempo real
+- Interface de gerenciamento de usuários totalmente integrada
+- Segurança aprimorada com verificação de usuários registrados
 
 ---
 **Próximo deploy:** Aguardando próximas alterações
