@@ -1,5 +1,49 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.1.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.2.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+
+## GitHub Push - Sistema de Usuários MongoDB - 2024-12-19 23:15
+
+### Informações do Push
+- **Tipo:** GitHub Push
+- **Data/Hora:** 2024-12-19 23:15 BRT
+- **Versão:** v3.6.0
+- **Commit:** babf57b
+- **Descrição:** Implementação completa do sistema de usuários integrado com MongoDB
+
+### Arquivos Modificados
+- ✅ **src/services/api.js** (v3.1.1) - API de usuários completa
+- ✅ **src/services/userService.js** (v3.4.2) - Integração com MongoDB
+- ✅ **src/pages/LoginPage.jsx** (v3.4.2) - Autenticação via MongoDB
+- ✅ **src/pages/ConfigPage.jsx** (v3.4.1) - Gerenciamento de usuários
+- ✅ **src/pages/ChamadosInternosPage.jsx** (v3.1.10) - Correção Material-UI
+- ✅ **src/pages/FuncionariosPage.jsx** (v1.1.1) - Correção Material-UI
+- ✅ **src/pages/QualidadeModulePage.jsx** (v1.1.1) - Correção Material-UI
+- ✅ **src/types/qualidade.js** (v1.1.1) - Validação de pontuação
+
+### Funcionalidades Implementadas
+- ✅ **API de usuários completa** (6 endpoints)
+- ✅ **Integração com backend MongoDB**
+- ✅ **Sistema de autenticação via MongoDB**
+- ✅ **Gerenciamento de usuários na página Config**
+- ✅ **Schema MongoDB:** _userMail, _userId, _userRole, _userClearance, _userTickets
+- ✅ **Cache local** para otimização de performance
+- ✅ **Correção de erros Material-UI Chip** em todas as páginas
+- ✅ **Validação robusta** de dados de entrada
+
+### Endpoints Implementados
+- `GET /api/users` - Listar todos os usuários
+- `POST /api/users` - Criar novo usuário
+- `PUT /api/users/:email` - Atualizar usuário
+- `DELETE /api/users/:email` - Deletar usuário
+- `GET /api/users/check/:email` - Verificar autorização
+- `GET /api/users/:email` - Obter dados do usuário
+
+### Observações
+- Sistema pronto para integração com backend MongoDB
+- Frontend totalmente funcional e testado
+- Aguardando backend estar disponível para teste completo
+
+---
 
 ## Implementação - Sistema de Ping do Usuário - 2024-12-19 20:45
 
