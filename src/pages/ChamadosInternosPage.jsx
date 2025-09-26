@@ -1,4 +1,4 @@
-// VERSION: v3.1.9 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.1.10 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 
@@ -441,7 +441,7 @@ const ChamadosInternosPage = () => {
                     </TableCell>
                     <TableCell sx={{ fontFamily: 'Poppins' }}>
                       <Chip 
-                        label={ticket.sla}
+                        label={ticket.sla || 'Não definido'}
                         size="small"
                         color="info"
                         variant="outlined"
@@ -449,7 +449,7 @@ const ChamadosInternosPage = () => {
                     </TableCell>
                     <TableCell>
                       <Chip 
-                        label={ticket.situacao}
+                        label={ticket.situacao || 'Não definida'}
                         size="small"
                         sx={{
                           background: getStatusColor(ticket.situacao).background,
@@ -600,7 +600,7 @@ const ChamadosInternosPage = () => {
                     </TableCell>
                     <TableCell sx={{ fontFamily: 'Poppins' }}>
                       <Chip 
-                        label={ticket.sla}
+                        label={ticket.sla || 'Não definido'}
                         size="small"
                         color="info"
                         variant="outlined"
@@ -608,7 +608,7 @@ const ChamadosInternosPage = () => {
                     </TableCell>
                     <TableCell>
                       <Chip 
-                        label={ticket.situacao}
+                        label={ticket.situacao || 'Não definida'}
                         size="small"
                         sx={{
                           background: getStatusColor(ticket.situacao).background,
@@ -699,7 +699,7 @@ const ChamadosInternosPage = () => {
                     Prioridade:
                   </Typography>
                   <Chip 
-                    label={selectedTicket.prioridade}
+                    label={selectedTicket.prioridade || 'Não definida'}
                     size="small"
                     color={getPriorityColor(selectedTicket.prioridade)}
                     variant="filled"
@@ -710,7 +710,7 @@ const ChamadosInternosPage = () => {
                     Situação:
                   </Typography>
                   <Chip 
-                    label={selectedTicket.situacao}
+                    label={selectedTicket.situacao || 'Não definida'}
                     size="small"
                     color={getStatusColor(selectedTicket.situacao)}
                     variant="filled"

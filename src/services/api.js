@@ -1,4 +1,4 @@
-// VERSION: v3.1.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.1.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import axios from 'axios';
 
 // Configuração base da API
@@ -130,6 +130,45 @@ export const igpAPI = {
   // Exportar dados
   exportData: async (format, data, filename) => {
     const response = await api.post(`/igp/export/${format}`, { data, filename });
+    return response.data;
+  }
+};
+
+// API para Usuários
+export const usersAPI = {
+  // Listar todos os usuários
+  getAll: async () => {
+    const response = await api.get('/users');
+    return response.data;
+  },
+
+  // Criar novo usuário
+  create: async (data) => {
+    const response = await api.post('/users', data);
+    return response.data;
+  },
+
+  // Atualizar usuário
+  update: async (email, data) => {
+    const response = await api.put(`/users/${email}`, data);
+    return response.data;
+  },
+
+  // Deletar usuário
+  delete: async (email) => {
+    const response = await api.delete(`/users/${email}`);
+    return response.data;
+  },
+
+  // Verificar se usuário está autorizado
+  isAuthorized: async (email) => {
+    const response = await api.get(`/users/check/${email}`);
+    return response.data;
+  },
+
+  // Obter dados do usuário
+  getByEmail: async (email) => {
+    const response = await api.get(`/users/${email}`);
     return response.data;
   }
 };

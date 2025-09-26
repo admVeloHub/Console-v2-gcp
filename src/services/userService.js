@@ -1,73 +1,119 @@
-// VERSION: v3.3.8 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.4.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
-// Lista de usuários autorizados (simulando banco de dados)
-// Em produção, isso viria de uma API real
-let authorizedUsers = [
-  {
-    id: 1,
-    email: 'lucas.gravina@velotax.com.br',
-    nome: 'Lucas Gravina',
-    funcao: 'Administrador',
-    permissoes: {
-      artigos: true,
-      velonews: true,
-      botPerguntas: true,
-      chamadosInternos: true,
-      igp: true,
-      qualidade: true,
-      capacity: true,
-      config: true
-    },
-    tiposTickets: {
-      artigos: true,
-      processos: true,
-      roteiros: true,
-      treinamentos: true,
-      funcionalidades: true,
-      recursos: true,
-      gestao: true,
-      rhFin: true,
-      facilities: true
-    }
-  }
-];
+import { usersAPI } from './api';
+
+// Cache local para melhor performance
+let usersCache = null;
+let cacheTimestamp = null;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+
+// Função para verificar se o cache é válido
+const isCacheValid = () => {
+  return usersCache && cacheTimestamp && (Date.now() - cacheTimestamp) < CACHE_DURATION;
+};
+
+// Função para limpar o cache
+const clearCache = () => {
+  usersCache = null;
+  cacheTimestamp = null;
+};
 
 // Função para verificar se um email está autorizado
-export const isUserAuthorized = (email) => {
-  return authorizedUsers.some(user => user.email === email);
+export const isUserAuthorized = async (email) => {
+  try {
+    const result = await usersAPI.isAuthorized(email);
+    return result.authorized;
+  } catch (error) {
+    console.error('Erro ao verificar autorização do usuário:', error);
+    return false;
+  }
 };
 
 // Função para obter dados do usuário autorizado
-export const getAuthorizedUser = (email) => {
-  return authorizedUsers.find(user => user.email === email);
+export const getAuthorizedUser = async (email) => {
+  try {
+    const mongoUser = await usersAPI.getByEmail(email);
+    return mongoUser; // Retorna dados diretamente do MongoDB
+  } catch (error) {
+    console.error('Erro ao obter dados do usuário:', error);
+    return null;
+  }
+};
+
+// Função para mapear dados do frontend para o schema do MongoDB
+const mapToMongoSchema = (userData) => {
+  return {
+    _userMail: userData.email,
+    _userId: userData.nome, // Nome do usuário no cadastro
+    _userRole: userData.funcao || 'Usuário',
+    _userClearance: userData.permissoes || {},
+    _userTickets: userData.tiposTickets || {}
+  };
 };
 
 // Função para adicionar novo usuário autorizado
-export const addAuthorizedUser = (userData) => {
-  const newUser = {
-    id: Date.now(),
-    ...userData
-  };
-  authorizedUsers.push(newUser);
-  return newUser;
+export const addAuthorizedUser = async (userData) => {
+  try {
+    const mongoData = mapToMongoSchema(userData);
+    const newUser = await usersAPI.create(mongoData);
+    clearCache(); // Limpar cache após adicionar usuário
+    return newUser; // Retorna dados diretamente do MongoDB
+  } catch (error) {
+    console.error('Erro ao adicionar usuário:', error);
+    throw error;
+  }
 };
 
 // Função para atualizar usuário autorizado
-export const updateAuthorizedUser = (email, updatedData) => {
-  const userIndex = authorizedUsers.findIndex(user => user.email === email);
-  if (userIndex !== -1) {
-    authorizedUsers[userIndex] = { ...authorizedUsers[userIndex], ...updatedData };
-    return authorizedUsers[userIndex];
+export const updateAuthorizedUser = async (email, updatedData) => {
+  try {
+    const mongoData = mapToMongoSchema(updatedData);
+    const updatedMongoUser = await usersAPI.update(email, mongoData);
+    clearCache(); // Limpar cache após atualizar usuário
+    return updatedMongoUser; // Retorna dados diretamente do MongoDB
+  } catch (error) {
+    console.error('Erro ao atualizar usuário:', error);
+    throw error;
   }
-  return null;
 };
 
 // Função para obter todos os usuários autorizados
-export const getAllAuthorizedUsers = () => {
-  return [...authorizedUsers];
+export const getAllAuthorizedUsers = async () => {
+  try {
+    // Verificar cache primeiro
+    if (isCacheValid()) {
+      return usersCache;
+    }
+
+    // Buscar do backend
+    const mongoUsers = await usersAPI.getAll();
+    
+    // Atualizar cache
+    usersCache = mongoUsers;
+    cacheTimestamp = Date.now();
+    
+    return mongoUsers; // Retorna dados diretamente do MongoDB
+  } catch (error) {
+    console.error('Erro ao obter usuários:', error);
+    
+    // Em caso de erro, tentar usar cache mesmo que expirado
+    if (usersCache) {
+      console.warn('Usando cache expirado devido a erro na API');
+      return usersCache;
+    }
+    
+    throw error;
+  }
 };
 
 // Função para remover usuário autorizado
-export const removeAuthorizedUser = (email) => {
-  authorizedUsers = authorizedUsers.filter(user => user.email !== email);
+export const removeAuthorizedUser = async (email) => {
+  try {
+    await usersAPI.delete(email);
+    clearCache(); // Limpar cache após remover usuário
+    return true;
+  } catch (error) {
+    console.error('Erro ao remover usuário:', error);
+    throw error;
+  }
 };

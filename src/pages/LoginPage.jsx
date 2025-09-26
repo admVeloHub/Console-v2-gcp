@@ -1,4 +1,4 @@
-// VERSION: v3.4.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.4.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState } from 'react';
 import {
   Box,
@@ -43,19 +43,28 @@ const LoginPage = () => {
       });
       
       // Verificar se o usuário está registrado no sistema
-      if (isUserAuthorized(userInfo.email)) {
+      const isAuthorized = await isUserAuthorized(userInfo.email);
+      if (isAuthorized) {
         // Obter dados do usuário registrado
-        const registeredUser = getAuthorizedUser(userInfo.email);
+        const registeredUser = await getAuthorizedUser(userInfo.email);
         
-        // Atualizar com dados do Google (nome e foto)
-        const user = {
-          ...registeredUser,
-          nome: userInfo.name,
-          picture: userInfo.picture
-        };
-        
-        // Fazer login via AuthContext (agora assíncrono)
-        await login(user);
+        if (registeredUser) {
+          // Usar dados do MongoDB com campos corretos
+          const user = {
+            id: registeredUser._userId,
+            email: registeredUser._userMail,
+            nome: registeredUser._userId, // Nome do usuário (campo _userId)
+            funcao: registeredUser._userRole,
+            permissoes: registeredUser._userClearance,
+            tiposTickets: registeredUser._userTickets,
+            picture: userInfo.picture // Foto do Google
+          };
+          
+          // Fazer login via AuthContext (agora assíncrono)
+          await login(user);
+        } else {
+          setError('Erro ao obter dados do usuário. Tente novamente.');
+        }
       } else {
         setError('Usuário não registrado no sistema. Entre em contato com o administrador para solicitar acesso.');
       }
@@ -85,14 +94,23 @@ const LoginPage = () => {
       const devEmail = 'lucas.gravina@velotax.com.br';
       
       // Verificar se o usuário de desenvolvimento está registrado
-      if (isUserAuthorized(devEmail)) {
-        const registeredUser = getAuthorizedUser(devEmail);
-        const user = {
-          ...registeredUser,
-          nome: 'Lucas Gravina',
-          picture: 'https://ui-avatars.com/api/?name=Lucas+Gravina&background=1634FF&color=fff&size=32&bold=true'
-        };
-        await login(user);
+      const isAuthorized = await isUserAuthorized(devEmail);
+      if (isAuthorized) {
+        const registeredUser = await getAuthorizedUser(devEmail);
+        if (registeredUser) {
+          const user = {
+            id: registeredUser._userId,
+            email: registeredUser._userMail,
+            nome: registeredUser._userId, // Nome do usuário (campo _userId)
+            funcao: registeredUser._userRole,
+            permissoes: registeredUser._userClearance,
+            tiposTickets: registeredUser._userTickets,
+            picture: 'https://ui-avatars.com/api/?name=Lucas+Gravina&background=1634FF&color=fff&size=32&bold=true'
+          };
+          await login(user);
+        } else {
+          setError('Erro ao obter dados do usuário de desenvolvimento.');
+        }
       } else {
         setError('Usuário de desenvolvimento não registrado no sistema.');
       }

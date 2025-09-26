@@ -196,8 +196,11 @@ export const calcularPontuacaoTotal = (avaliacao) => {
 
 // Função para obter status da pontuação
 export const getStatusPontuacao = (pontuacao) => {
-  if (pontuacao >= 80) return { status: 'excelente', cor: '#10B981', texto: 'Excelente' };
-  if (pontuacao >= 60) return { status: 'bom', cor: '#3B82F6', texto: 'Bom' };
-  if (pontuacao >= 40) return { status: 'regular', cor: '#F59E0B', texto: 'Regular' };
+  // Validar se pontuacao é um número válido
+  const pontuacaoNum = typeof pontuacao === 'number' ? pontuacao : 0;
+  
+  if (pontuacaoNum >= 80) return { status: 'excelente', cor: '#10B981', texto: 'Excelente' };
+  if (pontuacaoNum >= 60) return { status: 'bom', cor: '#3B82F6', texto: 'Bom' };
+  if (pontuacaoNum >= 40) return { status: 'regular', cor: '#F59E0B', texto: 'Regular' };
   return { status: 'ruim', cor: '#EF4444', texto: 'Ruim' };
 };

@@ -1,5 +1,5 @@
-// VERSION: v3.3.8 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
-import React, { useState } from 'react';
+// VERSION: v3.4.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   Typography,
@@ -51,7 +51,25 @@ import {
 
 const ConfigPage = () => {
   const { user: currentUser, updateUser } = useAuth();
-  const [users, setUsers] = useState(getAllAuthorizedUsers());
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Carregar usuários ao montar o componente
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const loadUsers = async () => {
+    try {
+      setLoading(true);
+      const usersData = await getAllAuthorizedUsers();
+      setUsers(usersData);
+    } catch (error) {
+      console.error('Erro ao carregar usuários:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const [openUserModal, setOpenUserModal] = useState(false);
   const [openPermissionsModal, setOpenPermissionsModal] = useState(false);
@@ -92,9 +110,9 @@ const ConfigPage = () => {
     if (user) {
       setEditingUser(user);
       setFormData({
-        email: user.email,
-        nome: user.nome,
-        funcao: user.funcao
+        email: user._userMail,
+        nome: user._userId,
+        funcao: user._userRole
       });
     } else {
       setEditingUser(null);
@@ -127,97 +145,118 @@ const ConfigPage = () => {
     setSelectedUser(null);
   };
 
-  const handleSaveUser = () => {
-    if (editingUser) {
-      // Editar usuário existente
-      const updatedUser = updateAuthorizedUser(editingUser.email, formData);
-      if (updatedUser) {
-        setUsers(getAllAuthorizedUsers());
+  const handleSaveUser = async () => {
+    try {
+      if (editingUser) {
+        // Editar usuário existente
+        await updateAuthorizedUser(editingUser.email, formData);
+      } else {
+        // Adicionar novo usuário
+        const newUser = {
+          ...formData,
+          permissoes: {
+            artigos: false,
+            velonews: false,
+            botPerguntas: false,
+            chamadosInternos: false,
+            igp: false,
+            qualidade: false,
+            capacity: false,
+            config: false
+          },
+          tiposTickets: {
+            artigos: false,
+            processos: false,
+            roteiros: false,
+            treinamentos: false,
+            funcionalidades: false,
+            recursos: false,
+            gestao: false,
+            rhFin: false,
+            facilities: false
+          }
+        };
+        await addAuthorizedUser(newUser);
       }
-    } else {
-      // Adicionar novo usuário
-      const newUser = {
-        ...formData,
-        permissoes: {
-          artigos: false,
-          velonews: false,
-          botPerguntas: false,
-          chamadosInternos: false,
-          igp: false,
-          qualidade: false,
-          capacity: false,
-          config: false
-        },
-        tiposTickets: {
-          artigos: false,
-          processos: false,
-          roteiros: false,
-          treinamentos: false,
-          funcionalidades: false,
-          recursos: false,
-          gestao: false,
-          rhFin: false,
-          facilities: false
-        }
-      };
-      addAuthorizedUser(newUser);
-      setUsers(getAllAuthorizedUsers());
-    }
-    handleCloseUserModal();
-  };
-
-  const handleDeleteUser = (userId) => {
-    const userToDelete = users.find(user => user.id === userId);
-    if (userToDelete) {
-      removeAuthorizedUser(userToDelete.email);
-      setUsers(getAllAuthorizedUsers());
+      
+      // Recarregar lista de usuários
+      await loadUsers();
+      handleCloseUserModal();
+    } catch (error) {
+      console.error('Erro ao salvar usuário:', error);
+      // Aqui você pode adicionar um toast ou alert para mostrar o erro
     }
   };
 
-  const handlePermissionChange = (permission, checked) => {
+  const handleDeleteUser = async (userId) => {
+    try {
+      const userToDelete = users.find(user => user._id === userId);
+      if (userToDelete) {
+        await removeAuthorizedUser(userToDelete._userMail);
+        await loadUsers(); // Recarregar lista de usuários
+      }
+    } catch (error) {
+      console.error('Erro ao remover usuário:', error);
+      // Aqui você pode adicionar um toast ou alert para mostrar o erro
+    }
+  };
+
+  const handlePermissionChange = async (permission, checked) => {
     if (selectedUser) {
-      const updatedUser = {
-        ...selectedUser,
-        permissoes: {
-          ...selectedUser.permissoes,
-          [permission]: checked
-        }
-      };
-      
-      // Atualizar o selectedUser para refletir imediatamente no modal
-      setSelectedUser(updatedUser);
-      
-      // Atualizar no serviço de usuários
-      updateAuthorizedUser(selectedUser.email, updatedUser);
-      setUsers(getAllAuthorizedUsers());
+      try {
+        const updatedUser = {
+          ...selectedUser,
+          permissoes: {
+            ...selectedUser.permissoes,
+            [permission]: checked
+          }
+        };
+        
+        // Atualizar o selectedUser para refletir imediatamente no modal
+        setSelectedUser(updatedUser);
+        
+        // Atualizar no serviço de usuários
+        await updateAuthorizedUser(selectedUser.email, updatedUser);
+        await loadUsers(); // Recarregar lista de usuários
 
-      // Se é o usuário logado, atualizar o AuthContext e localStorage
-      if (currentUser && currentUser.email === selectedUser.email) {
-        updateUser(updatedUser);
+        // Se é o usuário logado, atualizar o AuthContext e localStorage
+        if (currentUser && currentUser.email === selectedUser.email) {
+          updateUser(updatedUser);
+        }
+      } catch (error) {
+        console.error('Erro ao atualizar permissão:', error);
+        // Reverter a mudança no selectedUser em caso de erro
+        setSelectedUser(selectedUser);
       }
     }
   };
 
-  const handleTicketTypeChange = (ticketType, checked) => {
+  const handleTicketTypeChange = async (ticketType, checked) => {
     if (selectedUser) {
-      const updatedUser = {
-        ...selectedUser,
-        tiposTickets: {
-          ...selectedUser.tiposTickets,
-          [ticketType]: checked
-        }
-      };
-      
-      // Atualizar o selectedUser para refletir imediatamente no modal
-      setSelectedUser(updatedUser);
-      
-      // Atualizar no serviço de usuários
-      updateAuthorizedUser(selectedUser.email, updatedUser);
-      setUsers(getAllAuthorizedUsers());
+      try {
+        const updatedUser = {
+          ...selectedUser,
+          tiposTickets: {
+            ...selectedUser.tiposTickets,
+            [ticketType]: checked
+          }
+        };
+        
+        // Atualizar o selectedUser para refletir imediatamente no modal
+        setSelectedUser(updatedUser);
+        
+        // Atualizar no serviço de usuários
+        await updateAuthorizedUser(selectedUser.email, updatedUser);
+        await loadUsers(); // Recarregar lista de usuários
 
-      // Se é o usuário logado, atualizar o AuthContext e localStorage
-      if (currentUser && currentUser.email === selectedUser.email) {
-        updateUser(updatedUser);
+        // Se é o usuário logado, atualizar o AuthContext e localStorage
+        if (currentUser && currentUser.email === selectedUser.email) {
+          updateUser(updatedUser);
+        }
+      } catch (error) {
+        console.error('Erro ao atualizar tipo de ticket:', error);
+        // Reverter a mudança no selectedUser em caso de erro
+        setSelectedUser(selectedUser);
       }
     }
   };
@@ -337,7 +376,7 @@ const ConfigPage = () => {
               <TableBody>
                 {users.map((user) => (
                   <TableRow 
-                    key={user.id}
+                    key={user._id}
                     hover
                     sx={{ 
                       '&:hover': {
@@ -348,29 +387,29 @@ const ConfigPage = () => {
                     <TableCell>
                       <Box>
                         <Typography sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>
-                          {user.nome}
+                          {user._userId}
                         </Typography>
                         <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'Poppins' }}>
-                          {user.email}
+                          {user._userMail}
                         </Typography>
                       </Box>
                     </TableCell>
                     <TableCell>
                       <Chip 
-                        label={user.funcao}
+                        label={user._userRole || 'Não definida'}
                         size="small"
-                        color={getFuncaoColor(user.funcao)}
+                        color={getFuncaoColor(user._userRole)}
                         sx={{ fontFamily: 'Poppins', fontWeight: 500 }}
                       />
                     </TableCell>
                     <TableCell>
                       <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                        {Object.entries(user.permissoes).map(([key, hasPermission]) => {
+                        {Object.entries(user._userClearance).map(([key, hasPermission]) => {
                           const permission = cardPermissions.find(p => p.key === key);
                           return hasPermission ? (
                             <Chip
                               key={key}
-                              label={permission?.label}
+                              label={permission?.label || 'Permissão'}
                               size="small"
                               variant="outlined"
                               sx={{ 
@@ -418,7 +457,7 @@ const ConfigPage = () => {
                         <Tooltip title="Excluir">
                           <IconButton
                             size="small"
-                            onClick={() => handleDeleteUser(user.id)}
+                            onClick={() => handleDeleteUser(user._id)}
                             sx={{ 
                               color: 'var(--red)',
                               '&:hover': {

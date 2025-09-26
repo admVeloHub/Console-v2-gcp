@@ -672,9 +672,9 @@ const FuncionariosPage = () => {
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={status.texto}
+                          label={status.texto || 'Indefinido'}
                           sx={{
-                            backgroundColor: status.cor,
+                            backgroundColor: status.cor || '#666666',
                             color: '#ffffff',
                             fontFamily: 'Poppins',
                             fontWeight: 500
@@ -785,7 +785,7 @@ const FuncionariosPage = () => {
                                     {funcionario.acessos.map((acesso) => (
                                       <Chip
                                         key={acesso.id}
-                                        label={`${acesso.sistema}${acesso.perfil ? ` (${acesso.perfil})` : ''}`}
+                                        label={`${acesso.sistema || 'Sistema'}${acesso.perfil ? ` (${acesso.perfil})` : ''}`}
                                         onDelete={() => excluirAcesso(funcionario.id, acesso.id)}
                                         sx={{
                                           backgroundColor: '#1694FF',

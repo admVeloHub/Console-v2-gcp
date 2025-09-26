@@ -613,9 +613,9 @@ const QualidadeModulePage = () => {
                           </TableCell>
                           <TableCell>
                             <Chip
-                              label={status.texto}
+                              label={status.texto || 'Indefinido'}
                               sx={{
-                                backgroundColor: status.cor,
+                                backgroundColor: status.cor || '#666666',
                                 color: '#ffffff',
                                 fontFamily: 'Poppins',
                                 fontWeight: 500
