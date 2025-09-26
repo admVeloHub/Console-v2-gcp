@@ -1,4 +1,4 @@
-// VERSION: v3.4.4 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.4.5 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -333,7 +333,13 @@ const ConfigPage = () => {
 
       // Se é o usuário logado, atualizar o AuthContext e localStorage
         if (currentUser && currentUser.email === selectedUser._userMail) {
-        updateUser(updatedUser);
+          // Mapear dados do MongoDB para o formato que o AuthContext espera
+          const contextUser = {
+            ...currentUser,
+            permissoes: updatedUser._userClearance,
+            tiposTickets: updatedUser._userTickets
+          };
+          updateUser(contextUser);
         }
       } catch (error) {
         console.error('Erro ao atualizar permissão:', error);
@@ -363,7 +369,13 @@ const ConfigPage = () => {
 
       // Se é o usuário logado, atualizar o AuthContext e localStorage
         if (currentUser && currentUser.email === selectedUser._userMail) {
-        updateUser(updatedUser);
+          // Mapear dados do MongoDB para o formato que o AuthContext espera
+          const contextUser = {
+            ...currentUser,
+            permissoes: updatedUser._userClearance,
+            tiposTickets: updatedUser._userTickets
+          };
+          updateUser(contextUser);
         }
       } catch (error) {
         console.error('Erro ao atualizar tipo de ticket:', error);
