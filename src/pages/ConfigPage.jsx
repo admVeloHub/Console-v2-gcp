@@ -1,4 +1,4 @@
-// VERSION: v3.4.3 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.4.4 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -318,8 +318,8 @@ const ConfigPage = () => {
       try {
         const updatedUser = {
           ...selectedUser,
-          permissoes: {
-            ...selectedUser.permissoes,
+          _userClearance: {
+            ...selectedUser._userClearance,
             [permission]: checked
           }
         };
@@ -348,8 +348,8 @@ const ConfigPage = () => {
       try {
         const updatedUser = {
           ...selectedUser,
-          tiposTickets: {
-            ...selectedUser.tiposTickets,
+          _userTickets: {
+            ...selectedUser._userTickets,
             [ticketType]: checked
           }
         };
@@ -806,10 +806,10 @@ const ConfigPage = () => {
               {cardPermissions.map((permission) => (
                 <Grid item xs={12} sm={6} md={4} key={permission.key}>
                   <Card sx={{ 
-                    border: selectedUser?.permissoes[permission.key] 
+                    border: selectedUser?._userClearance[permission.key] 
                       ? '2px solid var(--blue-medium)' 
                       : '1px solid var(--gray-light)',
-                    backgroundColor: selectedUser?.permissoes[permission.key] 
+                    backgroundColor: selectedUser?._userClearance[permission.key] 
                       ? 'var(--cor-container)' 
                       : 'white',
                     transition: 'all 0.2s ease',
@@ -823,7 +823,7 @@ const ConfigPage = () => {
                       <FormControlLabel
                         control={
                           <Checkbox
-                            checked={selectedUser?.permissoes[permission.key] || false}
+                            checked={selectedUser?._userClearance[permission.key] || false}
                             onChange={(e) => handlePermissionChange(permission.key, e.target.checked)}
                             sx={{
                               color: 'var(--blue-medium)',
@@ -878,10 +878,10 @@ const ConfigPage = () => {
                 {ticketTypes.map((ticketType) => (
                   <Grid item xs={12} sm={6} md={4} key={ticketType.key}>
                     <Card sx={{ 
-                      border: selectedUser?.tiposTickets[ticketType.key] 
+                      border: selectedUser?._userTickets[ticketType.key] 
                         ? '2px solid var(--yellow)' 
                         : '1px solid var(--gray-light)',
-                      backgroundColor: selectedUser?.tiposTickets[ticketType.key] 
+                      backgroundColor: selectedUser?._userTickets[ticketType.key] 
                         ? 'rgba(252, 194, 0, 0.1)' 
                         : 'white',
                       transition: 'all 0.2s ease',
@@ -895,7 +895,7 @@ const ConfigPage = () => {
                         <FormControlLabel
                           control={
                             <Checkbox
-                              checked={selectedUser?.tiposTickets[ticketType.key] || false}
+                              checked={selectedUser?._userTickets[ticketType.key] || false}
                               onChange={(e) => handleTicketTypeChange(ticketType.key, e.target.checked)}
                               sx={{
                                 color: 'var(--yellow)',
