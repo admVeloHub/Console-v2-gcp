@@ -1,37 +1,45 @@
 # Deploy Log - Console de Conteúdo VeloHub
 <!-- VERSION: v1.3.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
 
-## GitHub Push - Sistema de Serviços e Melhorias UX - 2024-12-19 23:55
+## GitHub Push - Atualização do Módulo de Serviços e Formulário Bot_perguntas - 2024-12-19 23:55
 
 ### Informações do Push
 - **Tipo:** GitHub Push
 - **Data/Hora:** 2024-12-19 23:55 BRT
-- **Versão:** v3.7.1
-- **Commit:** cb00ea2
-- **Descrição:** Implementação completa do sistema de serviços e melhorias de UX
+- **Versão:** v3.7.2
+- **Commit:** 2b4deb9
+- **Descrição:** Atualização do módulo de serviços e formulário Bot_perguntas
 
 ### Arquivos Modificados
-- ✅ **src/pages/ServicosPage.jsx** (v1.2.0) - Console de serviços com 5 módulos
-- ✅ **src/pages/DashboardPage.jsx** (v3.7.1) - Card Config reposicionado e nova ordem
-- ✅ **src/App.jsx** (v3.7.0) - Rota de serviços adicionada
-- ✅ **src/pages/ConfigPage.jsx** (v3.7.1) - Permissão servicos e usuário gravina dev
-- ✅ **src/contexts/AuthContext.jsx** (v3.7.1) - Acesso total em desenvolvimento
-- ✅ **src/services/api.js** (v3.7.1) - API de serviços integrada
+- ✅ **src/pages/ServicosPage.jsx** (v1.3.0) - Novo schema e botão salvar
+- ✅ **src/pages/BotPerguntasPage.jsx** (v3.7.2) - Formulário alinhado com schema
+- ✅ **src/services/api.js** (v3.7.2) - Novo endpoint updateAllModuleStatus
+- ✅ **listagem de schema de coleções do mongoD.rb** - Compilação completa de schemas
 
 ### Funcionalidades Implementadas
-- ✅ **Sistema completo de serviços** com 5 módulos:
-  - Crédito Trabalhador
-  - Crédito Pessoal
-  - Antecipação
-  - Pagamento Antecipado
-  - Módulo IRPF
-- ✅ **3 status por serviço:** Verde (On), Amarelo (Revisão), Vermelho (Off)
-- ✅ **Integração com back-console** via servicesAPI
-- ✅ **Sistema de toast** para notificações
-- ✅ **Card Config reposicionado** no canto inferior direito
-- ✅ **Nova ordem dos cards** no dashboard
-- ✅ **Usuário gravina dev** com acesso total
-- ✅ **Sistema de permissões** completo para serviços
+
+#### **🔄 Módulo de Serviços (v1.3.0):**
+- ✅ **Novo schema:** Todos os status em um único documento
+- ✅ **Botão Salvar:** Posicionado abaixo e à direita dos cards
+- ✅ **Estado local:** Separado do backend para mudanças temporárias
+- ✅ **Envio único:** Todos os status enviados ao clicar em Salvar
+- ✅ **Mapeamento schema:** _trabalhador, _pessoal, _antecipacao, _pgtoAntecip, _irpf
+- ✅ **Novo endpoint:** updateAllModuleStatus na API
+- ✅ **UX melhorada:** Feedback visual e estados de loading
+
+#### **🔄 Formulário Bot_perguntas (v3.7.2):**
+- ✅ **Campos reorganizados:** Alinhados com schema MongoDB
+- ✅ **Tópico removido:** Campo eliminado do formulário
+- ✅ **Palavras-chave:** Movido para primeira posição
+- ✅ **Sinônimos:** Campo adicionado na segunda posição
+- ✅ **Resposta:** Contexto renomeado para Resposta
+- ✅ **Tabulação:** Substitui URLs de Imagens
+- ✅ **Mapeamento correto:** Dados enviados no formato do schema
+
+#### **📊 Schema MongoDB:**
+- ✅ **Compilação completa:** Todos os schemas documentados
+- ✅ **4 databases:** console_conteudo, console_chamados, console_config, console_analises
+- ✅ **11 collections:** Estrutura hierárquica organizada
 
 ### Melhorias de UX
 - ✅ **Card Config compacto** (180px x 120px) no canto inferior direito
@@ -58,13 +66,13 @@
 
 ### Observações
 - ✅ **Push realizado com sucesso** para repositório front-console
-- ✅ **README.md atualizado** com documentação completa
-- ✅ **Sistema de serviços pronto** para integração com backend
-- ✅ **Frontend totalmente funcional** e testado
-- ✅ **UX significativamente melhorada**
-- ✅ **Card Config otimizado** para melhor usabilidade
-- ✅ **Commit hash:** cb00ea2
-- ✅ **9 arquivos alterados** (942 inserções, 344 deleções)
+- ✅ **Módulo de serviços atualizado** com novo schema e UX melhorada
+- ✅ **Formulário Bot_perguntas alinhado** com schema MongoDB
+- ✅ **API expandida** com novo endpoint updateAllModuleStatus
+- ✅ **Schema MongoDB compilado** com todos os 11 schemas documentados
+- ✅ **Commit hash:** 2b4deb9
+- ✅ **4 arquivos alterados** (314 inserções, 139 deleções)
+- ✅ **Versão atualizada:** v3.7.2
 - ⏳ **Aguardando implementação** dos endpoints no back-console
 
 ---
