@@ -1,4 +1,4 @@
-// VERSION: v3.1.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.7.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import axios from 'axios';
 
 // Configuração base da API
@@ -177,6 +177,30 @@ export const usersAPI = {
 export const healthAPI = {
   check: async () => {
     const response = await api.get('/health');
+    return response.data;
+  }
+};
+
+// API de Serviços
+export const servicesAPI = {
+  // Buscar status atual dos módulos
+  getModuleStatus: async () => {
+    const response = await api.get('/module-status');
+    return response.data;
+  },
+
+  // Atualizar status de um módulo específico
+  updateModuleStatus: async (moduleKey, status) => {
+    const response = await api.post('/module-status', {
+      moduleKey,
+      status
+    });
+    return response.data;
+  },
+
+  // Atualizar múltiplos módulos
+  updateMultipleModules: async (modules) => {
+    const response = await api.put('/module-status', modules);
     return response.data;
   }
 };

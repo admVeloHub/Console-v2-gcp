@@ -1,4 +1,4 @@
-// VERSION: v3.4.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.7.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
@@ -28,6 +28,7 @@ import ConfigPage from './pages/ConfigPage';
 import QualidadePage from './pages/QualidadePage';
 import FuncionariosPage from './pages/FuncionariosPage';
 import QualidadeModulePage from './pages/QualidadeModulePage';
+import ServicosPage from './pages/ServicosPage';
 
 // Componente para rotas protegidas
 const ProtectedRoute = ({ children, requiredPermission }) => {
@@ -130,6 +131,11 @@ const AppContent = () => {
         <Route path="/qualidade-module" element={
           <ProtectedRoute requiredPermission="qualidade">
             <QualidadeModulePage />
+          </ProtectedRoute>
+        } />
+        <Route path="/servicos" element={
+          <ProtectedRoute requiredPermission="servicos">
+            <ServicosPage />
           </ProtectedRoute>
         } />
         <Route path="/login" element={<Navigate to="/" replace />} />

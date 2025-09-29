@@ -1,4 +1,4 @@
-// VERSION: v3.4.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.7.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { sendUserPing, debugUserPermissions } from '../services/userPingService';
 
@@ -80,13 +80,33 @@ export const AuthProvider = ({ children }) => {
   };
 
   const hasPermission = (permission) => {
-    if (!user || !user.permissoes) return false;
-    return user.permissoes[permission] === true;
+    if (!user) return false;
+    
+    // DESENVOLVIMENTO: Qualquer usuário logado tem acesso total
+    console.log('🔓 DESENVOLVIMENTO: Acesso total liberado para:', user.email || user._userMail);
+    return true;
+    
+    // Código original comentado para desenvolvimento
+    // if (user.email === 'gravina.dev@localhost' || user._userMail === 'gravina.dev@localhost') {
+    //   return true;
+    // }
+    // if (!user.permissoes) return false;
+    // return user.permissoes[permission] === true;
   };
 
   const canViewTicketType = (ticketType) => {
-    if (!user || !user.tiposTickets) return false;
-    return user.tiposTickets[ticketType] === true;
+    if (!user) return false;
+    
+    // DESENVOLVIMENTO: Qualquer usuário logado tem acesso total
+    console.log('🎫 DESENVOLVIMENTO: Acesso total a tickets para:', user.email || user._userMail);
+    return true;
+    
+    // Código original comentado para desenvolvimento
+    // if (user.email === 'gravina.dev@localhost' || user._userMail === 'gravina.dev@localhost') {
+    //   return true;
+    // }
+    // if (!user.tiposTickets) return false;
+    // return user.tiposTickets[ticketType] === true;
   };
 
   const updateUser = (updatedUserData) => {

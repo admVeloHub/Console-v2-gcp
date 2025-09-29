@@ -1,13 +1,12 @@
-<<<<<<< HEAD
-node_modules
-=======
-# VERSION: v3.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
-
 # Dependencies
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Production builds
+build/
+dist/
 
 # Environment variables
 .env
@@ -15,6 +14,26 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Cursor specific files
+.cursor/
+.cursorrules
 
 # Logs
 logs
@@ -33,7 +52,6 @@ coverage/
 .nyc_output
 
 # Dependency directories
-node_modules/
 jspm_packages/
 
 # Optional npm cache directory
@@ -72,16 +90,3 @@ jspm_packages/
 
 # DynamoDB Local files
 .dynamodb/
-
-# TernJS port file
-.tern-port
-
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
->>>>>>> bdce0b48cb5cbb7b2cf78af9d0929933c5816780

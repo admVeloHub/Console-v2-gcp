@@ -1,4 +1,4 @@
-// VERSION: v3.4.5 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.7.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -57,7 +57,59 @@ const ConfigPage = () => {
   // Carregar usuários ao montar o componente
   useEffect(() => {
     loadUsers();
+    createDevUserIfNeeded();
   }, []);
+
+  // Criar usuário de desenvolvimento se não existir
+  const createDevUserIfNeeded = async () => {
+    try {
+      const devUserEmail = 'gravina.dev@localhost';
+      const existingUsers = await getAllAuthorizedUsers();
+      
+      // Verificar se o usuário de desenvolvimento já existe
+      const devUserExists = existingUsers?.some(user => user._userMail === devUserEmail);
+      
+      if (!devUserExists) {
+        console.log('Criando usuário de desenvolvimento...');
+        
+        const devUser = {
+          _userMail: devUserEmail,
+          _userId: 'gravina_dev',
+          _userRole: 'Desenvolvedor',
+          _userClearance: {
+            artigos: true,
+            velonews: true,
+            botPerguntas: true,
+            chamadosInternos: true,
+            igp: true,
+            qualidade: true,
+            capacity: true,
+            config: true,
+            servicos: true
+          },
+          _userTickets: {
+            artigos: true,
+            processos: true,
+            roteiros: true,
+            treinamentos: true,
+            funcionalidades: true,
+            recursos: true,
+            gestao: true,
+            rhFin: true,
+            facilities: true
+          }
+        };
+
+        await addAuthorizedUser(devUser);
+        console.log('Usuário de desenvolvimento criado com sucesso!');
+        
+        // Recarregar lista de usuários
+        loadUsers();
+      }
+    } catch (error) {
+      console.error('Erro ao criar usuário de desenvolvimento:', error);
+    }
+  };
 
   const loadUsers = async () => {
     try {
@@ -93,7 +145,8 @@ const ConfigPage = () => {
       igp: false,
       qualidade: false,
       capacity: false,
-      config: false
+      config: false,
+      servicos: false
     },
     tiposTickets: {
       artigos: false,
@@ -117,7 +170,8 @@ const ConfigPage = () => {
     { key: 'igp', label: 'IGP', description: 'Indicadores de gestão' },
     { key: 'qualidade', label: 'Qualidade', description: 'Controle de qualidade' },
     { key: 'capacity', label: 'Capacity', description: 'Gestão de capacidade' },
-    { key: 'config', label: 'Config', description: 'Configurações do sistema' }
+    { key: 'config', label: 'Config', description: 'Configurações do sistema' },
+    { key: 'servicos', label: 'Serviços', description: 'Console de gerenciamento de serviços' }
   ];
 
   // Mapeamento dos tipos de tickets dos chamados internos
@@ -151,7 +205,8 @@ const ConfigPage = () => {
           igp: false,
           qualidade: false,
           capacity: false,
-          config: false
+          config: false,
+          servicos: false
         },
         tiposTickets: user._userTickets || {
           artigos: false,
@@ -182,7 +237,8 @@ const ConfigPage = () => {
           igp: false,
           qualidade: false,
           capacity: false,
-          config: false
+          config: false,
+          servicos: false
         },
         tiposTickets: {
           artigos: false,
@@ -219,7 +275,8 @@ const ConfigPage = () => {
           igp: false,
           qualidade: false,
           capacity: false,
-          config: false
+          config: false,
+          servicos: false
         },
         tiposTickets: {
           artigos: false,
