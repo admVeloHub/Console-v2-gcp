@@ -21,22 +21,23 @@ import { useAuth } from '../contexts/AuthContext';
 import BackButton from '../components/common/BackButton';
 import { servicesAPI } from '../services/api';
 
-// VERSION: v1.2.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.3.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 const ServicosPage = () => {
   const { user } = useAuth();
   const [moduleStatus, setModuleStatus] = useState({});
+  const [localStatus, setLocalStatus] = useState({});
   const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState({});
+  const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
 
-  // Configuração dos 5 serviços
+  // Configuração dos 5 serviços com mapeamento para o schema
   const services = [
-    { key: 'credito-trabalhador', name: 'Crédito Trabalhador', description: 'Sistema de crédito para trabalhadores' },
-    { key: 'credito-pessoal', name: 'Crédito Pessoal', description: 'Sistema de crédito pessoal' },
-    { key: 'antecipacao', name: 'Antecipação', description: 'Sistema de antecipação de valores' },
-    { key: 'pagamento-antecipado', name: 'Pagamento Antecipado', description: 'Sistema de pagamentos antecipados' },
-    { key: 'modulo-irpf', name: 'Módulo IRPF', description: 'Sistema de declaração IRPF' }
+    { key: 'credito-trabalhador', name: 'Crédito Trabalhador', description: 'Sistema de crédito para trabalhadores', schemaKey: '_trabalhador' },
+    { key: 'credito-pessoal', name: 'Crédito Pessoal', description: 'Sistema de crédito pessoal', schemaKey: '_pessoal' },
+    { key: 'antecipacao', name: 'Antecipação', description: 'Sistema de antecipação de valores', schemaKey: '_antecipacao' },
+    { key: 'pagamento-antecipado', name: 'Pagamento Antecipado', description: 'Sistema de pagamentos antecipados', schemaKey: '_pgtoAntecip' },
+    { key: 'modulo-irpf', name: 'Módulo IRPF', description: 'Sistema de declaração IRPF', schemaKey: '_irpf' }
   ];
 
   // Buscar status atual dos módulos
@@ -45,6 +46,7 @@ const ServicosPage = () => {
       setLoading(true);
       const data = await servicesAPI.getModuleStatus();
       setModuleStatus(data);
+      setLocalStatus(data);
     } catch (error) {
       console.error('Erro ao buscar status dos módulos:', error);
       showToast('Erro ao carregar status dos módulos', 'error');
@@ -53,25 +55,39 @@ const ServicosPage = () => {
     }
   };
 
-  // Atualizar status de um módulo específico
-  const updateModuleStatus = async (moduleKey, newStatus) => {
-    try {
-      setUpdating(prev => ({ ...prev, [moduleKey]: true }));
+  // Atualizar status local de um módulo (sem enviar para backend)
+  const updateLocalStatus = (moduleKey, newStatus) => {
+    setLocalStatus(prev => ({
+      ...prev,
+      [moduleKey]: newStatus
+    }));
+  };
 
-      await servicesAPI.updateModuleStatus(moduleKey, newStatus);
+  // Salvar todos os status para o backend
+  const saveAllStatus = async () => {
+    try {
+      setSaving(true);
       
-      // Atualizar estado local
-      setModuleStatus(prev => ({
-        ...prev,
-        [moduleKey]: newStatus
-      }));
+      // Mapear dados para o formato do schema
+      const schemaData = {
+        _trabalhador: localStatus['credito-trabalhador'] || 'off',
+        _pessoal: localStatus['credito-pessoal'] || 'off',
+        _antecipacao: localStatus['antecipacao'] || 'off',
+        _pgtoAntecip: localStatus['pagamento-antecipado'] || 'off',
+        _irpf: localStatus['modulo-irpf'] || 'off'
+      };
+
+      await servicesAPI.updateAllModuleStatus(schemaData);
       
-      showToast(`Status do ${services.find(s => s.key === moduleKey)?.name} atualizado para ${getStatusLabel(newStatus)}`, 'success');
+      // Atualizar estado principal
+      setModuleStatus(localStatus);
+      
+      showToast('Status de todos os serviços atualizados com sucesso!', 'success');
     } catch (error) {
-      console.error('Erro ao atualizar módulo:', error);
-      showToast('Erro ao atualizar status do módulo', 'error');
+      console.error('Erro ao salvar status dos módulos:', error);
+      showToast('Erro ao salvar status dos módulos', 'error');
     } finally {
-      setUpdating(prev => ({ ...prev, [moduleKey]: false }));
+      setSaving(false);
     }
   };
 
@@ -132,8 +148,7 @@ const ServicosPage = () => {
             color={status.color}
             size="small"
             startIcon={status.icon}
-            onClick={() => updateModuleStatus(moduleKey, status.key)}
-            disabled={updating[moduleKey]}
+            onClick={() => updateLocalStatus(moduleKey, status.key)}
             sx={{
               minWidth: '100px',
               textTransform: 'none',
@@ -168,7 +183,7 @@ const ServicosPage = () => {
           fontFamily: 'Poppins, sans-serif',
           mb: 3
         }}>
-          Controle o status dos serviços do VeloHub - Clique nos botões para alterar o status
+          Controle o status dos serviços do VeloHub - Altere os status e clique em Salvar para aplicar as mudanças
         </Typography>
       </Box>
 
@@ -181,69 +196,99 @@ const ServicosPage = () => {
 
       {/* Grid de Serviços */}
       {!loading && (
-        <Grid container spacing={3}>
-          {services.map((service) => {
-            const currentStatus = moduleStatus[service.key] || 'off';
-            
-            return (
-              <Grid item xs={12} md={6} lg={4} key={service.key}>
-                <Card 
-                  sx={{ 
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
-                      transform: 'translateY(-4px)',
-                      boxShadow: '0 8px 25px rgba(0,0,0,0.15)'
-                    }
-                  }}
-                >
-                  <CardContent sx={{ flexGrow: 1 }}>
-                    {/* Header do Card */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+        <>
+          <Grid container spacing={3}>
+            {services.map((service) => {
+              const currentStatus = localStatus[service.key] || 'off';
+              
+              return (
+                <Grid item xs={12} md={6} lg={4} key={service.key}>
+                  <Card 
+                    sx={{ 
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        transform: 'translateY(-4px)',
+                        boxShadow: '0 8px 25px rgba(0,0,0,0.15)'
+                      }
+                    }}
+                  >
+                    <CardContent sx={{ flexGrow: 1 }}>
+                      {/* Header do Card */}
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                        <Typography 
+                          variant="h6" 
+                          component="h3" 
+                          sx={{ 
+                            flexGrow: 1,
+                            color: 'var(--blue-dark)',
+                            fontWeight: 600,
+                            fontFamily: 'Poppins, sans-serif'
+                          }}
+                        >
+                          {service.name}
+                        </Typography>
+                        <Chip
+                          icon={getStatusIcon(currentStatus)}
+                          label={getStatusLabel(currentStatus)}
+                          color={getStatusColor(currentStatus)}
+                          size="small"
+                          variant="outlined"
+                        />
+                      </Box>
+
+                      {/* Descrição */}
                       <Typography 
-                        variant="h6" 
-                        component="h3" 
+                        variant="body2" 
+                        color="text.secondary" 
                         sx={{ 
-                          flexGrow: 1,
-                          color: 'var(--blue-dark)',
-                          fontWeight: 600,
-                          fontFamily: 'Poppins, sans-serif'
+                          mb: 3,
+                          fontFamily: 'Poppins, sans-serif',
+                          lineHeight: 1.6
                         }}
                       >
-                        {service.name}
+                        {service.description}
                       </Typography>
-                      <Chip
-                        icon={getStatusIcon(currentStatus)}
-                        label={getStatusLabel(currentStatus)}
-                        color={getStatusColor(currentStatus)}
-                        size="small"
-                        variant="outlined"
-                      />
-                    </Box>
 
-                    {/* Descrição */}
-                    <Typography 
-                      variant="body2" 
-                      color="text.secondary" 
-                      sx={{ 
-                        mb: 3,
-                        fontFamily: 'Poppins, sans-serif',
-                        lineHeight: 1.6
-                      }}
-                    >
-                      {service.description}
-                    </Typography>
+                      {/* Botões de Status */}
+                      {renderStatusButtons(service.key, currentStatus)}
+                    </CardContent>
+                  </Card>
+                </Grid>
+              );
+            })}
+          </Grid>
 
-                    {/* Botões de Status */}
-                    {renderStatusButtons(service.key, currentStatus)}
-                  </CardContent>
-                </Card>
-              </Grid>
-            );
-          })}
-        </Grid>
+          {/* Botão Salvar */}
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'flex-end', 
+            mt: 4,
+            pr: 2
+          }}>
+            <Button
+              variant="contained"
+              size="large"
+              onClick={saveAllStatus}
+              disabled={saving}
+              sx={{
+                backgroundColor: 'var(--green)',
+                fontFamily: 'Poppins, sans-serif',
+                fontWeight: 600,
+                px: 4,
+                py: 1.5,
+                '&:hover': {
+                  backgroundColor: 'var(--green)',
+                  opacity: 0.9
+                }
+              }}
+            >
+              {saving ? 'Salvando...' : 'Salvar Alterações'}
+            </Button>
+          </Box>
+        </>
       )}
 
       {/* Toast de Notificação */}

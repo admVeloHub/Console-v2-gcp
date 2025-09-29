@@ -1,4 +1,4 @@
-// VERSION: v3.7.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.7.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import axios from 'axios';
 
 // Configuração base da API
@@ -201,6 +201,12 @@ export const servicesAPI = {
   // Atualizar múltiplos módulos
   updateMultipleModules: async (modules) => {
     const response = await api.put('/module-status', modules);
+    return response.data;
+  },
+
+  // Atualizar todos os status dos módulos (novo schema)
+  updateAllModuleStatus: async (schemaData) => {
+    const response = await api.post('/module-status/all', schemaData);
     return response.data;
   }
 };

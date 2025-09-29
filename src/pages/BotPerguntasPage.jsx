@@ -1,4 +1,4 @@
-// VERSION: v3.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.7.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState } from 'react';
 import { 
   Container, 
@@ -18,11 +18,11 @@ import BackButton from '../components/common/BackButton';
 
 const BotPerguntasPage = () => {
   const [formData, setFormData] = useState({
-    topic: '',
-    context: '',
-    keywords: '',
-    question: '',
-    imageUrls: ''
+    keywords: '',        // Palavras-chave (movido para posição do tópico)
+    sinonimos: '',       // Sinônimos (nova posição)
+    context: '',         // Contexto renomeado para Resposta
+    question: '',        // Pergunta (permanece)
+    tabulacao: ''        // Tabulação (substitui URLs de imagens)
   });
 
   const [loading, setLoading] = useState(false);
@@ -44,16 +44,25 @@ const BotPerguntasPage = () => {
     setLoading(true);
 
     try {
+      // Mapear dados para o schema do backend
+      const mappedData = {
+        Pergunta: formData.question,
+        Resposta: formData.context,
+        "Palavras-chave": formData.keywords,
+        Sinonimos: formData.sinonimos,
+        Tabulação: formData.tabulacao
+      };
+
       // Enviar dados para API
-      const response = await botPerguntasAPI.create(formData);
+      const response = await botPerguntasAPI.create(mappedData);
       
       // Reset form
       setFormData({
-        topic: '',
-        context: '',
         keywords: '',
+        sinonimos: '',
+        context: '',
         question: '',
-        imageUrls: ''
+        tabulacao: ''
       });
 
       // Mostrar sucesso
@@ -124,11 +133,11 @@ const BotPerguntasPage = () => {
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label="Tópico"
-                  value={formData.topic}
-                  onChange={handleInputChange('topic')}
+                  label="Palavras-chave"
+                  value={formData.keywords}
+                  onChange={handleInputChange('keywords')}
                   required
-                  placeholder="ex: Tecnologia, Suporte, Vendas"
+                  placeholder="ex: ajuda, suporte, problema"
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       fontFamily: 'Poppins'
@@ -140,10 +149,10 @@ const BotPerguntasPage = () => {
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label="Palavras-chave"
-                  value={formData.keywords}
-                  onChange={handleInputChange('keywords')}
-                  placeholder="ex: ajuda, suporte, problema"
+                  label="Sinônimos"
+                  value={formData.sinonimos}
+                  onChange={handleInputChange('sinonimos')}
+                  placeholder="ex: auxílio, ajuda, suporte"
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       fontFamily: 'Poppins'
@@ -155,13 +164,13 @@ const BotPerguntasPage = () => {
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  label="Contexto"
+                  label="Resposta"
                   value={formData.context}
                   onChange={handleInputChange('context')}
                   multiline
                   rows={3}
                   required
-                  placeholder="Descreva o contexto da pergunta..."
+                  placeholder="Digite a resposta que o bot deve fornecer..."
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       fontFamily: 'Poppins'
@@ -191,10 +200,10 @@ const BotPerguntasPage = () => {
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  label="URLs de Imagens (separadas por vírgula)"
-                  value={formData.imageUrls}
-                  onChange={handleInputChange('imageUrls')}
-                  placeholder="https://exemplo.com/imagem1.jpg, https://exemplo.com/imagem2.jpg"
+                  label="Tabulação"
+                  value={formData.tabulacao}
+                  onChange={handleInputChange('tabulacao')}
+                  placeholder="Digite a tabulação para esta pergunta..."
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       fontFamily: 'Poppins'
