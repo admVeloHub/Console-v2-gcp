@@ -1,4 +1,4 @@
-// VERSION: v3.7.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.7.3 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { sendUserPing, debugUserPermissions } from '../services/userPingService';
 
@@ -82,16 +82,26 @@ export const AuthProvider = ({ children }) => {
   const hasPermission = (permission) => {
     if (!user) return false;
     
-    // DESENVOLVIMENTO: Qualquer usuário logado tem acesso total
-    console.log('🔓 DESENVOLVIMENTO: Acesso total liberado para:', user.email || user._userMail);
-    return true;
+    // DESENVOLVIMENTO: Usuário gravina dev tem acesso total
+    if (user.email === 'gravina.dev@localhost' || user._userMail === 'gravina.dev@localhost') {
+      console.log('🔓 DESENVOLVIMENTO: Acesso total liberado para gravina dev');
+      return true;
+    }
     
-    // Código original comentado para desenvolvimento
-    // if (user.email === 'gravina.dev@localhost' || user._userMail === 'gravina.dev@localhost') {
-    //   return true;
-    // }
-    // if (!user.permissoes) return false;
-    // return user.permissoes[permission] === true;
+    // Verificar permissões reais do usuário
+    if (!user.permissoes && !user._userClearance) {
+      console.log('❌ Usuário sem permissões definidas:', user.email || user._userMail);
+      return false;
+    }
+    
+    // Usar _userClearance (formato MongoDB) ou permissoes (formato frontend)
+    const userPermissions = user._userClearance || user.permissoes;
+    const hasAccess = userPermissions[permission] === true;
+    
+    console.log(`🔍 Verificando permissão '${permission}' para ${user.email || user._userMail}:`, hasAccess);
+    console.log('📋 Permissões do usuário:', userPermissions);
+    
+    return hasAccess;
   };
 
   const canViewTicketType = (ticketType) => {

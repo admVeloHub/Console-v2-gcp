@@ -1,4 +1,4 @@
-// VERSION: v3.4.5 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.4.7 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 import { usersAPI } from './api';
 
@@ -55,7 +55,10 @@ const mapToMongoSchema = (userData) => {
     _userMail: userData.email,
     _userId: userData.nome, // Nome do usuário no cadastro
     _userRole: userData.funcao || 'Usuário',
-    _userClearance: userData.permissoes || {},
+    _userClearance: {
+      ...userData.permissoes,
+      servicos: userData.permissoes?.servicos || false
+    },
     _userTickets: userData.tiposTickets || {}
   };
 };
@@ -78,11 +81,22 @@ export const updateAuthorizedUser = async (email, updatedData) => {
   try {
     // Se os dados já estão no formato MongoDB (vêm do modal de permissões), usar diretamente
     // Se não, mapear do formato frontend para MongoDB
-    const mongoData = updatedData._userClearance || updatedData._userTickets 
-      ? updatedData  // Já está no formato MongoDB
-      : mapToMongoSchema(updatedData); // Precisa mapear do frontend
+    let mongoData;
+    
+    if (updatedData._userClearance || updatedData._userTickets) {
+      // Já está no formato MongoDB - usar diretamente
+      mongoData = updatedData;
+    } else if (updatedData.permissoes || updatedData.tiposTickets) {
+      // Está no formato frontend - mapear para MongoDB
+      mongoData = mapToMongoSchema(updatedData);
+    } else {
+      // Dados básicos - manter estrutura MongoDB existente
+      mongoData = updatedData;
+    }
     
     console.log('Dados para atualização:', mongoData);
+    console.log('Email do usuário:', email);
+    
     const updatedMongoUser = await usersAPI.update(email, mongoData);
     clearCache(); // Limpar cache após atualizar usuário
     return updatedMongoUser; // Retorna dados diretamente do MongoDB
