@@ -1,4 +1,4 @@
-// VERSION: v1.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.0.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 /**
  * Determina o collectionId baseado nas permissões do usuário
@@ -95,9 +95,9 @@ export const sendUserPing = async (user) => {
 
     console.log('Enviando ping do usuário:', pingData);
 
-    // URL do backend - pode ser configurada via variável de ambiente
-    const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
-    const apiUrl = `${backendUrl}/api/user-ping`;
+    // URL do backend - usar a mesma configuração da API principal
+    const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://back-console.vercel.app/api';
+    const apiUrl = `${API_BASE_URL}/user-ping`;
 
     const response = await fetch(apiUrl, {
       method: 'POST',

@@ -21,7 +21,7 @@ import { useAuth } from '../contexts/AuthContext';
 import BackButton from '../components/common/BackButton';
 import { servicesAPI } from '../services/api';
 
-// VERSION: v1.3.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.3.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 const ServicosPage = () => {
   const { user } = useAuth();
@@ -68,13 +68,13 @@ const ServicosPage = () => {
     try {
       setSaving(true);
       
-      // Mapear dados para o formato do schema
+      // Mapear dados para o formato esperado pelo backend
       const schemaData = {
-        _trabalhador: localStatus['credito-trabalhador'] || 'off',
-        _pessoal: localStatus['credito-pessoal'] || 'off',
-        _antecipacao: localStatus['antecipacao'] || 'off',
-        _pgtoAntecip: localStatus['pagamento-antecipado'] || 'off',
-        _irpf: localStatus['modulo-irpf'] || 'off'
+        'credito-trabalhador': localStatus['credito-trabalhador'] || 'off',
+        'credito-pessoal': localStatus['credito-pessoal'] || 'off',
+        'antecipacao': localStatus['antecipacao'] || 'off',
+        'pagamento-antecipado': localStatus['pagamento-antecipado'] || 'off',
+        'modulo-irpf': localStatus['modulo-irpf'] || 'off'
       };
 
       await servicesAPI.updateAllModuleStatus(schemaData);
