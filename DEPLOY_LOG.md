@@ -1,5 +1,55 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.3.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.4.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+
+## GitHub Push - Implementação do Gráfico de Histórico de Avaliações - 2024-12-19 23:58
+
+### Informações do Push
+- **Tipo:** GitHub Push
+- **Data/Hora:** 2024-12-19 23:58 BRT
+- **Versão:** v1.2.0
+- **Commit:** 8bd98c0
+- **Descrição:** Implementação do gráfico de linha com histórico de avaliações - Notas reais, mediana e tendência
+
+### Arquivos Modificados
+- ✅ **src/pages/QualidadeModulePage.jsx** (v1.2.0) - Gráfico de linha com Recharts
+- ✅ **src/types/qualidade.js** (v1.3.0) - Geração de dados de histórico
+- ✅ **src/services/qualidadeAPI.js** (v1.5.0) - Integração GPT API completa
+- ✅ **src/services/qualidadeStorage.js** (v1.2.0) - Funções de relatório
+- ✅ **src/services/userService.js** (v3.4.13) - Correção nomes avaliadores
+- ✅ **src/pages/ConfigPage.jsx** (v3.7.18) - Cores personalizadas funções
+- ✅ **src/components/common/Header.jsx** (v3.3.7) - Exibição nome usuário
+- ✅ **.cursorrules** (v1.3.0) - Arquivos obrigatórios para leitura
+
+### Funcionalidades Implementadas
+
+#### 📊 Gráfico de Histórico de Avaliações
+- ✅ **Três Linhas**: Notas reais, mediana e tendência
+- ✅ **Biblioteca Recharts**: Integração completa
+- ✅ **Dados Reais**: Últimas 10 avaliações do colaborador
+- ✅ **Mediana**: Cálculo estatístico correto
+- ✅ **Tendência**: Média móvel das últimas 3 avaliações
+- ✅ **Estilização VeloHub**: Cores e fontes do LAYOUT_GUIDELINES.md
+
+#### 🎨 Layout e Design
+- ✅ **Dimensões Uniformes**: Botão e seletor com 40px de altura
+- ✅ **Alinhamento Perfeito**: Título, botão e seletor na mesma linha
+- ✅ **Container do Gráfico**: Estilo consistente com outros containers
+- ✅ **Responsividade**: Gráfico adaptável ao tamanho da tela
+
+#### 🔧 Correções e Melhorias
+- ✅ **Nomes de Avaliadores**: Correção para exibir nomes em vez de emails
+- ✅ **Cores das Funções**: Aplicação de gradientes personalizados
+- ✅ **Integração GPT**: API completa com 6 endpoints
+- ✅ **Versões**: Atualização de todos os arquivos modificados
+
+### Detalhes Técnicos
+- **Gráfico**: LineChart com ResponsiveContainer
+- **Dados**: Array de objetos com periodo, notaReal, mediana, tendencia
+- **Período**: Formato DD/MM para melhor legibilidade
+- **Cores**: #1694FF (notas reais), #FCC200 (mediana), condicional (tendência)
+- **Tooltip**: Estilo personalizado com fundo #F3F7FC
+
+---
 
 ## GitHub Push - Atualização do Módulo de Serviços e Formulário Bot_perguntas - 2024-12-19 23:55
 
