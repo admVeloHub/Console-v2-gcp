@@ -1,4 +1,4 @@
-// VERSION: v1.1.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.2.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 
@@ -52,16 +52,22 @@ import {
   Upload,
   AttachFile
 } from '@mui/icons-material';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { 
   getAvaliacoes, 
   addAvaliacao, 
   updateAvaliacao, 
-  deleteAvaliacao,
-  getFuncionariosAtivos
-} from '../services/qualidadeStorage';
+  deleteAvaliacao
+} from '../services/qualidadeAPI';
+import { 
+  getFuncionarios,
+  gerarRelatorioAgente,
+  gerarRelatorioGestao
+} from '../services/qualidadeAPI';
 import { exportAvaliacoesToExcel, exportAvaliacoesToPDF } from '../services/qualidadeExport';
 import { analyzeCallWithGPT } from '../services/gptService';
+import { getAvaliadoresValidos } from '../services/userService';
 import { 
   MESES, 
   ANOS, 
@@ -76,6 +82,7 @@ const QualidadeModulePage = () => {
   const [currentView, setCurrentView] = useState('avaliacoes');
   const [avaliacoes, setAvaliacoes] = useState([]);
   const [funcionarios, setFuncionarios] = useState([]);
+  const [avaliadores, setAvaliadores] = useState([]);
   const [loading, setLoading] = useState(true);
   
   // Estados dos filtros
@@ -114,18 +121,51 @@ const QualidadeModulePage = () => {
   const [gptLoading, setGptLoading] = useState(false);
   const [gptResult, setGptResult] = useState(null);
 
+  // Estados dos Relatórios
+  const [selectedColaborador, setSelectedColaborador] = useState('');
+  const [filtroMes, setFiltroMes] = useState('');
+  const [filtroAno, setFiltroAno] = useState(new Date().getFullYear());
+  const [relatorioAgente, setRelatorioAgente] = useState(null);
+  const [relatorioGestao, setRelatorioGestao] = useState(null);
+
   // Carregar dados
   useEffect(() => {
     carregarDados();
   }, []);
 
-  const carregarDados = () => {
+  const carregarDados = async () => {
     try {
-      const avaliacoesData = getAvaliacoes();
-      const funcionariosData = getFuncionariosAtivos();
+      setLoading(true);
+      
+      // Debug localStorage
+      const funcionariosLocal = localStorage.getItem('funcionarios_velotax');
+      console.log('🔍 Debug - localStorage funcionarios_velotax:', funcionariosLocal);
+      
+      const avaliacoesData = await getAvaliacoes();
+      const todosFuncionarios = await getFuncionarios();
+      const avaliadoresValidos = await getAvaliadoresValidos();
+      
+      console.log('🔍 Debug - Todos os funcionários:', todosFuncionarios);
+      console.log('🔍 Debug - Quantidade de funcionários:', todosFuncionarios.length);
+      console.log('🔍 Debug - Avaliadores válidos:', avaliadoresValidos);
+      
+      // Filtrar apenas funcionários ativos (mais permissivo para debug)
+      const funcionariosAtivos = todosFuncionarios.filter(f => {
+        const isAtivo = !f.desligado && !f.afastado;
+        console.log(`🔍 Debug - Funcionário ${f.nomeCompleto}: desligado=${f.desligado}, afastado=${f.afastado}, isAtivo=${isAtivo}`);
+        return isAtivo;
+      });
+      
+      console.log('🔍 Debug - Funcionários ativos:', funcionariosAtivos);
+      console.log('🔍 Debug - Quantidade de funcionários ativos:', funcionariosAtivos.length);
+      
+      // Fallback: se não há funcionários ativos, usar todos os funcionários
+      const funcionariosParaUsar = funcionariosAtivos.length > 0 ? funcionariosAtivos : todosFuncionarios;
+      console.log('🔍 Debug - Funcionários para usar no modal:', funcionariosParaUsar);
       
       setAvaliacoes(avaliacoesData);
-      setFuncionarios(funcionariosData);
+      setFuncionarios(funcionariosParaUsar);
+      setAvaliadores(avaliadoresValidos);
       setLoading(false);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
@@ -182,7 +222,7 @@ const QualidadeModulePage = () => {
       setFormData({
         colaboradorId: '',
         avaliador: '',
-        mes: new Date().toLocaleDateString('pt-BR', { month: 'long' }),
+        mes: new Date().toLocaleDateString('pt-BR', { month: 'long' }).replace(/^\w/, c => c.toUpperCase()),
         ano: new Date().getFullYear(),
         saudacaoAdequada: false,
         escutaAtiva: false,
@@ -221,13 +261,13 @@ const QualidadeModulePage = () => {
   const salvarAvaliacao = async () => {
     try {
       if (avaliacaoEditando) {
-        await updateAvaliacao(avaliacaoEditando.id, formData);
+        await updateAvaliacao(avaliacaoEditando._id, formData);
         mostrarSnackbar('Avaliação atualizada com sucesso!', 'success');
       } else {
         await addAvaliacao(formData);
         mostrarSnackbar('Avaliação adicionada com sucesso!', 'success');
       }
-      carregarDados();
+      await carregarDados();
       fecharModalAvaliacao();
     } catch (error) {
       console.error('Erro ao salvar avaliação:', error);
@@ -235,12 +275,12 @@ const QualidadeModulePage = () => {
     }
   };
 
-  const excluirAvaliacao = (id) => {
+  const excluirAvaliacao = async (id) => {
     if (window.confirm('Tem certeza que deseja excluir esta avaliação?')) {
       try {
-        deleteAvaliacao(id);
+        await deleteAvaliacao(id);
         mostrarSnackbar('Avaliação excluída com sucesso!', 'success');
-        carregarDados();
+        await carregarDados();
       } catch (error) {
         console.error('Erro ao excluir avaliação:', error);
         mostrarSnackbar('Erro ao excluir avaliação', 'error');
@@ -266,7 +306,7 @@ const QualidadeModulePage = () => {
     setGptLoading(true);
     try {
       const resultado = await analyzeCallWithGPT({
-        id: avaliacaoSelecionada.id,
+        id: avaliacaoSelecionada._id,
         colaboradorNome: avaliacaoSelecionada.colaboradorNome,
         arquivoLigacao: avaliacaoSelecionada.arquivoLigacao,
         nomeArquivo: avaliacaoSelecionada.nomeArquivo
@@ -279,6 +319,56 @@ const QualidadeModulePage = () => {
       mostrarSnackbar('Erro na análise GPT', 'error');
     } finally {
       setGptLoading(false);
+    }
+  };
+
+  // ===== FUNÇÕES DOS RELATÓRIOS =====
+
+  const gerarRelatorioAgenteHandler = async () => {
+    if (!selectedColaborador) {
+      mostrarSnackbar('Selecione um colaborador', 'warning');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const relatorio = await gerarRelatorioAgente(selectedColaborador);
+      setRelatorioAgente(relatorio);
+      
+      if (relatorio) {
+        mostrarSnackbar('Relatório gerado com sucesso!', 'success');
+      } else {
+        mostrarSnackbar('Nenhuma avaliação encontrada para este colaborador', 'info');
+      }
+    } catch (error) {
+      console.error('Erro ao gerar relatório do agente:', error);
+      mostrarSnackbar('Erro ao gerar relatório', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const gerarRelatorioGestaoHandler = async () => {
+    if (!filtroMes || !filtroAno) {
+      mostrarSnackbar('Selecione mês e ano', 'warning');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const relatorio = await gerarRelatorioGestao(filtroMes, filtroAno);
+      setRelatorioGestao(relatorio);
+      
+      if (relatorio) {
+        mostrarSnackbar('Relatório gerado com sucesso!', 'success');
+      } else {
+        mostrarSnackbar('Nenhuma avaliação encontrada para este período', 'info');
+      }
+    } catch (error) {
+      console.error('Erro ao gerar relatório da gestão:', error);
+      mostrarSnackbar('Erro ao gerar relatório', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -303,7 +393,7 @@ const QualidadeModulePage = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 6, mb: 8, pb: 4, position: 'relative' }}>
+    <Container maxWidth="lg" sx={{ mt: 2, mb: 8, pb: 4, position: 'relative' }}>
       {/* Botão Voltar - Canto esquerdo superior do dashboard */}
       <Button
         variant="outlined"
@@ -311,8 +401,8 @@ const QualidadeModulePage = () => {
         onClick={() => navigate('/qualidade')}
         sx={{
           position: 'absolute',
-          top: 0,
-          left: 0,
+          top: '10px',
+          left: '10px',
           color: '#000058',
           borderColor: '#000058',
           fontFamily: 'Poppins',
@@ -331,21 +421,22 @@ const QualidadeModulePage = () => {
       <Box sx={{ 
         display: 'flex', 
         justifyContent: 'center', 
-        mb: 4,
-        pt: 2
+        mb: 2,
+        pt: 1
       }}>
         <Typography variant="h4" sx={{ 
           fontFamily: 'Poppins', 
-          fontWeight: 700, 
+          fontWeight: 588, 
           color: '#000058',
-          textAlign: 'center'
+          textAlign: 'center',
+          mt: 1
         }}>
           Módulo de Qualidade
         </Typography>
       </Box>
 
       {/* Navegação por Abas */}
-      <Card sx={{ mb: 3, borderRadius: '16px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}>
+      <Card sx={{ mb: 2, mt: 1, borderRadius: '16px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}>
         <Tabs
           value={currentView}
           onChange={(e, newValue) => setCurrentView(newValue)}
@@ -395,7 +486,7 @@ const QualidadeModulePage = () => {
       {currentView === 'avaliacoes' && (
         <Box>
           {/* Toolbar */}
-          <Card sx={{ mb: 3, borderRadius: '16px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}>
+          <Card sx={{ mb: 2, mt: 1, borderRadius: '16px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}>
             <CardContent>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Typography variant="h6" sx={{ fontFamily: 'Poppins', color: '#000058', fontWeight: 600 }}>
@@ -575,7 +666,11 @@ const QualidadeModulePage = () => {
           </Card>
 
           {/* Lista de Avaliações */}
-          <Card sx={{ borderRadius: '16px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}>
+          <Card sx={{ 
+            borderRadius: '16px', 
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+            mt: 2
+          }}>
             <TableContainer>
               <Table>
                 <TableHead>
@@ -595,7 +690,7 @@ const QualidadeModulePage = () => {
                       const status = getStatusPontuacao(avaliacao.pontuacaoTotal);
                       
                       return (
-                        <TableRow key={avaliacao.id} sx={{ '&:hover': { backgroundColor: '#f8f9fa' } }}>
+                        <TableRow key={avaliacao._id} sx={{ '&:hover': { backgroundColor: '#f8f9fa' } }}>
                           <TableCell sx={{ fontFamily: 'Poppins' }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                               <Avatar sx={{ width: 32, height: 32, backgroundColor: '#1694FF' }}>
@@ -655,7 +750,7 @@ const QualidadeModulePage = () => {
                             </IconButton>
                             <IconButton
                               size="small"
-                              onClick={() => excluirAvaliacao(avaliacao.id)}
+                              onClick={() => excluirAvaliacao(avaliacao._id)}
                               sx={{ color: '#EF4444' }}
                             >
                               <Delete />
@@ -683,16 +778,365 @@ const QualidadeModulePage = () => {
 
       {currentView === 'relatorio-agente' && (
         <Box>
-          <Card sx={{ borderRadius: '16px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}>
-            <CardContent>
-              <Typography variant="h6" sx={{ fontFamily: 'Poppins', color: '#000058', fontWeight: 600, mb: 3 }}>
-                Relatório Individual do Agente
-              </Typography>
-              <Alert severity="info" sx={{ fontFamily: 'Poppins' }}>
-                Selecione um colaborador para visualizar seu relatório individual de desempenho.
-              </Alert>
+          <Card sx={{ 
+            borderRadius: '12px', 
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+            background: '#F3F7FC',
+            padding: '24px',
+            mt: 1
+          }}>
+            <CardContent sx={{ p: 0 }}>
+              {/* Header com título, botão e seletor na mesma linha */}
+              <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                mb: 3 
+              }}>
+                {/* Título */}
+                <Typography variant="h5" sx={{ 
+                  fontFamily: 'Poppins', 
+                  color: '#000058', 
+                  fontWeight: 500,
+                  fontSize: '1.5rem'
+                }}>
+                  Relatório Individual
+                </Typography>
+
+                {/* Linha com botão e seletor */}
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center',
+                  gap: 2
+                }}>
+                  {/* Botão Gerar Relatório */}
+                  <Button
+                    variant="contained"
+                    onClick={gerarRelatorioAgenteHandler}
+                    disabled={!selectedColaborador || loading}
+                    sx={{
+                      fontFamily: 'Poppins',
+                      fontWeight: 600,
+                      borderRadius: '8px',
+                      px: 3,
+                      py: 0.5,
+                      height: '40px',
+                      background: 'linear-gradient(135deg, #1634FF 0%, #0B24CC 100%)',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #0B24CC 0%, #1634FF 100%)',
+                      }
+                    }}
+                  >
+                    {loading ? 'Gerando...' : 'Gerar'}
+                  </Button>
+                  
+                  {/* Seleção de Colaborador */}
+                  <FormControl sx={{ minWidth: 250, height: '40px' }}>
+                  <InputLabel sx={{ fontFamily: 'Poppins', color: '#000058' }}>
+                    Selecione o Colaborador
+                  </InputLabel>
+                  <Select
+                    value={selectedColaborador || ''}
+                    onChange={(e) => setSelectedColaborador(e.target.value)}
+                    label="Selecione o Colaborador"
+                    sx={{ 
+                      fontFamily: 'Poppins',
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: '8px'
+                      }
+                    }}
+                  >
+                    {funcionarios.map((funcionario) => (
+                      <MenuItem 
+                        key={funcionario.id} 
+                        value={funcionario.id}
+                        sx={{ fontFamily: 'Poppins' }}
+                      >
+                        {funcionario.nomeCompleto}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  </FormControl>
+                </Box>
+              </Box>
+
+              {/* Resultados do Relatório */}
+              {relatorioAgente && (
+                <Box sx={{ mt: 3 }}>
+                  <Typography variant="h6" sx={{ 
+                    fontFamily: 'Poppins', 
+                    color: '#000058', 
+                    fontWeight: 600, 
+                    mb: 3,
+                    textAlign: 'center'
+                  }}>
+                    Resultados para {relatorioAgente.colaboradorNome}
+                  </Typography>
+
+                  {/* Cards de Métricas */}
+                  <Grid container spacing={3} sx={{ mb: 3 }}>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <Card sx={{ 
+                        textAlign: 'center', 
+                        p: 2,
+                        background: 'transparent',
+                        border: '1.5px solid #000058',
+                        borderRadius: '8px'
+                      }}>
+                        <Typography variant="h4" sx={{ 
+                          fontFamily: 'Poppins', 
+                          color: '#1634FF', 
+                          fontWeight: 700 
+                        }}>
+                          {relatorioAgente.totalAvaliacoes}
+                        </Typography>
+                        <Typography variant="body2" sx={{ 
+                          fontFamily: 'Poppins', 
+                          color: '#1634FF' 
+                        }}>
+                          Total de Avaliações
+                        </Typography>
+                      </Card>
+                    </Grid>
+
+                    <Grid item xs={12} sm={6} md={3}>
+                      <Card sx={{ 
+                        textAlign: 'center', 
+                        p: 2,
+                        background: relatorioAgente.mediaAvaliador > 60 
+                          ? 'linear-gradient(135deg, rgba(22, 180, 255, 0.15) 0%, rgba(22, 180, 255, 0.05) 100%)'
+                          : 'linear-gradient(135deg, rgba(220, 53, 69, 0.15) 0%, rgba(220, 53, 69, 0.05) 100%)',
+                        border: '1.5px solid #000058',
+                        borderRadius: '8px'
+                      }}>
+                        <Typography variant="h4" sx={{ 
+                          fontFamily: 'Poppins', 
+                          color: relatorioAgente.mediaAvaliador > 60 ? '#1694FF' : '#dc3545', 
+                          fontWeight: 700 
+                        }}>
+                          {relatorioAgente.mediaAvaliador}
+                        </Typography>
+                        <Typography variant="body2" sx={{ 
+                          fontFamily: 'Poppins', 
+                          color: relatorioAgente.mediaAvaliador > 60 ? '#1694FF' : '#dc3545'
+                        }}>
+                          Média Avaliador
+                        </Typography>
+                      </Card>
+                    </Grid>
+
+                    <Grid item xs={12} sm={6} md={3}>
+                      <Card sx={{ 
+                        textAlign: 'center', 
+                        p: 2,
+                        background: 'linear-gradient(135deg, rgba(252, 194, 0, 0.15) 0%, rgba(252, 194, 0, 0.05) 100%)',
+                        border: '1.5px solid #000058',
+                        borderRadius: '8px'
+                      }}>
+                        <Typography variant="h4" sx={{ 
+                          fontFamily: 'Poppins', 
+                          color: '#FCC200', 
+                          fontWeight: 700 
+                        }}>
+                          {relatorioAgente.mediaGPT}
+                        </Typography>
+                        <Typography variant="body2" sx={{ 
+                          fontFamily: 'Poppins', 
+                          color: '#FCC200'
+                        }}>
+                          Média GPT
+                        </Typography>
+                      </Card>
+                    </Grid>
+
+                    <Grid item xs={12} sm={6} md={3}>
+                      <Card sx={{ 
+                        textAlign: 'center', 
+                        p: 2,
+                        background: relatorioAgente.tendencia === 'melhorando' 
+                          ? 'linear-gradient(135deg, rgba(22, 180, 255, 0.15) 0%, rgba(22, 180, 255, 0.05) 100%)'
+                          : relatorioAgente.tendencia === 'piorando'
+                          ? 'linear-gradient(135deg, rgba(220, 53, 69, 0.15) 0%, rgba(220, 53, 69, 0.05) 100%)'
+                          : 'transparent',
+                        border: '1.5px solid #000058',
+                        borderRadius: '8px'
+                      }}>
+                        <Typography variant="h4" sx={{ 
+                          fontFamily: 'Poppins', 
+                          color: relatorioAgente.tendencia === 'melhorando' 
+                            ? '#1694FF'
+                            : relatorioAgente.tendencia === 'piorando'
+                            ? '#dc3545'
+                            : '#1634FF',
+                          fontWeight: 700 
+                        }}>
+                          {relatorioAgente.tendencia === 'melhorando' ? '📈' : 
+                           relatorioAgente.tendencia === 'piorando' ? '📉' : '➡️'}
+                        </Typography>
+                        <Typography variant="body2" sx={{ 
+                          fontFamily: 'Poppins', 
+                          color: relatorioAgente.tendencia === 'melhorando' 
+                            ? '#1694FF'
+                            : relatorioAgente.tendencia === 'piorando'
+                            ? '#dc3545'
+                            : '#1634FF'
+                        }}>
+                          {relatorioAgente.tendencia === 'melhorando' ? 'Melhorando' : 
+                           relatorioAgente.tendencia === 'piorando' ? 'Precisa Atenção' : 'Estável'}
+                        </Typography>
+                      </Card>
+                    </Grid>
+                  </Grid>
+
+                  {/* Melhor e Pior Nota */}
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} sm={6}>
+                      <Card sx={{ 
+                        textAlign: 'center', 
+                        p: 2,
+                        background: 'linear-gradient(135deg, rgba(22, 180, 255, 0.15) 0%, rgba(22, 180, 255, 0.05) 100%)',
+                        border: '1.5px solid #000058',
+                        borderRadius: '8px'
+                      }}>
+                        <Typography variant="h5" sx={{ 
+                          fontFamily: 'Poppins', 
+                          color: '#1694FF', 
+                          fontWeight: 700 
+                        }}>
+                          {relatorioAgente.melhorNota}
+                        </Typography>
+                        <Typography variant="body2" sx={{ 
+                          fontFamily: 'Poppins', 
+                          color: '#1694FF'
+                        }}>
+                          🏆 Melhor Nota
+                        </Typography>
+                      </Card>
+                    </Grid>
+
+                    <Grid item xs={12} sm={6}>
+                      <Card sx={{ 
+                        textAlign: 'center', 
+                        p: 2,
+                        background: 'linear-gradient(135deg, rgba(220, 53, 69, 0.15) 0%, rgba(220, 53, 69, 0.05) 100%)',
+                        border: '1.5px solid #000058',
+                        borderRadius: '8px'
+                      }}>
+                        <Typography variant="h5" sx={{ 
+                          fontFamily: 'Poppins', 
+                          color: '#dc3545', 
+                          fontWeight: 700 
+                        }}>
+                          {relatorioAgente.piorNota}
+                        </Typography>
+                        <Typography variant="body2" sx={{ 
+                          fontFamily: 'Poppins', 
+                          color: '#dc3545'
+                        }}>
+                          ⚠️ Pior Nota
+                        </Typography>
+                      </Card>
+                    </Grid>
+                  </Grid>
+                </Box>
+              )}
             </CardContent>
           </Card>
+
+          {/* Container do Gráfico de Histórico */}
+          {relatorioAgente && (
+            <Card sx={{ 
+              borderRadius: '12px', 
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+              background: '#F3F7FC',
+              padding: '24px',
+              mt: 2
+            }}>
+              <CardContent sx={{ p: 0 }}>
+                <Typography variant="h6" sx={{ 
+                  fontFamily: 'Poppins', 
+                  color: '#000058', 
+                  fontWeight: 600, 
+                  mb: 3
+                }}>
+                  Histórico de Avaliações
+                </Typography>
+
+                {/* Gráfico de Linha */}
+                <Box sx={{ 
+                  height: '300px', 
+                  background: 'transparent',
+                  border: '1.5px solid #000058',
+                  borderRadius: '8px',
+                  p: 2
+                }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={relatorioAgente.historico || []}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#E0E0E0" />
+                      <XAxis 
+                        dataKey="periodo" 
+                        stroke="#000058"
+                        fontSize={12}
+                        fontFamily="Poppins"
+                      />
+                      <YAxis 
+                        stroke="#000058"
+                        fontSize={12}
+                        fontFamily="Poppins"
+                        domain={[0, 100]}
+                      />
+                      <RechartsTooltip 
+                        contentStyle={{
+                          backgroundColor: '#F3F7FC',
+                          border: '1px solid #000058',
+                          borderRadius: '8px',
+                          fontFamily: 'Poppins',
+                          fontSize: '12px'
+                        }}
+                        labelStyle={{ color: '#000058', fontWeight: 600 }}
+                      />
+                      <Legend 
+                        wrapperStyle={{
+                          fontFamily: 'Poppins',
+                          fontSize: '12px',
+                          color: '#000058'
+                        }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="notaReal" 
+                        stroke="#1694FF" 
+                        strokeWidth={3}
+                        dot={{ fill: '#1694FF', strokeWidth: 2, r: 4 }}
+                        name="Notas Reais"
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="mediana" 
+                        stroke="#FCC200" 
+                        strokeWidth={2}
+                        strokeDasharray="5 5"
+                        dot={{ fill: '#FCC200', strokeWidth: 2, r: 3 }}
+                        name="Mediana"
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="tendencia" 
+                        stroke={relatorioAgente.tendencia === 'melhorando' ? '#15A237' : 
+                               relatorioAgente.tendencia === 'piorando' ? '#dc3545' : '#9e9e9e'} 
+                        strokeWidth={2}
+                        strokeDasharray="10 5"
+                        dot={{ fill: relatorioAgente.tendencia === 'melhorando' ? '#15A237' : 
+                                     relatorioAgente.tendencia === 'piorando' ? '#dc3545' : '#9e9e9e', 
+                              strokeWidth: 2, r: 3 }}
+                        name="Tendência"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </Box>
+              </CardContent>
+            </Card>
+          )}
         </Box>
       )}
 
@@ -751,7 +1195,7 @@ const QualidadeModulePage = () => {
                   }}
                 >
                   {funcionarios.map((funcionario) => (
-                    <MenuItem key={funcionario.id} value={funcionario.id} sx={{ fontFamily: 'Poppins' }}>
+                    <MenuItem key={funcionario._id || funcionario.id} value={funcionario._id || funcionario.id} sx={{ fontFamily: 'Poppins' }}>
                       {funcionario.nomeCompleto}
                     </MenuItem>
                   ))}
@@ -759,27 +1203,29 @@ const QualidadeModulePage = () => {
               </FormControl>
             </Grid>
             <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Avaliador"
-                value={formData.avaliador}
-                onChange={(e) => setFormData({ ...formData, avaliador: e.target.value })}
-                required
-                sx={{
-                  '& .MuiOutlinedInput-root': {
+              <FormControl fullWidth required>
+                <InputLabel sx={{ fontFamily: 'Poppins' }}>Avaliador</InputLabel>
+                <Select
+                  value={formData.avaliador}
+                  onChange={(e) => setFormData({ ...formData, avaliador: e.target.value })}
+                  label="Avaliador"
+                  sx={{
                     fontFamily: 'Poppins',
-                    '&:hover fieldset': {
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
                       borderColor: '#1694FF'
                     },
-                    '&.Mui-focused fieldset': {
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
                       borderColor: '#000058'
                     }
-                  },
-                  '& .MuiInputLabel-root': {
-                    fontFamily: 'Poppins'
-                  }
-                }}
-              />
+                  }}
+                >
+                  {avaliadores.map((avaliador) => (
+                    <MenuItem key={avaliador} value={avaliador} sx={{ fontFamily: 'Poppins' }}>
+                      {avaliador}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Grid>
             <Grid item xs={12} md={6}>
               <FormControl fullWidth required>
@@ -839,17 +1285,23 @@ const QualidadeModulePage = () => {
               </Typography>
             </Grid>
             
+            {/* Linha 1: Saudação e Escuta Ativa */}
             {[
-              { key: 'saudacaoAdequada', label: 'Saudação Adequada', pontos: 10 },
-              { key: 'escutaAtiva', label: 'Escuta Ativa', pontos: 25 },
-              { key: 'resolucaoQuestao', label: 'Resolução da Questão', pontos: 40 },
-              { key: 'empatiaCordialidade', label: 'Empatia e Cordialidade', pontos: 15 },
-              { key: 'direcionouPesquisa', label: 'Direcionamento de Pesquisa', pontos: 10 },
-              { key: 'procedimentoIncorreto', label: 'Procedimento Incorreto', pontos: -60 },
-              { key: 'encerramentoBrusco', label: 'Encerramento Brusco', pontos: -100 }
+              { key: 'saudacaoAdequada', label: 'Saudação Adequada', pontos: 10, isPositive: true },
+              { key: 'escutaAtiva', label: 'Escuta Ativa', pontos: 25, isPositive: true }
             ].map((criterio) => (
               <Grid item xs={12} md={6} key={criterio.key}>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 2, border: '1px solid #e0e0e0', borderRadius: '8px' }}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between', 
+                  p: 2, 
+                  border: criterio.isPositive 
+                    ? (formData[criterio.key] ? '1px solid rgba(22, 148, 255, 0.75)' : '1px solid rgba(22, 148, 255, 0.5)')
+                    : (formData[criterio.key] ? '1px solid #EF4444' : '1px solid rgba(255, 193, 7, 0.6)'),
+                  borderRadius: '8px',
+                  backgroundColor: '#ffffff'
+                }}>
                   <Box>
                     <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
                       {criterio.label}
@@ -858,45 +1310,264 @@ const QualidadeModulePage = () => {
                       {criterio.pontos > 0 ? `+${criterio.pontos} pontos` : `${criterio.pontos} pontos`}
                     </Typography>
                   </Box>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Button
-                      variant={formData[criterio.key] ? 'contained' : 'outlined'}
-                      size="small"
-                      onClick={() => setFormData({ ...formData, [criterio.key]: !formData[criterio.key] })}
-                      sx={{
-                        backgroundColor: formData[criterio.key] ? '#15A237' : 'transparent',
-                        color: formData[criterio.key] ? '#ffffff' : '#15A237',
-                        borderColor: '#15A237',
-                        fontFamily: 'Poppins',
-                        '&:hover': {
-                          backgroundColor: formData[criterio.key] ? '#128A2F' : '#f0f9ff',
-                          borderColor: '#15A237'
-                        }
-                      }}
-                    >
-                      <CheckCircle />
-                    </Button>
-                    <Button
-                      variant={!formData[criterio.key] ? 'contained' : 'outlined'}
-                      size="small"
-                      onClick={() => setFormData({ ...formData, [criterio.key]: !formData[criterio.key] })}
-                      sx={{
-                        backgroundColor: !formData[criterio.key] ? '#EF4444' : 'transparent',
-                        color: !formData[criterio.key] ? '#ffffff' : '#EF4444',
-                        borderColor: '#EF4444',
-                        fontFamily: 'Poppins',
-                        '&:hover': {
-                          backgroundColor: !formData[criterio.key] ? '#DC2626' : '#fef2f2',
-                          borderColor: '#EF4444'
-                        }
-                      }}
-                    >
-                      <Cancel />
-                    </Button>
-                  </Box>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => setFormData({ ...formData, [criterio.key]: !formData[criterio.key] })}
+                    sx={{
+                      minWidth: '28px',
+                      width: '28px',
+                      height: '28px',
+                      border: criterio.isPositive 
+                        ? (formData[criterio.key] ? '2px solid rgba(22, 148, 255, 0.75)' : '1px solid rgba(22, 148, 255, 0.5)')
+                        : (formData[criterio.key] ? '2px solid #EF4444' : '1px solid rgba(255, 193, 7, 0.6)'),
+                      backgroundColor: criterio.isPositive 
+                        ? (formData[criterio.key] ? '#000058' : 'transparent')
+                        : (formData[criterio.key] ? '#EF4444' : 'transparent'),
+                      borderRadius: '4px',
+                      '&:hover': {
+                        backgroundColor: criterio.isPositive 
+                          ? (formData[criterio.key] ? '#000040' : 'rgba(22, 148, 255, 0.1)')
+                          : (formData[criterio.key] ? '#DC2626' : 'rgba(255, 193, 7, 0.1)'),
+                        borderColor: criterio.isPositive 
+                          ? 'rgba(22, 148, 255, 0.75)'
+                          : '#EF4444'
+                      }
+                    }}
+                  >
+                    {formData[criterio.key] && (
+                      <CheckCircle sx={{ 
+                        color: '#ffffff', 
+                        fontSize: '14px' 
+                      }} />
+                    )}
+                  </Button>
                 </Box>
               </Grid>
             ))}
+            
+            {/* Linha 2: Resolução e Empatia */}
+            {[
+              { key: 'resolucaoQuestao', label: 'Resolução da Questão', pontos: 40, isPositive: true },
+              { key: 'empatiaCordialidade', label: 'Empatia e Cordialidade', pontos: 15, isPositive: true }
+            ].map((criterio) => (
+              <Grid item xs={12} md={6} key={criterio.key}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between', 
+                  p: 2, 
+                  border: criterio.isPositive 
+                    ? (formData[criterio.key] ? '1px solid rgba(22, 148, 255, 0.75)' : '1px solid rgba(22, 148, 255, 0.5)')
+                    : (formData[criterio.key] ? '1px solid #EF4444' : '1px solid rgba(255, 193, 7, 0.6)'),
+                  borderRadius: '8px',
+                  backgroundColor: '#ffffff'
+                }}>
+                  <Box>
+                    <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
+                      {criterio.label}
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666' }}>
+                      {criterio.pontos > 0 ? `+${criterio.pontos} pontos` : `${criterio.pontos} pontos`}
+                    </Typography>
+                  </Box>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => setFormData({ ...formData, [criterio.key]: !formData[criterio.key] })}
+                    sx={{
+                      minWidth: '28px',
+                      width: '28px',
+                      height: '28px',
+                      border: criterio.isPositive 
+                        ? (formData[criterio.key] ? '2px solid rgba(22, 148, 255, 0.75)' : '1px solid rgba(22, 148, 255, 0.5)')
+                        : (formData[criterio.key] ? '2px solid #EF4444' : '1px solid rgba(255, 193, 7, 0.6)'),
+                      backgroundColor: criterio.isPositive 
+                        ? (formData[criterio.key] ? '#000058' : 'transparent')
+                        : (formData[criterio.key] ? '#EF4444' : 'transparent'),
+                      borderRadius: '4px',
+                      '&:hover': {
+                        backgroundColor: criterio.isPositive 
+                          ? (formData[criterio.key] ? '#000040' : 'rgba(22, 148, 255, 0.1)')
+                          : (formData[criterio.key] ? '#DC2626' : 'rgba(255, 193, 7, 0.1)'),
+                        borderColor: criterio.isPositive 
+                          ? 'rgba(22, 148, 255, 0.75)'
+                          : '#EF4444'
+                      }
+                    }}
+                  >
+                    {formData[criterio.key] && (
+                      <CheckCircle sx={{ 
+                        color: '#ffffff', 
+                        fontSize: '14px' 
+                      }} />
+                    )}
+                  </Button>
+                </Box>
+              </Grid>
+            ))}
+            
+            {/* Linha 3: Direcionamento (coluna 1) - coluna 2 vazia */}
+            <Grid item xs={12} md={6}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between', 
+                p: 2, 
+                border: formData.direcionouPesquisa 
+                  ? '1px solid rgba(22, 148, 255, 0.75)' 
+                  : '1px solid rgba(22, 148, 255, 0.5)',
+                borderRadius: '8px',
+                backgroundColor: '#ffffff'
+              }}>
+                <Box>
+                  <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
+                    Direcionamento de Pesquisa
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666' }}>
+                    +10 pontos
+                  </Typography>
+                </Box>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => setFormData({ ...formData, direcionouPesquisa: !formData.direcionouPesquisa })}
+                  sx={{
+                    minWidth: '28px',
+                    width: '28px',
+                    height: '28px',
+                    border: formData.direcionouPesquisa 
+                      ? '2px solid rgba(22, 148, 255, 0.75)' 
+                      : '1px solid rgba(22, 148, 255, 0.5)',
+                    backgroundColor: formData.direcionouPesquisa ? '#000058' : 'transparent',
+                    borderRadius: '4px',
+                    '&:hover': {
+                      backgroundColor: formData.direcionouPesquisa 
+                        ? '#000040' 
+                        : 'rgba(22, 148, 255, 0.1)',
+                      borderColor: 'rgba(22, 148, 255, 0.75)'
+                    }
+                  }}
+                >
+                  {formData.direcionouPesquisa && (
+                    <CheckCircle sx={{ 
+                      color: '#ffffff', 
+                      fontSize: '14px' 
+                    }} />
+                  )}
+                </Button>
+              </Box>
+            </Grid>
+            
+            {/* Card invisível para ocupar coluna 2 da linha 3 */}
+            <Grid item xs={12} md={6}>
+              <Box sx={{ 
+                p: 2, 
+                visibility: 'hidden'
+              }}>
+                <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
+                  Espaço vazio
+                </Typography>
+              </Box>
+            </Grid>
+            
+            {/* Linha 4: Encerramento Brusco (coluna 1) e Procedimento Incorreto (coluna 2) */}
+            <Grid item xs={12} md={6}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between', 
+                p: 2, 
+                border: formData.encerramentoBrusco 
+                  ? '1px solid #EF4444' 
+                  : '1px solid rgba(255, 193, 7, 0.6)',
+                borderRadius: '8px',
+                backgroundColor: '#ffffff'
+              }}>
+                <Box>
+                  <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
+                    Encerramento Brusco
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666' }}>
+                    -100 pontos
+                  </Typography>
+                </Box>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => setFormData({ ...formData, encerramentoBrusco: !formData.encerramentoBrusco })}
+                  sx={{
+                    minWidth: '28px',
+                    width: '28px',
+                    height: '28px',
+                    border: formData.encerramentoBrusco 
+                      ? '2px solid #EF4444' 
+                      : '1px solid rgba(255, 193, 7, 0.6)',
+                    backgroundColor: formData.encerramentoBrusco ? '#EF4444' : 'transparent',
+                    borderRadius: '4px',
+                    '&:hover': {
+                      backgroundColor: formData.encerramentoBrusco 
+                        ? '#DC2626' 
+                        : 'rgba(255, 193, 7, 0.1)',
+                      borderColor: '#EF4444'
+                    }
+                  }}
+                >
+                  {formData.encerramentoBrusco && (
+                    <CheckCircle sx={{ 
+                      color: '#ffffff', 
+                      fontSize: '14px' 
+                    }} />
+                  )}
+                </Button>
+              </Box>
+            </Grid>
+            
+            {/* Procedimento Incorreto - Coluna 2, Linha 4 */}
+            <Grid item xs={12} md={6}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between', 
+                p: 2, 
+                border: formData.procedimentoIncorreto ? '1px solid #EF4444' : '1px solid rgba(255, 193, 7, 0.6)',
+                borderRadius: '8px',
+                backgroundColor: '#ffffff'
+              }}>
+                <Box>
+                  <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
+                    Procedimento Incorreto
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666' }}>
+                    -60 pontos
+                  </Typography>
+                </Box>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => setFormData({ ...formData, procedimentoIncorreto: !formData.procedimentoIncorreto })}
+                  sx={{
+                    minWidth: '28px',
+                    width: '28px',
+                    height: '28px',
+                    border: formData.procedimentoIncorreto ? '2px solid #EF4444' : '1px solid rgba(255, 193, 7, 0.6)',
+                    backgroundColor: formData.procedimentoIncorreto ? '#EF4444' : 'transparent',
+                    borderRadius: '4px',
+                    '&:hover': {
+                      backgroundColor: formData.procedimentoIncorreto ? '#DC2626' : 'rgba(255, 193, 7, 0.1)',
+                      borderColor: '#EF4444'
+                    }
+                  }}
+                >
+                  {formData.procedimentoIncorreto && (
+                    <CheckCircle sx={{ 
+                      color: '#ffffff', 
+                      fontSize: '14px' 
+                    }} />
+                  )}
+                </Button>
+              </Box>
+            </Grid>
             
             <Grid item xs={12}>
               <TextField

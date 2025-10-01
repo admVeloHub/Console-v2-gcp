@@ -1,6 +1,19 @@
-// VERSION: v1.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.2.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
-import { generateId, calcularPontuacaoTotal, PONTUACAO } from '../types/qualidade';
+import { 
+  generateId, 
+  calcularPontuacaoTotal, 
+  PONTUACAO,
+  getAvaliacoesPorColaborador as getAvaliacoesPorColaboradorUtil,
+  getAvaliacoesPorMesAno as getAvaliacoesPorMesAnoUtil,
+  gerarRelatorioAgente as gerarRelatorioAgenteUtil,
+  gerarRelatorioGestao as gerarRelatorioGestaoUtil,
+  getTendenciaClass,
+  getTendenciaText,
+  getPerformanceClass,
+  getPerformanceText,
+  formatDate
+} from '../types/qualidade';
 
 const STORAGE_KEY = 'funcionarios_velotax';
 const QUALIDADE_STORAGE_KEY = 'qualidade_avaliacoes';
@@ -182,13 +195,13 @@ export const getAvaliacoes = () => {
 // Obter avaliação por ID
 export const getAvaliacaoById = (id) => {
   const avaliacoes = getAvaliacoes();
-  return avaliacoes.find(a => a.id === id);
+  return avaliacoes.find(a => a._id === id);
 };
 
 // Obter avaliações por colaborador
 export const getAvaliacoesPorColaborador = (colaboradorId) => {
   const avaliacoes = getAvaliacoes();
-  return avaliacoes.filter(a => a.colaboradorId === colaboradorId);
+  return getAvaliacoesPorColaboradorUtil(colaboradorId, avaliacoes);
 };
 
 // Adicionar avaliação
@@ -218,7 +231,7 @@ export const addAvaliacao = async (avaliacaoData) => {
     }
 
     const novaAvaliacao = {
-      id: generateId(),
+      _id: generateId(), // Usar _id em vez de id
       colaboradorId: avaliacaoData.colaboradorId,
       colaboradorNome: funcionario.nomeCompleto,
       avaliador: avaliacaoData.avaliador,
@@ -259,7 +272,7 @@ export const addAvaliacao = async (avaliacaoData) => {
 export const updateAvaliacao = async (id, avaliacaoData) => {
   try {
     const avaliacoes = getAvaliacoes();
-    const index = avaliacoes.findIndex(a => a.id === id);
+    const index = avaliacoes.findIndex(a => a._id === id);
     
     if (index !== -1) {
       const avaliacaoExistente = avaliacoes[index];
@@ -306,8 +319,8 @@ export const updateAvaliacao = async (id, avaliacaoData) => {
 export const deleteAvaliacao = (id) => {
   try {
     const avaliacoes = getAvaliacoes();
-    const avaliacao = avaliacoes.find(a => a.id === id);
-    const avaliacoesAtualizadas = avaliacoes.filter(a => a.id !== id);
+    const avaliacao = avaliacoes.find(a => a._id === id);
+    const avaliacoesAtualizadas = avaliacoes.filter(a => a._id !== id);
     
     localStorage.setItem(QUALIDADE_STORAGE_KEY, JSON.stringify(avaliacoesAtualizadas));
     
@@ -363,88 +376,25 @@ export const gerarRelatorioAgente = (colaboradorId) => {
     return null;
   }
 
-  const pontuacoes = avaliacoes.map(a => a.pontuacaoTotal);
-  const mediaAvaliador = pontuacoes.reduce((sum, p) => sum + p, 0) / pontuacoes.length;
-  
-  // Calcular tendência
-  let tendencia = 'estavel';
-  if (avaliacoes.length >= 2) {
-    const primeiraMetade = avaliacoes.slice(0, Math.ceil(avaliacoes.length / 2));
-    const segundaMetade = avaliacoes.slice(Math.ceil(avaliacoes.length / 2));
-    
-    const mediaPrimeira = primeiraMetade.reduce((sum, a) => sum + a.pontuacaoTotal, 0) / primeiraMetade.length;
-    const mediaSegunda = segundaMetade.reduce((sum, a) => sum + a.pontuacaoTotal, 0) / segundaMetade.length;
-    
-    if (mediaSegunda > mediaPrimeira + 5) tendencia = 'melhorando';
-    else if (mediaSegunda < mediaPrimeira - 5) tendencia = 'piorando';
-  }
-
-  return {
-    colaboradorId,
-    colaboradorNome: funcionario.nomeCompleto,
-    avaliacoes,
-    mediaAvaliador: Math.round(mediaAvaliador * 100) / 100,
-    mediaGPT: 0, // Será implementado quando GPT estiver ativo
-    totalAvaliacoes: avaliacoes.length,
-    melhorNota: Math.max(...pontuacoes),
-    piorNota: Math.min(...pontuacoes),
-    tendencia
-  };
+  return gerarRelatorioAgenteUtil(colaboradorId, funcionario.nomeCompleto, avaliacoes);
 };
 
 // Gerar relatório da gestão
 export const gerarRelatorioGestao = (mes, ano) => {
-  const avaliacoes = getAvaliacoes().filter(a => a.mes === mes && a.ano === ano);
-  
-  if (avaliacoes.length === 0) {
-    return null;
-  }
-
-  // Agrupar por colaborador
-  const colaboradoresMap = new Map();
-  
-  avaliacoes.forEach(avaliacao => {
-    if (!colaboradoresMap.has(avaliacao.colaboradorId)) {
-      colaboradoresMap.set(avaliacao.colaboradorId, {
-        colaboradorId: avaliacao.colaboradorId,
-        colaboradorNome: avaliacao.colaboradorNome,
-        avaliacoes: []
-      });
-    }
-    colaboradoresMap.get(avaliacao.colaboradorId).avaliacoes.push(avaliacao);
-  });
-
-  // Calcular médias por colaborador
-  const colaboradores = Array.from(colaboradoresMap.values()).map(colaborador => {
-    const media = colaborador.avaliacoes.reduce((sum, a) => sum + a.pontuacaoTotal, 0) / colaborador.avaliacoes.length;
-    return {
-      colaboradorId: colaborador.colaboradorId,
-      colaboradorNome: colaborador.colaboradorNome,
-      nota: Math.round(media * 100) / 100,
-      posicao: 0 // Será definido após ordenação
-    };
-  });
-
-  // Ordenar por nota (maior para menor)
-  colaboradores.sort((a, b) => b.nota - a.nota);
-  colaboradores.forEach((colaborador, index) => {
-    colaborador.posicao = index + 1;
-  });
-
-  const mediaGeral = colaboradores.reduce((sum, c) => sum + c.nota, 0) / colaboradores.length;
-
-  return {
-    mes,
-    ano,
-    totalAvaliacoes: avaliacoes.length,
-    mediaGeral: Math.round(mediaGeral * 100) / 100,
-    top3Melhores: colaboradores.slice(0, 3),
-    top3Piores: colaboradores.slice(-3).reverse(),
-    colaboradores
-  };
+  const avaliacoes = getAvaliacoes();
+  return gerarRelatorioGestaoUtil(mes, ano, avaliacoes);
 };
 
 // ===== UTILITÁRIOS =====
+
+// Funções utilitárias para relatórios
+export { 
+  getTendenciaClass, 
+  getTendenciaText, 
+  getPerformanceClass, 
+  getPerformanceText, 
+  formatDate 
+};
 
 // Converter arquivo para Base64
 const fileToBase64 = (file) => {
@@ -483,7 +433,7 @@ export const exportToExcel = () => {
     const csvContent = [
       headers.join(','),
       ...avaliacoes.map(avaliacao => [
-        avaliacao.id,
+        avaliacao._id,
         `"${avaliacao.colaboradorNome}"`,
         `"${avaliacao.avaliador}"`,
         avaliacao.mes,

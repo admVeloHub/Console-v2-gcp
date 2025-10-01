@@ -1,4 +1,4 @@
-// VERSION: v1.1.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.2.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 
@@ -53,8 +53,11 @@ import {
   getFuncionariosAtivos, 
   addFuncionario, 
   updateFuncionario, 
-  deleteFuncionario 
-} from '../services/qualidadeStorage';
+  deleteFuncionario,
+  migrarDadosParaMongoDB,
+  verificarDadosLocais,
+  limparDadosLocais
+} from '../services/qualidadeAPI';
 import { exportFuncionariosToExcel, exportFuncionariosToPDF } from '../services/qualidadeExport';
 import { generateId } from '../types/qualidade';
 
@@ -117,13 +120,32 @@ const FuncionariosPage = () => {
     aplicarFiltros();
   }, [funcionarios, filtros]);
 
-  const carregarFuncionarios = () => {
+  const carregarFuncionarios = async () => {
     try {
-      const dados = getFuncionarios();
+      setLoading(true);
+      
+      // Verificar se há dados locais para migrar
+      if (verificarDadosLocais()) {
+        console.log('🔄 Dados locais encontrados, iniciando migração...');
+        const resultado = await migrarDadosParaMongoDB();
+        
+        if (resultado.migrados > 0) {
+          mostrarSnackbar(
+            `Migração concluída: ${resultado.migrados} funcionários migrados para o banco de dados`, 
+            'success'
+          );
+          
+          // Limpar dados locais após migração bem-sucedida
+          limparDadosLocais();
+        }
+      }
+      
+      const dados = await getFuncionarios();
       setFuncionarios(dados);
       setLoading(false);
     } catch (error) {
       console.error('Erro ao carregar funcionários:', error);
+      mostrarSnackbar('Erro ao carregar funcionários', 'error');
       setLoading(false);
     }
   };
@@ -240,16 +262,16 @@ const FuncionariosPage = () => {
     });
   };
 
-  const salvarFuncionario = () => {
+  const salvarFuncionario = async () => {
     try {
       if (funcionarioEditando) {
-        updateFuncionario(funcionarioEditando.id, formData);
+        await updateFuncionario(funcionarioEditando._id || funcionarioEditando.id, formData);
         mostrarSnackbar('Funcionário atualizado com sucesso!', 'success');
       } else {
-        addFuncionario(formData);
+        await addFuncionario(formData);
         mostrarSnackbar('Funcionário adicionado com sucesso!', 'success');
       }
-      carregarFuncionarios();
+      await carregarFuncionarios();
       fecharModal();
     } catch (error) {
       console.error('Erro ao salvar funcionário:', error);
@@ -257,12 +279,12 @@ const FuncionariosPage = () => {
     }
   };
 
-  const excluirFuncionario = (id) => {
+  const excluirFuncionario = async (id) => {
     if (window.confirm('Tem certeza que deseja excluir este funcionário?')) {
       try {
-        deleteFuncionario(id);
+        await deleteFuncionario(id);
         mostrarSnackbar('Funcionário excluído com sucesso!', 'success');
-        carregarFuncionarios();
+        await carregarFuncionarios();
       } catch (error) {
         console.error('Erro ao excluir funcionário:', error);
         mostrarSnackbar('Erro ao excluir funcionário', 'error');
@@ -296,7 +318,7 @@ const FuncionariosPage = () => {
     });
   };
 
-  const salvarAcesso = () => {
+  const salvarAcesso = async () => {
     try {
       const funcionarioAtualizado = { ...funcionarioSelecionado };
       
@@ -324,9 +346,9 @@ const FuncionariosPage = () => {
         funcionarioAtualizado.acessos.push(novoAcesso);
       }
       
-      updateFuncionario(funcionarioSelecionado.id, funcionarioAtualizado);
+      await updateFuncionario(funcionarioSelecionado.id, funcionarioAtualizado);
       mostrarSnackbar('Acesso salvo com sucesso!', 'success');
-      carregarFuncionarios();
+      await carregarFuncionarios();
       fecharModalAcesso();
     } catch (error) {
       console.error('Erro ao salvar acesso:', error);
@@ -334,7 +356,7 @@ const FuncionariosPage = () => {
     }
   };
 
-  const excluirAcesso = (funcionarioId, acessoId) => {
+  const excluirAcesso = async (funcionarioId, acessoId) => {
     if (window.confirm('Tem certeza que deseja excluir este acesso?')) {
       try {
         const funcionario = funcionarios.find(f => f.id === funcionarioId);
@@ -342,9 +364,9 @@ const FuncionariosPage = () => {
           ...funcionario,
           acessos: (funcionario.acessos || []).filter(a => a.id !== acessoId)
         };
-        updateFuncionario(funcionarioId, funcionarioAtualizado);
+        await updateFuncionario(funcionarioId, funcionarioAtualizado);
         mostrarSnackbar('Acesso excluído com sucesso!', 'success');
-        carregarFuncionarios();
+        await carregarFuncionarios();
       } catch (error) {
         console.error('Erro ao excluir acesso:', error);
         mostrarSnackbar('Erro ao excluir acesso', 'error');
@@ -463,7 +485,7 @@ const FuncionariosPage = () => {
               </Button>
               <Button
                 startIcon={<Person />}
-                onClick={exportFuncionariosToExcel}
+                onClick={() => exportFuncionariosToExcel()}
                 sx={{
                   backgroundColor: '#15A237',
                   color: '#ffffff',
@@ -478,7 +500,7 @@ const FuncionariosPage = () => {
               </Button>
               <Button
                 startIcon={<Business />}
-                onClick={exportFuncionariosToPDF}
+                onClick={() => exportFuncionariosToPDF()}
                 sx={{
                   backgroundColor: '#EF4444',
                   color: '#ffffff',
@@ -653,10 +675,10 @@ const FuncionariosPage = () => {
             <TableBody>
               {funcionariosFiltrados.map((funcionario) => {
                 const status = obterStatusFuncionario(funcionario);
-                const isExpanded = linhasExpandidas.has(funcionario.id);
+                const isExpanded = linhasExpandidas.has(funcionario._id || funcionario.id);
                 
                 return (
-                  <React.Fragment key={funcionario.id}>
+                  <React.Fragment key={funcionario._id || funcionario.id}>
                     <TableRow sx={{ '&:hover': { backgroundColor: '#f8f9fa' } }}>
                       <TableCell sx={{ fontFamily: 'Poppins' }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -705,7 +727,7 @@ const FuncionariosPage = () => {
                           </IconButton>
                           <IconButton
                             size="small"
-                            onClick={() => excluirFuncionario(funcionario.id)}
+                            onClick={() => excluirFuncionario(funcionario._id || funcionario.id)}
                             sx={{ color: '#EF4444' }}
                           >
                             <Delete />
@@ -715,7 +737,7 @@ const FuncionariosPage = () => {
                       <TableCell>
                         <IconButton
                           size="small"
-                          onClick={() => toggleLinhaExpandida(funcionario.id)}
+                          onClick={() => toggleLinhaExpandida(funcionario._id || funcionario.id)}
                         >
                           {isExpanded ? <ExpandLess /> : <ExpandMore />}
                         </IconButton>
@@ -786,7 +808,7 @@ const FuncionariosPage = () => {
                                       <Chip
                                         key={acesso.id}
                                         label={`${acesso.sistema || 'Sistema'}${acesso.perfil ? ` (${acesso.perfil})` : ''}`}
-                                        onDelete={() => excluirAcesso(funcionario.id, acesso.id)}
+                                        onDelete={() => excluirAcesso(funcionario._id || funcionario.id, acesso.id)}
                                         sx={{
                                           backgroundColor: '#1694FF',
                                           color: '#ffffff',

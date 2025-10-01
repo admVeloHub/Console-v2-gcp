@@ -1,4 +1,4 @@
-// VERSION: v3.4.7 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.4.13 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 import { usersAPI } from './api';
 
@@ -151,5 +151,95 @@ export const removeAuthorizedUser = async (email) => {
   } catch (error) {
     console.error('Erro ao remover usuário:', error);
     throw error;
+  }
+};
+
+// Buscar avaliadores válidos (administradores e gestão com módulo qualidade ativo)
+export const getAvaliadoresValidos = async () => {
+  try {
+    console.log('🔍 DEBUG - Iniciando busca de avaliadores válidos...');
+    const users = await getAllAuthorizedUsers();
+    console.log('🔍 DEBUG - Total de usuários encontrados:', users.length);
+    console.log('🔍 DEBUG - Usuários encontrados:', users);
+    
+    // Filtrar usuários que são avaliadores válidos
+    const avaliadores = users.filter(user => {
+      console.log(`🔍 DEBUG - Analisando usuário: ${user._userMail || user.email}`);
+      console.log(`🔍 DEBUG - Função: ${user._userRole}`);
+      console.log(`🔍 DEBUG - Clearance:`, user._userClearance);
+      
+      // Verificar se tem função de administrador ou gestão
+      const isAdminOuGestao = user._userRole === 'administrador' || user._userRole === 'gestão';
+      console.log(`🔍 DEBUG - É admin/gestão? ${isAdminOuGestao}`);
+      
+      // Verificar se tem módulo qualidade ativo
+      const hasQualidadeAtivo = user._userClearance && user._userClearance.qualidade === true;
+      console.log(`🔍 DEBUG - Tem qualidade ativo? ${hasQualidadeAtivo}`);
+      
+      const isValid = isAdminOuGestao && hasQualidadeAtivo;
+      console.log(`🔍 DEBUG - É avaliador válido? ${isValid}`);
+      
+      return isValid;
+    });
+    
+    console.log('🔍 DEBUG - Avaliadores filtrados:', avaliadores);
+    
+    // Retornar apenas os nomes dos avaliadores
+    const nomesAvaliadores = avaliadores.map(user => {
+      // Usar _userId que contém o nome do usuário, senão usar email como fallback
+      const nome = user._userId || user._userMail;
+      console.log(`🔍 DEBUG - Mapeando usuário ${user._userMail} para nome: ${nome}`);
+      return nome;
+    });
+    
+    console.log('✅ Avaliadores válidos encontrados:', nomesAvaliadores);
+    return nomesAvaliadores;
+  } catch (error) {
+    console.error('Erro ao buscar avaliadores válidos:', error);
+    console.log('⚠️ API não disponível, usando fallback local...');
+    
+    // Fallback: verificar localStorage para usuários
+    try {
+      const localUsers = JSON.parse(localStorage.getItem('authorizedUsers') || '[]');
+      console.log('🔍 DEBUG - Usuários do localStorage:', localUsers);
+      
+      // Filtrar usuários que são avaliadores válidos no localStorage
+      const avaliadores = localUsers.filter(user => {
+        console.log(`🔍 DEBUG - Analisando usuário local: ${user._userMail}`);
+        console.log(`🔍 DEBUG - Função local: ${user._userRole}`);
+        console.log(`🔍 DEBUG - Clearance local:`, user._userClearance);
+        
+        // Verificar se tem função de administrador ou gestão
+        const isAdminOuGestao = user._userRole === 'administrador' || user._userRole === 'gestão';
+        console.log(`🔍 DEBUG - É admin/gestão? ${isAdminOuGestao}`);
+        
+        // Verificar se tem módulo qualidade ativo
+        const hasQualidadeAtivo = user._userClearance && user._userClearance.qualidade === true;
+        console.log(`🔍 DEBUG - Tem qualidade ativo? ${hasQualidadeAtivo}`);
+        
+        const isValid = isAdminOuGestao && hasQualidadeAtivo;
+        console.log(`🔍 DEBUG - É avaliador válido? ${isValid}`);
+        
+        return isValid;
+      });
+      
+      console.log('🔍 DEBUG - Avaliadores filtrados do localStorage:', avaliadores);
+      
+      // Retornar apenas os nomes dos avaliadores
+      const nomesAvaliadores = avaliadores.map(user => {
+        // Usar _userId que contém o nome do usuário, senão usar email como fallback
+        const nome = user._userId || user._userMail;
+        console.log(`🔍 DEBUG - Mapeando usuário local ${user._userMail} para nome: ${nome}`);
+        return nome;
+      });
+      
+      console.log('✅ Avaliadores válidos encontrados no localStorage:', nomesAvaliadores);
+      return nomesAvaliadores;
+      
+    } catch (localError) {
+      console.error('Erro ao acessar localStorage:', localError);
+      console.log('⚠️ Usando fallback: lista vazia de avaliadores');
+      return [];
+    }
   }
 };

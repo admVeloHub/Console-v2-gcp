@@ -1,4 +1,4 @@
-// VERSION: v3.7.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.7.18 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -63,19 +63,59 @@ const ConfigPage = () => {
   // Criar usuário de desenvolvimento se não existir
   const createDevUserIfNeeded = async () => {
     try {
-      const devUserEmail = 'gravina.dev@localhost';
-      const existingUsers = await getAllAuthorizedUsers();
+      const devUserEmail = 'lucas.gravina@velotax.com.br';
+      
+      // Tentar buscar usuários da API primeiro
+      let existingUsers = [];
+      try {
+        existingUsers = await getAllAuthorizedUsers();
+      } catch (apiError) {
+        console.log('⚠️ API não disponível, usando fallback local');
+        // Fallback: verificar localStorage
+        const localUsers = JSON.parse(localStorage.getItem('authorizedUsers') || '[]');
+        existingUsers = localUsers;
+      }
       
       // Verificar se o usuário de desenvolvimento já existe
       const devUserExists = existingUsers?.some(user => user._userMail === devUserEmail);
+      const existingDevUser = existingUsers?.find(user => user._userMail === devUserEmail);
+      
+      console.log('🔍 DEBUG - Usuário de desenvolvimento existe?', devUserExists);
+      console.log('🔍 DEBUG - Usuário existente:', existingDevUser);
+      console.log('🔍 DEBUG - Usuários existentes:', existingUsers);
+      
+      // Se o usuário existe mas tem função incorreta, atualizar
+      if (existingDevUser && existingDevUser._userRole !== 'administrador') {
+        console.log('🔄 Atualizando função do usuário de desenvolvimento...');
+        existingDevUser._userRole = 'administrador';
+        
+        try {
+          await updateAuthorizedUser(existingDevUser._id, existingDevUser);
+          console.log('✅ Usuário de desenvolvimento atualizado via API!');
+        } catch (apiError) {
+          console.log('⚠️ API não disponível, atualizando localmente...');
+          // Fallback: atualizar no localStorage
+          const localUsers = JSON.parse(localStorage.getItem('authorizedUsers') || '[]');
+          const userIndex = localUsers.findIndex(user => user._userMail === devUserEmail);
+          if (userIndex !== -1) {
+            localUsers[userIndex] = existingDevUser;
+            localStorage.setItem('authorizedUsers', JSON.stringify(localUsers));
+            console.log('✅ Usuário de desenvolvimento atualizado localmente!');
+          }
+        }
+        
+        // Recarregar lista de usuários
+        loadUsers();
+        return;
+      }
       
       if (!devUserExists) {
-        console.log('Criando usuário de desenvolvimento...');
+        console.log('🔧 Criando usuário de desenvolvimento...');
         
         const devUser = {
           _userMail: devUserEmail,
           _userId: 'gravina_dev',
-          _userRole: 'Desenvolvedor',
+          _userRole: 'administrador',
           _userClearance: {
             artigos: true,
             velonews: true,
@@ -100,8 +140,17 @@ const ConfigPage = () => {
           }
         };
 
-        await addAuthorizedUser(devUser);
-        console.log('Usuário de desenvolvimento criado com sucesso!');
+        try {
+          await addAuthorizedUser(devUser);
+          console.log('✅ Usuário de desenvolvimento criado via API!');
+        } catch (apiError) {
+          console.log('⚠️ API não disponível, criando localmente...');
+          // Fallback: criar no localStorage
+          const localUsers = JSON.parse(localStorage.getItem('authorizedUsers') || '[]');
+          localUsers.push(devUser);
+          localStorage.setItem('authorizedUsers', JSON.stringify(localUsers));
+          console.log('✅ Usuário de desenvolvimento criado localmente!');
+        }
         
         // Recarregar lista de usuários
         loadUsers();
@@ -115,8 +164,22 @@ const ConfigPage = () => {
     try {
       setLoading(true);
       console.log('Carregando usuários...');
-      const usersData = await getAllAuthorizedUsers();
-      console.log('Usuários carregados:', usersData);
+      
+      let usersData = [];
+      try {
+        usersData = await getAllAuthorizedUsers();
+        console.log('Usuários carregados da API:', usersData);
+      } catch (apiError) {
+        console.log('⚠️ API não disponível, carregando do localStorage...');
+        // Fallback: carregar do localStorage
+        const localUsersString = localStorage.getItem('authorizedUsers');
+        console.log('🔍 DEBUG - localStorage raw:', localUsersString);
+        const localUsers = JSON.parse(localUsersString || '[]');
+        usersData = localUsers;
+        console.log('🔍 DEBUG - Usuários carregados do localStorage:', usersData);
+        console.log('🔍 DEBUG - Quantidade de usuários no localStorage:', usersData.length);
+      }
+      
       setUsers(usersData || []);
     } catch (error) {
       console.error('Erro ao carregar usuários:', error);
@@ -163,28 +226,28 @@ const ConfigPage = () => {
 
   // Mapeamento dos cards da tela inicial
   const cardPermissions = [
-    { key: 'artigos', label: 'Artigos', description: 'Gerenciamento de artigos' },
-    { key: 'velonews', label: 'Velonews', description: 'Sistema de notícias' },
-    { key: 'botPerguntas', label: 'Bot Perguntas', description: 'Sistema de perguntas automáticas' },
-    { key: 'chamadosInternos', label: 'Chamados Internos', description: 'Sistema de tickets' },
-    { key: 'igp', label: 'IGP', description: 'Indicadores de gestão' },
-    { key: 'qualidade', label: 'Qualidade', description: 'Controle de qualidade' },
-    { key: 'capacity', label: 'Capacity', description: 'Gestão de capacidade' },
-    { key: 'config', label: 'Config', description: 'Configurações do sistema' },
-    { key: 'servicos', label: 'Serviços', description: 'Console de gerenciamento de serviços' }
+    { key: 'artigos', label: 'Artigos' },
+    { key: 'velonews', label: 'Velonews' },
+    { key: 'botPerguntas', label: 'Bot Perguntas' },
+    { key: 'chamadosInternos', label: 'Chamados Internos' },
+    { key: 'igp', label: 'IGP' },
+    { key: 'qualidade', label: 'Qualidade' },
+    { key: 'capacity', label: 'Capacity' },
+    { key: 'config', label: 'Config' },
+    { key: 'servicos', label: 'Serviços' }
   ];
 
   // Mapeamento dos tipos de tickets dos chamados internos
   const ticketTypes = [
-    { key: 'artigos', label: 'Artigos', description: 'Tickets relacionados a artigos' },
-    { key: 'processos', label: 'Processos', description: 'Tickets sobre processos internos' },
-    { key: 'roteiros', label: 'Roteiros', description: 'Tickets de roteiros e procedimentos' },
-    { key: 'treinamentos', label: 'Treinamentos', description: 'Tickets sobre treinamentos' },
-    { key: 'funcionalidades', label: 'Funcionalidades', description: 'Tickets de novas funcionalidades' },
-    { key: 'recursos', label: 'Recursos', description: 'Tickets sobre recursos do sistema' },
-    { key: 'gestao', label: 'Gestão', description: 'Tickets de gestão e administração' },
-    { key: 'rhFin', label: 'RH & Fin', description: 'Tickets de recursos humanos e financeiro' },
-    { key: 'facilities', label: 'Facilities', description: 'Tickets de infraestrutura e facilities' }
+    { key: 'artigos', label: 'Artigos' },
+    { key: 'processos', label: 'Processos' },
+    { key: 'roteiros', label: 'Roteiros' },
+    { key: 'treinamentos', label: 'Treinamentos' },
+    { key: 'funcionalidades', label: 'Funcionalidades' },
+    { key: 'recursos', label: 'Recursos' },
+    { key: 'gestao', label: 'Gestão' },
+    { key: 'rhFin', label: 'RH & Fin' },
+    { key: 'facilities', label: 'Facilities' }
   ];
 
   const handleOpenUserModal = (user = null) => {
@@ -300,6 +363,37 @@ const ConfigPage = () => {
   const handleClosePermissionsModal = () => {
     setOpenPermissionsModal(false);
     setSelectedUser(null);
+  };
+
+  const handleSavePermissions = async () => {
+    if (!selectedUser) return;
+    
+    try {
+      console.log('💾 Salvando permissões para usuário:', selectedUser._userMail);
+      console.log('📋 Permissões dos cards:', selectedUser._userClearance);
+      console.log('🎫 Tipos de tickets:', selectedUser._userTickets);
+      
+      // Atualizar usuário com as novas permissões
+      await updateAuthorizedUser(selectedUser._id, {
+        _userClearance: selectedUser._userClearance,
+        _userTickets: selectedUser._userTickets
+      });
+      
+      console.log('✅ Permissões salvas com sucesso!');
+      
+      // Recarregar lista de usuários
+      await loadUsers();
+      
+      // Fechar modal
+      handleClosePermissionsModal();
+      
+      // Mostrar feedback de sucesso (opcional)
+      // Você pode adicionar um toast/snackbar aqui se quiser
+      
+    } catch (error) {
+      console.error('❌ Erro ao salvar permissões:', error);
+      // Aqui você pode adicionar tratamento de erro (toast, etc.)
+    }
   };
 
   const handleNextStep = () => {
@@ -445,14 +539,80 @@ const ConfigPage = () => {
 
   const getFuncaoColor = (funcao) => {
     switch (funcao) {
-      case 'Administrador':
-        return 'error';
-      case 'Gestão':
-        return 'primary';
-      case 'Editor':
-        return 'secondary';
+      case 'administrador':
+        return 'error'; // Vermelho para administrador
+      case 'gestão':
+        return 'primary'; // Azul para gestão
+      case 'editor':
+        return 'secondary'; // Cinza para editor
+      case 'Desenvolvedor':
+        return 'warning'; // Amarelo para desenvolvedor
       default:
-        return 'default';
+        return 'default'; // Cinza padrão
+    }
+  };
+
+  const getFuncaoStyle = (funcao) => {
+    switch (funcao) {
+      case 'administrador':
+        // RECICLAGEM: Amarelo → Azul Médio
+        return {
+          background: 'linear-gradient(135deg, #FCC200 0%, #FCC200 60%, #1634FF 100%)',
+          color: 'white',
+          fontWeight: 600,
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px',
+          fontSize: '0.75rem',
+          padding: '6px 12px',
+          borderRadius: '20px'
+        };
+      case 'gestão':
+        // ATUALIZAÇÃO: Azul Escuro → Amarelo
+        return {
+          background: 'linear-gradient(135deg, #000058 0%, #000058 60%, #FCC200 100%)',
+          color: 'white',
+          fontWeight: 600,
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px',
+          fontSize: '0.75rem',
+          padding: '6px 12px',
+          borderRadius: '20px'
+        };
+      case 'editor':
+        // ESSENCIAL: Azul Médio → Azul Claro
+        return {
+          background: 'linear-gradient(135deg, #1634FF 0%, #1634FF 60%, #1694FF 100%)',
+          color: 'white',
+          fontWeight: 600,
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px',
+          fontSize: '0.75rem',
+          padding: '6px 12px',
+          borderRadius: '20px'
+        };
+      case 'Desenvolvedor':
+        // OPCIONAL: Azul Escuro → Azul Opaco
+        return {
+          background: 'linear-gradient(135deg, #000058 0%, #000058 60%, #006AB9 100%)',
+          color: 'white',
+          fontWeight: 600,
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px',
+          fontSize: '0.75rem',
+          padding: '6px 12px',
+          borderRadius: '20px'
+        };
+      default:
+        return {
+          background: 'linear-gradient(135deg, #9e9e9e 0%, #9e9e9e 60%, #e0e0e0 100%)',
+          color: 'white',
+          fontWeight: 600,
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px',
+          fontSize: '0.75rem',
+          padding: '6px 12px',
+          borderRadius: '20px'
+        };
     }
   };
 
@@ -579,8 +739,11 @@ const ConfigPage = () => {
                       <Chip 
                         label={user._userRole || 'Não definida'}
                         size="small"
-                        color={getFuncaoColor(user._userRole)}
-                        sx={{ fontFamily: 'Poppins', fontWeight: 500 }}
+                        sx={{ 
+                          ...getFuncaoStyle(user._userRole),
+                          fontFamily: 'Poppins', 
+                          fontWeight: 500 
+                        }}
                       />
                     </TableCell>
                     <TableCell>
@@ -748,9 +911,6 @@ const ConfigPage = () => {
                           <Typography sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
                             {permission.label}
                           </Typography>
-                          <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'Poppins' }}>
-                            {permission.description}
-                          </Typography>
                         </Box>
                       }
                     />
@@ -775,9 +935,6 @@ const ConfigPage = () => {
                         <Box>
                           <Typography sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
                             {ticketType.label}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'Poppins' }}>
-                            {ticketType.description}
                           </Typography>
                         </Box>
                       }
@@ -842,7 +999,7 @@ const ConfigPage = () => {
           fontWeight: 600,
           color: 'var(--blue-dark)'
         }}>
-          Permissões - {selectedUser?.nome}
+          {selectedUser?._userId || selectedUser?._userMail}
           <IconButton
             aria-label="close"
             onClick={handleClosePermissionsModal}
@@ -867,9 +1024,6 @@ const ConfigPage = () => {
             }}>
               Permissões dos Cards da Tela Inicial
             </Typography>
-            <Alert severity="info" sx={{ mb: 3, fontFamily: 'Poppins' }}>
-              Selecione quais funcionalidades este usuário pode acessar na tela inicial.
-            </Alert>
             
             <Grid container spacing={1.5}>
               {cardPermissions.map((permission) => (
@@ -888,7 +1042,12 @@ const ConfigPage = () => {
                       boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                     }
                   }}>
-                    <CardContent sx={{ p: 1.5 }}>
+                    <CardContent sx={{ 
+                      pt: 2,
+                      pb: 0,
+                      px: 1.5,
+                      minHeight: '60px'
+                    }}>
                       <FormControlLabel
                         control={
                           <Checkbox
@@ -903,25 +1062,21 @@ const ConfigPage = () => {
                           />
                         }
                         label={
-                          <Box sx={{ ml: 1 }}>
-                            <Typography sx={{ 
-                              fontFamily: 'Poppins', 
-                              fontWeight: 600,
-                              color: 'var(--blue-dark)',
-                              fontSize: '0.9rem'
-                            }}>
-                              {permission.label}
-                            </Typography>
-                            <Typography variant="body2" sx={{ 
-                              fontFamily: 'Poppins',
-                              color: 'var(--gray)',
-                              fontSize: '0.8rem'
-                            }}>
-                              {permission.description}
-                            </Typography>
-                          </Box>
+                          <Typography sx={{ 
+                            fontFamily: 'Poppins', 
+                            fontWeight: 600,
+                            color: 'var(--blue-dark)',
+                            fontSize: '0.9rem',
+                            ml: 1
+                          }}>
+                            {permission.label}
+                          </Typography>
                         }
-                        sx={{ width: '100%', margin: 0, alignItems: 'flex-start' }}
+                        sx={{ 
+                          width: '100%', 
+                          margin: 0, 
+                          alignItems: 'center'
+                        }}
                       />
                     </CardContent>
                   </Card>
@@ -939,9 +1094,6 @@ const ConfigPage = () => {
               }}>
                 Tipos de Tickets dos Chamados Internos
               </Typography>
-              <Alert severity="warning" sx={{ mb: 3, fontFamily: 'Poppins' }}>
-                Selecione quais tipos de tickets este usuário pode visualizar no sistema de chamados internos.
-              </Alert>
               
               <Grid container spacing={1.5}>
                 {ticketTypes.map((ticketType) => (
@@ -960,7 +1112,12 @@ const ConfigPage = () => {
                         boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                       }
                     }}>
-                      <CardContent sx={{ p: 1.5 }}>
+                      <CardContent sx={{ 
+                        pt: 2,
+                        pb: 0,
+                        px: 1.5,
+                        minHeight: '60px'
+                      }}>
                         <FormControlLabel
                           control={
                             <Checkbox
@@ -975,25 +1132,21 @@ const ConfigPage = () => {
                             />
                           }
                           label={
-                            <Box sx={{ ml: 1 }}>
-                              <Typography sx={{ 
-                                fontFamily: 'Poppins', 
-                                fontWeight: 600,
-                                color: 'var(--blue-dark)',
-                                fontSize: '0.9rem'
-                              }}>
-                                {ticketType.label}
-                              </Typography>
-                              <Typography variant="body2" sx={{ 
-                                fontFamily: 'Poppins',
-                                color: 'var(--gray)',
-                                fontSize: '0.8rem'
-                              }}>
-                                {ticketType.description}
-                              </Typography>
-                            </Box>
+                            <Typography sx={{ 
+                              fontFamily: 'Poppins', 
+                              fontWeight: 600,
+                              color: 'var(--blue-dark)',
+                              fontSize: '0.9rem',
+                              ml: 1
+                            }}>
+                              {ticketType.label}
+                            </Typography>
                           }
-                          sx={{ width: '100%', margin: 0, alignItems: 'flex-start' }}
+                          sx={{ 
+                            width: '100%', 
+                            margin: 0, 
+                            alignItems: 'center'
+                          }}
                         />
                       </CardContent>
                     </Card>
@@ -1004,8 +1157,20 @@ const ConfigPage = () => {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClosePermissionsModal} sx={{ color: 'var(--blue-dark)' }}>
-            Fechar
+          <Button 
+            onClick={handleSavePermissions} 
+            variant="contained"
+            sx={{ 
+              backgroundColor: 'var(--blue-medium)',
+              color: 'white',
+              fontFamily: 'Poppins',
+              fontWeight: 600,
+              '&:hover': {
+                backgroundColor: 'var(--blue-dark)'
+              }
+            }}
+          >
+            Salvar
           </Button>
         </DialogActions>
       </Dialog>

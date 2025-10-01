@@ -1,4 +1,4 @@
-// VERSION: v3.3.6 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.3.7 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { AppBar, Toolbar, Typography, IconButton, Box, Menu, MenuItem, Avatar, Chip } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -127,7 +127,7 @@ const Header = () => {
               component="img"
               id="user-avatar"
               className="user-avatar"
-              src={user.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nome)}&background=1634FF&color=fff&size=32&bold=true`}
+              src={user.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(user._userId || user.nome || user.email)}&background=1634FF&color=fff&size=32&bold=true`}
               alt="Avatar"
               sx={{
                 width: '32px',
@@ -152,7 +152,7 @@ const Header = () => {
                 whiteSpace: 'nowrap'
               }}
             >
-              {user.nome}
+              {user._userId || user.nome || user.email}
             </Typography>
 
             {/* Botão de Logout */}

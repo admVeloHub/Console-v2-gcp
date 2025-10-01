@@ -1,11 +1,12 @@
-// VERSION: v1.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.3.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
-import { getAvaliacoes, getFuncionarios } from './qualidadeStorage';
+import { getAvaliacoes } from './qualidadeAPI';
+import { getFuncionarios } from './qualidadeAPI';
 
 // Exportar avaliações para Excel/CSV
-export const exportAvaliacoesToExcel = () => {
+export const exportAvaliacoesToExcel = async () => {
   try {
-    const avaliacoes = getAvaliacoes();
+    const avaliacoes = await getAvaliacoes();
     
     if (avaliacoes.length === 0) {
       alert('Não há avaliações para exportar');
@@ -23,7 +24,7 @@ export const exportAvaliacoesToExcel = () => {
     const csvContent = [
       headers.join(','),
       ...avaliacoes.map(avaliacao => [
-        avaliacao.id,
+        avaliacao._id,
         `"${avaliacao.colaboradorNome}"`,
         `"${avaliacao.avaliador}"`,
         avaliacao.mes,
@@ -61,9 +62,9 @@ export const exportAvaliacoesToExcel = () => {
 };
 
 // Exportar funcionários para Excel/CSV
-export const exportFuncionariosToExcel = () => {
+export const exportFuncionariosToExcel = async () => {
   try {
-    const funcionarios = getFuncionarios();
+    const funcionarios = await getFuncionarios();
     
     if (funcionarios.length === 0) {
       alert('Não há funcionários para exportar');
@@ -80,7 +81,7 @@ export const exportFuncionariosToExcel = () => {
     const csvContent = [
       headers.join(','),
       ...funcionarios.map(funcionario => [
-        funcionario.id,
+        funcionario._id || funcionario.id || 'N/A',
         `"${funcionario.nomeCompleto}"`,
         funcionario.dataAniversario,
         funcionario.empresa,
@@ -92,8 +93,8 @@ export const exportFuncionariosToExcel = () => {
         funcionario.dataDesligamento || '',
         funcionario.afastado ? 'Sim' : 'Não',
         funcionario.dataAfastamento || '',
-        funcionario.acessos.length,
-        `"${funcionario.acessos.map(a => `${a.sistema}${a.perfil ? ` (${a.perfil})` : ''}`).join('; ')}"`
+        (funcionario.acessos || []).length,
+        `"${(funcionario.acessos || []).map(a => `${a.sistema}${a.perfil ? ` (${a.perfil})` : ''}`).join('; ')}"`
       ].join(','))
     ].join('\n');
 
@@ -116,9 +117,9 @@ export const exportFuncionariosToExcel = () => {
 };
 
 // Exportar relatório de avaliações para PDF
-export const exportAvaliacoesToPDF = () => {
+export const exportAvaliacoesToPDF = async () => {
   try {
-    const avaliacoes = getAvaliacoes();
+    const avaliacoes = await getAvaliacoes();
     
     if (avaliacoes.length === 0) {
       alert('Não há avaliações para exportar');
@@ -328,9 +329,9 @@ export const exportAvaliacoesToPDF = () => {
 };
 
 // Exportar relatório de funcionários para PDF
-export const exportFuncionariosToPDF = () => {
+export const exportFuncionariosToPDF = async () => {
   try {
-    const funcionarios = getFuncionarios();
+    const funcionarios = await getFuncionarios();
     
     if (funcionarios.length === 0) {
       alert('Não há funcionários para exportar');
@@ -342,7 +343,7 @@ export const exportFuncionariosToPDF = () => {
     const funcionariosAtivos = funcionarios.filter(f => !f.desligado && !f.afastado).length;
     const funcionariosDesligados = funcionarios.filter(f => f.desligado).length;
     const funcionariosAfastados = funcionarios.filter(f => f.afastado).length;
-    const totalAcessos = funcionarios.reduce((sum, f) => sum + f.acessos.length, 0);
+    const totalAcessos = funcionarios.reduce((sum, f) => sum + (f.acessos || []).length, 0);
 
     // Criar HTML para PDF
     const htmlContent = `
@@ -504,7 +505,7 @@ export const exportFuncionariosToPDF = () => {
                   <td>${funcionario.empresa}</td>
                   <td>${new Date(funcionario.dataContratado).toLocaleDateString('pt-BR')}</td>
                   <td class="${statusClass}">${status}</td>
-                  <td>${funcionario.acessos.length}</td>
+                  <td>${(funcionario.acessos || []).length}</td>
                   <td>${funcionario.telefone || '-'}</td>
                 </tr>
               `;

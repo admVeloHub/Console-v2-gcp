@@ -1,4 +1,4 @@
-// VERSION: v3.7.3 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.8.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import axios from 'axios';
 
 // Configuração base da API
@@ -207,6 +207,78 @@ export const servicesAPI = {
   // Atualizar todos os status dos módulos (novo schema)
   updateAllModuleStatus: async (schemaData) => {
     const response = await api.put('/module-status', schemaData);
+    return response.data;
+  }
+};
+
+// API para Qualidade - Funcionários
+export const qualidadeFuncionariosAPI = {
+  // Listar todos os funcionários
+  getAll: async () => {
+    const response = await api.get('/qualidade/funcionarios');
+    return response.data;
+  },
+
+  // Listar apenas funcionários ativos
+  getAtivos: async () => {
+    const response = await api.get('/qualidade/funcionarios/ativos');
+    return response.data;
+  },
+
+  // Obter funcionário por ID
+  getById: async (id) => {
+    const response = await api.get(`/qualidade/funcionarios/${id}`);
+    return response.data;
+  },
+
+  // Criar novo funcionário
+  create: async (data) => {
+    const response = await api.post('/qualidade/funcionarios', data);
+    return response.data;
+  },
+
+  // Atualizar funcionário
+  update: async (id, data) => {
+    const response = await api.put(`/qualidade/funcionarios/${id}`, data);
+    return response.data;
+  },
+
+  // Deletar funcionário
+  delete: async (id) => {
+    const response = await api.delete(`/qualidade/funcionarios/${id}`);
+    return response.data;
+  }
+};
+
+// API para Qualidade - Avaliações
+export const qualidadeAvaliacoesAPI = {
+  // Listar todas as avaliações
+  getAll: async () => {
+    const response = await api.get('/qualidade/avaliacoes');
+    return response.data;
+  },
+
+  // Obter avaliação por ID
+  getById: async (id) => {
+    const response = await api.get(`/qualidade/avaliacoes/${id}`);
+    return response.data;
+  },
+
+  // Criar nova avaliação
+  create: async (data) => {
+    const response = await api.post('/qualidade/avaliacoes', data);
+    return response.data;
+  },
+
+  // Atualizar avaliação
+  update: async (id, data) => {
+    const response = await api.put(`/qualidade/avaliacoes/${id}`, data);
+    return response.data;
+  },
+
+  // Deletar avaliação
+  delete: async (id) => {
+    const response = await api.delete(`/qualidade/avaliacoes/${id}`);
     return response.data;
   }
 };

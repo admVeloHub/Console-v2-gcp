@@ -1,0 +1,473 @@
+// VERSION: v1.5.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+
+import { qualidadeFuncionariosAPI, qualidadeAvaliacoesAPI } from './api';
+import axios from 'axios';
+import { generateId, calcularPontuacaoTotal, PONTUACAO } from '../types/qualidade';
+import { 
+  getAvaliacoes as getAvaliacoesLocalStorage,
+  addAvaliacao as addAvaliacaoLocalStorage,
+  updateAvaliacao as updateAvaliacaoLocalStorage,
+  deleteAvaliacao as deleteAvaliacaoLocalStorage,
+  gerarRelatorioAgente as gerarRelatorioAgenteLocalStorage,
+  gerarRelatorioGestao as gerarRelatorioGestaoLocalStorage,
+  getAvaliacoesPorColaborador as getAvaliacoesPorColaboradorLocalStorage,
+  getTendenciaClass,
+  getTendenciaText,
+  getPerformanceClass,
+  getPerformanceText,
+  formatDate
+} from './qualidadeStorage';
+
+// ===== FUNCIONÁRIOS - API MONGODB =====
+
+// Obter todos os funcionários
+export const getFuncionarios = async () => {
+  try {
+    const response = await qualidadeFuncionariosAPI.getAll();
+    console.log(`📊 Funcionários carregados da API: ${response.length}`);
+    return response;
+  } catch (error) {
+    console.error('❌ Erro ao carregar funcionários da API:', error);
+    // Fallback para localStorage se API falhar
+    return getFuncionariosLocalStorage();
+  }
+};
+
+// Obter funcionários ativos
+export const getFuncionariosAtivos = async () => {
+  try {
+    const response = await qualidadeFuncionariosAPI.getAtivos();
+    console.log(`📊 Funcionários ativos carregados da API: ${response.length}`);
+    return response;
+  } catch (error) {
+    console.error('❌ Erro ao carregar funcionários ativos da API:', error);
+    // Fallback para localStorage se API falhar
+    return getFuncionariosAtivosLocalStorage();
+  }
+};
+
+// Adicionar funcionário
+export const addFuncionario = async (funcionarioData) => {
+  try {
+    const novoFuncionario = {
+      ...funcionarioData,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    const response = await qualidadeFuncionariosAPI.create(novoFuncionario);
+    console.log(`✅ Funcionário adicionado via API: ${response.nomeCompleto}`);
+    return response;
+  } catch (error) {
+    console.error('❌ Erro ao adicionar funcionário via API:', error);
+    // Fallback para localStorage se API falhar
+    return addFuncionarioLocalStorage(funcionarioData);
+  }
+};
+
+// Atualizar funcionário
+export const updateFuncionario = async (id, funcionarioData) => {
+  try {
+    const funcionarioAtualizado = {
+      ...funcionarioData,
+      updatedAt: new Date().toISOString()
+    };
+    
+    const response = await qualidadeFuncionariosAPI.update(id, funcionarioAtualizado);
+    console.log(`✅ Funcionário atualizado via API: ${response.nomeCompleto}`);
+    return response;
+  } catch (error) {
+    console.error('❌ Erro ao atualizar funcionário via API:', error);
+    // Fallback para localStorage se API falhar
+    return updateFuncionarioLocalStorage(id, funcionarioData);
+  }
+};
+
+// Excluir funcionário
+export const deleteFuncionario = async (id) => {
+  try {
+    await qualidadeFuncionariosAPI.delete(id);
+    console.log(`✅ Funcionário excluído via API: ${id}`);
+    return true;
+  } catch (error) {
+    console.error('❌ Erro ao excluir funcionário via API:', error);
+    // Fallback para localStorage se API falhar
+    return deleteFuncionarioLocalStorage(id);
+  }
+};
+
+// ===== FALLBACK PARA LOCALSTORAGE =====
+
+// Funções de fallback que usam localStorage
+const STORAGE_KEY = 'funcionarios_velotax';
+
+const getFuncionariosLocalStorage = () => {
+  try {
+    const data = localStorage.getItem(STORAGE_KEY);
+    if (data) {
+      const funcionarios = JSON.parse(data);
+      console.log(`📊 Funcionários carregados do localStorage: ${funcionarios.length}`);
+      return funcionarios;
+    }
+  } catch (error) {
+    console.error('❌ Erro ao carregar funcionários do localStorage:', error);
+  }
+  return [];
+};
+
+const getFuncionariosAtivosLocalStorage = () => {
+  const funcionarios = getFuncionariosLocalStorage();
+  return funcionarios.filter(f => !f.desligado && !f.afastado);
+};
+
+const addFuncionarioLocalStorage = (funcionarioData) => {
+  try {
+    const funcionarios = getFuncionariosLocalStorage();
+    const novoFuncionario = {
+      ...funcionarioData,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    funcionarios.push(novoFuncionario);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(funcionarios));
+    console.log(`✅ Funcionário adicionado ao localStorage: ${novoFuncionario.nomeCompleto}`);
+    return novoFuncionario;
+  } catch (error) {
+    console.error('❌ Erro ao adicionar funcionário ao localStorage:', error);
+    return null;
+  }
+};
+
+const updateFuncionarioLocalStorage = (id, funcionarioData) => {
+  try {
+    const funcionarios = getFuncionariosLocalStorage();
+    const index = funcionarios.findIndex(f => f.id === id);
+    
+    if (index !== -1) {
+      funcionarios[index] = {
+        ...funcionarios[index],
+        ...funcionarioData,
+        updatedAt: new Date().toISOString()
+      };
+      
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(funcionarios));
+      console.log(`✅ Funcionário atualizado no localStorage: ${funcionarios[index].nomeCompleto}`);
+      return funcionarios[index];
+    }
+  } catch (error) {
+    console.error('❌ Erro ao atualizar funcionário no localStorage:', error);
+  }
+  return null;
+};
+
+const deleteFuncionarioLocalStorage = (id) => {
+  try {
+    const funcionarios = getFuncionariosLocalStorage();
+    const funcionario = funcionarios.find(f => f.id === id);
+    const funcionariosAtualizados = funcionarios.filter(f => f.id !== id);
+    
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(funcionariosAtualizados));
+    console.log(`✅ Funcionário excluído do localStorage: ${funcionario?.nomeCompleto}`);
+    return true;
+  } catch (error) {
+    console.error('❌ Erro ao excluir funcionário do localStorage:', error);
+    return false;
+  }
+};
+
+// ===== MIGRAÇÃO DE DADOS =====
+
+// Migrar dados do localStorage para MongoDB
+export const migrarDadosParaMongoDB = async () => {
+  try {
+    const funcionariosLocal = getFuncionariosLocalStorage();
+    
+    if (funcionariosLocal.length === 0) {
+      console.log('📝 Nenhum dado local para migrar');
+      return { total: 0, migrados: 0, erros: 0 };
+    }
+
+    console.log(`🔄 Iniciando migração de ${funcionariosLocal.length} funcionários...`);
+    
+    let migrados = 0;
+    let erros = 0;
+
+    for (const funcionario of funcionariosLocal) {
+      try {
+        // Verificar se já existe no MongoDB
+        const existente = await qualidadeFuncionariosAPI.getById(funcionario.id);
+        
+        if (!existente) {
+          await qualidadeFuncionariosAPI.create(funcionario);
+          migrados++;
+          console.log(`✅ Migrado: ${funcionario.nomeCompleto}`);
+        } else {
+          console.log(`⏭️ Já existe: ${funcionario.nomeCompleto}`);
+        }
+      } catch (error) {
+        console.error(`❌ Erro ao migrar ${funcionario.nomeCompleto}:`, error);
+        erros++;
+      }
+    }
+
+    console.log(`🎉 Migração concluída: ${migrados} migrados, ${erros} erros`);
+    return { total: funcionariosLocal.length, migrados, erros };
+  } catch (error) {
+    console.error('❌ Erro na migração:', error);
+    return { total: 0, migrados: 0, erros: 1 };
+  }
+};
+
+// Verificar se há dados locais para migrar
+export const verificarDadosLocais = () => {
+  const funcionariosLocal = getFuncionariosLocalStorage();
+  return funcionariosLocal.length > 0;
+};
+
+// Limpar dados locais após migração bem-sucedida
+export const limparDadosLocais = () => {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem('funcionarios_velotax_backup');
+    localStorage.removeItem('funcionarios_velotax_log');
+    console.log('🧹 Dados locais limpos com sucesso');
+    return true;
+  } catch (error) {
+    console.error('❌ Erro ao limpar dados locais:', error);
+    return false;
+  }
+};
+
+// ===== AVALIAÇÕES - API MONGODB =====
+
+// Obter todas as avaliações
+export const getAvaliacoes = async () => {
+  try {
+    const response = await qualidadeAvaliacoesAPI.getAll();
+    console.log(`📊 Avaliações carregadas da API: ${response.length}`);
+    return response;
+  } catch (error) {
+    console.error('❌ Erro ao carregar avaliações da API:', error);
+    // Fallback para localStorage se API falhar
+    return getAvaliacoesLocalStorage();
+  }
+};
+
+// Adicionar avaliação
+export const addAvaliacao = async (avaliacaoData) => {
+  try {
+    const novaAvaliacao = {
+      ...avaliacaoData,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    const response = await qualidadeAvaliacoesAPI.create(novaAvaliacao);
+    console.log(`✅ Avaliação adicionada via API: ${response._id}`);
+    return response;
+  } catch (error) {
+    console.error('❌ Erro ao adicionar avaliação via API:', error);
+    // Fallback para localStorage se API falhar
+    return addAvaliacaoLocalStorage(avaliacaoData);
+  }
+};
+
+// Atualizar avaliação
+export const updateAvaliacao = async (id, avaliacaoData) => {
+  try {
+    const avaliacaoAtualizada = {
+      ...avaliacaoData,
+      updatedAt: new Date().toISOString()
+    };
+    const response = await qualidadeAvaliacoesAPI.update(id, avaliacaoAtualizada);
+    console.log(`✅ Avaliação atualizada via API: ${response._id}`);
+    return response;
+  } catch (error) {
+    console.error('❌ Erro ao atualizar avaliação via API:', error);
+    // Fallback para localStorage se API falhar
+    return updateAvaliacaoLocalStorage(id, avaliacaoData);
+  }
+};
+
+// Deletar avaliação
+export const deleteAvaliacao = async (id) => {
+  try {
+    const response = await qualidadeAvaliacoesAPI.delete(id);
+    console.log(`✅ Avaliação deletada via API: ${id}`);
+    return response;
+  } catch (error) {
+    console.error('❌ Erro ao deletar avaliação via API:', error);
+    // Fallback para localStorage se API falhar
+    return deleteAvaliacaoLocalStorage(id);
+  }
+};
+
+// ===== RELATÓRIOS =====
+
+// Gerar relatório do agente
+export const gerarRelatorioAgente = async (colaboradorId) => {
+  try {
+    // Buscar todas as avaliações da API e filtrar no frontend
+    const todasAvaliacoes = await qualidadeAvaliacoesAPI.getAll();
+    const avaliacoes = todasAvaliacoes.filter(a => a.colaboradorId === colaboradorId);
+    
+    const funcionarios = await getFuncionarios();
+    const funcionario = funcionarios.find(f => f.id === colaboradorId);
+    
+    if (!funcionario || avaliacoes.length === 0) {
+      return null;
+    }
+
+    // Buscar avaliações GPT para cada avaliação
+    const avaliacoesComGPT = await Promise.all(
+      avaliacoes.map(async (avaliacao) => {
+        const avaliacaoGPT = await getAvaliacaoGPTByAvaliacaoId(avaliacao._id);
+        return {
+          ...avaliacao,
+          avaliacaoGPT
+        };
+      })
+    );
+
+    // Usar função utilitária para gerar relatório
+    const { gerarRelatorioAgente: gerarRelatorioAgenteUtil } = await import('../types/qualidade');
+    return gerarRelatorioAgenteUtil(colaboradorId, funcionario.nomeCompleto, avaliacoesComGPT);
+  } catch (error) {
+    console.error('❌ Erro ao gerar relatório do agente via API:', error);
+    // Fallback para localStorage
+    return gerarRelatorioAgenteLocalStorage(colaboradorId);
+  }
+};
+
+// Gerar relatório da gestão
+export const gerarRelatorioGestao = async (mes, ano) => {
+  try {
+    // Buscar todas as avaliações da API e filtrar no frontend
+    const todasAvaliacoes = await qualidadeAvaliacoesAPI.getAll();
+    const avaliacoes = todasAvaliacoes.filter(a => a.mes === mes && a.ano === ano);
+    
+    if (avaliacoes.length === 0) {
+      return null;
+    }
+
+    // Usar função utilitária para gerar relatório
+    const { gerarRelatorioGestao: gerarRelatorioGestaoUtil } = await import('../types/qualidade');
+    return gerarRelatorioGestaoUtil(mes, ano, avaliacoes);
+  } catch (error) {
+    console.error('❌ Erro ao gerar relatório da gestão via API:', error);
+    // Fallback para localStorage
+    return gerarRelatorioGestaoLocalStorage(mes, ano);
+  }
+};
+
+// Obter avaliações por colaborador
+export const getAvaliacoesPorColaborador = async (colaboradorId) => {
+  try {
+    // Buscar todas as avaliações da API e filtrar no frontend
+    const todasAvaliacoes = await qualidadeAvaliacoesAPI.getAll();
+    const avaliacoes = todasAvaliacoes.filter(a => a.colaboradorId === colaboradorId);
+    console.log(`📊 Avaliações do colaborador carregadas da API: ${avaliacoes.length}`);
+    return avaliacoes;
+  } catch (error) {
+    console.error('❌ Erro ao carregar avaliações do colaborador via API:', error);
+    // Fallback para localStorage
+    return getAvaliacoesPorColaboradorLocalStorage(colaboradorId);
+  }
+};
+
+// ===== API GPT - IMPLEMENTAÇÃO COMPLETA =====
+
+// Configuração do axios para API GPT
+const gptAPI = axios.create({
+  baseURL: 'https://back-console.vercel.app/api/qualidade',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  timeout: 10000
+});
+
+// 1. Listar todas as avaliações GPT
+export const getAvaliacoesGPT = async (avaliacaoId = null) => {
+  try {
+    const url = avaliacaoId 
+      ? `/avaliacoes-gpt?avaliacaoId=${avaliacaoId}`
+      : '/avaliacoes-gpt';
+    
+    const response = await gptAPI.get(url);
+    console.log(`📊 Avaliações GPT carregadas: ${response.data.length || 1}`);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Erro ao carregar avaliações GPT:', error);
+    return null;
+  }
+};
+
+// 2. Obter avaliação GPT por ID
+export const getAvaliacaoGPTById = async (id) => {
+  try {
+    const response = await gptAPI.get(`/avaliacoes-gpt/${id}`);
+    console.log(`📊 Avaliação GPT carregada: ${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Erro ao carregar avaliação GPT por ID:', error);
+    return null;
+  }
+};
+
+// 3. Obter avaliação GPT por ID da avaliação original
+export const getAvaliacaoGPTByAvaliacaoId = async (avaliacaoId) => {
+  try {
+    const response = await gptAPI.get(`/avaliacoes-gpt/avaliacao/${avaliacaoId}`);
+    console.log(`📊 Avaliação GPT carregada para avaliação: ${avaliacaoId}`);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Erro ao carregar avaliação GPT por avaliação ID:', error);
+    return null;
+  }
+};
+
+// 4. Criar nova avaliação GPT
+export const createAvaliacaoGPT = async (dadosGPT) => {
+  try {
+    const response = await gptAPI.post('/avaliacoes-gpt', dadosGPT);
+    console.log(`✅ Avaliação GPT criada: ${dadosGPT.avaliacaoId}`);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Erro ao criar avaliação GPT:', error);
+    return null;
+  }
+};
+
+// 5. Atualizar avaliação GPT
+export const updateAvaliacaoGPT = async (id, dadosGPT) => {
+  try {
+    const response = await gptAPI.put(`/avaliacoes-gpt/${id}`, dadosGPT);
+    console.log(`✅ Avaliação GPT atualizada: ${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Erro ao atualizar avaliação GPT:', error);
+    return null;
+  }
+};
+
+// 6. Deletar avaliação GPT
+export const deleteAvaliacaoGPT = async (id) => {
+  try {
+    const response = await gptAPI.delete(`/avaliacoes-gpt/${id}`);
+    console.log(`✅ Avaliação GPT deletada: ${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Erro ao deletar avaliação GPT:', error);
+    return null;
+  }
+};
+
+// Exportar funções utilitárias
+export { 
+  getTendenciaClass, 
+  getTendenciaText, 
+  getPerformanceClass, 
+  getPerformanceText, 
+  formatDate 
+};

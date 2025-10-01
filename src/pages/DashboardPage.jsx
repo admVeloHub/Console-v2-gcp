@@ -1,4 +1,4 @@
-// VERSION: v3.7.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.7.4 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React from 'react';
 import { Container, Grid, Typography, Box, Card, CardContent } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
@@ -23,7 +23,7 @@ const DashboardPage = () => {
   // Debug: verificar se é o gravina dev
   console.log('🔍 DEBUG - Usuário atual:', user);
   console.log('🔍 DEBUG - Email do usuário:', user?.email || user?._userMail);
-  console.log('🔍 DEBUG - É gravina dev?', (user?.email === 'gravina.dev@localhost' || user?._userMail === 'gravina.dev@localhost'));
+  console.log('🔍 DEBUG - É Gravina@DEV?', (user?.email === 'lucas.gravina@velotax.com.br' || user?._userMail === 'lucas.gravina@velotax.com.br'));
   console.log('🔍 DEBUG - Tem permissão servicos?', hasPermission('servicos'));
 
   // Primeira fileira: Artigos, Velonews, Bot Perguntas, Serviços
@@ -46,7 +46,7 @@ const DashboardPage = () => {
     },
     {
       title: 'Bot Perguntas',
-      description: 'Configurar perguntas do chatbot',
+      description: 'Processos e Orientações',
       icon: <SmartToyOutlined sx={{ fontSize: '3.5rem' }} />,
       path: '/bot-perguntas',
       color: 'warning',
@@ -54,7 +54,7 @@ const DashboardPage = () => {
     },
     {
       title: 'Serviços',
-      description: 'Console de gerenciamento de serviços',
+      description: 'Serviços ativos no APP',
       icon: <EngineeringOutlined sx={{ fontSize: '3.5rem' }} />,
       path: '/servicos',
       color: 'info',

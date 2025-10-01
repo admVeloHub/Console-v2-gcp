@@ -1,4 +1,4 @@
-// VERSION: v3.7.3 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.7.4 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { sendUserPing, debugUserPermissions } from '../services/userPingService';
 
@@ -82,9 +82,11 @@ export const AuthProvider = ({ children }) => {
   const hasPermission = (permission) => {
     if (!user) return false;
     
-    // DESENVOLVIMENTO: Usuário gravina dev tem acesso total
-    if (user.email === 'gravina.dev@localhost' || user._userMail === 'gravina.dev@localhost') {
-      console.log('🔓 DESENVOLVIMENTO: Acesso total liberado para gravina dev');
+    console.log('🔍 DEBUG - Verificando permissão:', permission, 'para usuário:', user.email || user._userMail);
+    
+    // DESENVOLVIMENTO: Usuário Lucas Gravina tem acesso total
+    if (user.email === 'lucas.gravina@velotax.com.br' || user._userMail === 'lucas.gravina@velotax.com.br') {
+      console.log('🔓 DESENVOLVIMENTO: Acesso total liberado para Lucas Gravina');
       return true;
     }
     
