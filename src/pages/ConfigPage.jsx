@@ -1,4 +1,4 @@
-// VERSION: v3.7.20 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.7.21 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -284,6 +284,9 @@ const ConfigPage = () => {
           gestao: false,
           rhFin: false,
           facilities: false
+        },
+        funcoesAdministrativas: user._funcoesAdministrativas || {
+          avaliador: false
         }
       });
       setModalStep(1); // Para edição, sempre começar na etapa 1
@@ -316,6 +319,9 @@ const ConfigPage = () => {
           gestao: false,
           rhFin: false,
           facilities: false
+        },
+        funcoesAdministrativas: {
+          avaliador: false
         }
       });
       setModalStep(1); // Para novo usuário, começar na etapa 1
@@ -354,8 +360,11 @@ const ConfigPage = () => {
           gestao: false,
           rhFin: false,
           facilities: false
+        },
+        funcoesAdministrativas: {
+          avaliador: false
         }
-    });
+      });
   };
 
   const handleOpenPermissionsModal = (user) => {
