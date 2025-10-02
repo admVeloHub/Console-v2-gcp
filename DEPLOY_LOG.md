@@ -1,5 +1,84 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.5.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.6.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+
+## GitHub Push - Alinhamento com Schema MongoDB: Estrutura de Dados e Tipos Corretos - 2024-12-19 23:59
+
+### Informações do Push
+- **Tipo:** GitHub Push
+- **Data/Hora:** 2024-12-19 23:59 BRT
+- **Versão:** v1.8.0
+- **Commit:** 7be61da
+- **Descrição:** Alinhamento com schema MongoDB: estrutura de dados e tipos corretos
+
+### Arquivos Modificados
+- ✅ **src/pages/FuncionariosPage.jsx** (v1.4.0) - FormData e estrutura de acessos
+- ✅ **src/services/qualidadeAPI.js** (v1.8.0) - Conversão de datas e estrutura de dados
+
+### Alinhamento com Schema MongoDB
+
+#### 📋 Schema: console_analises.qualidade_funcionarios
+```javascript
+{
+  _id: ObjectId,
+  nomeCompleto: String,
+  dataAniversario: Date,        // ✅ Convertido de string para Date
+  empresa: String,
+  dataContratado: Date,         // ✅ Convertido de string para Date
+  telefone: String,
+  atuacao: String,
+  escala: String,
+  acessos: [{                   // ✅ Array adicionado ao formData
+    sistema: String,
+    perfil: String,
+    observacoes: String,
+    updatedAt: Date             // ✅ Convertido para Date
+  }],
+  desligado: Boolean,
+  dataDesligamento: Date,       // ✅ Convertido de string para Date
+  afastado: Boolean,
+  dataAfastamento: Date,        // ✅ Convertido de string para Date
+  createdAt: Date,              // ✅ Convertido para Date
+  updatedAt: Date               // ✅ Convertido para Date
+}
+```
+
+### Correções Implementadas
+
+#### 🛠️ Estrutura de Dados
+- ✅ **Campo `acessos`**: Adicionado ao formData inicial e carregamento
+- ✅ **Array acessos**: Estruturado conforme schema (sistema, perfil, observacoes, updatedAt)
+- ✅ **Remoção de campos**: Campo `id` removido dos acessos (não existe no schema)
+- ✅ **Reset correto**: FormData resetado com array acessos vazio
+
+#### 📅 Conversão de Datas
+- ✅ **dataAniversario**: string → Date
+- ✅ **dataContratado**: string → Date
+- ✅ **dataDesligamento**: string → Date
+- ✅ **dataAfastamento**: string → Date
+- ✅ **createdAt**: string → Date
+- ✅ **updatedAt**: string → Date
+
+#### 🔧 Melhorias Técnicas
+- ✅ **Geração de ID**: `id: generateId()` para novos funcionários
+- ✅ **Migração corrigida**: Usa `_id || id` para compatibilidade
+- ✅ **Logs de debug**: Melhorados para diagnóstico da API
+- ✅ **Validação de dados**: Estrutura garantida conforme schema
+
+### Detalhes Técnicos
+- **FormData**: Incluído campo `acessos: []` em todos os estados
+- **Edição**: Carrega `acessos: funcionario.acessos || []` corretamente
+- **Acessos**: Estrutura `{ sistema, perfil, observacoes, updatedAt }`
+- **Datas**: Conversão automática `new Date(string)` em addFuncionario e updateFuncionario
+- **API**: Dados enviados 100% compatíveis com schema MongoDB
+
+### Resultado
+- ✅ **Compatibilidade total** com schema MongoDB
+- ✅ **Tipos de dados corretos** (Date em vez de string)
+- ✅ **Estrutura de acessos** conforme especificação
+- ✅ **IDs únicos** gerados corretamente
+- ✅ **Logs detalhados** para diagnóstico
+
+---
 
 ## GitHub Push - Correções Críticas: Erro Iterable, Botão Azul Opaco e Cores Etiquetas - 2024-12-19 23:59
 

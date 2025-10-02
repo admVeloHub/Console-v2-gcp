@@ -1,4 +1,4 @@
-// VERSION: v1.8.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.9.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 import { qualidadeFuncionariosAPI, qualidadeAvaliacoesAPI } from './api';
 import axios from 'axios';
@@ -38,10 +38,15 @@ export const getFuncionarios = async () => {
   try {
     console.log('🔍 Tentando carregar funcionários da API...');
     const response = await qualidadeFuncionariosAPI.getAll();
-    console.log(`📊 Funcionários carregados da API: ${response?.length || 0}`);
-    console.log('📊 Dados recebidos:', response);
+    console.log('📊 Dados recebidos da API:', response);
+    
+    // A API retorna { count: X, data: Array, success: true }
+    // Precisamos extrair o array 'data'
+    const funcionarios = response?.data || response;
+    console.log(`📊 Funcionários extraídos: ${Array.isArray(funcionarios) ? funcionarios.length : 0}`);
+    
     // Garantir que sempre retorne um array
-    return Array.isArray(response) ? response : [];
+    return Array.isArray(funcionarios) ? funcionarios : [];
   } catch (error) {
     console.error('❌ Erro ao carregar funcionários da API:', error);
     console.error('❌ Detalhes do erro:', error.response?.data || error.message);
@@ -54,9 +59,15 @@ export const getFuncionarios = async () => {
 export const getFuncionariosAtivos = async () => {
   try {
     const response = await qualidadeFuncionariosAPI.getAtivos();
-    console.log(`📊 Funcionários ativos carregados da API: ${response?.length || 0}`);
+    console.log('📊 Dados recebidos da API (ativos):', response);
+    
+    // A API retorna { count: X, data: Array, success: true }
+    // Precisamos extrair o array 'data'
+    const funcionarios = response?.data || response;
+    console.log(`📊 Funcionários ativos extraídos: ${Array.isArray(funcionarios) ? funcionarios.length : 0}`);
+    
     // Garantir que sempre retorne um array
-    return Array.isArray(response) ? response : [];
+    return Array.isArray(funcionarios) ? funcionarios : [];
   } catch (error) {
     console.error('❌ Erro ao carregar funcionários ativos da API:', error);
     // Fallback para localStorage se API falhar
@@ -282,9 +293,15 @@ export const limparDadosLocais = () => {
 export const getAvaliacoes = async () => {
   try {
     const response = await qualidadeAvaliacoesAPI.getAll();
-    console.log(`📊 Avaliações carregadas da API: ${response?.length || 0}`);
+    console.log('📊 Dados recebidos da API (avaliações):', response);
+    
+    // A API retorna { count: X, data: Array, success: true }
+    // Precisamos extrair o array 'data'
+    const avaliacoes = response?.data || response;
+    console.log(`📊 Avaliações extraídas: ${Array.isArray(avaliacoes) ? avaliacoes.length : 0}`);
+    
     // Garantir que sempre retorne um array
-    return Array.isArray(response) ? response : [];
+    return Array.isArray(avaliacoes) ? avaliacoes : [];
   } catch (error) {
     console.error('❌ Erro ao carregar avaliações da API:', error);
     // Fallback para localStorage se API falhar
@@ -409,11 +426,16 @@ export const gerarRelatorioGestao = async (mes, ano) => {
 export const getAvaliacoesPorColaborador = async (colaboradorId) => {
   try {
     // Buscar todas as avaliações da API e filtrar no frontend
-    const todasAvaliacoes = await qualidadeAvaliacoesAPI.getAll();
+    const response = await qualidadeAvaliacoesAPI.getAll();
+    console.log('📊 Dados recebidos da API (avaliações por colaborador):', response);
+    
+    // A API retorna { count: X, data: Array, success: true }
+    // Precisamos extrair o array 'data'
+    const todasAvaliacoes = response?.data || response;
     const avaliacoes = Array.isArray(todasAvaliacoes) 
       ? todasAvaliacoes.filter(a => a.colaboradorId === colaboradorId)
       : [];
-    console.log(`📊 Avaliações do colaborador carregadas da API: ${avaliacoes.length}`);
+    console.log(`📊 Avaliações do colaborador extraídas: ${avaliacoes.length}`);
     return avaliacoes;
   } catch (error) {
     console.error('❌ Erro ao carregar avaliações do colaborador via API:', error);
@@ -441,8 +463,14 @@ export const getAvaliacoesGPT = async (avaliacaoId = null) => {
       : '/avaliacoes-gpt';
     
     const response = await gptAPI.get(url);
-    console.log(`📊 Avaliações GPT carregadas: ${response.data.length || 1}`);
-    return response.data;
+    console.log('📊 Dados recebidos da API (avaliações GPT):', response.data);
+    
+    // A API retorna { count: X, data: Array, success: true }
+    // Precisamos extrair o array 'data'
+    const avaliacoesGPT = response.data?.data || response.data;
+    console.log(`📊 Avaliações GPT extraídas: ${Array.isArray(avaliacoesGPT) ? avaliacoesGPT.length : 1}`);
+    
+    return avaliacoesGPT;
   } catch (error) {
     console.error('❌ Erro ao carregar avaliações GPT:', error);
     return null;
