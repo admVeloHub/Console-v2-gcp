@@ -152,7 +152,7 @@ const QualidadeModulePage = () => {
       // Filtrar apenas funcionários ativos (mais permissivo para debug)
       const funcionariosAtivos = todosFuncionarios.filter(f => {
         const isAtivo = !f.desligado && !f.afastado;
-        console.log(`🔍 Debug - Funcionário ${f.nomeCompleto}: desligado=${f.desligado}, afastado=${f.afastado}, isAtivo=${isAtivo}`);
+        console.log(`🔍 Debug - Funcionário ${f.colaboradorNome || f.nomeCompleto}: desligado=${f.desligado}, afastado=${f.afastado}, isAtivo=${isAtivo}`);
         return isAtivo;
       });
       

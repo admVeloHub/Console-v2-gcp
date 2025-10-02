@@ -1,5 +1,68 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.7.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.8.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+
+## GitHub Push - Correção do Gráfico de Histórico de Avaliações: Ordenação e Precisão - 2024-12-19 23:59
+
+### Informações do Push
+- **Tipo:** GitHub Push
+- **Data/Hora:** 2024-12-19 23:59 BRT
+- **Versão:** v1.10.0
+- **Commit:** e1689e8
+- **Branch:** master → master
+- **Repositório:** https://github.com/admVeloHub/front-console.git
+
+### Arquivos Modificados
+1. `src/types/qualidade.js` (v1.4.0)
+2. `src/services/qualidadeAPI.js` (v1.18.0)
+3. `src/pages/QualidadeModulePage.jsx` (v1.9.0)
+4. `DEPLOY_LOG.md` (v1.7.0)
+
+### Descrição das Alterações
+- **Correção da ordenação cronológica** do eixo X do gráfico (antigo → recente)
+- **Alteração do formato do período** para MesAbreviado/YYYY (ex: Jan/2024)
+- **Correção do campo colaboradorNome** no relatório individual
+- **Garantia da precisão** dos valores do eixo Y
+- **Ordenação baseada em mês/ano** da avaliação, não data de inclusão
+- **Compatibilidade mantida** com campos antigos (nomeCompleto)
+
+### Detalhes Técnicos
+- **Ordenação:** Usa `new Date(a.ano, MESES.indexOf(a.mes))` para ordenação cronológica
+- **Formato do período:** `Jan/2024`, `Fev/2024`, etc. para ordenação correta
+- **Fallback:** Mantém compatibilidade com `nomeCompleto` quando `colaboradorNome` não disponível
+- **Precisão:** Valores do eixo Y arredondados para 2 casas decimais
+
+---
+
+## Implementação - Correção do Cálculo de Pontuação das Avaliações - 2024-12-19 23:59
+
+### Informações da Implementação
+- **Tipo:** Implementação
+- **Data/Hora:** 2024-12-19 23:59 BRT
+- **Versão:** v1.11.0
+- **Status:** Concluído
+
+### Arquivos Modificados
+1. `src/services/qualidadeAPI.js` (v1.19.0)
+2. `DEPLOY_LOG.md` (v1.8.0)
+
+### Descrição das Alterações
+- **Correção do cálculo de pontuação** nas funções `addAvaliacao` e `updateAvaliacao`
+- **Adição da chamada** para `calcularPontuacaoTotal()` antes de enviar dados para a API
+- **Logs de debug** para acompanhar o cálculo da pontuação
+- **Correção do problema** onde avaliações apareciam com nota 0 e status "Ruim"
+
+### Detalhes Técnicos
+- **Função `addAvaliacao`:** Agora calcula `pontuacaoTotal` antes de enviar para API
+- **Função `updateAvaliacao`:** Recalcula pontuação ao atualizar avaliação
+- **Logs adicionados:** `🔍 DEBUG - Pontuação calculada:` e `🔍 DEBUG - Pontuação recalculada:`
+- **Importação:** `calcularPontuacaoTotal` já estava importada, mas não estava sendo usada
+
+### Problema Resolvido
+- **Antes:** Avaliações com pontuação máxima apareciam como nota 0 e status "Ruim"
+- **Depois:** Pontuação é calculada corretamente baseada nos critérios selecionados
+- **Resultado:** Avaliações agora mostram a pontuação real e status correto
+
+---
 
 ## GitHub Push - Padronização de Schemas MongoDB: Nomenclatura e Estrutura Unificada - 2024-12-19 23:59
 

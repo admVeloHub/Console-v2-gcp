@@ -1,4 +1,4 @@
-// VERSION: v1.18.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.20.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 import { qualidadeFuncionariosAPI, qualidadeAvaliacoesAPI } from './api';
 import axios from 'axios';
@@ -393,6 +393,16 @@ export const getAvaliacoes = async () => {
 // Adicionar avaliação
 export const addAvaliacao = async (avaliacaoData) => {
   try {
+    // Debug dos valores originais
+    console.log('🔍 DEBUG - Valores originais dos critérios:');
+    console.log('  - saudacaoAdequada:', typeof avaliacaoData.saudacaoAdequada, avaliacaoData.saudacaoAdequada);
+    console.log('  - escutaAtiva:', typeof avaliacaoData.escutaAtiva, avaliacaoData.escutaAtiva);
+    console.log('  - resolucaoQuestao:', typeof avaliacaoData.resolucaoQuestao, avaliacaoData.resolucaoQuestao);
+    console.log('  - empatiaCordialidade:', typeof avaliacaoData.empatiaCordialidade, avaliacaoData.empatiaCordialidade);
+    console.log('  - direcionouPesquisa:', typeof avaliacaoData.direcionouPesquisa, avaliacaoData.direcionouPesquisa);
+    console.log('  - procedimentoIncorreto:', typeof avaliacaoData.procedimentoIncorreto, avaliacaoData.procedimentoIncorreto);
+    console.log('  - encerramentoBrusco:', typeof avaliacaoData.encerramentoBrusco, avaliacaoData.encerramentoBrusco);
+    
     // Mapear dados conforme schema console_analises.qualidade_avaliacoes
     const novaAvaliacao = {
       colaboradorNome: avaliacaoData.colaboradorNome || avaliacaoData.colaboradorId, // String
@@ -411,11 +421,15 @@ export const addAvaliacao = async (avaliacaoData) => {
       encerramentoBrusco: Boolean(avaliacaoData.encerramentoBrusco), // Boolean
       moderado: Boolean(avaliacaoData.moderado || false), // Boolean
       observacoesModeracao: avaliacaoData.observacoesModeracao || '', // String
-      pontuacaoTotal: Number(avaliacaoData.pontuacaoTotal || 0), // Number
+      pontuacaoTotal: 0, // Será calculado
       createdAt: new Date(), // Date
       updatedAt: new Date() // Date
     };
     
+    // Calcular pontuação total
+    novaAvaliacao.pontuacaoTotal = calcularPontuacaoTotal(novaAvaliacao);
+    
+    console.log('🔍 DEBUG - Pontuação calculada:', novaAvaliacao.pontuacaoTotal);
     console.log('🔍 DEBUG - Dados da avaliação sendo enviados:', novaAvaliacao);
     console.log('🔍 DEBUG - Tipos dos campos:');
     console.log('  - colaboradorNome:', typeof novaAvaliacao.colaboradorNome, novaAvaliacao.colaboradorNome);
@@ -423,6 +437,14 @@ export const addAvaliacao = async (avaliacaoData) => {
     console.log('  - mes:', typeof novaAvaliacao.mes, novaAvaliacao.mes);
     console.log('  - ano:', typeof novaAvaliacao.ano, novaAvaliacao.ano);
     console.log('  - dataAvaliacao:', typeof novaAvaliacao.dataAvaliacao, novaAvaliacao.dataAvaliacao);
+    console.log('🔍 DEBUG - Critérios de avaliação:');
+    console.log('  - saudacaoAdequada:', typeof novaAvaliacao.saudacaoAdequada, novaAvaliacao.saudacaoAdequada);
+    console.log('  - escutaAtiva:', typeof novaAvaliacao.escutaAtiva, novaAvaliacao.escutaAtiva);
+    console.log('  - resolucaoQuestao:', typeof novaAvaliacao.resolucaoQuestao, novaAvaliacao.resolucaoQuestao);
+    console.log('  - empatiaCordialidade:', typeof novaAvaliacao.empatiaCordialidade, novaAvaliacao.empatiaCordialidade);
+    console.log('  - direcionouPesquisa:', typeof novaAvaliacao.direcionouPesquisa, novaAvaliacao.direcionouPesquisa);
+    console.log('  - procedimentoIncorreto:', typeof novaAvaliacao.procedimentoIncorreto, novaAvaliacao.procedimentoIncorreto);
+    console.log('  - encerramentoBrusco:', typeof novaAvaliacao.encerramentoBrusco, novaAvaliacao.encerramentoBrusco);
     
     const response = await qualidadeAvaliacoesAPI.create(novaAvaliacao);
     console.log(`✅ Avaliação adicionada via API: ${response._id}`);
@@ -441,6 +463,12 @@ export const updateAvaliacao = async (id, avaliacaoData) => {
       ...avaliacaoData,
       updatedAt: new Date().toISOString()
     };
+    
+    // Calcular pontuação total
+    avaliacaoAtualizada.pontuacaoTotal = calcularPontuacaoTotal(avaliacaoAtualizada);
+    
+    console.log('🔍 DEBUG - Pontuação recalculada:', avaliacaoAtualizada.pontuacaoTotal);
+    
     const response = await qualidadeAvaliacoesAPI.update(id, avaliacaoAtualizada);
     console.log(`✅ Avaliação atualizada via API: ${response._id}`);
     return response;
