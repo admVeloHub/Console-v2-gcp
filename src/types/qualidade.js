@@ -1,4 +1,4 @@
-// VERSION: v1.3.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.4.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 /**
  * @typedef {Object} Funcionario
@@ -266,10 +266,13 @@ export const gerarRelatorioAgente = (colaboradorId, colaboradorNome, avaliacoes)
   // Gerar histórico com notas reais, mediana e tendência
   const historico = [];
   
-  // Ordenar avaliações por data
-  const avaliacoesOrdenadas = [...avaliacoes].sort((a, b) => 
-    new Date(a.dataAvaliacao).getTime() - new Date(b.dataAvaliacao).getTime()
-  );
+  // Ordenar avaliações por mês/ano da avaliação (cronológica: antigo → recente)
+  const avaliacoesOrdenadas = [...avaliacoes].sort((a, b) => {
+    // Converter mês/ano para timestamp para ordenação cronológica
+    const dataA = new Date(a.ano, MESES.indexOf(a.mes));
+    const dataB = new Date(b.ano, MESES.indexOf(b.mes));
+    return dataA.getTime() - dataB.getTime();
+  });
   
   // Calcular mediana geral
   const notasOrdenadas = notasAvaliador.sort((a, b) => a - b);
@@ -282,8 +285,9 @@ export const gerarRelatorioAgente = (colaboradorId, colaboradorNome, avaliacoes)
   const avaliacoesParaGrafico = avaliacoesOrdenadas.slice(-pontosGrafico);
   
   avaliacoesParaGrafico.forEach((avaliacao, index) => {
-    const data = new Date(avaliacao.dataAvaliacao);
-    const periodo = `${(data.getDate()).toString().padStart(2, '0')}/${(data.getMonth() + 1).toString().padStart(2, '0')}`;
+    // Usar mês/ano da avaliação para o período (ex: "Jan/2024", "Fev/2024")
+    const mesAbreviado = avaliacao.mes.substring(0, 3); // Janeiro → Jan
+    const periodo = `${mesAbreviado}/${avaliacao.ano}`;
     
     // Calcular tendência (média móvel das últimas 3 avaliações)
     const inicioTendencia = Math.max(0, index - 2);

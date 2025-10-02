@@ -1,4 +1,4 @@
-// VERSION: v1.17.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.18.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 import { qualidadeFuncionariosAPI, qualidadeAvaliacoesAPI } from './api';
 import axios from 'axios';
@@ -497,7 +497,7 @@ export const gerarRelatorioAgente = async (colaboradorId) => {
 
     // Usar função utilitária para gerar relatório
     const { gerarRelatorioAgente: gerarRelatorioAgenteUtil } = await import('../types/qualidade');
-    return gerarRelatorioAgenteUtil(colaboradorId, funcionario.nomeCompleto, avaliacoesComGPT);
+    return gerarRelatorioAgenteUtil(colaboradorId, funcionario.colaboradorNome || funcionario.nomeCompleto, avaliacoesComGPT);
   } catch (error) {
     console.error('❌ Erro ao gerar relatório do agente via API:', error);
     // Fallback para localStorage

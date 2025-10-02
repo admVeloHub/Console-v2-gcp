@@ -1,4 +1,4 @@
-// VERSION: v1.8.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.9.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 
@@ -275,7 +275,7 @@ const QualidadeModulePage = () => {
       const funcionarioSelecionado = funcionarios.find(f => f._id === formData.colaboradorId || f.id === formData.colaboradorId);
       const dadosParaEnvio = {
         ...formData,
-        colaboradorNome: funcionarioSelecionado?.nomeCompleto || formData.colaboradorNome
+        colaboradorNome: funcionarioSelecionado?.colaboradorNome || funcionarioSelecionado?.nomeCompleto || formData.colaboradorNome
       };
       
       if (avaliacaoEditando) {
@@ -1253,7 +1253,7 @@ const QualidadeModulePage = () => {
                 >
                   {funcionarios.map((funcionario) => (
                     <MenuItem key={funcionario._id || funcionario.id} value={funcionario._id || funcionario.id} sx={{ fontFamily: 'Poppins' }}>
-                      {funcionario.nomeCompleto}
+                      {funcionario.colaboradorNome || funcionario.nomeCompleto}
                     </MenuItem>
                   ))}
                 </Select>
