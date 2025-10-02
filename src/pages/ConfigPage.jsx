@@ -1,4 +1,4 @@
-// VERSION: v3.7.21 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.7.22 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -384,11 +384,13 @@ const ConfigPage = () => {
       console.log('💾 Salvando permissões para usuário:', selectedUser._userMail);
       console.log('📋 Permissões dos cards:', selectedUser._userClearance);
       console.log('🎫 Tipos de tickets:', selectedUser._userTickets);
+      console.log('🔧 Funções administrativas:', selectedUser._funcoesAdministrativas);
       
       // Atualizar usuário com as novas permissões
       await updateAuthorizedUser(selectedUser._id, {
         _userClearance: selectedUser._userClearance,
-        _userTickets: selectedUser._userTickets
+        _userTickets: selectedUser._userTickets,
+        _funcoesAdministrativas: selectedUser._funcoesAdministrativas
       });
       
       console.log('✅ Permissões salvas com sucesso!');
