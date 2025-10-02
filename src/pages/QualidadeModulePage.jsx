@@ -1,4 +1,4 @@
-// VERSION: v1.7.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.8.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 
@@ -271,11 +271,18 @@ const QualidadeModulePage = () => {
 
   const salvarAvaliacao = async () => {
     try {
+      // Mapear colaboradorId para colaboradorNome
+      const funcionarioSelecionado = funcionarios.find(f => f._id === formData.colaboradorId || f.id === formData.colaboradorId);
+      const dadosParaEnvio = {
+        ...formData,
+        colaboradorNome: funcionarioSelecionado?.nomeCompleto || formData.colaboradorNome
+      };
+      
       if (avaliacaoEditando) {
-        await updateAvaliacao(avaliacaoEditando._id, formData);
+        await updateAvaliacao(avaliacaoEditando._id, dadosParaEnvio);
         mostrarSnackbar('Avaliação atualizada com sucesso!', 'success');
       } else {
-        await addAvaliacao(formData);
+        await addAvaliacao(dadosParaEnvio);
         mostrarSnackbar('Avaliação adicionada com sucesso!', 'success');
       }
       await carregarDados();
@@ -902,7 +909,7 @@ const QualidadeModulePage = () => {
                         value={funcionario.id}
                         sx={{ fontFamily: 'Poppins' }}
                       >
-                        {funcionario.nomeCompleto}
+                        {funcionario.colaboradorNome || funcionario.nomeCompleto}
                       </MenuItem>
                     ))}
                   </Select>

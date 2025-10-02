@@ -1,4 +1,4 @@
-// VERSION: v1.16.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.17.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 import { qualidadeFuncionariosAPI, qualidadeAvaliacoesAPI } from './api';
 import axios from 'axios';
@@ -81,7 +81,7 @@ export const addFuncionario = async (funcionarioData) => {
   try {
     // Converter strings de data para Date conforme schema MongoDB
     const novoFuncionario = {
-      nomeCompleto: funcionarioData.nomeCompleto,
+      colaboradorNome: funcionarioData.nomeCompleto || funcionarioData.colaboradorNome,
       dataAniversario: funcionarioData.dataAniversario ? new Date(funcionarioData.dataAniversario) : null,
       empresa: funcionarioData.empresa,
       dataContratado: funcionarioData.dataContratado ? new Date(funcionarioData.dataContratado) : null,
@@ -100,7 +100,7 @@ export const addFuncionario = async (funcionarioData) => {
     console.log('🔍 Debug - Dados para POST funcionário:', novoFuncionario);
     
     const response = await qualidadeFuncionariosAPI.create(novoFuncionario);
-    console.log(`✅ Funcionário adicionado via API: ${response.nomeCompleto}`);
+    console.log(`✅ Funcionário adicionado via API: ${response.colaboradorNome || response.nomeCompleto}`);
     return response;
   } catch (error) {
     console.error('❌ Erro ao adicionar funcionário via API:', error);
@@ -116,6 +116,7 @@ export const updateFuncionario = async (id, funcionarioData) => {
     // Converter strings de data para Date conforme schema
     const funcionarioAtualizado = {
       ...funcionarioData,
+      colaboradorNome: funcionarioData.nomeCompleto || funcionarioData.colaboradorNome,
       dataAniversario: funcionarioData.dataAniversario ? new Date(funcionarioData.dataAniversario) : null,
       dataContratado: funcionarioData.dataContratado ? new Date(funcionarioData.dataContratado) : null,
       dataDesligamento: funcionarioData.dataDesligamento ? new Date(funcionarioData.dataDesligamento) : null,
@@ -124,7 +125,7 @@ export const updateFuncionario = async (id, funcionarioData) => {
     };
     
     const response = await qualidadeFuncionariosAPI.update(id, funcionarioAtualizado);
-    console.log(`✅ Funcionário atualizado via API: ${response.nomeCompleto}`);
+    console.log(`✅ Funcionário atualizado via API: ${response.colaboradorNome || response.nomeCompleto}`);
     return response;
   } catch (error) {
     console.error('❌ Erro ao atualizar funcionário via API:', error);
@@ -392,28 +393,36 @@ export const getAvaliacoes = async () => {
 // Adicionar avaliação
 export const addAvaliacao = async (avaliacaoData) => {
   try {
-    // Converter strings de data para Date conforme schema MongoDB
+    // Mapear dados conforme schema console_analises.qualidade_avaliacoes
     const novaAvaliacao = {
-      colaboradorNome: avaliacaoData.colaboradorNome,
-      avaliador: avaliacaoData.avaliador,
-      mes: avaliacaoData.mes,
-      ano: avaliacaoData.ano,
-      dataAvaliacao: avaliacaoData.dataAvaliacao ? new Date(avaliacaoData.dataAvaliacao) : new Date(),
-      arquivoLigacao: avaliacaoData.arquivoLigacao,
-      nomeArquivo: avaliacaoData.nomeArquivo,
-      saudacaoAdequada: avaliacaoData.saudacaoAdequada,
-      escutaAtiva: avaliacaoData.escutaAtiva,
-      resolucaoQuestao: avaliacaoData.resolucaoQuestao,
-      empatiaCordialidade: avaliacaoData.empatiaCordialidade,
-      direcionouPesquisa: avaliacaoData.direcionouPesquisa,
-      procedimentoIncorreto: avaliacaoData.procedimentoIncorreto,
-      encerramentoBrusco: avaliacaoData.encerramentoBrusco,
-      moderado: avaliacaoData.moderado || false,
-      observacoesModeracao: avaliacaoData.observacoesModeracao,
-      pontuacaoTotal: avaliacaoData.pontuacaoTotal,
-      createdAt: new Date(),
-      updatedAt: new Date()
+      colaboradorNome: avaliacaoData.colaboradorNome || avaliacaoData.colaboradorId, // String
+      avaliador: avaliacaoData.avaliador, // String
+      mes: avaliacaoData.mes, // String
+      ano: Number(avaliacaoData.ano), // Number
+      dataAvaliacao: avaliacaoData.dataAvaliacao ? new Date(avaliacaoData.dataAvaliacao) : new Date(), // Date
+      arquivoLigacao: avaliacaoData.arquivoLigacao || '', // String
+      nomeArquivo: avaliacaoData.nomeArquivo || '', // String
+      saudacaoAdequada: Boolean(avaliacaoData.saudacaoAdequada), // Boolean
+      escutaAtiva: Boolean(avaliacaoData.escutaAtiva), // Boolean
+      resolucaoQuestao: Boolean(avaliacaoData.resolucaoQuestao), // Boolean
+      empatiaCordialidade: Boolean(avaliacaoData.empatiaCordialidade), // Boolean
+      direcionouPesquisa: Boolean(avaliacaoData.direcionouPesquisa), // Boolean
+      procedimentoIncorreto: Boolean(avaliacaoData.procedimentoIncorreto), // Boolean
+      encerramentoBrusco: Boolean(avaliacaoData.encerramentoBrusco), // Boolean
+      moderado: Boolean(avaliacaoData.moderado || false), // Boolean
+      observacoesModeracao: avaliacaoData.observacoesModeracao || '', // String
+      pontuacaoTotal: Number(avaliacaoData.pontuacaoTotal || 0), // Number
+      createdAt: new Date(), // Date
+      updatedAt: new Date() // Date
     };
+    
+    console.log('🔍 DEBUG - Dados da avaliação sendo enviados:', novaAvaliacao);
+    console.log('🔍 DEBUG - Tipos dos campos:');
+    console.log('  - colaboradorNome:', typeof novaAvaliacao.colaboradorNome, novaAvaliacao.colaboradorNome);
+    console.log('  - avaliador:', typeof novaAvaliacao.avaliador, novaAvaliacao.avaliador);
+    console.log('  - mes:', typeof novaAvaliacao.mes, novaAvaliacao.mes);
+    console.log('  - ano:', typeof novaAvaliacao.ano, novaAvaliacao.ano);
+    console.log('  - dataAvaliacao:', typeof novaAvaliacao.dataAvaliacao, novaAvaliacao.dataAvaliacao);
     
     const response = await qualidadeAvaliacoesAPI.create(novaAvaliacao);
     console.log(`✅ Avaliação adicionada via API: ${response._id}`);

@@ -1,4 +1,4 @@
-// VERSION: v1.4.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.5.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 
@@ -87,7 +87,8 @@ const FuncionariosPage = () => {
   
   // Estados dos formulários
   const [formData, setFormData] = useState({
-    nomeCompleto: '',
+    nomeCompleto: '', // Mantido para compatibilidade com frontend
+    colaboradorNome: '', // Campo padronizado conforme schema
     dataAniversario: '',
     empresa: '',
     dataContratado: '',
@@ -158,7 +159,7 @@ const FuncionariosPage = () => {
 
     if (filtros.nome) {
       filtrados = filtrados.filter(f => 
-        f.nomeCompleto.toLowerCase().includes(filtros.nome.toLowerCase())
+        (f.colaboradorNome || f.nomeCompleto || '').toLowerCase().includes(filtros.nome.toLowerCase())
       );
     }
 
@@ -216,7 +217,8 @@ const FuncionariosPage = () => {
     if (funcionario) {
       setFuncionarioEditando(funcionario);
       setFormData({
-        nomeCompleto: funcionario.nomeCompleto,
+        nomeCompleto: funcionario.nomeCompleto || funcionario.colaboradorNome,
+        colaboradorNome: funcionario.colaboradorNome || funcionario.nomeCompleto,
         dataAniversario: funcionario.dataAniversario,
         empresa: funcionario.empresa,
         dataContratado: funcionario.dataContratado,
@@ -233,6 +235,7 @@ const FuncionariosPage = () => {
       setFuncionarioEditando(null);
       setFormData({
         nomeCompleto: '',
+        colaboradorNome: '',
         dataAniversario: '',
         empresa: '',
         dataContratado: '',
@@ -690,7 +693,7 @@ const FuncionariosPage = () => {
                       <TableCell sx={{ fontFamily: 'Poppins' }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <Person sx={{ color: '#666666', fontSize: 20 }} />
-                          {funcionario.nomeCompleto}
+                          {funcionario.colaboradorNome || funcionario.nomeCompleto}
                         </Box>
                       </TableCell>
                       <TableCell sx={{ fontFamily: 'Poppins' }}>

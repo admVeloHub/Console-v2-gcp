@@ -1,4 +1,5 @@
 listagem de schema de coleções do mongoDB
+<!-- VERSION: v1.1.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
   🗄️ Database Principal: console_conteudo
 //schema console_conteudo.Artigos
 {
@@ -15,11 +16,11 @@ updatedAt: Date                 // Data de atualização
 //schema console_conteudo.Bot_perguntas
 {
 _id: ObjectId,
-Pergunta: String,               // Pergunta do bot
-Resposta: String,               // Resposta do bot
-"Palavras-chave": String,       // Palavras-chave
-Sinonimos: String,              // Sinônimos
-Tabulação: String,              // Tabulação
+pergunta: String,               // Pergunta do bot
+resposta: String,               // Resposta do bot
+palavrasChave: String,          // Palavras-chave
+sinonimos: String,              // Sinônimos
+tabulacao: String,              // Tabulação
 createdAt: Date,                // Data de criação
 updatedAt: Date                 // Data de atualização
 }
@@ -27,8 +28,8 @@ updatedAt: Date                 // Data de atualização
 //schema console_conteudo.Velonews
 {
 _id: ObjectId,
-title: String,                  // Título da notícia
-content: String,                // Conteúdo da notícia
+titulo: String,                 // Título da notícia
+conteudo: String,               // Conteúdo da notícia
 isCritical: Boolean,            // Se é notícia crítica
 createdAt: Date,                // Data de criação
 updatedAt: Date                 // Data de atualização
@@ -43,7 +44,9 @@ _genero: String,                // Gênero do ticket
 _tipo: String,                  // Tipo do ticket
 _direcionamento: String,        // Direcionamento
 _corpo: String,                 // Corpo do ticket
-_data_hora: Date                // Data e hora
+_data_hora: Date,               // Data e hora
+createdAt: Date,                // Data de criação
+updatedAt: Date                 // Data de atualização
 }
 
 // schema DB console_chamados.tk_conteudos
@@ -52,7 +55,9 @@ _id: ObjectId,
 _direcionamento: String,        // Direcionamento
 _descrição: String,             // Descrição
 _obs: String,                   // Observações
-_data_hora: Date                // Data e hora
+_data_hora: Date,               // Data e hora
+createdAt: Date,                // Data de criação
+updatedAt: Date                 // Data de atualização
 }
 
 🗄️ Database: console_config
@@ -89,16 +94,18 @@ _pessoal: String,        // Status do Crédito Pessoal
 _antecipacao: String,    // Status da Antecipação
 _pgtoAntecip: String,    // Status do Pagamento Antecipado
 _irpf: String,           // Status do Módulo IRPF
-createdAt: Date,
-updatedAt: Date
+createdAt: Date,         // Data de criação
+updatedAt: Date          // Data de atualização
 }
 
 
 //🗄️ Schema de Ping de Usuário
-de login ou refresh
+// de login ou refresh
 {
 _userId: String,                // ID do usuário
-_collectionId: String           // ID da collection
+_collectionId: String,          // ID da collection
+createdAt: Date,                // Data de criação
+updatedAt: Date                 // Data de atualização
 }
 
 🗄️ Database console_analises
@@ -129,7 +136,7 @@ updatedAt: Date,                // Data de atualização
 //schema console_analises.qualidade_funcionarios
 {
 _id: ObjectId,
-nomeCompleto: String,           // Nome completo
+colaboradorNome: String,        // Nome completo (padronizado)
 dataAniversario: Date,          // Data de aniversário
 empresa: String,                // Empresa
 dataContratado: Date,           // Data de contratação
@@ -140,7 +147,7 @@ acessos: [{                     // Array de acessos
   sistema: String,
   perfil: String,
   observacoes: String,
-      updatedAt: Date
+  updatedAt: Date
 }],
 desligado: Boolean,             // Se foi desligado
 dataDesligamento: Date,         // Data de desligamento
@@ -153,7 +160,7 @@ updatedAt: Date                 // Data de atualização
 //schema console_analises.qualidade_avaliacoes_gpt
 {
 _id: ObjectId,
-avaliacaoId: String,            // ID da avaliação original
+avaliacao_id: ObjectId,         // Referência à avaliação original (padronizado)
 analiseGPT: String,             // Análise completa do GPT
 pontuacaoGPT: Number,           // Pontuação calculada pelo GPT (0-100)
 criteriosGPT: {                 // Critérios avaliados pelo GPT
@@ -168,6 +175,7 @@ criteriosGPT: {                 // Critérios avaliados pelo GPT
 confianca: Number,              // Nível de confiança (0-100)
 palavrasCriticas: [String],     // Palavras-chave críticas mencionadas
 calculoDetalhado: [String],     // Explicação do cálculo da pontuação
-createdAt: Date                 // Data de criação
+createdAt: Date,                // Data de criação
+updatedAt: Date                 // Data de atualização (padronizado)
 }
 
