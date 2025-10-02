@@ -1,4 +1,4 @@
-// VERSION: v1.7.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.7.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 
@@ -67,7 +67,7 @@ import {
 } from '../services/qualidadeAPI';
 import { exportAvaliacoesToExcel, exportAvaliacoesToPDF } from '../services/qualidadeExport';
 import { analyzeCallWithGPT } from '../services/gptService';
-import { getAvaliadoresValidos } from '../services/userService';
+import { getAvaliadoresValidos } from '../services/qualidadeAPI';
 import { 
   MESES, 
   ANOS, 
