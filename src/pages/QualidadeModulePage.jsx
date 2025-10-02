@@ -1,4 +1,4 @@
-// VERSION: v1.11.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.12.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 
@@ -1272,11 +1272,15 @@ const QualidadeModulePage = () => {
                     }
                   }}
                 >
-                  {funcionarios.map((funcionario) => (
-                    <MenuItem key={funcionario._id || funcionario.id} value={funcionario.colaboradorNome || funcionario.nomeCompleto} sx={{ fontFamily: 'Poppins' }}>
-                      {funcionario.colaboradorNome || funcionario.nomeCompleto}
-                    </MenuItem>
-                  ))}
+                  {funcionarios.map((funcionario) => {
+                    const nomeColaborador = funcionario.colaboradorNome || funcionario.nomeCompleto;
+                    console.log('🔍 DEBUG - Funcionário no select:', { id: funcionario._id, nome: nomeColaborador });
+                    return (
+                      <MenuItem key={funcionario._id || funcionario.id} value={nomeColaborador} sx={{ fontFamily: 'Poppins' }}>
+                        {nomeColaborador}
+                      </MenuItem>
+                    );
+                  })}
                 </Select>
               </FormControl>
             </Grid>
