@@ -1,4 +1,4 @@
-// VERSION: v1.6.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.7.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 
@@ -163,8 +163,17 @@ const QualidadeModulePage = () => {
       const funcionariosParaUsar = funcionariosAtivos.length > 0 ? funcionariosAtivos : todosFuncionarios;
       console.log('🔍 Debug - Funcionários para usar no modal:', funcionariosParaUsar);
       
+      // Garantir que todos os funcionários tenham um ID válido
+      const funcionariosComId = funcionariosParaUsar.map(f => ({
+        ...f,
+        id: f._id || f.id, // Usar _id se disponível, senão usar id
+        _id: f._id || f.id // Garantir que _id também esteja disponível
+      }));
+      
+      console.log('🔍 Debug - Funcionários com ID corrigido:', funcionariosComId);
+      
       setAvaliacoes(avaliacoesData);
-      setFuncionarios(funcionariosParaUsar);
+      setFuncionarios(funcionariosComId);
       setAvaliadores(avaliadoresValidos);
       setLoading(false);
     } catch (error) {

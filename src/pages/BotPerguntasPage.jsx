@@ -1,4 +1,4 @@
-// VERSION: v3.7.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.7.5 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState } from 'react';
 import { 
   Container, 
@@ -44,7 +44,18 @@ const BotPerguntasPage = () => {
     setLoading(true);
 
     try {
-      // Mapear dados para o schema do backend
+      // Validar campos obrigatórios
+      if (!formData.question || !formData.context || !formData.keywords) {
+        setSnackbar({
+          open: true,
+          message: 'Pergunta, Resposta e Palavras-chave são obrigatórios',
+          severity: 'error'
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Mapear dados para o schema do MongoDB conforme diretrizes
       const mappedData = {
         Pergunta: formData.question,
         Resposta: formData.context,
@@ -52,6 +63,12 @@ const BotPerguntasPage = () => {
         Sinonimos: formData.sinonimos,
         Tabulação: formData.tabulacao
       };
+
+      console.log('🔍 Debug - Dados mapeados para envio:', mappedData);
+      console.log('🔍 Debug - Campos obrigatórios verificados:');
+      console.log('  - Pergunta:', !!formData.question, formData.question);
+      console.log('  - Resposta:', !!formData.context, formData.context);
+      console.log('  - Palavras-chave:', !!formData.keywords, formData.keywords);
 
       // Enviar dados para API
       const response = await botPerguntasAPI.create(mappedData);

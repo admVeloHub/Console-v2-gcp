@@ -1,4 +1,4 @@
-// VERSION: v1.9.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.10.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 import { qualidadeFuncionariosAPI, qualidadeAvaliacoesAPI } from './api';
 import axios from 'axios';
@@ -136,6 +136,28 @@ export const deleteFuncionario = async (id) => {
   }
 };
 
+// ===== AVALIADORES =====
+
+// Obter lista de avaliadores válidos
+export const getAvaliadoresValidos = async () => {
+  try {
+    // Lista fixa de avaliadores baseada nos usuários do sistema
+    const avaliadores = [
+      'Lucas Gravina',
+      'André Violaro', 
+      'Emerson Medeiros',
+      'Anderson Felipe Silva',
+      'João Silva'
+    ];
+    
+    console.log(`📊 Avaliadores carregados: ${avaliadores.length}`);
+    return avaliadores;
+  } catch (error) {
+    console.error('❌ Erro ao carregar avaliadores:', error);
+    return [];
+  }
+};
+
 // ===== FALLBACK PARA LOCALSTORAGE =====
 
 // Funções de fallback que usam localStorage
@@ -165,6 +187,7 @@ const addFuncionarioLocalStorage = (funcionarioData) => {
     const funcionarios = getFuncionariosLocalStorage();
     const novoFuncionario = {
       ...funcionarioData,
+      id: generateId(), // Gerar ID único para localStorage também
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
