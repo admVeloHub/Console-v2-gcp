@@ -1,4 +1,4 @@
-// VERSION: v1.3.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.4.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 
@@ -94,6 +94,7 @@ const FuncionariosPage = () => {
     telefone: '',
     atuacao: '',
     escala: '',
+    acessos: [], // Array de acessos conforme schema
     desligado: false,
     dataDesligamento: '',
     afastado: false,
@@ -222,6 +223,7 @@ const FuncionariosPage = () => {
         telefone: funcionario.telefone || '',
         atuacao: funcionario.atuacao || '',
         escala: funcionario.escala || '',
+        acessos: funcionario.acessos || [], // Carregar acessos conforme schema
         desligado: funcionario.desligado,
         dataDesligamento: funcionario.dataDesligamento || '',
         afastado: funcionario.afastado,
@@ -237,6 +239,7 @@ const FuncionariosPage = () => {
         telefone: '',
         atuacao: '',
         escala: '',
+        acessos: [],
         desligado: false,
         dataDesligamento: '',
         afastado: false,
@@ -257,6 +260,7 @@ const FuncionariosPage = () => {
       telefone: '',
       atuacao: '',
       escala: '',
+      acessos: [],
       desligado: false,
       dataDesligamento: '',
       afastado: false,
@@ -333,17 +337,18 @@ const FuncionariosPage = () => {
         // Editar acesso existente
         const index = funcionarioAtualizado.acessos.findIndex(a => a.id === acessoEditando.id);
         funcionarioAtualizado.acessos[index] = {
-          ...acessoEditando,
-          ...acessoData,
-          updatedAt: new Date().toISOString()
+          sistema: acessoData.sistema,
+          perfil: acessoData.perfil,
+          observacoes: acessoData.observacoes,
+          updatedAt: new Date()
         };
       } else {
-        // Adicionar novo acesso
+        // Adicionar novo acesso conforme schema
         const novoAcesso = {
-          id: generateId(),
-          ...acessoData,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+          sistema: acessoData.sistema,
+          perfil: acessoData.perfil,
+          observacoes: acessoData.observacoes,
+          updatedAt: new Date()
         };
         funcionarioAtualizado.acessos.push(novoAcesso);
       }

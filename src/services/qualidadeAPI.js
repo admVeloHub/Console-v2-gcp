@@ -1,4 +1,4 @@
-// VERSION: v1.6.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.8.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 import { qualidadeFuncionariosAPI, qualidadeAvaliacoesAPI } from './api';
 import axios from 'axios';
@@ -20,15 +20,31 @@ import {
 
 // ===== FUNCIONÁRIOS - API MONGODB =====
 
+// Testar conectividade da API
+export const testarAPI = async () => {
+  try {
+    console.log('🔍 Testando conectividade da API...');
+    const response = await qualidadeFuncionariosAPI.getAll();
+    console.log('✅ API funcionando:', response);
+    return true;
+  } catch (error) {
+    console.error('❌ API com problemas:', error);
+    return false;
+  }
+};
+
 // Obter todos os funcionários
 export const getFuncionarios = async () => {
   try {
+    console.log('🔍 Tentando carregar funcionários da API...');
     const response = await qualidadeFuncionariosAPI.getAll();
     console.log(`📊 Funcionários carregados da API: ${response?.length || 0}`);
+    console.log('📊 Dados recebidos:', response);
     // Garantir que sempre retorne um array
     return Array.isArray(response) ? response : [];
   } catch (error) {
     console.error('❌ Erro ao carregar funcionários da API:', error);
+    console.error('❌ Detalhes do erro:', error.response?.data || error.message);
     // Fallback para localStorage se API falhar
     return getFuncionariosLocalStorage();
   }
@@ -51,10 +67,16 @@ export const getFuncionariosAtivos = async () => {
 // Adicionar funcionário
 export const addFuncionario = async (funcionarioData) => {
   try {
+    // Converter strings de data para Date conforme schema
     const novoFuncionario = {
       ...funcionarioData,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      id: generateId(), // Gerar ID único
+      dataAniversario: funcionarioData.dataAniversario ? new Date(funcionarioData.dataAniversario) : null,
+      dataContratado: funcionarioData.dataContratado ? new Date(funcionarioData.dataContratado) : null,
+      dataDesligamento: funcionarioData.dataDesligamento ? new Date(funcionarioData.dataDesligamento) : null,
+      dataAfastamento: funcionarioData.dataAfastamento ? new Date(funcionarioData.dataAfastamento) : null,
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
     
     const response = await qualidadeFuncionariosAPI.create(novoFuncionario);
@@ -70,9 +92,14 @@ export const addFuncionario = async (funcionarioData) => {
 // Atualizar funcionário
 export const updateFuncionario = async (id, funcionarioData) => {
   try {
+    // Converter strings de data para Date conforme schema
     const funcionarioAtualizado = {
       ...funcionarioData,
-      updatedAt: new Date().toISOString()
+      dataAniversario: funcionarioData.dataAniversario ? new Date(funcionarioData.dataAniversario) : null,
+      dataContratado: funcionarioData.dataContratado ? new Date(funcionarioData.dataContratado) : null,
+      dataDesligamento: funcionarioData.dataDesligamento ? new Date(funcionarioData.dataDesligamento) : null,
+      dataAfastamento: funcionarioData.dataAfastamento ? new Date(funcionarioData.dataAfastamento) : null,
+      updatedAt: new Date()
     };
     
     const response = await qualidadeFuncionariosAPI.update(id, funcionarioAtualizado);
@@ -197,8 +224,16 @@ export const migrarDadosParaMongoDB = async () => {
 
     for (const funcionario of funcionariosLocal) {
       try {
+        // Usar _id se disponível, senão usar id
+        const funcionarioId = funcionario._id || funcionario.id;
+        
+        if (!funcionarioId) {
+          console.log(`⚠️ Funcionário sem ID, pulando: ${funcionario.nomeCompleto}`);
+          continue;
+        }
+        
         // Verificar se já existe no MongoDB
-        const existente = await qualidadeFuncionariosAPI.getById(funcionario.id);
+        const existente = await qualidadeFuncionariosAPI.getById(funcionarioId);
         
         if (!existente) {
           await qualidadeFuncionariosAPI.create(funcionario);

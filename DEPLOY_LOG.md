@@ -1,5 +1,65 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.4.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.5.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+
+## GitHub Push - Correções Críticas: Erro Iterable, Botão Azul Opaco e Cores Etiquetas - 2024-12-19 23:59
+
+### Informações do Push
+- **Tipo:** GitHub Push
+- **Data/Hora:** 2024-12-19 23:59 BRT
+- **Versão:** v1.6.0
+- **Commit:** 7322b0b
+- **Descrição:** Correções críticas: erro iterable, botão azul opaco, alinhamento seletor e cores etiquetas função
+
+### Arquivos Modificados
+- ✅ **src/pages/FuncionariosPage.jsx** (v1.3.0) - Correção erro "t is not iterable"
+- ✅ **src/pages/QualidadeModulePage.jsx** (v1.6.0) - Botão azul opaco e seletor alinhado
+- ✅ **src/pages/ConfigPage.jsx** (v3.7.19) - Cores etiquetas função case-insensitive
+- ✅ **src/services/qualidadeAPI.js** (v1.6.0) - Validação de arrays para prevenir crashes
+- ✅ **src/styles/theme.js** (v3.1.0) - Estilos padrão Material-UI
+- ✅ **src/styles/globals.css** (v3.1.0) - Classes CSS específicas com !important
+
+### Correções Implementadas
+
+#### 🚨 Correção Crítica - Erro "t is not iterable"
+- ✅ **FuncionariosPage.jsx**: Validação de array antes do spread operator
+- ✅ **QualidadeModulePage.jsx**: Validação de array antes do spread operator
+- ✅ **qualidadeAPI.js**: Garantia de retorno de arrays válidos em todas as funções
+- ✅ **Fallback seguro**: Arrays vazios quando API retorna undefined/null
+
+#### 🎨 Botão "Gerar" - Cor Azul Opaco Oficial
+- ✅ **Cor aplicada**: #006AB9 (Azul Opaco do LAYOUT_GUIDELINES.md)
+- ✅ **Letras brancas**: #F3F7FC (Tom de branco oficial)
+- ✅ **Múltiplas proteções**: Tema + Classe CSS + SX inline com !important
+- ✅ **Hover**: #005A9F (tom mais escuro do azul opaco)
+
+#### 📏 Seletor "Selecione o Colaborador" - Alinhamento Perfeito
+- ✅ **Altura padronizada**: 40px (mesma do botão)
+- ✅ **Texto centralizado**: Padding ajustado para alinhamento vertical
+- ✅ **Animação preservada**: Label sobe ao clicar (Material-UI)
+- ✅ **Múltiplas proteções**: Tema + Classe CSS + SX inline com !important
+
+#### 🏷️ Cores das Etiquetas de Função - Case-Insensitive
+- ✅ **Administrador**: Gradiente Amarelo → Azul Médio (RECICLAGEM)
+- ✅ **Gestão**: Gradiente Azul Escuro → Amarelo (ATUALIZAÇÃO)
+- ✅ **Editor**: Gradiente Azul Médio → Azul Claro (ESSENCIAL)
+- ✅ **Desenvolvedor**: Gradiente Azul Escuro → Azul Opaco (OPCIONAL)
+- ✅ **Case-insensitive**: Suporte para "Administrador" e "administrador"
+
+### Melhorias Técnicas
+- ✅ **Validação robusta**: Array.isArray() em todas as funções de API
+- ✅ **Classes CSS específicas**: .velohub-btn-azul-opaco e .velohub-select-alinhado
+- ✅ **Proteção com !important**: Sobrescreve estilos padrão do Material-UI
+- ✅ **Logs melhorados**: response?.length || 0 para evitar erros de propriedade
+- ✅ **Fallback seguro**: Sistema continua funcionando mesmo com API indisponível
+
+### Detalhes Técnicos
+- **Erro resolvido**: TypeError: t is not iterable na linha 154
+- **Botão**: backgroundColor: '#006AB9 !important' com classe CSS específica
+- **Seletor**: height: '40px !important' com alinhamento centralizado
+- **Etiquetas**: funcaoLower = funcao?.toLowerCase() para case-insensitive
+- **API**: Array.isArray(response) ? response : [] em todas as funções
+
+---
 
 ## GitHub Push - Implementação do Gráfico de Histórico de Avaliações - 2024-12-19 23:58
 
