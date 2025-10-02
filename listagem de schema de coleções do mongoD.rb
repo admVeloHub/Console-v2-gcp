@@ -102,7 +102,6 @@ _collectionId: String           // ID da collection
 9. schema console_analises.qualidade_avaliacoes
 {
 _id: ObjectId,
-colaboradorId: String,          // ID do colaborador
 colaboradorNome: String,        // Nome do colaborador
 avaliador: String,              // Avaliador
 mes: String,                    // Mês da avaliação

@@ -1,8 +1,9 @@
-// VERSION: v1.10.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.15.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 import { qualidadeFuncionariosAPI, qualidadeAvaliacoesAPI } from './api';
 import axios from 'axios';
 import { generateId, calcularPontuacaoTotal, PONTUACAO } from '../types/qualidade';
+import { getAvaliadoresValidos as getUserAvaliadoresValidos } from './userService';
 import { 
   getAvaliacoes as getAvaliacoesLocalStorage,
   addAvaliacao as addAvaliacaoLocalStorage,
@@ -78,23 +79,32 @@ export const getFuncionariosAtivos = async () => {
 // Adicionar funcionário
 export const addFuncionario = async (funcionarioData) => {
   try {
-    // Converter strings de data para Date conforme schema
+    // Converter strings de data para Date conforme schema MongoDB
     const novoFuncionario = {
-      ...funcionarioData,
-      id: generateId(), // Gerar ID único
+      nomeCompleto: funcionarioData.nomeCompleto,
       dataAniversario: funcionarioData.dataAniversario ? new Date(funcionarioData.dataAniversario) : null,
+      empresa: funcionarioData.empresa,
       dataContratado: funcionarioData.dataContratado ? new Date(funcionarioData.dataContratado) : null,
+      telefone: funcionarioData.telefone,
+      atuacao: funcionarioData.atuacao,
+      escala: funcionarioData.escala,
+      acessos: funcionarioData.acessos || [],
+      desligado: funcionarioData.desligado || false,
       dataDesligamento: funcionarioData.dataDesligamento ? new Date(funcionarioData.dataDesligamento) : null,
+      afastado: funcionarioData.afastado || false,
       dataAfastamento: funcionarioData.dataAfastamento ? new Date(funcionarioData.dataAfastamento) : null,
       createdAt: new Date(),
       updatedAt: new Date()
     };
+    
+    console.log('🔍 Debug - Dados para POST funcionário:', novoFuncionario);
     
     const response = await qualidadeFuncionariosAPI.create(novoFuncionario);
     console.log(`✅ Funcionário adicionado via API: ${response.nomeCompleto}`);
     return response;
   } catch (error) {
     console.error('❌ Erro ao adicionar funcionário via API:', error);
+    console.error('❌ Detalhes do erro:', error.response?.data || error.message);
     // Fallback para localStorage se API falhar
     return addFuncionarioLocalStorage(funcionarioData);
   }
@@ -141,16 +151,9 @@ export const deleteFuncionario = async (id) => {
 // Obter lista de avaliadores válidos
 export const getAvaliadoresValidos = async () => {
   try {
-    // Lista fixa de avaliadores baseada nos usuários do sistema
-    const avaliadores = [
-      'Lucas Gravina',
-      'André Violaro', 
-      'Emerson Medeiros',
-      'Anderson Felipe Silva',
-      'João Silva'
-    ];
-    
-    console.log(`📊 Avaliadores carregados: ${avaliadores.length}`);
+    // Usar função do userService que verifica critérios reais
+    const avaliadores = await getUserAvaliadoresValidos();
+    console.log(`📊 Avaliadores válidos carregados: ${avaliadores.length}`);
     return avaliadores;
   } catch (error) {
     console.error('❌ Erro ao carregar avaliadores:', error);
@@ -169,7 +172,27 @@ const getFuncionariosLocalStorage = () => {
     if (data) {
       const funcionarios = JSON.parse(data);
       console.log(`📊 Funcionários carregados do localStorage: ${funcionarios.length}`);
-      return funcionarios;
+      
+      // Corrigir funcionários antigos que não têm _id conforme schema MongoDB
+      const funcionariosCorrigidos = funcionarios.map(funcionario => {
+        if (!funcionario._id) {
+          console.log(`🔧 Adicionando _id para funcionário antigo: ${funcionario.nomeCompleto}`);
+          return {
+            ...funcionario,
+            _id: generateId() // Usar _id conforme schema MongoDB
+          };
+        }
+        return funcionario;
+      });
+      
+      // Salvar funcionários corrigidos se houve mudanças
+      if (funcionariosCorrigidos.length !== funcionarios.length || 
+          funcionariosCorrigidos.some((f, i) => f._id !== funcionarios[i]?._id)) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(funcionariosCorrigidos));
+        console.log(`✅ Funcionários antigos corrigidos com _id`);
+      }
+      
+      return funcionariosCorrigidos;
     }
   } catch (error) {
     console.error('❌ Erro ao carregar funcionários do localStorage:', error);
@@ -187,9 +210,9 @@ const addFuncionarioLocalStorage = (funcionarioData) => {
     const funcionarios = getFuncionariosLocalStorage();
     const novoFuncionario = {
       ...funcionarioData,
-      id: generateId(), // Gerar ID único para localStorage também
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      _id: generateId(), // Usar _id conforme schema MongoDB
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
     
     funcionarios.push(novoFuncionario);
@@ -258,11 +281,11 @@ export const migrarDadosParaMongoDB = async () => {
 
     for (const funcionario of funcionariosLocal) {
       try {
-        // Usar _id se disponível, senão usar id
-        const funcionarioId = funcionario._id || funcionario.id;
+        // Usar _id conforme schema MongoDB
+        const funcionarioId = funcionario._id;
         
         if (!funcionarioId) {
-          console.log(`⚠️ Funcionário sem ID, pulando: ${funcionario.nomeCompleto}`);
+          console.log(`⚠️ Funcionário sem _id, pulando: ${funcionario.nomeCompleto}`);
           continue;
         }
         
@@ -270,7 +293,9 @@ export const migrarDadosParaMongoDB = async () => {
         const existente = await qualidadeFuncionariosAPI.getById(funcionarioId);
         
         if (!existente) {
-          await qualidadeFuncionariosAPI.create(funcionario);
+          // Remover _id do funcionário antes de enviar (MongoDB gera automaticamente)
+          const { _id, ...funcionarioParaEnviar } = funcionario;
+          await qualidadeFuncionariosAPI.create(funcionarioParaEnviar);
           migrados++;
           console.log(`✅ Migrado: ${funcionario.nomeCompleto}`);
         } else {
@@ -335,10 +360,27 @@ export const getAvaliacoes = async () => {
 // Adicionar avaliação
 export const addAvaliacao = async (avaliacaoData) => {
   try {
+    // Converter strings de data para Date conforme schema MongoDB
     const novaAvaliacao = {
-      ...avaliacaoData,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      colaboradorNome: avaliacaoData.colaboradorNome,
+      avaliador: avaliacaoData.avaliador,
+      mes: avaliacaoData.mes,
+      ano: avaliacaoData.ano,
+      dataAvaliacao: avaliacaoData.dataAvaliacao ? new Date(avaliacaoData.dataAvaliacao) : new Date(),
+      arquivoLigacao: avaliacaoData.arquivoLigacao,
+      nomeArquivo: avaliacaoData.nomeArquivo,
+      saudacaoAdequada: avaliacaoData.saudacaoAdequada,
+      escutaAtiva: avaliacaoData.escutaAtiva,
+      resolucaoQuestao: avaliacaoData.resolucaoQuestao,
+      empatiaCordialidade: avaliacaoData.empatiaCordialidade,
+      direcionouPesquisa: avaliacaoData.direcionouPesquisa,
+      procedimentoIncorreto: avaliacaoData.procedimentoIncorreto,
+      encerramentoBrusco: avaliacaoData.encerramentoBrusco,
+      moderado: avaliacaoData.moderado || false,
+      observacoesModeracao: avaliacaoData.observacoesModeracao,
+      pontuacaoTotal: avaliacaoData.pontuacaoTotal,
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
     
     const response = await qualidadeAvaliacoesAPI.create(novaAvaliacao);

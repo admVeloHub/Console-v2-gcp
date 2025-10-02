@@ -1,4 +1,4 @@
-// VERSION: v3.1.6 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.1.7 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useMemo, useCallback } from 'react';
 import { 
   Container, 
@@ -25,6 +25,7 @@ import BackButton from '../components/common/BackButton';
 const ArtigosPage = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [formData, setFormData] = useState({
+    tag: '',                    // Campo obrigatório do schema
     artigo_titulo: '',
     artigo_conteudo: '',
     categoria_id: '',
