@@ -1,4 +1,4 @@
-// VERSION: v1.16.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.16.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 import { qualidadeFuncionariosAPI, qualidadeAvaliacoesAPI } from './api';
 import axios from 'axios';
@@ -161,8 +161,9 @@ export const getAvaliadoresValidos = async () => {
       console.log(`🔍 DEBUG - Função: ${user._userRole}`);
       console.log(`🔍 DEBUG - Funções administrativas:`, user._funcoesAdministrativas);
       
-      // Verificar se tem função de administrador ou gestão
-      const isAdminOuGestao = user._userRole === 'administrador' || user._userRole === 'gestão';
+      // Verificar se tem função de administrador ou gestão (case insensitive)
+      const userRole = user._userRole?.toLowerCase();
+      const isAdminOuGestao = userRole === 'administrador' || userRole === 'gestão' || userRole === 'gestao';
       console.log(`🔍 DEBUG - É admin/gestão? ${isAdminOuGestao}`);
       
       // Verificar se tem flag de avaliador

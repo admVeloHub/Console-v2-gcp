@@ -1,4 +1,4 @@
-// VERSION: v3.7.24 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.7.25 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -440,14 +440,18 @@ const ConfigPage = () => {
         // Editar usuário existente - incluir permissões se estiver na etapa 2
         const updateData = modalStep === 2 ? {
           ...formData,
-          ...permissionsData
+          _userClearance: permissionsData.permissoes,
+          _userTickets: permissionsData.tiposTickets,
+          _funcoesAdministrativas: permissionsData.funcoesAdministrativas
         } : formData;
         await updateAuthorizedUser(editingUser._userMail, updateData);
       } else {
         // Adicionar novo usuário
         const newUser = {
           ...formData,
-          ...permissionsData
+          _userClearance: permissionsData.permissoes,
+          _userTickets: permissionsData.tiposTickets,
+          _funcoesAdministrativas: permissionsData.funcoesAdministrativas
         };
         await addAuthorizedUser(newUser);
       }

@@ -1,4 +1,4 @@
-// VERSION: v3.4.13 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.4.14 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 import { usersAPI } from './api';
 
@@ -83,7 +83,7 @@ export const updateAuthorizedUser = async (email, updatedData) => {
     // Se não, mapear do formato frontend para MongoDB
     let mongoData;
     
-    if (updatedData._userClearance || updatedData._userTickets) {
+    if (updatedData._userClearance || updatedData._userTickets || updatedData._funcoesAdministrativas) {
       // Já está no formato MongoDB - usar diretamente
       mongoData = updatedData;
     } else if (updatedData.permissoes || updatedData.tiposTickets) {
