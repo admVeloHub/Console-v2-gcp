@@ -1,4 +1,4 @@
-// VERSION: v3.7.19 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.7.20 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -221,6 +221,9 @@ const ConfigPage = () => {
       gestao: false,
       rhFin: false,
       facilities: false
+    },
+    funcoesAdministrativas: {
+      avaliador: false
     }
   });
 
@@ -460,6 +463,16 @@ const ConfigPage = () => {
       tiposTickets: {
         ...prev.tiposTickets,
         [ticketType]: checked
+      }
+    }));
+  };
+
+  const handleModalFuncaoAdministrativaChange = (funcao, checked) => {
+    setPermissionsData(prev => ({
+      ...prev,
+      funcoesAdministrativas: {
+        ...prev.funcoesAdministrativas,
+        [funcao]: checked
       }
     }));
   };
@@ -925,7 +938,7 @@ const ConfigPage = () => {
               <Typography variant="h6" sx={{ fontFamily: 'Poppins', fontWeight: 600, mb: 2 }}>
                 Tipos de Tickets Liberados
               </Typography>
-              <Grid container spacing={2}>
+              <Grid container spacing={2} sx={{ mb: 3 }}>
                 {ticketTypes.map((ticketType) => (
                   <Grid item xs={12} sm={6} key={ticketType.key}>
                     <FormControlLabel
@@ -946,6 +959,46 @@ const ConfigPage = () => {
                   </Grid>
                 ))}
               </Grid>
+
+              {/* Seção Funções Administrativas - apenas para Gestão e Administrador */}
+              {(formData.funcao === 'Gestão' || formData.funcao === 'Administrador') && (
+                <>
+                  <Typography variant="h6" sx={{ 
+                    fontFamily: 'Poppins', 
+                    fontWeight: 600, 
+                    mb: 2,
+                    color: 'var(--blue-dark)'
+                  }}>
+                    Funções Administrativas
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={permissionsData.funcoesAdministrativas.avaliador || false}
+                            onChange={(e) => handleModalFuncaoAdministrativaChange('avaliador', e.target.checked)}
+                          />
+                        }
+                        label={
+                          <Box>
+                            <Typography sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
+                              Avaliador
+                            </Typography>
+                            <Typography variant="body2" sx={{ 
+                              fontFamily: 'Poppins', 
+                              color: 'text.secondary',
+                              fontSize: '0.75rem'
+                            }}>
+                              Pode avaliar funcionários no módulo Qualidade
+                            </Typography>
+                          </Box>
+                        }
+                      />
+                    </Grid>
+                  </Grid>
+                </>
+              )}
             </Box>
           )}
         </DialogContent>
