@@ -1,4 +1,4 @@
-// VERSION: v1.20.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.23.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 import { qualidadeFuncionariosAPI, qualidadeAvaliacoesAPI } from './api';
 import axios from 'axios';
@@ -405,11 +405,11 @@ export const addAvaliacao = async (avaliacaoData) => {
     
     // Mapear dados conforme schema console_analises.qualidade_avaliacoes
     const novaAvaliacao = {
-      colaboradorNome: avaliacaoData.colaboradorNome || avaliacaoData.colaboradorId, // String
+      colaboradorNome: avaliacaoData.colaboradorNome, // String
       avaliador: avaliacaoData.avaliador, // String
       mes: avaliacaoData.mes, // String
       ano: Number(avaliacaoData.ano), // Number
-      dataAvaliacao: avaliacaoData.dataAvaliacao ? new Date(avaliacaoData.dataAvaliacao) : new Date(), // Date
+      dataAvaliacao: avaliacaoData.dataAvaliacao ? new Date(avaliacaoData.dataAvaliacao).toISOString() : new Date().toISOString(), // String ISO
       arquivoLigacao: avaliacaoData.arquivoLigacao || '', // String
       nomeArquivo: avaliacaoData.nomeArquivo || '', // String
       saudacaoAdequada: Boolean(avaliacaoData.saudacaoAdequada), // Boolean
@@ -422,8 +422,8 @@ export const addAvaliacao = async (avaliacaoData) => {
       moderado: Boolean(avaliacaoData.moderado || false), // Boolean
       observacoesModeracao: avaliacaoData.observacoesModeracao || '', // String
       pontuacaoTotal: 0, // Será calculado
-      createdAt: new Date(), // Date
-      updatedAt: new Date() // Date
+      createdAt: new Date().toISOString(), // String ISO
+      updatedAt: new Date().toISOString() // String ISO
     };
     
     // Calcular pontuação total
@@ -445,6 +445,8 @@ export const addAvaliacao = async (avaliacaoData) => {
     console.log('  - direcionouPesquisa:', typeof novaAvaliacao.direcionouPesquisa, novaAvaliacao.direcionouPesquisa);
     console.log('  - procedimentoIncorreto:', typeof novaAvaliacao.procedimentoIncorreto, novaAvaliacao.procedimentoIncorreto);
     console.log('  - encerramentoBrusco:', typeof novaAvaliacao.encerramentoBrusco, novaAvaliacao.encerramentoBrusco);
+    
+    console.log('🔍 DEBUG - Enviando dados para API:', JSON.stringify(novaAvaliacao, null, 2));
     
     const response = await qualidadeAvaliacoesAPI.create(novaAvaliacao);
     console.log(`✅ Avaliação adicionada via API: ${response._id}`);
@@ -495,20 +497,15 @@ export const deleteAvaliacao = async (id) => {
 // ===== RELATÓRIOS =====
 
 // Gerar relatório do agente
-export const gerarRelatorioAgente = async (colaboradorId) => {
+export const gerarRelatorioAgente = async (colaboradorNome) => {
   try {
     // Buscar todas as avaliações da API e filtrar no frontend
     const todasAvaliacoes = await qualidadeAvaliacoesAPI.getAll();
     const avaliacoes = Array.isArray(todasAvaliacoes) 
-      ? todasAvaliacoes.filter(a => a.colaboradorId === colaboradorId)
+      ? todasAvaliacoes.filter(a => a.colaboradorNome === colaboradorNome)
       : [];
     
-    const funcionarios = await getFuncionarios();
-    const funcionario = Array.isArray(funcionarios) 
-      ? funcionarios.find(f => f.id === colaboradorId)
-      : null;
-    
-    if (!funcionario || avaliacoes.length === 0) {
+    if (avaliacoes.length === 0) {
       return null;
     }
 
@@ -525,11 +522,11 @@ export const gerarRelatorioAgente = async (colaboradorId) => {
 
     // Usar função utilitária para gerar relatório
     const { gerarRelatorioAgente: gerarRelatorioAgenteUtil } = await import('../types/qualidade');
-    return gerarRelatorioAgenteUtil(colaboradorId, funcionario.colaboradorNome || funcionario.nomeCompleto, avaliacoesComGPT);
+    return gerarRelatorioAgenteUtil(colaboradorNome, colaboradorNome, avaliacoesComGPT);
   } catch (error) {
     console.error('❌ Erro ao gerar relatório do agente via API:', error);
     // Fallback para localStorage
-    return gerarRelatorioAgenteLocalStorage(colaboradorId);
+    return gerarRelatorioAgenteLocalStorage(colaboradorNome);
   }
 };
 
@@ -557,7 +554,7 @@ export const gerarRelatorioGestao = async (mes, ano) => {
 };
 
 // Obter avaliações por colaborador
-export const getAvaliacoesPorColaborador = async (colaboradorId) => {
+export const getAvaliacoesPorColaborador = async (colaboradorNome) => {
   try {
     // Buscar todas as avaliações da API e filtrar no frontend
     const response = await qualidadeAvaliacoesAPI.getAll();
@@ -567,14 +564,14 @@ export const getAvaliacoesPorColaborador = async (colaboradorId) => {
     // Precisamos extrair o array 'data'
     const todasAvaliacoes = response?.data || response;
     const avaliacoes = Array.isArray(todasAvaliacoes) 
-      ? todasAvaliacoes.filter(a => a.colaboradorId === colaboradorId)
+      ? todasAvaliacoes.filter(a => a.colaboradorNome === colaboradorNome)
       : [];
     console.log(`📊 Avaliações do colaborador extraídas: ${avaliacoes.length}`);
     return avaliacoes;
   } catch (error) {
     console.error('❌ Erro ao carregar avaliações do colaborador via API:', error);
     // Fallback para localStorage
-    return getAvaliacoesPorColaboradorLocalStorage(colaboradorId);
+    return getAvaliacoesPorColaboradorLocalStorage(colaboradorNome);
   }
 };
 
