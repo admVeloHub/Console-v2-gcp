@@ -1,4 +1,4 @@
-// VERSION: v1.14.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.15.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 
@@ -140,6 +140,11 @@ const QualidadeModulePage = () => {
       setSelectedColaborador('');
     }
   }, [funcionarios]);
+
+  // Debug: Monitorar mudanças no selectedColaborador
+  useEffect(() => {
+    console.log('🔍 DEBUG - selectedColaborador mudou para:', selectedColaborador);
+  }, [selectedColaborador]);
 
   const carregarDados = async () => {
     try {
@@ -370,6 +375,8 @@ const QualidadeModulePage = () => {
   const gerarRelatorioAgenteHandler = async () => {
     console.log('🔍 DEBUG - gerarRelatorioAgenteHandler chamado');
     console.log('🔍 DEBUG - selectedColaborador:', selectedColaborador);
+    console.log('🔍 DEBUG - Tipo do selectedColaborador:', typeof selectedColaborador);
+    console.log('🔍 DEBUG - Tamanho do selectedColaborador:', selectedColaborador?.length);
     
     if (!selectedColaborador) {
       console.log('⚠️ DEBUG - Nenhum colaborador selecionado');
@@ -378,6 +385,7 @@ const QualidadeModulePage = () => {
     }
 
     console.log('🚀 DEBUG - Iniciando geração de relatório para:', selectedColaborador);
+    console.log('🚀 DEBUG - Passando para gerarRelatorioAgente:', selectedColaborador);
     setLoading(true);
     try {
       const relatorio = await gerarRelatorioAgente(selectedColaborador);
@@ -900,7 +908,10 @@ const QualidadeModulePage = () => {
                   </InputLabel>
                   <Select
                     value={selectedColaborador || ''}
-                    onChange={(e) => setSelectedColaborador(e.target.value)}
+                    onChange={(e) => {
+                      console.log('🔍 DEBUG - Select onChange:', e.target.value);
+                      setSelectedColaborador(e.target.value);
+                    }}
                     label="Selecione o Colaborador"
                     sx={{ 
                       fontFamily: 'Poppins',
@@ -1284,7 +1295,11 @@ const QualidadeModulePage = () => {
                 >
                   {funcionarios.map((funcionario) => {
                     const nomeColaborador = funcionario.colaboradorNome || funcionario.nomeCompleto;
-                    console.log('🔍 DEBUG - Funcionário no select:', { id: funcionario._id, nome: nomeColaborador });
+                    console.log('🔍 DEBUG - Criando MenuItem:', { 
+                      id: funcionario._id, 
+                      nome: nomeColaborador, 
+                      value: nomeColaborador 
+                    });
                     return (
                       <MenuItem key={funcionario._id || funcionario.id} value={nomeColaborador} sx={{ fontFamily: 'Poppins' }}>
                         {nomeColaborador}
