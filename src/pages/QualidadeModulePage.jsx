@@ -948,7 +948,7 @@ const QualidadeModulePage = () => {
                     {funcionarios.map((funcionario) => (
                       <MenuItem 
                         key={funcionario.id} 
-                        value={funcionario.id}
+                        value={funcionario.colaboradorNome || funcionario.nomeCompleto}
                         sx={{ fontFamily: 'Poppins' }}
                       >
                         {funcionario.colaboradorNome || funcionario.nomeCompleto}
