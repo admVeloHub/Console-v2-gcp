@@ -74,7 +74,10 @@ _userClearance: {               // Permissões do usuário
   config: Boolean,
   servicos: Boolean
 },
-_userTickets: Object            // Tipos de tickets
+_userTickets: Object,           // Tipos de tickets
+_funcoesAdministrativas: {      // Funções administrativas
+  avaliador: Boolean            // Se é avaliador no módulo Qualidade
+}
 }
 
 //schema console_config.module_status
