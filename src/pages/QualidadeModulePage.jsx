@@ -1,4 +1,4 @@
-// VERSION: v1.12.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.13.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 
@@ -282,11 +282,13 @@ const QualidadeModulePage = () => {
         return;
       }
       
-      // Mapear colaboradorId para colaboradorNome
-      const funcionarioSelecionado = funcionarios.find(f => f._id === formData.colaboradorId || f.id === formData.colaboradorId);
+      // Mapear colaboradorId (que agora é o nome) para colaboradorNome
+      const funcionarioSelecionado = funcionarios.find(f => 
+        (f.colaboradorNome || f.nomeCompleto) === formData.colaboradorId
+      );
       const dadosParaEnvio = {
         ...formData,
-        colaboradorNome: funcionarioSelecionado?.colaboradorNome || funcionarioSelecionado?.nomeCompleto
+        colaboradorNome: formData.colaboradorId // colaboradorId já é o nome agora
       };
       
       // Debug dos dados antes do envio
