@@ -1,4 +1,4 @@
-// VERSION: v3.7.22 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.7.24 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -60,8 +60,21 @@ const ConfigPage = () => {
     createDevUserIfNeeded();
   }, []);
 
-  // Criar usuário de desenvolvimento se não existir
+  // Criar usuário de desenvolvimento se não existir (APENAS EM DESENVOLVIMENTO)
   const createDevUserIfNeeded = async () => {
+    // Verificar se estamos em desenvolvimento
+    const isDevelopment = window.location.hostname === 'localhost' || 
+                         window.location.hostname === '127.0.0.1' ||
+                         window.location.hostname.includes('dev') ||
+                         process.env.NODE_ENV === 'development';
+    
+    if (!isDevelopment) {
+      console.log('🚀 Ambiente de PRODUÇÃO detectado - bypass de desenvolvimento desabilitado');
+      return;
+    }
+    
+    console.log('🔧 Ambiente de DESENVOLVIMENTO detectado - ativando bypass');
+    
     try {
       const devUserEmail = 'lucas.gravina@velotax.com.br';
       
@@ -85,9 +98,9 @@ const ConfigPage = () => {
       console.log('🔍 DEBUG - Usuários existentes:', existingUsers);
       
       // Se o usuário existe mas tem função incorreta, atualizar
-      if (existingDevUser && existingDevUser._userRole !== 'administrador') {
+      if (existingDevUser && existingDevUser._userRole !== 'Administrador') {
         console.log('🔄 Atualizando função do usuário de desenvolvimento...');
-        existingDevUser._userRole = 'administrador';
+        existingDevUser._userRole = 'Administrador';
         
         try {
           await updateAuthorizedUser(existingDevUser._id, existingDevUser);
@@ -114,8 +127,8 @@ const ConfigPage = () => {
         
         const devUser = {
           _userMail: devUserEmail,
-          _userId: 'gravina_dev',
-          _userRole: 'administrador',
+          _userId: 'Lucas Gravina',
+          _userRole: 'Administrador',
           _userClearance: {
             artigos: true,
             velonews: true,
@@ -137,6 +150,9 @@ const ConfigPage = () => {
             gestao: true,
             rhFin: true,
             facilities: true
+          },
+          _funcoesAdministrativas: {
+            avaliador: true
           }
         };
 
