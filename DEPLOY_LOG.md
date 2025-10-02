@@ -64,6 +64,43 @@
 
 ---
 
+## GitHub Push - Correção do Cálculo de Pontuação das Avaliações e Debug dos Critérios - 2024-12-19 23:59
+
+### Informações do Push
+- **Tipo:** GitHub Push
+- **Data/Hora:** 2024-12-19 23:59 BRT
+- **Versão:** v1.12.0
+- **Commit:** 18b9399
+- **Branch:** master → master
+- **Repositório:** https://github.com/admVeloHub/front-console.git
+
+### Arquivos Modificados
+1. `src/services/qualidadeAPI.js` (v1.20.0)
+2. `src/pages/QualidadeModulePage.jsx` (v1.9.0)
+3. `DEPLOY_LOG.md` (v1.8.0)
+
+### Descrição das Alterações
+- **Correção do cálculo de pontuação** nas funções `addAvaliacao` e `updateAvaliacao`
+- **Adição da chamada** para `calcularPontuacaoTotal()` antes de enviar dados para a API
+- **Correção do problema** onde avaliações apareciam com nota 0 e status "Ruim"
+- **Logs de debug** para acompanhar o cálculo da pontuação
+- **Logs para verificar** valores originais e convertidos dos critérios booleanos
+- **Correção do debug** do nome do funcionário para usar `colaboradorNome`
+
+### Detalhes Técnicos
+- **Função `addAvaliacao`:** Agora calcula `pontuacaoTotal` antes de enviar para API
+- **Função `updateAvaliacao`:** Recalcula pontuação ao atualizar avaliação
+- **Logs adicionados:** `🔍 DEBUG - Pontuação calculada:` e `🔍 DEBUG - Pontuação recalculada:`
+- **Debug dos critérios:** Logs para verificar valores originais e convertidos dos booleans
+- **Importação:** `calcularPontuacaoTotal` já estava importada, mas não estava sendo usada
+
+### Problema Resolvido
+- **Antes:** Avaliações com pontuação máxima apareciam como nota 0 e status "Ruim"
+- **Depois:** Pontuação é calculada corretamente baseada nos critérios selecionados
+- **Resultado:** Avaliações agora mostram a pontuação real e status correto
+
+---
+
 ## GitHub Push - Padronização de Schemas MongoDB: Nomenclatura e Estrutura Unificada - 2024-12-19 23:59
 
 ### Informações do Push

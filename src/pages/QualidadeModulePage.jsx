@@ -1,4 +1,4 @@
-// VERSION: v1.9.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.10.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 
@@ -271,12 +271,27 @@ const QualidadeModulePage = () => {
 
   const salvarAvaliacao = async () => {
     try {
+      // Validações obrigatórias
+      if (!formData.colaboradorId) {
+        mostrarSnackbar('Selecione um colaborador', 'error');
+        return;
+      }
+      
+      if (!formData.avaliador) {
+        mostrarSnackbar('Selecione um avaliador', 'error');
+        return;
+      }
+      
       // Mapear colaboradorId para colaboradorNome
       const funcionarioSelecionado = funcionarios.find(f => f._id === formData.colaboradorId || f.id === formData.colaboradorId);
       const dadosParaEnvio = {
         ...formData,
-        colaboradorNome: funcionarioSelecionado?.colaboradorNome || funcionarioSelecionado?.nomeCompleto || formData.colaboradorNome
+        colaboradorNome: funcionarioSelecionado?.colaboradorNome || funcionarioSelecionado?.nomeCompleto
       };
+      
+      // Debug dos dados antes do envio
+      console.log('🔍 DEBUG - Funcionário selecionado:', funcionarioSelecionado);
+      console.log('🔍 DEBUG - Dados para envio:', dadosParaEnvio);
       
       if (avaliacaoEditando) {
         await updateAvaliacao(avaliacaoEditando._id, dadosParaEnvio);
