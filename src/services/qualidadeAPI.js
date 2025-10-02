@@ -1,4 +1,4 @@
-// VERSION: v1.23.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.24.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 import { qualidadeFuncionariosAPI, qualidadeAvaliacoesAPI } from './api';
 import axios from 'axios';
@@ -500,12 +500,22 @@ export const deleteAvaliacao = async (id) => {
 export const gerarRelatorioAgente = async (colaboradorNome) => {
   try {
     // Buscar todas as avaliações da API e filtrar no frontend
-    const todasAvaliacoes = await qualidadeAvaliacoesAPI.getAll();
+    const response = await qualidadeAvaliacoesAPI.getAll();
+    console.log('📊 Dados recebidos da API (relatório agente):', response);
+    
+    // A API retorna { count: X, data: Array, success: true }
+    // Precisamos extrair o array 'data'
+    const todasAvaliacoes = response?.data || response;
+    console.log(`📊 Total de avaliações encontradas: ${Array.isArray(todasAvaliacoes) ? todasAvaliacoes.length : 0}`);
+    
     const avaliacoes = Array.isArray(todasAvaliacoes) 
       ? todasAvaliacoes.filter(a => a.colaboradorNome === colaboradorNome)
       : [];
     
+    console.log(`📊 Avaliações filtradas para ${colaboradorNome}: ${avaliacoes.length}`);
+    
     if (avaliacoes.length === 0) {
+      console.log('⚠️ Nenhuma avaliação encontrada para o colaborador:', colaboradorNome);
       return null;
     }
 
@@ -534,12 +544,22 @@ export const gerarRelatorioAgente = async (colaboradorNome) => {
 export const gerarRelatorioGestao = async (mes, ano) => {
   try {
     // Buscar todas as avaliações da API e filtrar no frontend
-    const todasAvaliacoes = await qualidadeAvaliacoesAPI.getAll();
+    const response = await qualidadeAvaliacoesAPI.getAll();
+    console.log('📊 Dados recebidos da API (relatório gestão):', response);
+    
+    // A API retorna { count: X, data: Array, success: true }
+    // Precisamos extrair o array 'data'
+    const todasAvaliacoes = response?.data || response;
+    console.log(`📊 Total de avaliações encontradas: ${Array.isArray(todasAvaliacoes) ? todasAvaliacoes.length : 0}`);
+    
     const avaliacoes = Array.isArray(todasAvaliacoes) 
       ? todasAvaliacoes.filter(a => a.mes === mes && a.ano === ano)
       : [];
     
+    console.log(`📊 Avaliações filtradas para ${mes}/${ano}: ${avaliacoes.length}`);
+    
     if (avaliacoes.length === 0) {
+      console.log('⚠️ Nenhuma avaliação encontrada para o período:', `${mes}/${ano}`);
       return null;
     }
 

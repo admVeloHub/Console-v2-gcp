@@ -1,5 +1,5 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.8.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.9.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
 
 ## GitHub Push - Correção do Gráfico de Histórico de Avaliações: Ordenação e Precisão - 2024-12-19 23:59
 
@@ -98,6 +98,41 @@
 - **Antes:** Avaliações com pontuação máxima apareciam como nota 0 e status "Ruim"
 - **Depois:** Pontuação é calculada corretamente baseada nos critérios selecionados
 - **Resultado:** Avaliações agora mostram a pontuação real e status correto
+
+---
+
+## GitHub Push - Correção da Validação e Mapeamento de Dados das Avaliações - 2024-12-19 23:59
+
+### Informações do Push
+- **Tipo:** GitHub Push
+- **Data/Hora:** 2024-12-19 23:59 BRT
+- **Versão:** v1.13.0
+- **Commit:** e47dc15
+- **Branch:** master → master
+- **Repositório:** https://github.com/admVeloHub/front-console.git
+
+### Arquivos Modificados
+1. `src/pages/QualidadeModulePage.jsx` (v1.10.0)
+2. `DEPLOY_LOG.md` (v1.8.0)
+
+### Descrição das Alterações
+- **Correção do mapeamento** do `colaboradorNome` para evitar valores vazios
+- **Validações obrigatórias** adicionadas para colaborador e avaliador
+- **Correção do problema** de erro 400 (Bad Request) na API
+- **Logs de debug** adicionados para acompanhar dados antes do envio
+- **Melhorada experiência** do usuário com mensagens de erro claras
+
+### Detalhes Técnicos
+- **Validação de colaborador:** Impede envio se `colaboradorId` estiver vazio
+- **Validação de avaliador:** Impede envio se `avaliador` estiver vazio
+- **Mapeamento corrigido:** Remove fallback para `formData.colaboradorNome` vazio
+- **Logs adicionados:** `🔍 DEBUG - Funcionário selecionado:` e `🔍 DEBUG - Dados para envio:`
+- **Mensagens de erro:** "Selecione um colaborador" e "Selecione um avaliador"
+
+### Problema Resolvido
+- **Antes:** Erro 400 (Bad Request) devido a campos vazios (`colaboradorNome: ''`, `avaliador: ''`)
+- **Depois:** Validação impede envio com campos obrigatórios vazios
+- **Resultado:** Avaliações são criadas com sucesso quando todos os campos são preenchidos
 
 ---
 

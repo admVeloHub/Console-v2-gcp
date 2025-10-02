@@ -1,4 +1,4 @@
-// VERSION: v1.10.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.11.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 
@@ -358,14 +358,20 @@ const QualidadeModulePage = () => {
   // ===== FUNÇÕES DOS RELATÓRIOS =====
 
   const gerarRelatorioAgenteHandler = async () => {
+    console.log('🔍 DEBUG - gerarRelatorioAgenteHandler chamado');
+    console.log('🔍 DEBUG - selectedColaborador:', selectedColaborador);
+    
     if (!selectedColaborador) {
+      console.log('⚠️ DEBUG - Nenhum colaborador selecionado');
       mostrarSnackbar('Selecione um colaborador', 'warning');
       return;
     }
 
+    console.log('🚀 DEBUG - Iniciando geração de relatório para:', selectedColaborador);
     setLoading(true);
     try {
       const relatorio = await gerarRelatorioAgente(selectedColaborador);
+      console.log('📊 DEBUG - Relatório recebido:', relatorio);
       setRelatorioAgente(relatorio);
       
       if (relatorio) {
@@ -1267,7 +1273,7 @@ const QualidadeModulePage = () => {
                   }}
                 >
                   {funcionarios.map((funcionario) => (
-                    <MenuItem key={funcionario._id || funcionario.id} value={funcionario._id || funcionario.id} sx={{ fontFamily: 'Poppins' }}>
+                    <MenuItem key={funcionario._id || funcionario.id} value={funcionario.colaboradorNome || funcionario.nomeCompleto} sx={{ fontFamily: 'Poppins' }}>
                       {funcionario.colaboradorNome || funcionario.nomeCompleto}
                     </MenuItem>
                   ))}
