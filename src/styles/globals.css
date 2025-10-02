@@ -1,4 +1,4 @@
-/* VERSION: v3.0.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team */
+/* VERSION: v3.1.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team */
 
 /* Importar fontes VeloHub */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Anton&display=swap');
@@ -118,6 +118,44 @@ body {
   padding: 24px;
   margin: 16px;
   transition: all 0.3s ease;
+}
+
+/* Botão azul opaco específico */
+.velohub-btn-azul-opaco {
+  background-color: #006AB9 !important;
+  color: #F3F7FC !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.velohub-btn-azul-opaco:hover {
+  background-color: #005A9F !important;
+  color: #F3F7FC !important;
+}
+
+.velohub-btn-azul-opaco:disabled {
+  background-color: #B0BEC5 !important;
+  color: #F3F7FC !important;
+}
+
+/* Seletor alinhado específico */
+.velohub-select-alinhado .MuiSelect-select {
+  height: 40px !important;
+  padding: 8px 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  box-sizing: border-box !important;
+}
+
+.velohub-select-alinhado .MuiOutlinedInput-root {
+  height: 40px !important;
+}
+
+.velohub-select-alinhado .MuiInputBase-input {
+  padding: 8px 14px !important;
+  height: 24px !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 .velohub-card {

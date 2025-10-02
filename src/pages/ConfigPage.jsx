@@ -1,4 +1,4 @@
-// VERSION: v3.7.18 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.7.19 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -538,14 +538,16 @@ const ConfigPage = () => {
 
 
   const getFuncaoColor = (funcao) => {
-    switch (funcao) {
+    const funcaoLower = funcao?.toLowerCase();
+    switch (funcaoLower) {
       case 'administrador':
         return 'error'; // Vermelho para administrador
       case 'gestão':
+      case 'gestao':
         return 'primary'; // Azul para gestão
       case 'editor':
         return 'secondary'; // Cinza para editor
-      case 'Desenvolvedor':
+      case 'desenvolvedor':
         return 'warning'; // Amarelo para desenvolvedor
       default:
         return 'default'; // Cinza padrão
@@ -553,7 +555,8 @@ const ConfigPage = () => {
   };
 
   const getFuncaoStyle = (funcao) => {
-    switch (funcao) {
+    const funcaoLower = funcao?.toLowerCase();
+    switch (funcaoLower) {
       case 'administrador':
         // RECICLAGEM: Amarelo → Azul Médio
         return {
@@ -567,6 +570,7 @@ const ConfigPage = () => {
           borderRadius: '20px'
         };
       case 'gestão':
+      case 'gestao':
         // ATUALIZAÇÃO: Azul Escuro → Amarelo
         return {
           background: 'linear-gradient(135deg, #000058 0%, #000058 60%, #FCC200 100%)',
@@ -590,7 +594,7 @@ const ConfigPage = () => {
           padding: '6px 12px',
           borderRadius: '20px'
         };
-      case 'Desenvolvedor':
+      case 'desenvolvedor':
         // OPCIONAL: Azul Escuro → Azul Opaco
         return {
           background: 'linear-gradient(135deg, #000058 0%, #000058 60%, #006AB9 100%)',

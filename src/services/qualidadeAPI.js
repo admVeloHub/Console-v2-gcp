@@ -1,4 +1,4 @@
-// VERSION: v1.5.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.6.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 import { qualidadeFuncionariosAPI, qualidadeAvaliacoesAPI } from './api';
 import axios from 'axios';
@@ -24,8 +24,9 @@ import {
 export const getFuncionarios = async () => {
   try {
     const response = await qualidadeFuncionariosAPI.getAll();
-    console.log(`📊 Funcionários carregados da API: ${response.length}`);
-    return response;
+    console.log(`📊 Funcionários carregados da API: ${response?.length || 0}`);
+    // Garantir que sempre retorne um array
+    return Array.isArray(response) ? response : [];
   } catch (error) {
     console.error('❌ Erro ao carregar funcionários da API:', error);
     // Fallback para localStorage se API falhar
@@ -37,8 +38,9 @@ export const getFuncionarios = async () => {
 export const getFuncionariosAtivos = async () => {
   try {
     const response = await qualidadeFuncionariosAPI.getAtivos();
-    console.log(`📊 Funcionários ativos carregados da API: ${response.length}`);
-    return response;
+    console.log(`📊 Funcionários ativos carregados da API: ${response?.length || 0}`);
+    // Garantir que sempre retorne um array
+    return Array.isArray(response) ? response : [];
   } catch (error) {
     console.error('❌ Erro ao carregar funcionários ativos da API:', error);
     // Fallback para localStorage se API falhar
@@ -245,8 +247,9 @@ export const limparDadosLocais = () => {
 export const getAvaliacoes = async () => {
   try {
     const response = await qualidadeAvaliacoesAPI.getAll();
-    console.log(`📊 Avaliações carregadas da API: ${response.length}`);
-    return response;
+    console.log(`📊 Avaliações carregadas da API: ${response?.length || 0}`);
+    // Garantir que sempre retorne um array
+    return Array.isArray(response) ? response : [];
   } catch (error) {
     console.error('❌ Erro ao carregar avaliações da API:', error);
     // Fallback para localStorage se API falhar
@@ -310,10 +313,14 @@ export const gerarRelatorioAgente = async (colaboradorId) => {
   try {
     // Buscar todas as avaliações da API e filtrar no frontend
     const todasAvaliacoes = await qualidadeAvaliacoesAPI.getAll();
-    const avaliacoes = todasAvaliacoes.filter(a => a.colaboradorId === colaboradorId);
+    const avaliacoes = Array.isArray(todasAvaliacoes) 
+      ? todasAvaliacoes.filter(a => a.colaboradorId === colaboradorId)
+      : [];
     
     const funcionarios = await getFuncionarios();
-    const funcionario = funcionarios.find(f => f.id === colaboradorId);
+    const funcionario = Array.isArray(funcionarios) 
+      ? funcionarios.find(f => f.id === colaboradorId)
+      : null;
     
     if (!funcionario || avaliacoes.length === 0) {
       return null;
@@ -345,7 +352,9 @@ export const gerarRelatorioGestao = async (mes, ano) => {
   try {
     // Buscar todas as avaliações da API e filtrar no frontend
     const todasAvaliacoes = await qualidadeAvaliacoesAPI.getAll();
-    const avaliacoes = todasAvaliacoes.filter(a => a.mes === mes && a.ano === ano);
+    const avaliacoes = Array.isArray(todasAvaliacoes) 
+      ? todasAvaliacoes.filter(a => a.mes === mes && a.ano === ano)
+      : [];
     
     if (avaliacoes.length === 0) {
       return null;
@@ -366,7 +375,9 @@ export const getAvaliacoesPorColaborador = async (colaboradorId) => {
   try {
     // Buscar todas as avaliações da API e filtrar no frontend
     const todasAvaliacoes = await qualidadeAvaliacoesAPI.getAll();
-    const avaliacoes = todasAvaliacoes.filter(a => a.colaboradorId === colaboradorId);
+    const avaliacoes = Array.isArray(todasAvaliacoes) 
+      ? todasAvaliacoes.filter(a => a.colaboradorId === colaboradorId)
+      : [];
     console.log(`📊 Avaliações do colaborador carregadas da API: ${avaliacoes.length}`);
     return avaliacoes;
   } catch (error) {

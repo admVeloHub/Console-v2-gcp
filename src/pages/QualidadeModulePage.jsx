@@ -1,4 +1,4 @@
-// VERSION: v1.2.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.6.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 
@@ -174,7 +174,9 @@ const QualidadeModulePage = () => {
   };
 
   const aplicarFiltros = () => {
-    let filtrados = [...avaliacoes];
+    // Garantir que avaliacoes seja sempre um array
+    const avaliacoesArray = Array.isArray(avaliacoes) ? avaliacoes : [];
+    let filtrados = [...avaliacoesArray];
 
     if (filtros.colaborador) {
       filtrados = filtrados.filter(a => 
@@ -814,6 +816,7 @@ const QualidadeModulePage = () => {
                     variant="contained"
                     onClick={gerarRelatorioAgenteHandler}
                     disabled={!selectedColaborador || loading}
+                    className="velohub-btn-azul-opaco"
                     sx={{
                       fontFamily: 'Poppins',
                       fontWeight: 600,
@@ -821,9 +824,14 @@ const QualidadeModulePage = () => {
                       px: 3,
                       py: 0.5,
                       height: '40px',
-                      background: 'linear-gradient(135deg, #1634FF 0%, #0B24CC 100%)',
+                      backgroundColor: '#006AB9 !important', // Azul Opaco oficial do LAYOUT_GUIDELINES.md
+                      color: '#F3F7FC !important', // Tom de branco oficial do LAYOUT_GUIDELINES.md
                       '&:hover': {
-                        background: 'linear-gradient(135deg, #0B24CC 0%, #1634FF 100%)',
+                        backgroundColor: '#005A9F !important', // Tom mais escuro do azul opaco
+                      },
+                      '&:disabled': {
+                        backgroundColor: '#B0BEC5 !important',
+                        color: '#F3F7FC !important'
                       }
                     }}
                   >
@@ -831,8 +839,16 @@ const QualidadeModulePage = () => {
                   </Button>
                   
                   {/* Seleção de Colaborador */}
-                  <FormControl sx={{ minWidth: 250, height: '40px' }}>
-                  <InputLabel sx={{ fontFamily: 'Poppins', color: '#000058' }}>
+                  <FormControl sx={{ minWidth: 250 }} className="velohub-select-alinhado">
+                  <InputLabel 
+                    sx={{ 
+                      fontFamily: 'Poppins', 
+                      color: '#000058',
+                      '&.Mui-focused': {
+                        color: '#006AB9'
+                      }
+                    }}
+                  >
                     Selecione o Colaborador
                   </InputLabel>
                   <Select
@@ -841,8 +857,33 @@ const QualidadeModulePage = () => {
                     label="Selecione o Colaborador"
                     sx={{ 
                       fontFamily: 'Poppins',
+                      height: '40px',
                       '& .MuiOutlinedInput-root': {
-                        borderRadius: '8px'
+                        borderRadius: '8px',
+                        height: '40px',
+                        '& fieldset': {
+                          borderColor: '#000058'
+                        },
+                        '&:hover fieldset': {
+                          borderColor: '#006AB9'
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#006AB9'
+                        }
+                      },
+                      '& .MuiSelect-select': {
+                        height: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        paddingTop: '8px !important',
+                        paddingBottom: '8px !important',
+                        boxSizing: 'border-box'
+                      },
+                      '& .MuiInputBase-input': {
+                        padding: '8px 14px !important',
+                        height: '24px !important',
+                        display: 'flex',
+                        alignItems: 'center'
                       }
                     }}
                   >

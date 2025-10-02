@@ -1,4 +1,4 @@
-// VERSION: v1.2.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.3.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 
@@ -151,7 +151,9 @@ const FuncionariosPage = () => {
   };
 
   const aplicarFiltros = () => {
-    let filtrados = [...funcionarios];
+    // Garantir que funcionarios seja sempre um array
+    const funcionariosArray = Array.isArray(funcionarios) ? funcionarios : [];
+    let filtrados = [...funcionariosArray];
 
     if (filtros.nome) {
       filtrados = filtrados.filter(f => 

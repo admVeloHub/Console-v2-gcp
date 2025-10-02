@@ -1,4 +1,4 @@
-// VERSION: v3.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.1.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import { createTheme } from '@mui/material/styles';
 
 export const velohubTheme = createTheme({
@@ -52,6 +52,38 @@ export const velohubTheme = createTheme({
             transform: 'translateY(-4px)',
             boxShadow: '0 8px 30px rgba(0, 0, 0, 0.15)',
           },
+        },
+      },
+    },
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          fontFamily: '"Poppins", "Roboto", "Helvetica", "Arial", sans-serif',
+          fontWeight: 600,
+          borderRadius: '8px',
+          textTransform: 'none',
+        },
+        contained: {
+          '&.MuiButton-contained': {
+            backgroundColor: '#1634FF', // blue-medium padrão
+            color: '#F3F7FC',
+            '&:hover': {
+              backgroundColor: '#000058', // blue-dark
+            },
+          },
+        },
+      },
+    },
+    MuiSelect: {
+      styleOverrides: {
+        root: {
+          fontFamily: '"Poppins", "Roboto", "Helvetica", "Arial", sans-serif',
+        },
+        select: {
+          padding: '8px 14px',
+          height: 'auto',
+          display: 'flex',
+          alignItems: 'center',
         },
       },
     },
