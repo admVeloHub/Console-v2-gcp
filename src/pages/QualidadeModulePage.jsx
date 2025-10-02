@@ -1,4 +1,4 @@
-// VERSION: v1.13.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.14.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 
@@ -132,6 +132,14 @@ const QualidadeModulePage = () => {
   useEffect(() => {
     carregarDados();
   }, []);
+
+  // Limpar selectedColaborador quando funcionários carregam (para evitar cache de IDs)
+  useEffect(() => {
+    if (funcionarios.length > 0) {
+      console.log('🔍 DEBUG - Limpando selectedColaborador para evitar cache de IDs');
+      setSelectedColaborador('');
+    }
+  }, [funcionarios]);
 
   const carregarDados = async () => {
     try {
