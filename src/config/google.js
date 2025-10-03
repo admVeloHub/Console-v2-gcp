@@ -1,4 +1,4 @@
-// VERSION: v3.3.3 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.5.4 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 // Configuração do Google OAuth
 // Para obter o Client ID:

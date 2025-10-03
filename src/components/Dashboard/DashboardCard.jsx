@@ -1,4 +1,4 @@
-// VERSION: v3.3.4 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.5.4 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React from 'react';
 import { Card, CardContent, Typography, Box, IconButton } from '@mui/material';
 import { ArrowForward } from '@mui/icons-material';

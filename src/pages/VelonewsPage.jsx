@@ -1,4 +1,4 @@
-// VERSION: v3.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.1.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState } from 'react';
 import { 
   Container, 
@@ -45,8 +45,17 @@ const VelonewsPage = () => {
     setLoading(true);
 
     try {
-      // Enviar dados para API
-      const response = await velonewsAPI.create(formData);
+      // Mapear dados para o schema MongoDB conforme diretrizes
+      const mappedData = {
+        titulo: formData.title,        // title → titulo (português)
+        conteudo: formData.content,    // content → conteudo (português)
+        isCritical: formData.isCritical // Campo já correto
+      };
+
+      console.log('🔍 DEBUG - Dados mapeados para envio:', mappedData);
+
+      // Enviar dados mapeados para API
+      const response = await velonewsAPI.create(mappedData);
       
       // Reset form
       setFormData({

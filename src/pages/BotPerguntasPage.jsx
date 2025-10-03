@@ -1,4 +1,4 @@
-// VERSION: v3.7.5 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.7.6 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState } from 'react';
 import { 
   Container, 
@@ -57,11 +57,11 @@ const BotPerguntasPage = () => {
 
       // Mapear dados para o schema do MongoDB conforme diretrizes
       const mappedData = {
-        Pergunta: formData.question,
-        Resposta: formData.context,
-        "Palavras-chave": formData.keywords,
-        Sinonimos: formData.sinonimos,
-        Tabulação: formData.tabulacao
+        pergunta: formData.question,        // Pergunta → pergunta (minúscula)
+        resposta: formData.context,         // Resposta → resposta (minúscula)
+        palavrasChave: formData.keywords,   // "Palavras-chave" → palavrasChave (camelCase)
+        sinonimos: formData.sinonimos,      // Sinonimos → sinonimos (minúscula)
+        tabulacao: formData.tabulacao       // Tabulação → tabulacao (minúscula)
       };
 
       console.log('🔍 Debug - Dados mapeados para envio:', mappedData);

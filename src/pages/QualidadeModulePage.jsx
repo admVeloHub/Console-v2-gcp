@@ -1,4 +1,4 @@
-// VERSION: v1.15.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.16.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 

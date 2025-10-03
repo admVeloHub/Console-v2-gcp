@@ -1,4 +1,4 @@
-// VERSION: v3.3.7 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.5.4 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { AppBar, Toolbar, Typography, IconButton, Box, Menu, MenuItem, Avatar, Chip } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
