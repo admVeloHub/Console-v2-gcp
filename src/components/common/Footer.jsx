@@ -1,4 +1,4 @@
-// VERSION: v3.5.4 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v4.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Chip } from '@mui/material';
 import { healthAPI } from '../../services/api';
@@ -6,7 +6,7 @@ import { healthAPI } from '../../services/api';
 const Footer = () => {
   const [apiStatus, setApiStatus] = useState({
     isOnline: false,
-    version: '3.5.4',
+    version: '4.0.0',
     loading: true
   });
 
@@ -18,14 +18,14 @@ const Footer = () => {
         
         setApiStatus({
           isOnline: response.status === 'OK',
-          version: response.version || '3.5.4',
+          version: response.version || '4.0.0',
           loading: false
         });
       } catch (error) {
         // Silenciar erro de conexão - API pode não estar rodando em desenvolvimento
         setApiStatus({
           isOnline: false,
-          version: '3.5.4',
+          version: '4.0.0',
           loading: false
         });
       }

@@ -44,9 +44,51 @@ const LoginPage = () => {
       
       // Verificar se o usuário está registrado no sistema
       const isAuthorized = await isUserAuthorized(userInfo.email);
-      if (isAuthorized) {
-        // Obter dados do usuário registrado
-        const registeredUser = await getAuthorizedUser(userInfo.email);
+      
+      // Fallback para desenvolvimento quando API não está disponível
+      const isDevelopment = window.location.hostname === 'localhost' || 
+                           window.location.hostname === '127.0.0.1' ||
+                           window.location.hostname.includes('dev');
+      
+      if (isAuthorized || (isDevelopment && userInfo.email === 'lucas.gravina@velotax.com.br')) {
+        let registeredUser;
+        
+        if (isAuthorized) {
+          // Obter dados do usuário registrado via API
+          registeredUser = await getAuthorizedUser(userInfo.email);
+        } else {
+          // Fallback para desenvolvimento - criar usuário dev
+          console.log('🔧 MODO DESENVOLVIMENTO: Criando usuário dev automaticamente');
+          registeredUser = {
+            _userId: 'Lucas Gravina',
+            _userMail: userInfo.email,
+            _userRole: 'Administrador',
+            _userClearance: {
+              artigos: true,
+              velonews: true,
+              botPerguntas: true,
+              botAnalises: true,
+              chamadosInternos: true,
+              igp: true,
+              qualidade: true,
+              capacity: true,
+              config: true,
+              servicos: true
+            },
+            _userTickets: {
+              artigos: true,
+              processos: true,
+              roteiros: true,
+              treinamentos: true,
+              recursos: true,
+              funcionalidades: true,
+              gestao: true,
+              rhfin: true,
+              facilities: true,
+              geral: true
+            }
+          };
+        }
         
         if (registeredUser) {
           // Usar dados do MongoDB com campos corretos

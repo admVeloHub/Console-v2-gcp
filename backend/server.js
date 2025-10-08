@@ -22,6 +22,7 @@ require('dotenv').config();
 const artigosRoutes = require('./routes/artigos');
 const velonewsRoutes = require('./routes/velonews');
 const botPerguntasRoutes = require('./routes/botPerguntas');
+const botAnalisesRoutes = require('./routes/botAnalises');
 const igpRoutes = require('./routes/igp');
 
 <<<<<<< HEAD
@@ -87,6 +88,7 @@ app.use(checkMonitoringFunctions);
 app.use('/api/artigos', artigosRoutes);
 app.use('/api/velonews', velonewsRoutes);
 app.use('/api/bot-perguntas', botPerguntasRoutes);
+app.use('/api/bot-analises', botAnalisesRoutes);
 app.use('/api/igp', igpRoutes);
 
 // Rota de health check

@@ -12,7 +12,13 @@ const BackButton = ({ to = '/', label = 'Voltar' }) => {
   };
 
   return (
-    <Box sx={{ mb: 2 }}>
+    <Box sx={{ 
+      mb: 2, 
+      mt: 2,
+      ml: 2,
+      display: 'flex',
+      justifyContent: 'flex-start'
+    }}>
       <Button
         variant="outlined"
         startIcon={<ArrowBack />}

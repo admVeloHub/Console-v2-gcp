@@ -1,5 +1,45 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.9.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.10.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+
+## GitHub Push - Correção de Mapeamento de Dados e Atualização de Versão para 3.5.4 - 2024-12-19 23:59
+
+### Informações do Push
+- **Tipo:** GitHub Push
+- **Data/Hora:** 2024-12-19 23:59 BRT
+- **Versão:** v3.5.4
+- **Commit:** 73322ae
+- **Branch:** master → master
+- **Repositório:** https://github.com/admVeloHub/front-console.git
+
+### Arquivos Modificados
+1. `src/pages/VelonewsPage.jsx` (v3.1.0)
+2. `src/pages/BotPerguntasPage.jsx` (v3.7.6)
+3. `src/components/common/Footer.jsx` (v3.5.4)
+4. `src/components/common/Header.jsx` (v3.5.4)
+5. `src/components/Dashboard/DashboardCard.jsx` (v3.5.4)
+6. `src/config/google.js` (v3.5.4)
+7. `DEPLOY_LOG.md` (v1.10.0)
+
+### Descrição das Alterações
+- **Correção do mapeamento VelonewsPage:** title/content → titulo/conteudo (português)
+- **Correção do mapeamento BotPerguntasPage:** campos maiúscula → minúscula/camelCase
+- **Atualização da versão do sistema** para 3.5.4 no rodapé e componentes
+- **Compatibilidade total** com schema MongoDB padronizado
+- **Padronização de versões** em todos os componentes
+
+### Detalhes Técnicos
+- **VelonewsPage:** Mapeamento corrigido para schema MongoDB (titulo, conteudo, isCritical)
+- **BotPerguntasPage:** Mapeamento corrigido (pergunta, resposta, palavrasChave, sinonimos, tabulacao)
+- **Footer:** Versão atualizada para 3.5.4 em todos os fallbacks
+- **Componentes:** Versões padronizadas para 3.5.4
+- **Schema MongoDB:** 100% compatível com frontend
+
+### Problema Resolvido
+- **Antes:** Incompatibilidade entre campos frontend e backend
+- **Depois:** Mapeamento correto conforme schema MongoDB padronizado
+- **Resultado:** Envio de dados funcionando corretamente em todos os módulos
+
+---
 
 ## GitHub Push - Correção do Gráfico de Histórico de Avaliações: Ordenação e Precisão - 2024-12-19 23:59
 

@@ -1,5 +1,5 @@
 listagem de schema de coleções do mongoDB
-<!-- VERSION: v1.1.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.2.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
   🗄️ Database Principal: console_conteudo
 //schema console_conteudo.Artigos
 {
@@ -31,6 +31,38 @@ _id: ObjectId,
 titulo: String,                 // Título da notícia
 conteudo: String,               // Conteúdo da notícia
 isCritical: Boolean,            // Se é notícia crítica
+createdAt: Date,                // Data de criação
+updatedAt: Date                 // Data de atualização
+}
+
+//schema console_conteudo.user_activity
+{
+_id: ObjectId,
+userId: String,                 // Email do usuário
+action: String,                 // Tipo de ação (question_asked, etc.)
+details: Object,                // Detalhes da ação
+timestamp: Date,                // Data e hora da ação
+sessionId: String,              // ID da sessão (pode ser null)
+source: String,                 // Fonte da ação (chatbot, etc.)
+metadata: Object                // Metadados adicionais
+}
+
+//schema console_conteudo.bot_feedback
+{
+_id: ObjectId,
+colaboradorNome: String,        // Email do colaborador
+action: String,                 // Tipo de ação (feedback_given, etc.)
+messageId: Number,              // ID da mensagem
+sessionId: String,              // ID da sessão
+source: String,                 // Fonte (chatbot, etc.)
+details: {                      // Detalhes do feedback
+  feedbackType: String,         // Tipo do feedback (negative, positive, etc.)
+  comment: String,              // Comentário do usuário
+  question: String,             // Pergunta original
+  answer: String,               // Resposta do bot
+  aiProvider: String,           // Provedor de IA (pode ser null)
+  responseSource: String        // Fonte da resposta (bot_perguntas, etc.)
+},
 createdAt: Date,                // Data de criação
 updatedAt: Date                 // Data de atualização
 }
@@ -72,6 +104,7 @@ _userClearance: {               // Permissões do usuário
   artigos: Boolean,
   velonews: Boolean,
   botPerguntas: Boolean,
+  botAnalises: Boolean,
   chamadosInternos: Boolean,
   igp: Boolean,
   qualidade: Boolean,

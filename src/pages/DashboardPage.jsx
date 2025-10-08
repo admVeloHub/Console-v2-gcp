@@ -1,4 +1,4 @@
-// VERSION: v3.7.4 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.8.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React from 'react';
 import { Container, Grid, Typography, Box, Card, CardContent } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
@@ -11,7 +11,8 @@ import {
   CheckCircleOutlined, 
   BoltOutlined,
   SettingsOutlined,
-  EngineeringOutlined
+  EngineeringOutlined,
+  AnalyticsOutlined
 } from '@mui/icons-material';
 import DashboardCard from '../components/Dashboard/DashboardCard';
 import { useAuth } from '../contexts/AuthContext';
@@ -62,8 +63,16 @@ const DashboardPage = () => {
     }
   ];
 
-  // Segunda fileira: IGP, Qualidade, Capacity, Chamados Internos
+  // Segunda fileira: Bot Análises, IGP, Capacity, Qualidade
   const secondRowCards = [
+    {
+      title: 'Bot Análises',
+      description: 'Análises e relatórios do bot',
+      icon: <AnalyticsOutlined sx={{ fontSize: '3.5rem' }} />,
+      path: '/bot-analises',
+      color: 'primary',
+      permission: 'botAnalises'
+    },
     {
       title: 'IGP',
       description: 'Dashboard de métricas e relatórios',
@@ -73,14 +82,6 @@ const DashboardPage = () => {
       permission: 'igp'
     },
     {
-      title: 'Qualidade',
-      description: 'Controle de qualidade e auditoria',
-      icon: <CheckCircleOutlined sx={{ fontSize: '3.5rem' }} />,
-      path: '/qualidade',
-      color: 'success',
-      permission: 'qualidade'
-    },
-    {
       title: 'Capacity',
       description: 'Monitoramento de capacidade e recursos',
       icon: <BoltOutlined sx={{ fontSize: '3.5rem' }} />,
@@ -88,6 +89,18 @@ const DashboardPage = () => {
       color: 'info',
       permission: 'capacity'
     },
+    {
+      title: 'Qualidade',
+      description: 'Controle de qualidade e auditoria',
+      icon: <CheckCircleOutlined sx={{ fontSize: '3.5rem' }} />,
+      path: '/qualidade',
+      color: 'success',
+      permission: 'qualidade'
+    }
+  ];
+
+  // Terceira fileira: Chamados Internos (centralizado)
+  const thirdRowCards = [
     {
       title: 'Chamados Internos',
       description: 'Sistema de tickets e suporte interno',
@@ -111,12 +124,14 @@ const DashboardPage = () => {
   // Filtrar cards baseado nas permissões do usuário
   const filteredFirstRowCards = firstRowCards.filter(card => hasPermission(card.permission));
   const filteredSecondRowCards = secondRowCards.filter(card => hasPermission(card.permission));
+  const filteredThirdRowCards = thirdRowCards.filter(card => hasPermission(card.permission));
   const hasConfigPermission = hasPermission(configCard.permission);
 
   // Debug: mostrar quais cards estão sendo renderizados
   console.log('🎯 CARDS FILTRADOS:');
   console.log('📋 Primeira fileira:', filteredFirstRowCards.map(c => c.title));
   console.log('📋 Segunda fileira:', filteredSecondRowCards.map(c => c.title));
+  console.log('📋 Terceira fileira:', filteredThirdRowCards.map(c => c.title));
   console.log('⚙️ Config visível:', hasConfigPermission);
 
   const handleCardClick = (path) => {
@@ -139,7 +154,7 @@ const DashboardPage = () => {
         </Grid>
       )}
 
-      {/* Segunda fileira: IGP, Qualidade, Capacity, Chamados Internos */}
+      {/* Segunda fileira: Bot Análises, IGP, Capacity, Qualidade */}
       {filteredSecondRowCards.length > 0 && (
         <Grid container spacing={4} sx={{ mb: 4 }}>
           {filteredSecondRowCards.map((card) => (
@@ -153,94 +168,41 @@ const DashboardPage = () => {
         </Grid>
       )}
 
-
-      {/* Card Config - Posicionado no canto inferior direito */}
-      {hasConfigPermission && (
-        <Box sx={{
-          position: 'fixed',
-          bottom: '100px', // Acima do footer
-          right: '20px',
-          zIndex: 1000,
-          width: '180px'
-        }}>
-          <Card
-            className="velohub-card"
-            sx={{
-              height: '120px',
-              display: 'flex',
-              flexDirection: 'column',
-              cursor: 'pointer',
-              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-              border: '1px solid rgba(22, 52, 255, 0.1)',
-              borderRadius: '12px',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-              position: 'relative',
-              overflow: 'hidden',
-              '&::before': {
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                height: '3px',
-                background: 'linear-gradient(135deg, var(--blue-dark) 0%, var(--blue-dark) 60%, var(--blue-opaque) 100%)',
-                transform: 'scaleX(0)',
-                transition: 'transform 0.3s ease',
-              },
-              '&:hover': {
-                transform: 'translateY(-8px) scale(1.02)',
-                boxShadow: '0 15px 30px rgba(0, 0, 0, 0.15)',
-                borderColor: 'var(--blue-medium)',
-                '&::before': {
-                  transform: 'scaleX(1)',
-                },
-              },
-            }}
-            onClick={() => handleCardClick(configCard.path)}
-          >
-            <CardContent sx={{ 
-              flexGrow: 1, 
-              textAlign: 'center', 
-              p: 2,
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              height: '100%'
-            }}>
-              <Box
-                sx={{
-                  mb: 1,
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  height: '40px',
-                  color: 'var(--blue-opaque)',
-                }}
-              >
-                {configCard.icon}
-              </Box>
-              
-              <Typography
-                variant="h6"
-                component="h3"
-                sx={{
-                  fontFamily: 'Poppins',
-                  fontWeight: 600,
-                  color: 'var(--blue-dark)',
-                  fontSize: '1rem',
-                  mb: 1,
-                }}
-              >
-                {configCard.title}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Box>
-      )}
+      {/* Terceira fileira: Chamados Internos (centralizado) + Config (alinhado à direita) */}
+      <Grid container spacing={4} sx={{ mb: 4 }}>
+        {/* Chamados Internos - Centralizado */}
+        {filteredThirdRowCards.length > 0 && (
+          <Grid item xs={12} sm={6} md={3} sx={{ display: 'flex', justifyContent: 'center' }}>
+            <Box sx={{ width: '100%', maxWidth: '300px' }}>
+              {filteredThirdRowCards.map((card) => (
+                <DashboardCard 
+                  key={card.title}
+                  {...card} 
+                  onClick={() => handleCardClick(card.path)}
+                />
+              ))}
+            </Box>
+          </Grid>
+        )}
+        
+        {/* Espaço vazio para centralizar Chamados */}
+        {filteredThirdRowCards.length > 0 && (
+          <Grid item xs={12} sm={6} md={6} />
+        )}
+        
+        {/* Config - Alinhado à direita */}
+        {hasConfigPermission && (
+          <Grid item xs={12} sm={6} md={3}>
+            <DashboardCard 
+              {...configCard} 
+              onClick={() => handleCardClick(configCard.path)}
+            />
+          </Grid>
+        )}
+      </Grid>
 
       {/* Mensagem quando usuário não tem permissões */}
-      {filteredFirstRowCards.length === 0 && filteredSecondRowCards.length === 0 && (
+      {filteredFirstRowCards.length === 0 && filteredSecondRowCards.length === 0 && filteredThirdRowCards.length === 0 && (
         <Box sx={{ 
           textAlign: 'center', 
           mt: 8, 
