@@ -1,4 +1,4 @@
-// VERSION: v3.8.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.9.0 | DATE: 2025-01-10 | AUTHOR: VeloHub Development Team
 import axios from 'axios';
 
 // Configuração base da API
@@ -186,7 +186,7 @@ export const servicesAPI = {
   // Buscar status atual dos módulos
   getModuleStatus: async () => {
     const response = await api.get('/module-status');
-    return response.data;
+    return response.data.data; // Extrair o data interno da resposta
   },
 
   // Atualizar status de um módulo específico
