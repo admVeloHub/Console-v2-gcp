@@ -1,8 +1,11 @@
-// VERSION: v2.1.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v2.2.3 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useCallback, useEffect } from 'react';
-import { Typography, Box, Tabs, Tab, Container, Grid, Card, CardContent, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-import { QuestionAnswer, People, Schedule, TrendingUp, TrendingDown, DateRange, BarChart, Timeline, PieChart as PieChartIcon, ShowChart, Person } from '@mui/icons-material';
+import { Typography, Box, Tabs, Tab, Container, Grid, Card, CardContent, FormControl, InputLabel, Select, MenuItem, Button } from '@mui/material';
+import { QuestionAnswer, People, Schedule, TrendingUp, TrendingDown, DateRange, BarChart, Timeline, PieChart as PieChartIcon, ShowChart, Person, FileDownload, PictureAsPdf } from '@mui/icons-material';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import BackButton from '../components/common/BackButton';
 import botAnalisesService from '../services/botAnalisesService';
 
@@ -54,6 +57,466 @@ const BotAnalisesPage = () => {
   const handleFiltroUsuarioChange = useCallback((event) => {
     setFiltroUsuario(event.target.value);
   }, []);
+
+  // Funções de exportação
+  const handleExportarXLS = useCallback(() => {
+    console.log('🔄 Exportando dados para XLS...');
+    
+    try {
+      // Criar workbook
+      const workbook = XLSX.utils.book_new();
+      
+      // === ABA 1: MÉTRICAS GERAIS ===
+      const metricasData = [
+        ['Métrica', 'Valor'],
+        ['Total de Perguntas', metricas.totalPerguntas],
+        ['Usuários Ativos', metricas.usuariosAtivos],
+        ['Horário Pico', metricas.horarioPico],
+        ['Crescimento', typeof metricas.crescimento === 'object' ? `${metricas.crescimento.percentual}%` : metricas.crescimento],
+        ['Média Diária', metricas.mediaDiaria]
+      ];
+      
+      const metricasSheet = XLSX.utils.aoa_to_sheet(metricasData);
+      XLSX.utils.book_append_sheet(workbook, metricasSheet, 'Métricas Gerais');
+      
+      // === ABA 2: DADOS DO GRÁFICO ===
+      const graficoData = [['Período', 'Total Uso', 'Feedbacks Positivos', 'Feedbacks Negativos']];
+      const periodos = Object.keys(dadosGrafico.totalUso);
+      
+      periodos.forEach(periodo => {
+        graficoData.push([
+          periodo,
+          dadosGrafico.totalUso[periodo] || 0,
+          dadosGrafico.feedbacksPositivos[periodo] || 0,
+          dadosGrafico.feedbacksNegativos[periodo] || 0
+        ]);
+      });
+      
+      const graficoSheet = XLSX.utils.aoa_to_sheet(graficoData);
+      XLSX.utils.book_append_sheet(workbook, graficoSheet, 'Dados do Gráfico');
+      
+      // === ABA 3: PERGUNTAS FREQUENTES ===
+      const perguntasData = [['Pergunta', 'Frequência']];
+      dadosPerguntasFrequentes.forEach(item => {
+        perguntasData.push([item.name, item.value]);
+      });
+      
+      const perguntasSheet = XLSX.utils.aoa_to_sheet(perguntasData);
+      XLSX.utils.book_append_sheet(workbook, perguntasSheet, 'Perguntas Frequentes');
+      
+      // === ABA 4: RANKING AGENTES ===
+      const rankingData = [['Agente', 'Perguntas', 'Sessões', 'Score']];
+      dadosRankingAgentes.forEach(agente => {
+        rankingData.push([agente.name, agente.perguntas, agente.sessoes, agente.score]);
+      });
+      
+      const rankingSheet = XLSX.utils.aoa_to_sheet(rankingData);
+      XLSX.utils.book_append_sheet(workbook, rankingSheet, 'Ranking Agentes');
+      
+      // === ABA 5: LISTA ATIVIDADES ===
+      const atividadesData = [['Usuário', 'Pergunta', 'Data', 'Horário', 'Ação']];
+      listaAtividades.forEach(atividade => {
+        atividadesData.push([
+          atividade.usuario,
+          atividade.pergunta,
+          atividade.data,
+          atividade.horario,
+          atividade.acao
+        ]);
+      });
+      
+      const atividadesSheet = XLSX.utils.aoa_to_sheet(atividadesData);
+      XLSX.utils.book_append_sheet(workbook, atividadesSheet, 'Lista Atividades');
+      
+      // === ABA 6: INFORMAÇÕES DO PERÍODO ===
+      const periodoTexto = periodoFiltro === '1dia' ? '1 dia' : 
+                          periodoFiltro === '7dias' ? '7 dias' : 
+                          periodoFiltro === '30dias' ? '30 dias' : 
+                          periodoFiltro === '90dias' ? '90 dias' : 
+                          periodoFiltro === '1ano' ? '1 ano' : periodoFiltro;
+      
+      const periodoData = [
+        ['Informação', 'Valor'],
+        ['Período Analisado', periodoTexto],
+        ['Data de Exportação', new Date().toLocaleDateString('pt-BR')],
+        ['Hora de Exportação', new Date().toLocaleTimeString('pt-BR')],
+        ['Filtro de Exibição', exibicaoFiltro],
+        ['Total de Registros', Object.keys(dadosGrafico.totalUso).length]
+      ];
+      
+      const periodoSheet = XLSX.utils.aoa_to_sheet(periodoData);
+      XLSX.utils.book_append_sheet(workbook, periodoSheet, 'Informações do Período');
+      
+      // Gerar nome do arquivo com data e período
+      const dataAtual = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+      const periodoArquivo = periodoFiltro === '1dia' ? '1_dia' : 
+                            periodoFiltro === '7dias' ? '7_dias' : 
+                            periodoFiltro === '30dias' ? '30_dias' : 
+                            periodoFiltro === '90dias' ? '90_dias' : 
+                            periodoFiltro === '1ano' ? '1_ano' : periodoFiltro;
+      const nomeArquivo = `Bot_Analises_${periodoArquivo}_${dataAtual}.xlsx`;
+      
+      // Download
+      XLSX.writeFile(workbook, nomeArquivo);
+      
+      console.log('✅ Exportação XLS concluída com sucesso!');
+    } catch (error) {
+      console.error('❌ Erro ao exportar XLS:', error);
+      alert('Erro ao exportar arquivo XLS. Tente novamente.');
+    }
+  }, [metricas, dadosGrafico, dadosPerguntasFrequentes, dadosRankingAgentes, listaAtividades]);
+
+  const handleExportarPDF = useCallback(() => {
+    console.log('🔄 Exportando consolidação da tela Atividade para PDF...');
+    
+    try {
+      // Criar documento PDF
+      const doc = new jsPDF();
+      
+      // === CABEÇALHO ===
+      doc.setFontSize(20);
+      doc.setTextColor(0, 102, 204); // Azul VeloHub
+      doc.text('Consolidação Bot Análises - Tela Atividade', 20, 20);
+      
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      const dataRelatorio = new Date().toLocaleDateString('pt-BR');
+      const horaRelatorio = new Date().toLocaleTimeString('pt-BR');
+      doc.text(`Data: ${dataRelatorio} às ${horaRelatorio}`, 20, 30);
+      doc.text(`Período: ${periodoFiltro} | Exibição: ${exibicaoFiltro}`, 20, 35);
+      
+      // === MÉTRICAS GERAIS - CARDS ===
+      doc.setFontSize(16);
+      doc.setTextColor(0, 102, 204);
+      const tituloWidth = doc.getTextWidth('Métricas Gerais da Operação');
+      doc.text('Métricas Gerais da Operação', (210 - tituloWidth) / 2, 50);
+      
+      // Layout de cards centralizados na página (corrigido)
+      const cardWidth = 30;
+      const cardHeight = 25;
+      const cardSpacing = 32;
+      const totalCardsWidth = (cardWidth * 5) + (cardSpacing * 4);
+      const startX = Math.max(15, (210 - totalCardsWidth) / 2); // Garantir que não saia da página
+      const startY = 55;
+      
+      // Card 1: Total Perguntas
+      doc.setFillColor(240, 248, 255);
+      doc.rect(startX, startY, cardWidth, cardHeight, 'F');
+      doc.setDrawColor(0, 102, 204);
+      doc.setLineWidth(0.5);
+      doc.rect(startX, startY, cardWidth, cardHeight, 'S');
+      doc.setFontSize(9);
+      doc.setTextColor(0, 102, 204);
+      const text1 = 'Total de Perguntas';
+      const text1Width = doc.getTextWidth(text1);
+      doc.text(text1, startX + (cardWidth - text1Width) / 2, startY + 8);
+      doc.setFontSize(16);
+      doc.setTextColor(0, 0, 0);
+      const value1 = metricas.totalPerguntas.toString();
+      const value1Width = doc.getTextWidth(value1);
+      doc.text(value1, startX + (cardWidth - value1Width) / 2, startY + 18);
+      
+      // Card 2: Usuários Ativos
+      doc.setFillColor(240, 248, 255);
+      doc.rect(startX + cardSpacing, startY, cardWidth, cardHeight, 'F');
+      doc.setDrawColor(0, 102, 204);
+      doc.rect(startX + cardSpacing, startY, cardWidth, cardHeight, 'S');
+      doc.setFontSize(9);
+      doc.setTextColor(0, 102, 204);
+      const text2 = 'Usuários Ativos';
+      const text2Width = doc.getTextWidth(text2);
+      doc.text(text2, startX + cardSpacing + (cardWidth - text2Width) / 2, startY + 8);
+      doc.setFontSize(16);
+      doc.setTextColor(0, 0, 0);
+      const value2 = metricas.usuariosAtivos.toString();
+      const value2Width = doc.getTextWidth(value2);
+      doc.text(value2, startX + cardSpacing + (cardWidth - value2Width) / 2, startY + 18);
+      
+      // Card 3: Horário Pico
+      doc.setFillColor(240, 248, 255);
+      doc.rect(startX + (cardSpacing * 2), startY, cardWidth, cardHeight, 'F');
+      doc.setDrawColor(0, 102, 204);
+      doc.rect(startX + (cardSpacing * 2), startY, cardWidth, cardHeight, 'S');
+      doc.setFontSize(9);
+      doc.setTextColor(0, 102, 204);
+      const text3 = 'Horário Pico';
+      const text3Width = doc.getTextWidth(text3);
+      doc.text(text3, startX + (cardSpacing * 2) + (cardWidth - text3Width) / 2, startY + 8);
+      doc.setFontSize(10);
+      doc.setTextColor(0, 0, 0);
+      const value3 = metricas.horarioPico;
+      const value3Width = doc.getTextWidth(value3);
+      doc.text(value3, startX + (cardSpacing * 2) + (cardWidth - value3Width) / 2, startY + 18);
+      
+      // Card 4: Crescimento
+      doc.setFillColor(240, 248, 255);
+      doc.rect(startX + (cardSpacing * 3), startY, cardWidth, cardHeight, 'F');
+      doc.setDrawColor(0, 102, 204);
+      doc.rect(startX + (cardSpacing * 3), startY, cardWidth, cardHeight, 'S');
+      doc.setFontSize(9);
+      doc.setTextColor(0, 102, 204);
+      const text4 = 'Crescimento';
+      const text4Width = doc.getTextWidth(text4);
+      doc.text(text4, startX + (cardSpacing * 3) + (cardWidth - text4Width) / 2, startY + 8);
+      doc.setFontSize(10);
+      doc.setTextColor(0, 0, 0);
+      const crescimentoTexto = typeof metricas.crescimento === 'object' ? 
+        `${metricas.crescimento.percentual}%` : metricas.crescimento;
+      const value4Width = doc.getTextWidth(crescimentoTexto);
+      doc.text(crescimentoTexto, startX + (cardSpacing * 3) + (cardWidth - value4Width) / 2, startY + 18);
+      
+      // Card 5: Média Diária
+      doc.setFillColor(240, 248, 255);
+      doc.rect(startX + (cardSpacing * 4), startY, cardWidth, cardHeight, 'F');
+      doc.setDrawColor(0, 102, 204);
+      doc.rect(startX + (cardSpacing * 4), startY, cardWidth, cardHeight, 'S');
+      doc.setFontSize(9);
+      doc.setTextColor(0, 102, 204);
+      const text5 = 'Média Diária';
+      const text5Width = doc.getTextWidth(text5);
+      doc.text(text5, startX + (cardSpacing * 4) + (cardWidth - text5Width) / 2, startY + 8);
+      doc.setFontSize(16);
+      doc.setTextColor(0, 0, 0);
+      const value5 = metricas.mediaDiaria.toString();
+      const value5Width = doc.getTextWidth(value5);
+      doc.text(value5, startX + (cardSpacing * 4) + (cardWidth - value5Width) / 2, startY + 18);
+      
+      // === GRÁFICO DE USO DA OPERAÇÃO ===
+      doc.setFontSize(16);
+      doc.setTextColor(0, 102, 204);
+      const graficoTituloWidth = doc.getTextWidth('Gráfico de Uso da Operação');
+      doc.text('Gráfico de Uso da Operação', (210 - graficoTituloWidth) / 2, startY + 35);
+      
+      // Usar dados reais do gráfico (30 dias por dia) - não das métricas gerais
+      const periodos = Object.keys(dadosGrafico.totalUso);
+      if (periodos.length > 0) {
+        // Usar todos os dados disponíveis, não apenas 7
+        const graficoData = periodos.map(periodo => ({
+          periodo: periodo,
+          totalUso: dadosGrafico.totalUso[periodo] || 0,
+          feedbacksPositivos: dadosGrafico.feedbacksPositivos[periodo] || 0,
+          feedbacksNegativos: dadosGrafico.feedbacksNegativos[periodo] || 0
+        }));
+        
+        // Encontrar valor máximo para escala
+        const maxValue = Math.max(...graficoData.map(item => Math.max(item.totalUso, item.feedbacksPositivos, item.feedbacksNegativos)));
+        const pointSpacing = Math.min(25, 150 / graficoData.length); // Ajustar espaçamento baseado no número de pontos
+        const chartStartX = 20;
+        const chartStartY = startY + 45;
+        const chartHeight = 50;
+        const chartWidth = Math.min(160, pointSpacing * graficoData.length); // Ajustar largura
+        
+        // Desenhar eixo Y
+        doc.setDrawColor(0, 0, 0);
+        doc.setLineWidth(0.3);
+        doc.line(chartStartX, chartStartY, chartStartX, chartStartY + chartHeight);
+        
+        // Desenhar eixo X
+        doc.line(chartStartX, chartStartY + chartHeight, chartStartX + chartWidth, chartStartY + chartHeight);
+        
+        // Valores no eixo Y (pelo menos nos vértices)
+        const yValues = [0, Math.round(maxValue * 0.25), Math.round(maxValue * 0.5), Math.round(maxValue * 0.75), maxValue];
+        yValues.forEach((value, index) => {
+          const y = chartStartY + chartHeight - (index * chartHeight / 4);
+          doc.setFontSize(7);
+          doc.setTextColor(0, 0, 0);
+          doc.text(value.toString(), chartStartX - 8, y + 2);
+          // Linha de grade horizontal
+          doc.setDrawColor(200, 200, 200);
+          doc.setLineWidth(0.1);
+          doc.line(chartStartX, y, chartStartX + chartWidth, y);
+        });
+        
+        // Calcular pontos para as linhas
+        const totalUsoPoints = [];
+        const feedbacksPositivosPoints = [];
+        const feedbacksNegativosPoints = [];
+        
+        graficoData.forEach((item, index) => {
+          const x = chartStartX + (index * pointSpacing);
+          const totalUsoY = chartStartY + chartHeight - ((item.totalUso / maxValue) * chartHeight);
+          const posY = chartStartY + chartHeight - ((item.feedbacksPositivos / maxValue) * chartHeight);
+          const negY = chartStartY + chartHeight - ((item.feedbacksNegativos / maxValue) * chartHeight);
+          
+          totalUsoPoints.push({ x, y: totalUsoY });
+          feedbacksPositivosPoints.push({ x, y: posY });
+          feedbacksNegativosPoints.push({ x, y: negY });
+          
+          // Labels dos períodos (apenas alguns para não sobrecarregar)
+          if (index % Math.ceil(graficoData.length / 7) === 0) {
+            doc.setFontSize(8);
+            doc.setTextColor(0, 0, 0);
+            const labelText = item.periodo.split('-')[2]; // Apenas o dia
+            doc.text(labelText, x - 2, chartStartY + chartHeight + 5);
+          }
+        });
+        
+        // Desenhar linha Total Uso (azul) - mais fina
+        doc.setDrawColor(0, 102, 204);
+        doc.setLineWidth(0.8);
+        for (let i = 0; i < totalUsoPoints.length - 1; i++) {
+          doc.line(totalUsoPoints[i].x, totalUsoPoints[i].y, totalUsoPoints[i + 1].x, totalUsoPoints[i + 1].y);
+        }
+        
+        // Desenhar linha Feedbacks Positivos (verde) - mais fina
+        doc.setDrawColor(0, 150, 0);
+        doc.setLineWidth(0.6);
+        for (let i = 0; i < feedbacksPositivosPoints.length - 1; i++) {
+          doc.line(feedbacksPositivosPoints[i].x, feedbacksPositivosPoints[i].y, feedbacksPositivosPoints[i + 1].x, feedbacksPositivosPoints[i + 1].y);
+        }
+        
+        // Desenhar linha Feedbacks Negativos (vermelho) - mais fina
+        doc.setDrawColor(200, 0, 0);
+        doc.setLineWidth(0.6);
+        for (let i = 0; i < feedbacksNegativosPoints.length - 1; i++) {
+          doc.line(feedbacksNegativosPoints[i].x, feedbacksNegativosPoints[i].y, feedbacksNegativosPoints[i + 1].x, feedbacksNegativosPoints[i + 1].y);
+        }
+        
+        // Desenhar pontos nas linhas
+        doc.setFillColor(0, 102, 204);
+        totalUsoPoints.forEach(point => {
+          doc.circle(point.x, point.y, 1, 'F');
+        });
+        
+        doc.setFillColor(0, 150, 0);
+        feedbacksPositivosPoints.forEach(point => {
+          doc.circle(point.x, point.y, 0.8, 'F');
+        });
+        
+        doc.setFillColor(200, 0, 0);
+        feedbacksNegativosPoints.forEach(point => {
+          doc.circle(point.x, point.y, 0.8, 'F');
+        });
+        
+        // Legenda embaixo do gráfico (horizontal) - CORRIGIDA
+        const legendStartY = chartStartY + chartHeight + 20; // Mais espaço
+        const legendStartX = chartStartX + 20;
+        
+        // Item da legenda - Total Uso
+        doc.setFillColor(0, 102, 204);
+        doc.circle(legendStartX, legendStartY, 1.5, 'F');
+        doc.setFontSize(8);
+        doc.setTextColor(0, 0, 0);
+        doc.text('Total Uso', legendStartX + 4, legendStartY + 1);
+        
+        // Item da legenda - Feedbacks Positivos
+        doc.setFillColor(0, 150, 0);
+        doc.circle(legendStartX + 35, legendStartY, 1.2, 'F');
+        doc.text('Feedbacks +', legendStartX + 39, legendStartY + 1);
+        
+        // Item da legenda - Feedbacks Negativos
+        doc.setFillColor(200, 0, 0);
+        doc.circle(legendStartX + 70, legendStartY, 1.2, 'F');
+        doc.text('Feedbacks -', legendStartX + 74, legendStartY + 1);
+      }
+      
+      // === PERGUNTAS FREQUENTES ===
+      doc.setFontSize(16);
+      doc.setTextColor(0, 102, 204);
+      const perguntasTituloWidth = doc.getTextWidth('Perguntas Frequentes');
+      doc.text('Perguntas Frequentes', (210 - perguntasTituloWidth) / 2, startY + 120); // Mais espaço do gráfico
+      
+      const perguntasTable = [
+        ['Pergunta', 'Frequência'],
+        ...dadosPerguntasFrequentes.slice(0, 8).map(item => [item.name, item.value.toString()])
+      ];
+      
+      doc.autoTable({
+        startY: startY + 125,
+        head: [perguntasTable[0]],
+        body: perguntasTable.slice(1),
+        theme: 'grid',
+        headStyles: { fillColor: [0, 102, 204] },
+        columnStyles: {
+          0: { cellWidth: 120, fontSize: 8 }, // Aumentado para evitar quebra
+          1: { cellWidth: 30, halign: 'center' }
+        },
+        margin: { left: 15 },
+        styles: { fontSize: 8 }
+      });
+      
+      // === RANKING DE AGENTES ===
+      doc.setFontSize(16);
+      doc.setTextColor(0, 102, 204);
+      const rankingTituloWidth = doc.getTextWidth('Ranking de Agentes');
+      doc.text('Ranking de Agentes', (210 - rankingTituloWidth) / 2, doc.lastAutoTable.finalY + 20);
+      
+      const rankingTable = [
+        ['Agente', 'Perguntas', 'Sessões', 'Score'],
+        ...dadosRankingAgentes.slice(0, 8).map(agente => [
+          agente.name,
+          agente.perguntas.toString(),
+          agente.sessoes.toString(),
+          agente.score.toString()
+        ])
+      ];
+      
+      doc.autoTable({
+        startY: doc.lastAutoTable.finalY + 25,
+        head: [rankingTable[0]],
+        body: rankingTable.slice(1),
+        theme: 'grid',
+        headStyles: { fillColor: [0, 102, 204] },
+        columnStyles: {
+          0: { cellWidth: 90, fontSize: 8 }, // Aumentado para mesma largura total
+          1: { cellWidth: 20, halign: 'center' },
+          2: { cellWidth: 20, halign: 'center' },
+          3: { cellWidth: 20, halign: 'center' }
+        },
+        margin: { left: 15 },
+        styles: { fontSize: 8 }
+      });
+      
+      // === LISTA DE ATIVIDADES ===
+      doc.setFontSize(16);
+      doc.setTextColor(0, 102, 204);
+      const atividadesTituloWidth = doc.getTextWidth('Lista de Atividades');
+      doc.text('Lista de Atividades', (210 - atividadesTituloWidth) / 2, doc.lastAutoTable.finalY + 20);
+      
+      const atividadesTable = [
+        ['Usuário', 'Pergunta', 'Data', 'Horário'],
+        ...listaAtividades.slice(0, 10).map(atividade => [
+          atividade.usuario,
+          atividade.pergunta.length > 35 ? atividade.pergunta.substring(0, 35) + '...' : atividade.pergunta,
+          atividade.data,
+          atividade.horario
+        ])
+      ];
+      
+      doc.autoTable({
+        startY: doc.lastAutoTable.finalY + 25,
+        head: [atividadesTable[0]],
+        body: atividadesTable.slice(1),
+        theme: 'grid',
+        headStyles: { fillColor: [0, 102, 204] },
+        columnStyles: {
+          0: { cellWidth: 35, fontSize: 8 }, // Ajustado para mesma largura total (150mm)
+          1: { cellWidth: 80, fontSize: 8 }, // Aumentado para perguntas
+          2: { cellWidth: 20, halign: 'center', fontSize: 8 },
+          3: { cellWidth: 15, halign: 'center', fontSize: 8 }
+        },
+        margin: { left: 15 },
+        styles: { fontSize: 8 }
+      });
+      
+      // Gerar nome do arquivo com data e período
+      const dataArquivo = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+      const periodoArquivo = periodoFiltro === '1dia' ? '1_dia' : 
+                            periodoFiltro === '7dias' ? '7_dias' : 
+                            periodoFiltro === '30dias' ? '30_dias' : 
+                            periodoFiltro === '90dias' ? '90_dias' : 
+                            periodoFiltro === '1ano' ? '1_ano' : periodoFiltro;
+      const nomeArquivo = `Bot_Analises_Consolidacao_${periodoArquivo}_${dataArquivo}.pdf`;
+      
+      // Download
+      doc.save(nomeArquivo);
+      
+      console.log('✅ Exportação PDF consolidada concluída com sucesso!');
+    } catch (error) {
+      console.error('❌ Erro ao exportar PDF:', error);
+      alert('Erro ao exportar arquivo PDF. Tente novamente.');
+    }
+  }, [metricas, dadosGrafico, dadosPerguntasFrequentes, dadosRankingAgentes, listaAtividades, periodoFiltro, exibicaoFiltro]);
 
 
   // Carregar métricas quando o componente montar ou filtro mudar
@@ -166,12 +629,15 @@ const BotAnalisesPage = () => {
         Bot Análises
       </Typography>
 
-      {/* Tabs do Material-UI */}
+      {/* Tabs do Material-UI com Botões de Exportação */}
       <Box sx={{ 
         borderBottom: 1, 
         borderColor: 'divider',
         mb: 3,
-        mt: 1
+        mt: 1,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
       }}>
         <Tabs 
           value={activeTab} 
@@ -208,6 +674,40 @@ const BotAnalisesPage = () => {
             aria-controls="bot-analises-tabpanel-1"
           />
         </Tabs>
+        
+        {/* Botões de Exportação */}
+        <Box sx={{ display: 'flex', gap: 1, pr: 2 }}>
+          <Button
+            variant="outlined"
+            startIcon={<FileDownload />}
+            onClick={handleExportarXLS}
+            sx={{
+              borderColor: 'var(--blue-medium)',
+              color: 'var(--blue-medium)',
+              '&:hover': {
+                borderColor: 'var(--blue-dark)',
+                backgroundColor: 'var(--blue-light)',
+              }
+            }}
+          >
+            XLS
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<PictureAsPdf />}
+            onClick={handleExportarPDF}
+            sx={{
+              borderColor: 'var(--red-medium)',
+              color: 'var(--red-medium)',
+              '&:hover': {
+                borderColor: 'var(--red-dark)',
+                backgroundColor: 'var(--red-light)',
+              }
+            }}
+          >
+            PDF
+          </Button>
+        </Box>
       </Box>
 
       {/* Conteúdo das Abas - Renderização Condicional Direta */}
