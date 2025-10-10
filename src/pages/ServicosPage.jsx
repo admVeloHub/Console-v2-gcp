@@ -21,7 +21,7 @@ import { useAuth } from '../contexts/AuthContext';
 import BackButton from '../components/common/BackButton';
 import { servicesAPI } from '../services/api';
 
-// VERSION: v1.3.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.4.0 | DATE: 2025-01-10 | AUTHOR: VeloHub Development Team
 
 const ServicosPage = () => {
   const { user } = useAuth();
@@ -31,13 +31,14 @@ const ServicosPage = () => {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
 
-  // Configuração dos 5 serviços com mapeamento para o schema
+  // Configuração dos 6 serviços com mapeamento para o schema
   const services = [
     { key: 'credito-trabalhador', name: 'Crédito Trabalhador', description: 'Sistema de crédito para trabalhadores', schemaKey: '_trabalhador' },
     { key: 'credito-pessoal', name: 'Crédito Pessoal', description: 'Sistema de crédito pessoal', schemaKey: '_pessoal' },
     { key: 'antecipacao', name: 'Antecipação', description: 'Sistema de antecipação de valores', schemaKey: '_antecipacao' },
     { key: 'pagamento-antecipado', name: 'Pagamento Antecipado', description: 'Sistema de pagamentos antecipados', schemaKey: '_pgtoAntecip' },
-    { key: 'modulo-irpf', name: 'Módulo IRPF', description: 'Sistema de declaração IRPF', schemaKey: '_irpf' }
+    { key: 'modulo-irpf', name: 'Módulo IRPF', description: 'Sistema de declaração IRPF', schemaKey: '_irpf' },
+    { key: 'modulo-seguro', name: 'Módulo Seguro', description: 'Sistema de seguros', schemaKey: '_seguro' }
   ];
 
   // Buscar status atual dos módulos
@@ -74,7 +75,8 @@ const ServicosPage = () => {
         'credito-pessoal': localStatus['credito-pessoal'] || 'off',
         'antecipacao': localStatus['antecipacao'] || 'off',
         'pagamento-antecipado': localStatus['pagamento-antecipado'] || 'off',
-        'modulo-irpf': localStatus['modulo-irpf'] || 'off'
+        'modulo-irpf': localStatus['modulo-irpf'] || 'off',
+        'modulo-seguro': localStatus['modulo-seguro'] || 'off'
       };
 
       await servicesAPI.updateAllModuleStatus(schemaData);
