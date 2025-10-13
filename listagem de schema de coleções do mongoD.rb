@@ -127,10 +127,13 @@ _funcoesAdministrativas: {      // Funções administrativas
 }
 }
 
+Collection console_config.module_status com 2 documentos: status dos módulos e perguntas frequentes do bot
+   // Documento 1: _id: "status" - Status dos módulos (existente)
+   // Documento 2: _id: "faq" - Perguntas frequentes do bot (novo)
+
 //schema console_config.module_status
-// Schema MongoDB atualizado
 {
-_id: ObjectId,
+_id: "status",
 _trabalhador: String,    // Status do Crédito Trabalhador
 _pessoal: String,        // Status do Crédito Pessoal  
 _antecipacao: String,    // Status da Antecipação
@@ -142,9 +145,7 @@ updatedAt: Date          // Data de atualização
 }
 
 //schema console_config.module_status
-// Collection com 2 documentos: status dos módulos e perguntas frequentes do bot
-// Documento 1: _id: "status" - Status dos módulos (existente)
-// Documento 2: _id: "faq" - Perguntas frequentes do bot (novo)
+// 
 {
 _id: "faq",                      // ID fixo para identificação no backend
 dados: [String],                 // Array com as 10 perguntas mais feitas (apenas os textos)

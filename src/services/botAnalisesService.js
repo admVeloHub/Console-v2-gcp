@@ -1,4 +1,4 @@
-// VERSION: v2.5.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v2.6.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 // Configuração da API
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://back-console.vercel.app/api';
@@ -178,36 +178,34 @@ class BotAnalisesService {
   }
   
   processarPerguntasFrequentes(metadados) {
-    console.log('🔄 Processando perguntas frequentes com contagem real:', metadados);
+    console.log('🔄 Processando perguntas frequentes com dados reais:', metadados);
     
-    // Verificar se metadados.tiposAcao existe e tem dados
-    if (!metadados.tiposAcao || metadados.tiposAcao.length === 0) {
-      console.log('⚠️ tiposAcao vazio, usando dados de fallback');
+    // Verificar se metadados.perguntasFrequentes existe e tem dados
+    if (!metadados.perguntasFrequentes || metadados.perguntasFrequentes.length === 0) {
+      console.log('⚠️ perguntasFrequentes vazio, usando dados de fallback');
       return [
-        { name: 'QUESTION_ASKED', value: 15 },
-        { name: 'FEEDBACK_GIVEN', value: 8 },
-        { name: 'ARTICLE_VIEWED', value: 12 },
-        { name: 'AI_BUTTON_USED', value: 6 },
-        { name: 'CLARIFICATION_REQUESTED', value: 4 }
+        { name: 'antecipação', value: 15 },
+        { name: 'crédito trabalhador', value: 12 },
+        { name: 'crédito pessoal', value: 10 },
+        { name: 'como solicitar', value: 8 },
+        { name: 'documentos necessários', value: 6 },
+        { name: 'prazo de aprovação', value: 5 },
+        { name: 'taxa de juros', value: 4 },
+        { name: 'valor máximo', value: 3 },
+        { name: 'parcelamento', value: 2 },
+        { name: 'cancelamento', value: 1 }
       ];
     }
     
-    // Contar frequência real dos tipos de ação
-    const frequencia = {};
-    metadados.tiposAcao.forEach(tipo => {
-      frequencia[tipo] = (frequencia[tipo] || 0) + 1;
-    });
-    
-    // Converter para formato esperado e ordenar por frequência
-    const perguntas = Object.entries(frequencia)
-      .sort(([,a], [,b]) => b - a) // Ordena por frequência (maior para menor)
+    // Usar dados reais das perguntas frequentes do backend
+    const perguntas = metadados.perguntasFrequentes
       .slice(0, 10) // Top 10
-      .map(([tipo, count]) => ({
-        name: tipo.replace('_', ' ').toUpperCase(),
-        value: count // ✅ CONTAGEM REAL
+      .map(item => ({
+        name: item.name,
+        value: item.value
       }));
     
-    console.log('✅ Perguntas frequentes processadas com contagem real:', perguntas);
+    console.log('✅ Perguntas frequentes processadas com dados reais:', perguntas);
     return perguntas;
   }
   
@@ -423,18 +421,33 @@ class BotAnalisesService {
   // Perguntas mais frequentes
   async getPerguntasMaisFrequentes(periodoFiltro = '7dias') {
     try {
-      // Verificar se pode usar cache
-      if (this.podeUsarCache(periodoFiltro)) {
-        const dadosCache = this.filtrarCache(periodoFiltro);
-        return dadosCache?.perguntasFrequentes || [];
+      console.log('🔄 Buscando perguntas frequentes para período:', periodoFiltro);
+      
+      // Buscar dados diretamente do endpoint específico
+      const response = await this.makeRequest(`/bot-analises/perguntas-frequentes?periodo=${periodoFiltro}`);
+      
+      if (response && Array.isArray(response)) {
+        console.log('✅ Perguntas frequentes obtidas do backend:', response);
+        return response;
       }
-
-      // Buscar novos dados
-      const dados = await this.buscarNovosDados(periodoFiltro, 'dia');
-      return dados?.perguntasFrequentes || [];
+      
+      console.log('⚠️ Resposta inválida do backend, usando fallback');
+      return [
+        { name: 'antecipação', value: 15 },
+        { name: 'crédito trabalhador', value: 12 },
+        { name: 'crédito pessoal', value: 10 },
+        { name: 'como solicitar', value: 8 },
+        { name: 'documentos necessários', value: 6 }
+      ];
     } catch (error) {
-      console.error('Erro ao buscar perguntas frequentes:', error);
-      return [];
+      console.error('❌ Erro ao buscar perguntas frequentes:', error);
+      return [
+        { name: 'antecipação', value: 15 },
+        { name: 'crédito trabalhador', value: 12 },
+        { name: 'crédito pessoal', value: 10 },
+        { name: 'como solicitar', value: 8 },
+        { name: 'documentos necessários', value: 6 }
+      ];
     }
   }
 

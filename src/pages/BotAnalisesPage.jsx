@@ -1,4 +1,4 @@
-// VERSION: v2.3.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v2.4.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useCallback, useEffect } from 'react';
 import { Typography, Box, Tabs, Tab, Container, Grid, Card, CardContent, FormControl, InputLabel, Select, MenuItem, Button } from '@mui/material';
 import { QuestionAnswer, People, Schedule, TrendingUp, TrendingDown, DateRange, BarChart, Timeline, PieChart as PieChartIcon, ShowChart, Person, FileDownload, PictureAsPdf } from '@mui/icons-material';
@@ -1311,7 +1311,7 @@ const BotAnalisesPage = () => {
                              <ResponsiveContainer width="100%" height="100%">
                                <PieChart>
                                  <Pie
-                                   data={dadosPerguntasFrequentes}
+                                   data={dadosPerguntasFrequentes.slice(0, 5)}
                                    cx="50%"
                                    cy="50%"
                                    labelLine={false}
@@ -1320,7 +1320,7 @@ const BotAnalisesPage = () => {
                                    fill="#8884d8"
                                    dataKey="value"
                                  >
-                                   {dadosPerguntasFrequentes.map((entry, index) => (
+                                   {dadosPerguntasFrequentes.slice(0, 5).map((entry, index) => (
                                      <Cell key={`cell-${index}`} fill={coresPizza[index % coresPizza.length]} />
                                    ))}
                                  </Pie>
