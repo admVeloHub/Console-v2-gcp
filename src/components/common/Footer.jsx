@@ -18,14 +18,14 @@ const Footer = () => {
         
         setApiStatus({
           isOnline: response.status === 'OK',
-          version: response.version || '4.0.0',
+          version: response.version || '4.1.2',
           loading: false
         });
       } catch (error) {
         // Silenciar erro de conexão - API pode não estar rodando em desenvolvimento
         setApiStatus({
           isOnline: false,
-          version: '4.0.0',
+          version: '4.1.2',
           loading: false
         });
       }

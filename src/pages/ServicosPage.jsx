@@ -21,7 +21,7 @@ import { useAuth } from '../contexts/AuthContext';
 import BackButton from '../components/common/BackButton';
 import { servicesAPI } from '../services/api';
 
-// VERSION: v1.4.0 | DATE: 2025-01-10 | AUTHOR: VeloHub Development Team
+// VERSION: v1.5.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 const ServicosPage = () => {
   const { user } = useAuth();
@@ -69,14 +69,15 @@ const ServicosPage = () => {
     try {
       setSaving(true);
       
-      // Mapear dados para o formato esperado pelo backend
+      // Mapear dados para o formato esperado pelo backend (seguindo estratégia do backend)
       const schemaData = {
-        'credito-trabalhador': localStatus['credito-trabalhador'] || 'off',
-        'credito-pessoal': localStatus['credito-pessoal'] || 'off',
-        'antecipacao': localStatus['antecipacao'] || 'off',
-        'pagamento-antecipado': localStatus['pagamento-antecipado'] || 'off',
-        'modulo-irpf': localStatus['modulo-irpf'] || 'off',
-        'modulo-seguro': localStatus['modulo-seguro'] || 'off'
+        _id: "status",                    // ID fixo para identificação no backend
+        _trabalhador: localStatus['credito-trabalhador'] || 'off',
+        _pessoal: localStatus['credito-pessoal'] || 'off',
+        _antecipacao: localStatus['antecipacao'] || 'off',
+        _pgtoAntecip: localStatus['pagamento-antecipado'] || 'off',
+        _irpf: localStatus['modulo-irpf'] || 'off',
+        _seguro: localStatus['modulo-seguro'] || 'off'
       };
 
       await servicesAPI.updateAllModuleStatus(schemaData);

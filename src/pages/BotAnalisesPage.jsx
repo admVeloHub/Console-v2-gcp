@@ -1,4 +1,4 @@
-// VERSION: v2.2.3 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v2.3.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useCallback, useEffect } from 'react';
 import { Typography, Box, Tabs, Tab, Container, Grid, Card, CardContent, FormControl, InputLabel, Select, MenuItem, Button } from '@mui/material';
 import { QuestionAnswer, People, Schedule, TrendingUp, TrendingDown, DateRange, BarChart, Timeline, PieChart as PieChartIcon, ShowChart, Person, FileDownload, PictureAsPdf } from '@mui/icons-material';
@@ -1126,12 +1126,29 @@ const BotAnalisesPage = () => {
                               ...Object.keys(dadosGrafico.feedbacksNegativos)
                             ]);
                             
-                            return Array.from(todosPeriodos).sort().map(periodo => ({
-                              periodo: periodo,
-                              totalUso: dadosGrafico.totalUso[periodo] || 0,
-                              feedbacksPositivos: dadosGrafico.feedbacksPositivos[periodo] || 0,
-                              feedbacksNegativos: dadosGrafico.feedbacksNegativos[periodo] || 0
-                            }));
+                            return Array.from(todosPeriodos).sort().map(periodo => {
+                              // Formatar data para exibição mantendo identificação única
+                              let dataFormatada;
+                              if (periodo.includes('-')) {
+                                const data = new Date(periodo);
+                                // Formato: DD/MM/YY para economizar espaço mas manter identificação
+                                dataFormatada = data.toLocaleDateString('pt-BR', { 
+                                  day: '2-digit', 
+                                  month: '2-digit', 
+                                  year: '2-digit' 
+                                });
+                              } else {
+                                dataFormatada = periodo;
+                              }
+                              
+                              return {
+                                periodo: dataFormatada,
+                                periodoOriginal: periodo, // Manter referência original
+                                totalUso: dadosGrafico.totalUso[periodo] || 0,
+                                feedbacksPositivos: dadosGrafico.feedbacksPositivos[periodo] || 0,
+                                feedbacksNegativos: dadosGrafico.feedbacksNegativos[periodo] || 0
+                              };
+                            });
                           })()}
                           margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
                           syncId="grafico-uso"

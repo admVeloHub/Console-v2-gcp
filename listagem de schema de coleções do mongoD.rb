@@ -1,5 +1,5 @@
 listagem de schema de coleções do mongoDB
-<!-- VERSION: v1.6.0 | DATE: 2025-01-10 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.7.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
 
   🗄️ Database Principal: console_conteudo
 
@@ -139,6 +139,17 @@ _irpf: String,           // Status do Módulo IRPF
 _seguro: String,         // Status do Módulo Seguro
 createdAt: Date,         // Data de criação
 updatedAt: Date          // Data de atualização
+}
+
+//schema console_config.module_status
+// Collection com 2 documentos: status dos módulos e perguntas frequentes do bot
+// Documento 1: _id: "status" - Status dos módulos (existente)
+// Documento 2: _id: "faq" - Perguntas frequentes do bot (novo)
+{
+_id: "faq",                      // ID fixo para identificação no backend
+dados: [String],                 // Array com as 10 perguntas mais feitas (apenas os textos)
+totalPerguntas: Number,          // Total de perguntas no período
+updatedAt: Date                  // Data de atualização (controle de versionamento)
 }
 
 
