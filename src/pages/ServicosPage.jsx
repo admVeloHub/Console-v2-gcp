@@ -21,7 +21,7 @@ import { useAuth } from '../contexts/AuthContext';
 import BackButton from '../components/common/BackButton';
 import { servicesAPI } from '../services/api';
 
-// VERSION: v1.5.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.5.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 const ServicosPage = () => {
   const { user } = useAuth();
@@ -46,8 +46,13 @@ const ServicosPage = () => {
     try {
       setLoading(true);
       console.log('🔍 Fazendo requisição para /api/module-status');
-      const data = await servicesAPI.getModuleStatus();
-      console.log('✅ Dados recebidos:', data);
+      const response = await servicesAPI.getModuleStatus();
+      console.log('✅ Dados recebidos:', response);
+      
+      // Extrair dados do objeto de resposta
+      const data = response.data || response;
+      console.log('📊 Dados extraídos:', data);
+      
       setModuleStatus(data);
       setLocalStatus(data);
     } catch (error) {
