@@ -1,4 +1,4 @@
-// VERSION: v2.4.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v2.4.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useCallback, useEffect } from 'react';
 import { Typography, Box, Tabs, Tab, Container, Grid, Card, CardContent, FormControl, InputLabel, Select, MenuItem, Button } from '@mui/material';
 import { QuestionAnswer, People, Schedule, TrendingUp, TrendingDown, DateRange, BarChart, Timeline, PieChart as PieChartIcon, ShowChart, Person, FileDownload, PictureAsPdf } from '@mui/icons-material';
@@ -19,7 +19,7 @@ const BotAnalisesPage = () => {
     totalPerguntas: 0,
     usuariosAtivos: 0,
     horarioPico: '00:00',
-    crescimento: '+0%',
+    crescimento: { percentual: 0, positivo: true },
     mediaDiaria: 0
   });
   const [loading, setLoading] = useState(true);
@@ -1158,21 +1158,7 @@ const BotAnalisesPage = () => {
                             stroke="#e0e0e0" 
                             vertical={true}
                             horizontal={true}
-                            verticalPoints={(() => {
-                              // Política de vértices baseada no período
-                              if (periodoFiltroGrafico === '1dia' || periodoFiltroGrafico === '7dias' || periodoFiltroGrafico === '30dias') {
-                                // Para até 30 dias, mostra todos os pontos
-                                const todosPeriodos = new Set([
-                                  ...Object.keys(dadosGrafico.totalUso),
-                                  ...Object.keys(dadosGrafico.feedbacksPositivos),
-                                  ...Object.keys(dadosGrafico.feedbacksNegativos)
-                                ]);
-                                return Array.from(todosPeriodos).sort();
-                              } else {
-                                // Para períodos maiores, mostra apenas pontos semanais
-                                return undefined; // Deixa o Recharts decidir
-                              }
-                            })()}
+                            verticalPoints={undefined}
                             horizontalPoints={undefined}
                           />
                           <XAxis 

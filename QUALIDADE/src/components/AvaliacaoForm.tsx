@@ -17,7 +17,7 @@ const AvaliacaoForm: React.FC<AvaliacaoFormProps> = ({
   onCancel
 }) => {
   const [formData, setFormData] = useState<AvaliacaoFormData>({
-    colaboradorId: '',
+    colaboradorNome: '',
     avaliador: '',
     mes: new Date().toLocaleDateString('pt-BR', { month: 'long' }),
     ano: new Date().getFullYear(),
@@ -128,7 +128,7 @@ const AvaliacaoForm: React.FC<AvaliacaoFormProps> = ({
     console.log('🔍 É File no submit?', formData.arquivoLigacao instanceof File);
     
     // Validações
-    if (!formData.colaboradorId) {
+    if (!formData.colaboradorNome) {
       alert('Por favor, selecione um agente para avaliação');
       return;
     }
@@ -197,14 +197,14 @@ const AvaliacaoForm: React.FC<AvaliacaoFormProps> = ({
                 Nome do Agente *
               </label>
               <select
-                value={formData.colaboradorId}
-                onChange={(e) => handleInputChange('colaboradorId', e.target.value)}
+                value={formData.colaboradorNome}
+                onChange={(e) => handleInputChange('colaboradorNome', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-velotax-blue focus:border-transparent"
                 required
               >
                 <option value="">Selecione um agente</option>
                 {funcionarios.map((funcionario) => (
-                  <option key={funcionario.id} value={funcionario.id}>
+                  <option key={funcionario.id} value={funcionario.nomeCompleto}>
                     {funcionario.nomeCompleto} - {funcionario.empresa} {funcionario.atuacao ? `(${funcionario.atuacao})` : ''}
                   </option>
                 ))}

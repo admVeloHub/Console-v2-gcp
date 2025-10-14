@@ -186,7 +186,7 @@ export const servicesAPI = {
   // Buscar status atual dos módulos
   getModuleStatus: async () => {
     const response = await api.get('/module-status');
-    return response.data.data; // Extrair o data interno da resposta
+    return response.data;
   },
 
   // Atualizar status de um módulo específico
@@ -207,6 +207,15 @@ export const servicesAPI = {
   // Atualizar todos os status dos módulos (seguindo estratégia do backend)
   updateAllModuleStatus: async (schemaData) => {
     const response = await api.post('/module-status', schemaData);
+    return response.data;
+  }
+};
+
+// API para FAQ Bot
+export const faqBotAPI = {
+  // Atualizar perguntas frequentes do bot
+  updateFAQ: async (faqData) => {
+    const response = await api.post('/faq-bot', faqData);
     return response.data;
   }
 };

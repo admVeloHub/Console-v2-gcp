@@ -1,21 +1,13 @@
-<<<<<<< HEAD
-// VERSION: v3.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
-=======
-// VERSION: v3.1.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
->>>>>>> bdce0b48cb5cbb7b2cf78af9d0929933c5816780
+// VERSION: v3.1.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
-<<<<<<< HEAD
-const { connectToDatabase, checkDatabaseHealth } = require('./config/database');
-=======
 const http = require('http');
 const { Server } = require('socket.io');
 const { connectToDatabase, checkDatabaseHealth } = require('./config/database');
 const { initializeCollections, getCollectionsStats } = require('./config/collections');
->>>>>>> bdce0b48cb5cbb7b2cf78af9d0929933c5816780
 require('dotenv').config();
 
 // Importar rotas
@@ -25,9 +17,6 @@ const botPerguntasRoutes = require('./routes/botPerguntas');
 const botAnalisesRoutes = require('./routes/botAnalises');
 const igpRoutes = require('./routes/igp');
 
-<<<<<<< HEAD
-const app = express();
-=======
 // Importar middleware
 const { checkMonitoringFunctions } = require('./middleware/monitoring');
 
@@ -41,31 +30,21 @@ const io = new Server(server, {
     methods: ["GET", "POST"]
   }
 });
->>>>>>> bdce0b48cb5cbb7b2cf78af9d0929933c5816780
 const PORT = process.env.PORT || 3001;
 
 // Middleware de segurança
 app.use(helmet());
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-<<<<<<< HEAD
-    ? ['https://yourdomain.com'] 
-=======
     ? [process.env.CORS_ORIGIN || 'https://front-console.vercel.app'] 
->>>>>>> bdce0b48cb5cbb7b2cf78af9d0929933c5816780
     : ['http://localhost:3000'],
   credentials: true
 }));
 
 // Rate limiting
 const limiter = rateLimit({
-<<<<<<< HEAD
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100 // máximo 100 requests por IP
-=======
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutos
   max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100 // máximo 100 requests por IP
->>>>>>> bdce0b48cb5cbb7b2cf78af9d0929933c5816780
 });
 app.use('/api/', limiter);
 
@@ -73,16 +52,11 @@ app.use('/api/', limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-<<<<<<< HEAD
-// Servir arquivos estáticos do React
-app.use(express.static(path.join(__dirname, 'public/build')));
-=======
 // Servir arquivos estáticos (página de monitoramento)
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Middleware de monitoramento
 app.use(checkMonitoringFunctions);
->>>>>>> bdce0b48cb5cbb7b2cf78af9d0929933c5816780
 
 // Rotas da API
 app.use('/api/artigos', artigosRoutes);
@@ -94,14 +68,6 @@ app.use('/api/igp', igpRoutes);
 // Rota de health check
 app.get('/api/health', async (req, res) => {
   try {
-<<<<<<< HEAD
-    const dbHealth = await checkDatabaseHealth();
-    res.json({ 
-      status: 'OK', 
-      timestamp: new Date().toISOString(),
-      version: '3.0.0',
-      database: dbHealth
-=======
     let dbHealth = { status: 'disabled', message: 'MongoDB não configurado' };
     let collectionsStats = {};
     
@@ -114,35 +80,25 @@ app.get('/api/health', async (req, res) => {
     res.json({ 
       status: 'OK', 
       timestamp: new Date().toISOString(),
-      version: '3.1.1',
+      version: '3.1.2',
       environment: process.env.VERCEL === '1' ? 'vercel' : 'local',
       database: dbHealth,
       collections: collectionsStats
->>>>>>> bdce0b48cb5cbb7b2cf78af9d0929933c5816780
     });
   } catch (error) {
     res.status(500).json({ 
       status: 'ERROR', 
       timestamp: new Date().toISOString(),
-<<<<<<< HEAD
-      version: '3.0.0',
-=======
-      version: '3.1.1',
->>>>>>> bdce0b48cb5cbb7b2cf78af9d0929933c5816780
+      version: '3.1.2',
       error: error.message
     });
   }
 });
 
-<<<<<<< HEAD
-// Servir React app para todas as rotas não-API
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/build', 'index.html'));
-=======
 // Rota raiz para verificar se a API está funcionando
 app.get('/', (req, res) => {
   res.json({ 
-    message: 'Console de Conteúdo VeloHub API v3.1.1',
+    message: 'Console de Conteúdo VeloHub API v3.1.2',
     status: 'OK',
     timestamp: new Date().toISOString(),
     monitor: '/monitor.html'
@@ -152,7 +108,6 @@ app.get('/', (req, res) => {
 // Rota para a página de monitoramento
 app.get('/monitor', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'monitor.html'));
->>>>>>> bdce0b48cb5cbb7b2cf78af9d0929933c5816780
 });
 
 // Error handling
@@ -164,24 +119,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-<<<<<<< HEAD
-// Inicializar servidor
-const startServer = async () => {
-  try {
-    // Conectar ao MongoDB
-    await connectToDatabase();
-    
-    // Iniciar servidor
-    app.listen(PORT, () => {
-      console.log(`🚀 Servidor rodando na porta ${PORT}`);
-      console.log(`📊 Console de Conteúdo VeloHub v3.0.0`);
-      console.log(`🌐 Ambiente: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`🗄️ MongoDB: Conectado`);
-    });
-  } catch (error) {
-    console.error('❌ Erro ao iniciar servidor:', error);
-    process.exit(1);
-=======
 // WebSocket para monitoramento
 io.on('connection', (socket) => {
   console.log('🔌 Cliente conectado ao Monitor Skynet');
@@ -237,7 +174,7 @@ const startServer = async () => {
     // Iniciar servidor
     server.listen(PORT, () => {
       console.log(`🚀 Servidor rodando na porta ${PORT}`);
-      console.log(`📊 Console de Conteúdo VeloHub v3.1.1`);
+      console.log(`📊 Console de Conteúdo VeloHub v3.1.2`);
       console.log(`🌐 Ambiente: ${process.env.NODE_ENV || 'development'}`);
       console.log(`📡 Monitor Skynet: http://localhost:${PORT}/monitor`);
     });
@@ -247,7 +184,6 @@ const startServer = async () => {
     if (process.env.VERCEL !== '1') {
       process.exit(1);
     }
->>>>>>> bdce0b48cb5cbb7b2cf78af9d0929933c5816780
   }
 };
 

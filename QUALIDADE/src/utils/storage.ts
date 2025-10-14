@@ -1672,9 +1672,8 @@ export const addAvaliacao = async (data: AvaliacaoFormData): Promise<Avaliacao> 
       console.log('⚠️ Nenhum arquivo de ligação fornecido');
     }
 
-    // Obter nome do colaborador
-    const funcionario = getFuncionarioById(data.colaboradorId);
-    const colaboradorNome = funcionario?.nomeCompleto || 'N/A';
+    // Usar nome do colaborador diretamente
+    const colaboradorNome = data.colaboradorNome;
 
     // Calcular pontuação total
     const pontuacaoTotal = calcularPontuacao(data);
@@ -1682,7 +1681,6 @@ export const addAvaliacao = async (data: AvaliacaoFormData): Promise<Avaliacao> 
     // Criar nova avaliação
     const novaAvaliacao: Avaliacao = {
       id: generateId(),
-      colaboradorId: data.colaboradorId,
       colaboradorNome: colaboradorNome,
       avaliador: data.avaliador,
       mes: data.mes,
@@ -1830,10 +1828,10 @@ export const getAvaliacaoById = (id: string): Avaliacao | null => {
   }
 };
 
-export const getAvaliacoesPorColaborador = (colaboradorId: string): Avaliacao[] => {
+export const getAvaliacoesPorColaborador = (colaboradorNome: string): Avaliacao[] => {
   try {
     const avaliacoes = getAvaliacoes();
-    return avaliacoes.filter(a => a.colaboradorId === colaboradorId);
+    return avaliacoes.filter(a => a.colaboradorNome === colaboradorNome);
   } catch (error) {
     console.error('Erro ao buscar avaliações do colaborador:', error);
     return [];
@@ -1866,12 +1864,9 @@ export const calcularPontuacao = (data: AvaliacaoFormData): number => {
 };
 
 // Função para gerar relatório do agente
-export const gerarRelatorioAgente = (colaboradorId: string): RelatorioAgente | null => {
+export const gerarRelatorioAgente = (colaboradorNome: string): RelatorioAgente | null => {
   try {
-    const funcionario = getFuncionarioById(colaboradorId);
-    if (!funcionario) return null;
-
-    const avaliacoes = getAvaliacoesPorColaborador(colaboradorId);
+    const avaliacoes = getAvaliacoesPorColaborador(colaboradorNome);
     if (avaliacoes.length === 0) return null;
 
     const notasAvaliador = avaliacoes.map(a => a.pontuacaoTotal);
@@ -1896,8 +1891,7 @@ export const gerarRelatorioAgente = (colaboradorId: string): RelatorioAgente | n
     }
 
     return {
-      colaboradorId,
-      colaboradorNome: funcionario.nomeCompleto,
+      colaboradorNome,
       avaliacoes,
       mediaAvaliador: Math.round(mediaAvaliador * 100) / 100,
       mediaGPT: Math.round(mediaGPT * 100) / 100,
@@ -1922,15 +1916,14 @@ export const gerarRelatorioGestao = (mes: string, ano: number): RelatorioGestao 
     const colaboradoresMap = new Map<string, { notas: number[]; nome: string }>();
     
     avaliacoes.forEach(avaliacao => {
-      if (!colaboradoresMap.has(avaliacao.colaboradorId)) {
-        colaboradoresMap.set(avaliacao.colaboradorId, { notas: [], nome: avaliacao.colaboradorNome });
+      if (!colaboradoresMap.has(avaliacao.colaboradorNome)) {
+        colaboradoresMap.set(avaliacao.colaboradorNome, { notas: [], nome: avaliacao.colaboradorNome });
       }
-      colaboradoresMap.get(avaliacao.colaboradorId)!.notas.push(avaliacao.pontuacaoTotal);
+      colaboradoresMap.get(avaliacao.colaboradorNome)!.notas.push(avaliacao.pontuacaoTotal);
     });
 
     // Calcular médias por colaborador
-    const colaboradores = Array.from(colaboradoresMap.entries()).map(([id, data]) => ({
-      colaboradorId: id,
+    const colaboradores = Array.from(colaboradoresMap.entries()).map(([nome, data]) => ({
       colaboradorNome: data.nome,
       nota: Math.round((data.notas.reduce((a, b) => a + b, 0) / data.notas.length) * 100) / 100
     }));

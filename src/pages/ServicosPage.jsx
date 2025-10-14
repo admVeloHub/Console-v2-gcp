@@ -45,11 +45,13 @@ const ServicosPage = () => {
   const fetchModuleStatus = async () => {
     try {
       setLoading(true);
+      console.log('🔍 Fazendo requisição para /api/module-status');
       const data = await servicesAPI.getModuleStatus();
+      console.log('✅ Dados recebidos:', data);
       setModuleStatus(data);
       setLocalStatus(data);
     } catch (error) {
-      console.error('Erro ao buscar status dos módulos:', error);
+      console.error('❌ Erro ao buscar status dos módulos:', error);
       showToast('Erro ao carregar status dos módulos', 'error');
     } finally {
       setLoading(false);
@@ -69,25 +71,25 @@ const ServicosPage = () => {
     try {
       setSaving(true);
       
-      // Mapear dados para o formato esperado pelo backend (seguindo estratégia do backend)
-      const schemaData = {
-        _id: "status",                    // ID fixo para identificação no backend
-        _trabalhador: localStatus['credito-trabalhador'] || 'off',
-        _pessoal: localStatus['credito-pessoal'] || 'off',
-        _antecipacao: localStatus['antecipacao'] || 'off',
-        _pgtoAntecip: localStatus['pagamento-antecipado'] || 'off',
-        _irpf: localStatus['modulo-irpf'] || 'off',
-        _seguro: localStatus['modulo-seguro'] || 'off'
+      // Mapear dados para o formato esperado pelo backend
+      const modulesData = {
+        'credito-trabalhador': localStatus['credito-trabalhador'] || 'off',
+        'credito-pessoal': localStatus['credito-pessoal'] || 'off',
+        'antecipacao': localStatus['antecipacao'] || 'off',
+        'pagamento-antecipado': localStatus['pagamento-antecipado'] || 'off',
+        'modulo-irpf': localStatus['modulo-irpf'] || 'off',
+        'modulo-seguro': localStatus['modulo-seguro'] || 'off'
       };
 
-      await servicesAPI.updateAllModuleStatus(schemaData);
+      console.log('🔍 Enviando dados para o backend:', modulesData);
+      await servicesAPI.updateMultipleModules(modulesData);
       
       // Atualizar estado principal
       setModuleStatus(localStatus);
       
       showToast('Status de todos os serviços atualizados com sucesso!', 'success');
     } catch (error) {
-      console.error('Erro ao salvar status dos módulos:', error);
+      console.error('❌ Erro ao salvar status dos módulos:', error);
       showToast('Erro ao salvar status dos módulos', 'error');
     } finally {
       setSaving(false);

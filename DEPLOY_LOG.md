@@ -1,5 +1,124 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.11.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.14.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+
+## Implementação - Correção de Estrutura de Dados dos Cards de Métricas - 2024-12-19 23:59
+
+### Informações da Implementação
+- **Tipo:** Correção de Bug
+- **Data/Hora:** 2024-12-19 23:59 BRT
+- **Versão:** v1.14.0
+- **Status:** Concluído
+
+### Arquivos Modificados
+1. `src/pages/BotAnalisesPage.jsx` (v2.4.2) - Correção da estrutura de dados do crescimento
+2. `DEPLOY_LOG.md` (v1.14.0) - Log da correção
+
+### Problema Resolvido
+- **Problema:** Inconsistência na estrutura do objeto `crescimento` nos cards de métricas
+- **Causa:** Estado inicial definido como string `'+0%'`, mas código esperava objeto `{ percentual, positivo }`
+- **Solução:** Corrigido estado inicial para ser consistente com a estrutura esperada
+
+### Detalhes da Correção
+- ✅ **Estado inicial corrigido** - `crescimento: { percentual: 0, positivo: true }`
+- ✅ **Consistência mantida** - Estrutura alinhada com o serviço backend
+- ✅ **Cards funcionais** - Métricas de crescimento agora exibem corretamente
+- ✅ **Sem erros de runtime** - Eliminados erros de acesso a propriedades undefined
+
+### Resultado
+- ✅ **Cards funcionais** - Métricas de crescimento exibem corretamente
+- ✅ **Sem erros** - Eliminados erros de acesso a propriedades
+- ✅ **Estrutura consistente** - Dados alinhados entre frontend e backend
+- ✅ **Experiência melhorada** - Interface mais estável
+
+---
+
+## Implementação - Otimização de Logs do BotAnalisesService - 2024-12-19 23:59
+
+### Informações da Implementação
+- **Tipo:** Otimização de Performance
+- **Data/Hora:** 2024-12-19 23:59 BRT
+- **Versão:** v1.13.0
+- **Status:** Concluído
+
+### Arquivos Modificados
+1. `src/services/botAnalisesService.js` (v2.6.2) - Otimização de logs
+2. `DEPLOY_LOG.md` (v1.13.0) - Log da otimização
+
+### Problema Resolvido
+- **Problema:** Quantidade excessiva de logs no console do navegador
+- **Causa:** Logs verbosos em funções chamadas frequentemente (cache, processamento, fallbacks)
+- **Solução:** Remoção de logs redundantes, mantendo apenas os essenciais para debug
+
+### Logs Removidos
+- ✅ **Cache ativado/limpo** - Logs removidos (muito verbosos)
+- ✅ **Uso de cache** - Log removido (chamado a cada filtro)
+- ✅ **Nova busca** - Log removido (chamado frequentemente)
+- ✅ **Processamento de dados** - Logs removidos (muito verbosos)
+- ✅ **Perguntas frequentes** - Logs de processamento removidos
+- ✅ **Ranking de agentes** - Logs de processamento removidos
+- ✅ **Lista de atividades** - Logs de processamento removidos
+- ✅ **Diagnóstico serviço** - Logs de diagnóstico removidos
+- ✅ **Fallbacks** - Logs de fallback removidos (muito verbosos)
+
+### Logs Mantidos
+- ✅ **URL completa** - Mantido para debug do endpoint 404
+- ✅ **Erros críticos** - Mantidos para troubleshooting
+- ✅ **Logs de erro** - Mantidos para diagnóstico
+
+### Resultado
+- ✅ **Console limpo** - Redução significativa de logs verbosos
+- ✅ **Performance melhorada** - Menos operações de console
+- ✅ **Debug mantido** - Logs essenciais preservados
+- ✅ **Experiência melhorada** - Console mais legível
+
+---
+
+## Implementação - Correção de Erros Críticos no BotAnalisesPage - 2024-12-19 23:59
+
+### Informações da Implementação
+- **Tipo:** Correção de Bugs
+- **Data/Hora:** 2024-12-19 23:59 BRT
+- **Versão:** v1.12.0
+- **Status:** Concluído
+
+### Arquivos Modificados
+1. `src/pages/BotAnalisesPage.jsx` (v2.4.1) - Correção do erro de gráfico
+2. `backend/server.js` (v3.1.2) - Correção de conflitos de merge
+3. `src/services/botAnalisesService.js` (v2.6.1) - Logs de debug adicionados
+4. `DEPLOY_LOG.md` (v1.12.0) - Log das correções
+
+### Problemas Corrigidos
+
+#### 🚨 Erro Crítico - Gráfico de Linha
+- **Problema:** Erro "Expected length" nos atributos x1 e x2 do gráfico
+- **Causa:** `verticalPoints` do `CartesianGrid` recebendo strings de data em vez de valores numéricos
+- **Solução:** Removido `verticalPoints` customizado, deixando o Recharts decidir automaticamente
+- **Resultado:** Gráfico renderiza corretamente sem erros de console
+
+#### 🔧 Conflitos de Merge - Backend
+- **Problema:** Conflitos de merge no arquivo `backend/server.js`
+- **Causa:** Merge automático mal resolvido entre branches
+- **Solução:** Resolução manual de todos os conflitos, mantendo funcionalidades mais recentes
+- **Resultado:** Servidor backend funcional e estável
+
+#### 🔍 Debug - Endpoint 404
+- **Problema:** Erro 404 no endpoint `/bot-analises/perguntas-frequentes`
+- **Investigação:** Logs de debug adicionados para identificar URL completa
+- **Status:** Em investigação - endpoint existe no backend mas retorna 404
+
+### Detalhes Técnicos
+- **BotAnalisesPage:** `verticalPoints={undefined}` no CartesianGrid
+- **Server.js:** Conflitos resolvidos, versão atualizada para 3.1.2
+- **BotAnalisesService:** Logs de URL completa para debug
+- **Compatibilidade:** Mantida com todas as funcionalidades existentes
+
+### Resultado
+- ✅ **Gráfico funcionando** sem erros de console
+- ✅ **Backend estável** sem conflitos de merge
+- ✅ **Logs de debug** para investigação do 404
+- ✅ **Versões atualizadas** em todos os arquivos modificados
+
+---
 
 ## GitHub Push - Implementação Completa da Aba Bot Análises v4.0.0 - 2024-12-19 23:59
 

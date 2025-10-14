@@ -1,15 +1,17 @@
+// VERSION: v1.0.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// CORREÇÃO: Removida aba "Relatórios Gestão" do módulo de qualidade
+
 import React, { useState, useEffect } from 'react';
-import { Plus, BarChart3, Users, FileText, Bot } from 'lucide-react';
+import { Plus, Users, FileText, Bot } from 'lucide-react';
 import { Avaliacao, AvaliacaoFormData, Funcionario } from '../types';
 import { getAvaliacoes, addAvaliacao, updateAvaliacao, deleteAvaliacao, getFuncionariosAtivos, migrarArquivosAntigos } from '../utils/storage';
 import AvaliacaoForm from './AvaliacaoForm';
 import AvaliacaoList from './AvaliacaoList';
 import RelatorioAgenteComponent from './RelatorioAgente';
-import RelatorioGestaoComponent from './RelatorioGestao';
 import GPTIntegration from './GPTIntegration';
 import ConfirmationDialog from './ConfirmationDialog';
 
-type QualidadeView = 'avaliacoes' | 'relatorio-agente' | 'relatorio-gestao' | 'gpt';
+type QualidadeView = 'avaliacoes' | 'relatorio-agente' | 'gpt';
 
 const QualidadeModule: React.FC = () => {
   const [avaliacoes, setAvaliacoes] = useState<Avaliacao[]>([]);
@@ -19,7 +21,7 @@ const QualidadeModule: React.FC = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [editingAvaliacao, setEditingAvaliacao] = useState<Avaliacao | null>(null);
   const [deletingAvaliacaoId, setDeletingAvaliacaoId] = useState<string | null>(null);
-  const [selectedColaborador, setSelectedColaborador] = useState<Funcionario | null>(null);
+  const [selectedColaboradorNome, setSelectedColaboradorNome] = useState<string>('');
   const [selectedAvaliacao, setSelectedAvaliacao] = useState<Avaliacao | null>(null);
 
   useEffect(() => {
@@ -118,7 +120,7 @@ const QualidadeModule: React.FC = () => {
       if (editingAvaliacao) {
         console.log('🔍 Editando avaliação existente...');
         const updatedAvaliacao = await updateAvaliacao(editingAvaliacao.id, {
-          colaboradorId: data.colaboradorId,
+          colaboradorNome: data.colaboradorNome,
           avaliador: data.avaliador,
           mes: data.mes,
           ano: data.ano,
@@ -266,10 +268,9 @@ const QualidadeModule: React.FC = () => {
         );
       
       case 'relatorio-agente':
-        return selectedColaborador ? (
+        return selectedColaboradorNome ? (
           <RelatorioAgenteComponent
-            colaboradorId={selectedColaborador.id}
-            colaboradorNome={selectedColaborador.nomeCompleto}
+            colaboradorNome={selectedColaboradorNome}
           />
         ) : (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
@@ -278,8 +279,6 @@ const QualidadeModule: React.FC = () => {
           </div>
         );
       
-      case 'relatorio-gestao':
-        return <RelatorioGestaoComponent />;
       
       case 'gpt':
         return selectedAvaliacao ? (
@@ -330,10 +329,6 @@ const QualidadeModule: React.FC = () => {
               <button onClick={() => setCurrentView('relatorio-agente')} className={getNavigationClass('relatorio-agente')}>
                 <Users size={18} />
                 <span className="text-sm">Relatório do Agente</span>
-              </button>
-              <button onClick={() => setCurrentView('relatorio-gestao')} className={getNavigationClass('relatorio-gestao')}>
-                <BarChart3 size={18} />
-                <span className="text-sm">Relatório da Gestão</span>
               </button>
               <button onClick={() => setCurrentView('gpt')} className={getNavigationClass('gpt')}>
                 <Bot size={18} />
@@ -410,16 +405,15 @@ const QualidadeModule: React.FC = () => {
           <div className="mb-3 bg-white rounded-lg shadow-sm border border-gray-200 p-3">
             <label className="block text-sm font-medium text-gray-700 mb-2">Selecione um Colaborador</label>
             <select
-              value={selectedColaborador?.id || ''}
+              value={selectedColaboradorNome}
               onChange={(e) => {
-                const funcionario = funcionarios.find(f => f.id === e.target.value);
-                setSelectedColaborador(funcionario || null);
+                setSelectedColaboradorNome(e.target.value);
               }}
               className="w-full max-w-md px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#000058] focus:border-transparent"
             >
               <option value="">Selecione um colaborador</option>
               {funcionarios.map((funcionario) => (
-                <option key={funcionario.id} value={funcionario.id}>
+                <option key={funcionario.id} value={funcionario.nomeCompleto}>
                   {funcionario.nomeCompleto} - {funcionario.empresa}
                 </option>
               ))}
@@ -457,7 +451,7 @@ const QualidadeModule: React.FC = () => {
       {showAvaliacaoForm && (
         <AvaliacaoForm
           initialData={editingAvaliacao ? {
-            colaboradorId: editingAvaliacao.colaboradorId,
+            colaboradorNome: editingAvaliacao.colaboradorNome,
             avaliador: editingAvaliacao.avaliador,
             mes: editingAvaliacao.mes,
             ano: editingAvaliacao.ano,

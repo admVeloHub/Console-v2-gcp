@@ -1,3 +1,6 @@
+// VERSION: v1.0.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// CORREÇÃO: Removido colaboradorId, usando apenas colaboradorNome conforme schema MongoDB aprovado
+
 export interface Funcionario {
   id: string;
   nomeCompleto: string;
@@ -48,7 +51,6 @@ export interface AcessoFormData {
 // Módulo de Qualidade
 export interface Avaliacao {
   id: string;
-  colaboradorId: string;
   colaboradorNome: string;
   avaliador: string;
   mes: string;
@@ -93,7 +95,7 @@ export interface AvaliacaoGPT {
 }
 
 export interface AvaliacaoFormData {
-  colaboradorId: string;
+  colaboradorNome: string;
   avaliador: string;
   mes: string;
   ano: number;
@@ -109,7 +111,6 @@ export interface AvaliacaoFormData {
 }
 
 export interface RelatorioAgente {
-  colaboradorId: string;
   colaboradorNome: string;
   avaliacoes: Avaliacao[];
   mediaAvaliador: number;
@@ -126,19 +127,16 @@ export interface RelatorioGestao {
   totalAvaliacoes: number;
   mediaGeral: number;
   top3Melhores: Array<{
-    colaboradorId: string;
     colaboradorNome: string;
     nota: number;
     posicao: number;
   }>;
   top3Piores: Array<{
-    colaboradorId: string;
     colaboradorNome: string;
     nota: number;
     posicao: number;
   }>;
   colaboradores: Array<{
-    colaboradorId: string;
     colaboradorNome: string;
     nota: number;
     posicao: number;

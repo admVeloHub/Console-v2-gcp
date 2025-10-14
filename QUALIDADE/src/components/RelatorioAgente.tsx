@@ -4,12 +4,10 @@ import { RelatorioAgente, Avaliacao, MESES, ANOS } from '../types';
 import { getAvaliacoesPorColaborador } from '../utils/storage';
 
 interface RelatorioAgenteProps {
-  colaboradorId: string;
   colaboradorNome: string;
 }
 
 const RelatorioAgenteComponent: React.FC<RelatorioAgenteProps> = ({
-  colaboradorId,
   colaboradorNome
 }) => {
   const [relatorio, setRelatorio] = useState<RelatorioAgente | null>(null);
@@ -18,24 +16,24 @@ const RelatorioAgenteComponent: React.FC<RelatorioAgenteProps> = ({
   const [filterAno, setFilterAno] = useState<number>(0);
 
   useEffect(() => {
-    console.log('🔄 useEffect executado - colaboradorId:', colaboradorId, 'filterMes:', filterMes, 'filterAno:', filterAno);
-    if (colaboradorId) {
+    console.log('🔄 useEffect executado - colaboradorNome:', colaboradorNome, 'filterMes:', filterMes, 'filterAno:', filterAno);
+    if (colaboradorNome) {
       carregarDados();
     } else {
-      console.log('❌ ColaboradorId não definido, pulando carregamento');
+      console.log('❌ ColaboradorNome não definido, pulando carregamento');
       setRelatorio(null);
       setAvaliacoes([]);
     }
-  }, [colaboradorId, filterMes, filterAno]);
+  }, [colaboradorNome, filterMes, filterAno]);
 
   const carregarDados = () => {
-    if (!colaboradorId) {
-      console.log('❌ ColaboradorId não definido, pulando carregamento');
+    if (!colaboradorNome) {
+      console.log('❌ ColaboradorNome não definido, pulando carregamento');
       return;
     }
     
-    console.log('🔍 Carregando dados para colaborador:', colaboradorId);
-    const todasAvaliacoes = getAvaliacoesPorColaborador(colaboradorId);
+    console.log('🔍 Carregando dados para colaborador:', colaboradorNome);
+    const todasAvaliacoes = getAvaliacoesPorColaborador(colaboradorNome);
     console.log('📊 Total de avaliações encontradas:', todasAvaliacoes.length);
     
     let avaliacoesFiltradas = todasAvaliacoes;
@@ -87,7 +85,6 @@ const RelatorioAgenteComponent: React.FC<RelatorioAgenteProps> = ({
     }
 
     const novoRelatorio: RelatorioAgente = {
-      colaboradorId,
       colaboradorNome,
       avaliacoes: avaliacoesFiltradas,
       mediaAvaliador: Math.round(mediaAvaliador * 100) / 100,
