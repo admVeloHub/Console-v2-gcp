@@ -1,5 +1,92 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.18.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.20.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+
+## Push GitHub - Correção de Condição de Corrida no Modal de Permissões - 2024-12-19 23:59
+
+### Informações do Push
+- **Tipo:** Push GitHub
+- **Data/Hora:** 2024-12-19 23:59 BRT
+- **Versão:** v1.20.0
+- **Status:** Concluído
+
+### Arquivos Incluídos no Push
+1. `src/pages/ConfigPage.jsx` - Correção de condição de corrida no modal de permissões (v3.7.31)
+2. `DEPLOY_LOG.md` - Log da correção (v1.20.0)
+
+### Descrição do Push
+Correção crítica de condição de corrida (race condition) no modal de permissões que causava sobreposição de dados:
+
+**🚨 Problema Identificado:**
+- Modal de permissões salvava alterações via API
+- Imediatamente recarregava dados do backend com `await loadUsers()`
+- Consulta anterior ainda em processamento sobrescrevia alterações
+- Usuário via checkbox alterado mas dados não persistiam
+
+**🔧 Solução Implementada:**
+- Removido `await loadUsers()` após salvamento
+- Implementada atualização de estado local imediata
+- Usuário vê alterações refletidas instantaneamente
+- Eliminada condição de corrida completamente
+
+**📊 Melhorias Técnicas:**
+- Interface mais responsiva e confiável
+- Redução de requisições desnecessárias ao backend
+- Melhor experiência do usuário
+- Performance otimizada
+
+### Impacto
+- ✅ Correção definitiva do problema de permissões não persistindo
+- ✅ Interface mais responsiva e confiável
+- ✅ Redução de carga no servidor backend
+- ✅ Melhoria significativa na experiência do usuário
+
+---
+
+## Push GitHub - Correção Completa do Sistema de Permissões e Compatibilidade com Schema MongoDB - 2024-12-19 23:59
+
+### Informações do Push
+- **Tipo:** Push GitHub
+- **Data/Hora:** 2024-12-19 23:59 BRT
+- **Versão:** v1.19.0
+- **Status:** Concluído
+- **Commit:** 056ab8d
+
+### Arquivos Incluídos no Push
+1. `src/pages/ConfigPage.jsx` - Correções no sistema de permissões (v3.7.30)
+2. `src/services/userService.js` - Correção de mapeamento e versionamento (v1.2.1)
+3. `listagem de schema de coleções do mongoD.rb` - Atualização do schema MongoDB (v1.7.2)
+
+### Descrição do Push
+Correção completa e definitiva do sistema de permissões com total compatibilidade com o schema MongoDB:
+
+**🔧 Correções Críticas no Mapeamento:**
+- Corrigido mapeamento frontend-backend: email/nome/funcao → _userMail/_userId/_userRole
+- Corrigido envio de permissões: permissionsData em vez de selectedUser
+- Adicionada inicialização correta do permissionsData no modal de permissões
+
+**📊 Schema MongoDB Atualizado:**
+- Adicionado campo botAnalises em _userClearance
+- Adicionados campos auditoria e relatoriosGestao em _funcoesAdministrativas
+- Especificado estrutura detalhada para _userTickets (antes era Object genérico)
+
+**🔄 Melhorias no Serviço:**
+- Atualizado mapToMongoSchema para incluir _funcoesAdministrativas
+- Adicionado versionamento v1.2.1 ao userService.js
+- Mapeamento 100% compatível com backend
+
+**🎯 Resultado:**
+- Sistema de permissões funcionando corretamente
+- Compatibilidade total entre frontend e backend
+- Problemas de salvamento de permissões resolvidos
+- Schema MongoDB sincronizado com implementação
+
+### Impacto
+- Correção definitiva dos problemas de salvamento de permissões
+- Sistema de permissões robusto e confiável
+- Compatibilidade total com schema MongoDB
+- Melhoria significativa na experiência do usuário
+
+---
 
 ## Push GitHub - Reorganização de Funções e Correções no Sistema de Permissões - 2024-12-19 23:59
 

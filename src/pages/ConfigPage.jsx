@@ -1,4 +1,4 @@
-// VERSION: v3.7.30 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.7.31 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -481,8 +481,19 @@ const ConfigPage = () => {
       
       console.log('✅ Permissões salvas com sucesso!');
       
-      // Recarregar lista de usuários
-      await loadUsers();
+      // ✅ Atualizar estado local em vez de recarregar do backend
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user._userMail === selectedUser._userMail 
+            ? { 
+                ...user, 
+                _userClearance: permissionsData.permissoes,
+                _userTickets: permissionsData.tiposTickets,
+                _funcoesAdministrativas: permissionsData.funcoesAdministrativas
+              }
+            : user
+        )
+      );
       
       // Fechar modal
       handleClosePermissionsModal();
