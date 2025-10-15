@@ -1,4 +1,4 @@
-// VERSION: v3.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.0.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 // Configuração da API
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://back-console.vercel.app/api';
@@ -100,27 +100,26 @@ class BotAnalisesService {
       });
 
       // Validar resposta
-      if (!response.success || !response.data) {
+      if (!response.success) {
         throw new Error('Resposta inválida do backend');
       }
 
       console.log('✅ Dados recebidos do backend:', {
         success: response.success,
-        totalRegistros: response.data.resumo?.totalRegistros || 0,
-        totalAtividades: response.data.dadosBrutos?.atividades?.length || 0
+        totalPerguntas: response.totalPerguntas || 0,
+        totalAtividades: response.dadosBrutos?.atividades?.length || 0
       });
 
-      // Extrair dados
-      const { resumo, metadados, dadosBrutos } = response.data;
-      const atividades = dadosBrutos?.atividades || [];
+      // Extrair dados diretamente da resposta (backend retorna dados no nível raiz)
+      const atividades = response.dadosBrutos?.atividades || [];
 
-      // Montar métricas dos cards usando resumo e metadados
+      // Montar métricas dos cards usando dados diretos da resposta
       const metricasGerais = {
-        totalPerguntas: resumo.totalRegistros || 0,
-        usuariosAtivos: resumo.totalUsuarios || 0,
-        horarioPico: this.extrairHorarioPico(metadados.horariosPico),
-        crescimento: metadados.crescimento || { percentual: 0, positivo: true },
-        mediaDiaria: this.calcularMediaDiaria(resumo.totalRegistros, this.obterDiasDoPeriodo(periodo))
+        totalPerguntas: response.totalPerguntas || 0,
+        usuariosAtivos: response.usuariosAtivos || 0,
+        horarioPico: response.horarioPico || '00:00-01:00',
+        crescimento: response.crescimento || { percentual: 0, positivo: true },
+        mediaDiaria: response.mediaDiaria || 0
       };
 
       // Calcular dados processados no frontend a partir de dadosBrutos
@@ -186,7 +185,7 @@ class BotAnalisesService {
     const totalUso = {};
     
     perguntas.forEach(item => {
-      const data = new Date(item.timestamp);
+      const data = new Date(item.createdAt);
       let chave;
 
       switch (exibicao) {
@@ -255,21 +254,21 @@ class BotAnalisesService {
     const atividadePorUsuario = {};
     
     atividades.forEach(item => {
-      if (item.userId && item.userId.includes('@velotax.com.br')) {
-        if (!atividadePorUsuario[item.userId]) {
-          atividadePorUsuario[item.userId] = {
-            nome: this.getNomeUsuario(item.userId),
+      if (item.colaboradorNome && item.colaboradorNome.includes('@velotax.com.br')) {
+        if (!atividadePorUsuario[item.colaboradorNome]) {
+          atividadePorUsuario[item.colaboradorNome] = {
+            nome: this.getNomeUsuario(item.colaboradorNome),
             perguntas: 0,
             sessoes: new Set()
           };
         }
         
         if (item.action === 'question_asked') {
-          atividadePorUsuario[item.userId].perguntas++;
+          atividadePorUsuario[item.colaboradorNome].perguntas++;
         }
         
         if (item.sessionId) {
-          atividadePorUsuario[item.userId].sessoes.add(item.sessionId);
+          atividadePorUsuario[item.colaboradorNome].sessoes.add(item.sessionId);
         }
       }
     });
@@ -311,12 +310,12 @@ class BotAnalisesService {
         !item.details.question.includes('@velotax.com.br')
       )
       .map(item => ({
-        usuario: this.getNomeUsuario(item.userId),
+        usuario: this.getNomeUsuario(item.colaboradorNome),
         pergunta: item.details.question.length > 60 
           ? item.details.question.substring(0, 60) + '...' 
           : item.details.question,
-        data: new Date(item.timestamp).toLocaleDateString('pt-BR'),
-        horario: new Date(item.timestamp).toLocaleTimeString('pt-BR', { 
+        data: new Date(item.createdAt).toLocaleDateString('pt-BR'),
+        horario: new Date(item.createdAt).toLocaleTimeString('pt-BR', { 
           hour: '2-digit', 
           minute: '2-digit' 
         }),
@@ -742,18 +741,15 @@ class BotAnalisesService {
   // Perguntas mais frequentes
   async getPerguntasMaisFrequentes(periodoFiltro = '7dias') {
     try {
-      console.log('🔗 URL completa:', `${this.apiBaseUrl}/bot-analises/perguntas-frequentes?periodo=${periodoFiltro}`);
-      
-      // Buscar dados diretamente do endpoint específico
-      const response = await this.makeRequest(`/bot-analises/perguntas-frequentes?periodo=${periodoFiltro}`);
-      
-      if (response && Array.isArray(response)) {
-        console.log('✅ Perguntas frequentes obtidas do backend:', response.length);
-        return response;
+      // Verificar se pode usar cache
+      if (this.podeUsarCache(periodoFiltro)) {
+        const dadosCache = this.filtrarCache(periodoFiltro);
+        return dadosCache?.perguntasFrequentes || [];
       }
-      
-      console.warn('⚠️ Nenhuma pergunta frequente retornada pelo backend');
-      return [];
+
+      // Buscar novos dados
+      const dados = await this.buscarNovosDados(periodoFiltro, 'dia');
+      return dados?.perguntasFrequentes || [];
     } catch (error) {
       console.error('❌ Erro ao buscar perguntas frequentes:', error);
       return [];

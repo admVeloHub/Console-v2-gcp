@@ -1,5 +1,38 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.16.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.17.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+
+## Push GitHub - Correção Bot Análises e Remoção Aba Relatório da Gestão - 2024-12-19 23:59
+
+### Informações do Push
+- **Tipo:** Push GitHub
+- **Data/Hora:** 2024-12-19 23:59 BRT
+- **Versão:** v1.17.0
+- **Status:** Concluído
+- **Commit:** e1ea2b6
+
+### Arquivos Incluídos no Push
+1. `.cursorrules` - Atualização das diretrizes do projeto
+2. `DEPLOY_LOG.md` - Log das implementações realizadas
+3. `Diretrizes especificas do projeto.txt` - Novo arquivo com diretrizes específicas
+4. `src/pages/QualidadeModulePage.jsx` - Remoção da aba "Relatório da Gestão"
+5. `src/services/botAnalisesService.js` - Correção definitiva da integração frontend-backend
+
+### Descrição do Push
+Push contendo as correções definitivas do módulo Bot Análises e remoção da aba "Relatório da Gestão":
+- Correção completa da integração frontend-backend
+- Adaptação para estrutura real do backend
+- Implementação de cálculos no frontend
+- Cache inteligente otimizado
+- Interface simplificada do módulo de qualidade
+- Documentação atualizada
+
+### Resultado
+- ✅ **Push realizado com sucesso** - Commit e1ea2b6 enviado para origin/master
+- ✅ **5 arquivos processados** - 302 inserções, 308 deleções
+- ✅ **Repositório atualizado** - Todas as alterações sincronizadas
+- ✅ **Versionamento consistente** - Todas as versões atualizadas
+
+---
 
 ## Implementação - Remoção da Aba "Relatório da Gestão" - 2024-12-19 23:59
 
@@ -1241,6 +1274,43 @@
 - Correções de bugs críticos aplicadas
 - Documentação completa criada
 - Próximos passos: implementar abas de relatórios e upload de áudio
+
+---
+
+## 🔧 CORREÇÃO CRÍTICA - Bot Análises Service
+**Data/Hora:** 2024-12-19 15:30:00  
+**Tipo:** Correção de Bug  
+**Versão:** v3.2.0  
+**Arquivos Modificados:**
+- `src/services/botAnalisesService.js` (v3.0.0 → v3.2.0)
+
+### Descrição
+Correção crítica no serviço de Bot Análises para compatibilidade com a nova estrutura de dados do backend:
+
+**Problemas Identificados:**
+- Frontend esperava `response.data` mas backend retorna dados no nível raiz
+- Campos `timestamp` não existiam (corrigido para `createdAt`)
+- Campo `userId` não existia (corrigido para `colaboradorNome`)
+- Endpoint `/perguntas-frequentes` não existia (removido)
+
+**Correções Aplicadas:**
+1. **Estrutura de Resposta:** Ajustada validação para trabalhar com dados no nível raiz
+2. **Campos de Data:** Corrigido `item.timestamp` → `item.createdAt`
+3. **Identificação de Usuário:** Corrigido `item.userId` → `item.colaboradorNome`
+4. **Endpoint Único:** Removido endpoint separado de perguntas frequentes
+5. **Métricas Gerais:** Ajustado para usar dados diretos da resposta
+
+**Resultado:**
+- ✅ Frontend agora processa corretamente os dados do backend
+- ✅ Métricas gerais funcionando
+- ✅ Gráficos e rankings funcionando
+- ✅ Lista de atividades funcionando
+- ✅ Cache inteligente mantido
+
+### Observações
+- Backend retorna estrutura: `{success, totalPerguntas, usuariosAtivos, horarioPico, crescimento, mediaDiaria, totalRegistros, totalAtividades, dadosBrutos}`
+- Frontend agora compatível com esta estrutura
+- Sistema de cache mantido para performance
 
 ---
 **Próximo deploy:** Aguardando próximas alterações
