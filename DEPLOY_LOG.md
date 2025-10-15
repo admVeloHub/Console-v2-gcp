@@ -1313,4 +1313,83 @@ Correção crítica no serviço de Bot Análises para compatibilidade com a nova
 - Sistema de cache mantido para performance
 
 ---
+
+## 🔧 CORREÇÃO - Filtros de Exibição do Gráfico
+**Data/Hora:** 2024-12-19 15:45:00  
+**Tipo:** Correção de Bug  
+**Versão:** v3.0.3  
+**Arquivos Modificados:**
+- `src/services/botAnalisesService.js` (v3.0.2 → v3.0.3)
+
+### Descrição
+Correção do problema nos filtros de exibição do gráfico (dia/semana/mês):
+
+**Problema Identificado:**
+- Gráfico não reagia às mudanças de filtro de exibição
+- Cache retornava dados calculados com exibição anterior
+- Filtros dia/semana/mês não apresentavam diferenças visuais
+
+**Correções Aplicadas:**
+1. **Cache Inteligente:** Modificado para armazenar dados brutos além dos processados
+2. **Recálculo Dinâmico:** Gráfico sempre recalculado com exibição atual
+3. **Método getDadosUsoOperacao:** Agora recalcula gráfico mesmo usando cache
+4. **Logs de Debug:** Adicionados para monitorar funcionamento dos filtros
+
+**Resultado:**
+- ✅ Filtros de exibição funcionando corretamente
+- ✅ Gráfico reagindo às mudanças dia/semana/mês
+- ✅ Cache mantido para performance
+- ✅ Dados brutos preservados para recálculo
+
+### Observações
+- Cache agora armazena `dadosBrutos` para permitir recálculo
+- Método `calcularDadosGrafico` sempre executado com exibição atual
+- Logs temporários adicionados para debug
+
+---
+
+## 🔧 CORREÇÃO - Análises Específicas
+**Data/Hora:** 2024-12-19 16:00:00  
+**Tipo:** Correção de Bug  
+**Versão:** v3.0.4  
+**Arquivos Modificados:**
+- `src/services/botAnalisesService.js` (v3.0.3 → v3.0.4)
+
+### Descrição
+Correção do container "Análises Específicas" que estava em branco:
+
+**Problema Identificado:**
+- Container "Análises Específicas" não exibia dados
+- Método `getAnalisesEspecificas` retornava objeto vazio
+- Faltava implementação do cálculo das análises específicas
+
+**Correções Aplicadas:**
+1. **Método calcularAnalisesEspecificas:** Implementado cálculo completo
+2. **Padrões de Uso:** Análise de horários picos e dias mais ativos
+3. **Análise de Sessões:** Duração média e estatísticas de sessões
+4. **Integração:** Adicionado ao método `buscarNovosDados`
+5. **Logs:** Atualizados para incluir análises específicas
+
+**Funcionalidades Implementadas:**
+- **Padrões de Uso:**
+  - Horário pico de uso
+  - Dia da semana mais ativo
+  - Distribuição de horários ativos
+- **Análise de Sessões:**
+  - Total de sessões
+  - Duração média das sessões
+  - Média de perguntas por sessão
+
+**Resultado:**
+- ✅ Container "Análises Específicas" agora exibe dados
+- ✅ 3 seções funcionando: Padrões de Uso, Análise de Sessões, Perguntas Frequentes
+- ✅ Dados calculados em tempo real a partir das atividades
+- ✅ Logs atualizados para monitoramento
+
+### Observações
+- Análises calculadas dinamicamente a partir dos dados brutos
+- Métodos auxiliares para cálculos estatísticos
+- Estrutura de dados padronizada para exibição
+
+---
 **Próximo deploy:** Aguardando próximas alterações

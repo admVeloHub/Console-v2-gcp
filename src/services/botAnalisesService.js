@@ -1,4 +1,4 @@
-// VERSION: v3.0.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.0.4 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 // Configuração da API
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://back-console.vercel.app/api';
@@ -57,6 +57,7 @@ class BotAnalisesService {
   limparCache() {
     this.cache = {
       dados: null,
+      dadosBrutos: null,
       periodoCache: null,
       exibicaoCache: null,
       timestamp: null,
@@ -86,9 +87,11 @@ class BotAnalisesService {
 
     // Log removido - muito verboso para uso frequente de cache
     
-    // Simular filtro local (os dados já vêm processados do backend)
-    // O backend retorna dados de 90 dias, então filtros menores são aplicados localmente
-    return this.cache.dados;
+    // Retornar dados processados + dados brutos para recálculo de gráficos
+    return {
+      ...this.cache.dados,
+      dadosBrutos: this.cache.dadosBrutos
+    };
   }
 
   // Buscar novos dados (períodos > 90 dias) com retry
@@ -128,7 +131,8 @@ class BotAnalisesService {
         dadosGrafico: this.calcularDadosGrafico(atividades, exibicao),
         perguntasFrequentes: this.calcularPerguntasFrequentes(atividades),
         rankingAgentes: this.calcularRankingAgentes(atividades),
-        listaAtividades: this.calcularListaAtividades(atividades)
+        listaAtividades: this.calcularListaAtividades(atividades),
+        analisesEspecificas: this.calcularAnalisesEspecificas(atividades)
       };
 
       console.log('📊 Dados processados:', {
@@ -136,12 +140,17 @@ class BotAnalisesService {
         grafico: Object.keys(dadosProcessados.dadosGrafico.totalUso).length + ' períodos',
         perguntas: dadosProcessados.perguntasFrequentes.length + ' itens',
         ranking: dadosProcessados.rankingAgentes.length + ' agentes',
-        atividades: dadosProcessados.listaAtividades.length + ' atividades'
+        atividades: dadosProcessados.listaAtividades.length + ' atividades',
+        analises: {
+          padroes: dadosProcessados.analisesEspecificas.padroesUso.length + ' padrões',
+          sessoes: dadosProcessados.analisesEspecificas.analiseSessoes.length + ' análises'
+        }
       });
 
       // Atualizar cache se for período de 30 dias ou menor
       if (this.periodosCache.includes(periodo)) {
         this.cache.dados = dadosProcessados;
+        this.cache.dadosBrutos = { atividades }; // Armazenar dados brutos para recálculo
         this.cache.periodoCache = periodo;
         this.cache.exibicaoCache = exibicao;
         this.cache.timestamp = Date.now();
@@ -331,6 +340,139 @@ class BotAnalisesService {
     return lista;
   }
 
+  // Calcular análises específicas a partir das atividades
+  calcularAnalisesEspecificas(atividades) {
+    // 1. Perguntas Frequentes (já calculadas, mas vamos usar uma versão mais detalhada)
+    const perguntasFrequentes = this.calcularPerguntasFrequentes(atividades);
+
+    // 2. Padrões de Uso - análise de horários e dias da semana
+    const padroesUso = this.calcularPadroesUso(atividades);
+
+    // 3. Análise de Sessões - duração e comportamento
+    const analiseSessoes = this.calcularAnaliseSessoes(atividades);
+
+    return {
+      perguntasFrequentes,
+      padroesUso,
+      analiseSessoes
+    };
+  }
+
+  // Calcular padrões de uso (horários e dias)
+  calcularPadroesUso(atividades) {
+    const perguntas = atividades.filter(item => item.action === 'question_asked');
+    
+    // Análise por horário
+    const porHorario = {};
+    const porDiaSemana = {};
+    
+    perguntas.forEach(item => {
+      const data = new Date(item.createdAt);
+      const hora = data.getHours();
+      const diaSemana = data.getDay(); // 0 = domingo, 1 = segunda, etc.
+      
+      // Agrupar por hora
+      porHorario[hora] = (porHorario[hora] || 0) + 1;
+      
+      // Agrupar por dia da semana
+      porDiaSemana[diaSemana] = (porDiaSemana[diaSemana] || 0) + 1;
+    });
+
+    // Encontrar horário pico
+    const horarioPico = Object.entries(porHorario)
+      .sort(([,a], [,b]) => b - a)[0];
+
+    // Encontrar dia mais ativo
+    const diaMaisAtivo = Object.entries(porDiaSemana)
+      .sort(([,a], [,b]) => b - a)[0];
+
+    return [
+      {
+        tipo: 'Horário Pico',
+        valor: horarioPico ? `${horarioPico[0]}:00` : 'N/A',
+        detalhes: horarioPico ? `${horarioPico[1]} perguntas` : 'Sem dados'
+      },
+      {
+        tipo: 'Dia Mais Ativo',
+        valor: this.getNomeDiaSemana(diaMaisAtivo ? parseInt(diaMaisAtivo[0]) : 0),
+        detalhes: diaMaisAtivo ? `${diaMaisAtivo[1]} perguntas` : 'Sem dados'
+      },
+      {
+        tipo: 'Distribuição',
+        valor: `${Object.keys(porHorario).length} horários ativos`,
+        detalhes: `Pico: ${horarioPico ? horarioPico[1] : 0} perguntas`
+      }
+    ];
+  }
+
+  // Calcular análise de sessões
+  calcularAnaliseSessoes(atividades) {
+    // Agrupar por sessionId
+    const sessoes = {};
+    
+    atividades.forEach(item => {
+      if (item.sessionId) {
+        if (!sessoes[item.sessionId]) {
+          sessoes[item.sessionId] = {
+            perguntas: 0,
+            inicio: null,
+            fim: null,
+            usuario: item.colaboradorNome
+          };
+        }
+        
+        if (item.action === 'question_asked') {
+          sessoes[item.sessionId].perguntas++;
+        }
+        
+        const data = new Date(item.createdAt);
+        if (!sessoes[item.sessionId].inicio || data < sessoes[item.sessionId].inicio) {
+          sessoes[item.sessionId].inicio = data;
+        }
+        if (!sessoes[item.sessionId].fim || data > sessoes[item.sessionId].fim) {
+          sessoes[item.sessionId].fim = data;
+        }
+      }
+    });
+
+    // Calcular estatísticas
+    const sessoesArray = Object.values(sessoes);
+    const totalSessoes = sessoesArray.length;
+    const totalPerguntas = sessoesArray.reduce((sum, sessao) => sum + sessao.perguntas, 0);
+    
+    // Duração média das sessões
+    const duracoes = sessoesArray
+      .filter(sessao => sessao.inicio && sessao.fim)
+      .map(sessao => sessao.fim - sessao.inicio);
+    
+    const duracaoMedia = duracoes.length > 0 
+      ? Math.round(duracoes.reduce((sum, dur) => sum + dur, 0) / duracoes.length / 1000 / 60) // em minutos
+      : 0;
+
+    return [
+      {
+        tipo: 'Total de Sessões',
+        valor: totalSessoes.toString(),
+        detalhes: `${totalPerguntas} perguntas no total`
+      },
+      {
+        tipo: 'Duração Média',
+        valor: `${duracaoMedia} min`,
+        detalhes: `${duracoes.length} sessões analisadas`
+      },
+      {
+        tipo: 'Perguntas por Sessão',
+        valor: totalSessoes > 0 ? Math.round(totalPerguntas / totalSessoes) : 0,
+        detalhes: 'Média de perguntas por sessão'
+      }
+    ];
+  }
+
+  // Método auxiliar para obter nome do dia da semana
+  getNomeDiaSemana(dia) {
+    const dias = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+    return dias[dia] || 'Desconhecido';
+  }
 
   // ========================================
   // SISTEMA DE CACHE DE CÁLCULOS
@@ -720,14 +862,21 @@ class BotAnalisesService {
   // Dados para gráfico de linhas - Uso da Operação
   async getDadosUsoOperacao(periodoFiltro = '7dias', exibicaoFiltro = 'dia') {
     try {
-      // Logs de diagnóstico removidos - muito verbosos
+      console.log(`🔄 getDadosUsoOperacao chamado: periodo=${periodoFiltro}, exibicao=${exibicaoFiltro}`);
       
-      // Verificar se pode usar cache
+      // Verificar se pode usar cache (mas sempre recalcular gráfico para exibição correta)
       if (this.podeUsarCache(periodoFiltro)) {
+        console.log('📦 Usando cache, recalculando gráfico para exibição:', exibicaoFiltro);
         const dadosCache = this.filtrarCache(periodoFiltro);
-        return dadosCache?.dadosGrafico || { totalUso: {}, feedbacksPositivos: {}, feedbacksNegativos: {} };
+        if (dadosCache && dadosCache.dadosBrutos) {
+          // Recalcular gráfico com a exibição correta
+          const dadosGrafico = this.calcularDadosGrafico(dadosCache.dadosBrutos.atividades, exibicaoFiltro);
+          console.log('📊 Gráfico recalculado:', Object.keys(dadosGrafico.totalUso).length, 'períodos');
+          return dadosGrafico;
+        }
       }
 
+      console.log('🆕 Buscando novos dados do backend');
       // Buscar novos dados
       const dados = await this.buscarNovosDados(periodoFiltro, exibicaoFiltro);
       
