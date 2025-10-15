@@ -1,4 +1,4 @@
-// VERSION: v3.7.37 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.7.38 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -620,7 +620,7 @@ const ConfigPage = () => {
         setUsers(prevUsers => 
           (prevUsers || []).map(user => 
             user._userMail === selectedUser._userMail 
-              ? updatedUser.data
+              ? (updatedUser.data || user)
               : user
           )
         );
@@ -666,7 +666,7 @@ const ConfigPage = () => {
         setUsers(prevUsers => 
           (prevUsers || []).map(user => 
             user._userMail === selectedUser._userMail 
-              ? updatedUser.data
+              ? (updatedUser.data || user)
               : user
           )
         );
@@ -874,7 +874,7 @@ const ConfigPage = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {users && Array.isArray(users) ? users.map((user) => (
+                {users && Array.isArray(users) ? users.filter(user => user).map((user) => (
                   <TableRow 
                     key={user._id || `user-${Math.random()}`}
                     hover
