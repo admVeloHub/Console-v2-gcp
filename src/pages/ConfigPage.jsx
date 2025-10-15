@@ -1,4 +1,4 @@
-// VERSION: v3.7.25 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.7.28 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -29,7 +29,8 @@ import {
   Checkbox,
   Grid,
   Tooltip,
-  Alert
+  Alert,
+  Snackbar
 } from '@mui/material';
 import {
   Add,
@@ -53,6 +54,11 @@ const ConfigPage = () => {
   const { user: currentUser, updateUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
 
   // Carregar usuários ao montar o componente
   useEffect(() => {
@@ -103,7 +109,7 @@ const ConfigPage = () => {
         existingDevUser._userRole = 'Administrador';
         
         try {
-          await updateAuthorizedUser(existingDevUser._id, existingDevUser);
+          await updateAuthorizedUser(existingDevUser._userMail, existingDevUser);
           console.log('✅ Usuário de desenvolvimento atualizado via API!');
         } catch (apiError) {
           console.log('⚠️ API não disponível, atualizando localmente...');
@@ -201,6 +207,11 @@ const ConfigPage = () => {
     } catch (error) {
       console.error('Erro ao carregar usuários:', error);
       setUsers([]);
+      // Mostrar erro apenas se não for erro de API indisponível
+      if (!error.message?.includes('API não disponível')) {
+        const errorMessage = error.response?.data?.message || error.message || 'Erro ao carregar usuários';
+        alert(`Erro: ${errorMessage}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -241,7 +252,9 @@ const ConfigPage = () => {
       facilities: false
     },
     funcoesAdministrativas: {
-      avaliador: false
+      avaliador: false,
+      auditoria: false,
+      relatoriosGestao: false
     }
   });
 
@@ -306,7 +319,9 @@ const ConfigPage = () => {
           facilities: false
         },
         funcoesAdministrativas: user._funcoesAdministrativas || {
-          avaliador: false
+          avaliador: false,
+          auditoria: false,
+          relatoriosGestao: false
         }
       });
       setModalStep(1); // Para edição, sempre começar na etapa 1
@@ -342,7 +357,9 @@ const ConfigPage = () => {
           facilities: false
         },
         funcoesAdministrativas: {
-          avaliador: false
+          avaliador: false,
+          auditoria: false,
+          relatoriosGestao: false
         }
       });
       setModalStep(1); // Para novo usuário, começar na etapa 1
@@ -384,7 +401,9 @@ const ConfigPage = () => {
           facilities: false
         },
         funcoesAdministrativas: {
-          avaliador: false
+          avaliador: false,
+          auditoria: false,
+          relatoriosGestao: false
         }
       });
   };
@@ -399,6 +418,18 @@ const ConfigPage = () => {
     setSelectedUser(null);
   };
 
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbar({
+      open: true,
+      message,
+      severity
+    });
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar(prev => ({ ...prev, open: false }));
+  };
+
   const handleSavePermissions = async () => {
     if (!selectedUser) return;
     
@@ -408,8 +439,8 @@ const ConfigPage = () => {
       console.log('🎫 Tipos de tickets:', selectedUser._userTickets);
       console.log('🔧 Funções administrativas:', selectedUser._funcoesAdministrativas);
       
-      // Atualizar usuário com as novas permissões
-      await updateAuthorizedUser(selectedUser._id, {
+      // Atualizar usuário com as novas permissões - CORRIGIDO: usar email em vez de _id
+      await updateAuthorizedUser(selectedUser._userMail, {
         _userClearance: selectedUser._userClearance,
         _userTickets: selectedUser._userTickets,
         _funcoesAdministrativas: selectedUser._funcoesAdministrativas
@@ -423,12 +454,12 @@ const ConfigPage = () => {
       // Fechar modal
       handleClosePermissionsModal();
       
-      // Mostrar feedback de sucesso (opcional)
-      // Você pode adicionar um toast/snackbar aqui se quiser
+      // Mostrar feedback de sucesso
+      showSnackbar('✅ Permissões salvas com sucesso!', 'success');
       
     } catch (error) {
       console.error('❌ Erro ao salvar permissões:', error);
-      // Aqui você pode adicionar tratamento de erro (toast, etc.)
+      showSnackbar(`❌ Erro ao salvar permissões: ${error.message}`, 'error');
     }
   };
 
@@ -467,7 +498,9 @@ const ConfigPage = () => {
     handleCloseUserModal();
     } catch (error) {
       console.error('Erro ao salvar usuário:', error);
-      alert(`Erro: ${error.message}`);
+      // Melhorar feedback de erro
+      const errorMessage = error.response?.data?.message || error.message || 'Erro desconhecido ao salvar usuário';
+      alert(`Erro: ${errorMessage}`);
     }
   };
 
@@ -480,7 +513,8 @@ const ConfigPage = () => {
       }
     } catch (error) {
       console.error('Erro ao remover usuário:', error);
-      // Aqui você pode adicionar um toast ou alert para mostrar o erro
+      const errorMessage = error.response?.data?.message || error.message || 'Erro desconhecido ao remover usuário';
+      alert(`Erro: ${errorMessage}`);
     }
   };
 
@@ -546,6 +580,8 @@ const ConfigPage = () => {
         console.error('Erro ao atualizar permissão:', error);
         // Reverter a mudança no selectedUser em caso de erro
         setSelectedUser(selectedUser);
+        const errorMessage = error.response?.data?.message || error.message || 'Erro ao atualizar permissão';
+        alert(`Erro: ${errorMessage}`);
       }
     }
   };
@@ -582,6 +618,8 @@ const ConfigPage = () => {
         console.error('Erro ao atualizar tipo de ticket:', error);
         // Reverter a mudança no selectedUser em caso de erro
         setSelectedUser(selectedUser);
+        const errorMessage = error.response?.data?.message || error.message || 'Erro ao atualizar tipo de ticket';
+        alert(`Erro: ${errorMessage}`);
       }
     }
   };
@@ -595,10 +633,10 @@ const ConfigPage = () => {
       case 'gestão':
       case 'gestao':
         return 'primary'; // Azul para gestão
+      case 'monitor':
+        return 'success'; // Verde para monitor
       case 'editor':
         return 'secondary'; // Cinza para editor
-      case 'desenvolvedor':
-        return 'warning'; // Amarelo para desenvolvedor
       default:
         return 'default'; // Cinza padrão
     }
@@ -632,10 +670,10 @@ const ConfigPage = () => {
           padding: '6px 12px',
           borderRadius: '20px'
         };
-      case 'editor':
-        // ESSENCIAL: Azul Médio → Azul Claro
+      case 'monitor':
+        // MONITOR: Verde → Azul Claro
         return {
-          background: 'linear-gradient(135deg, #1634FF 0%, #1634FF 60%, #1694FF 100%)',
+          background: 'linear-gradient(135deg, #15A237 0%, #15A237 60%, #1694FF 100%)',
           color: 'white',
           fontWeight: 600,
           textTransform: 'uppercase',
@@ -644,10 +682,10 @@ const ConfigPage = () => {
           padding: '6px 12px',
           borderRadius: '20px'
         };
-      case 'desenvolvedor':
-        // OPCIONAL: Azul Escuro → Azul Opaco
+      case 'editor':
+        // ESSENCIAL: Azul Médio → Azul Claro
         return {
-          background: 'linear-gradient(135deg, #000058 0%, #000058 60%, #006AB9 100%)',
+          background: 'linear-gradient(135deg, #1634FF 0%, #1634FF 60%, #1694FF 100%)',
           color: 'white',
           fontWeight: 600,
           textTransform: 'uppercase',
@@ -940,6 +978,7 @@ const ConfigPage = () => {
               >
                 <MenuItem value="Administrador">Administrador</MenuItem>
                 <MenuItem value="Gestão">Gestão</MenuItem>
+                <MenuItem value="Monitor">Monitor</MenuItem>
                 <MenuItem value="Editor">Editor</MenuItem>
               </Select>
             </FormControl>
@@ -997,8 +1036,8 @@ const ConfigPage = () => {
                 ))}
               </Grid>
 
-              {/* Seção Funções Administrativas - apenas para Gestão e Administrador */}
-              {(formData.funcao === 'Gestão' || formData.funcao === 'Administrador') && (
+              {/* Seção Funções Administrativas - apenas para Gestão, Monitor e Administrador */}
+              {(formData.funcao === 'Gestão' || formData.funcao === 'Monitor' || formData.funcao === 'Administrador') && (
                 <>
                   <Typography variant="h6" sx={{ 
                     fontFamily: 'Poppins', 
@@ -1028,6 +1067,54 @@ const ConfigPage = () => {
                               fontSize: '0.75rem'
                             }}>
                               Pode avaliar funcionários no módulo Qualidade
+                            </Typography>
+                          </Box>
+                        }
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={permissionsData.funcoesAdministrativas.auditoria || false}
+                            onChange={(e) => handleModalFuncaoAdministrativaChange('auditoria', e.target.checked)}
+                          />
+                        }
+                        label={
+                          <Box>
+                            <Typography sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
+                              Auditoria
+                            </Typography>
+                            <Typography variant="body2" sx={{ 
+                              fontFamily: 'Poppins', 
+                              color: 'text.secondary',
+                              fontSize: '0.75rem'
+                            }}>
+                              Acesso às funcionalidades de auditoria do sistema
+                            </Typography>
+                          </Box>
+                        }
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={permissionsData.funcoesAdministrativas.relatoriosGestao || false}
+                            onChange={(e) => handleModalFuncaoAdministrativaChange('relatoriosGestao', e.target.checked)}
+                          />
+                        }
+                        label={
+                          <Box>
+                            <Typography sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
+                              Relatórios De Gestão
+                            </Typography>
+                            <Typography variant="body2" sx={{ 
+                              fontFamily: 'Poppins', 
+                              color: 'text.secondary',
+                              fontSize: '0.75rem'
+                            }}>
+                              Acesso aos relatórios gerenciais e de gestão
                             </Typography>
                           </Box>
                         }
@@ -1268,6 +1355,22 @@ const ConfigPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Snackbar para feedback */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert 
+          onClose={handleCloseSnackbar} 
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };
