@@ -1,4 +1,4 @@
-// VERSION: v3.7.33 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.7.35 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -876,7 +876,7 @@ const ConfigPage = () => {
               <TableBody>
                 {users && Array.isArray(users) ? users.map((user) => (
                   <TableRow 
-                    key={user._id}
+                    key={user._id || `user-${Math.random()}`}
                     hover
                     sx={{ 
                       '&:hover': {
@@ -887,10 +887,10 @@ const ConfigPage = () => {
                     <TableCell>
                       <Box>
                         <Typography sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>
-                          {user._userId}
+                          {user._userId || 'Nome não definido'}
                         </Typography>
                         <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'Poppins' }}>
-                          {user._userMail}
+                          {user._userMail || 'Email não definido'}
                         </Typography>
                       </Box>
                     </TableCell>
@@ -899,7 +899,7 @@ const ConfigPage = () => {
                         label={user._userRole || 'Não definida'}
                         size="small"
                         sx={{ 
-                          ...getFuncaoStyle(user._userRole),
+                          ...getFuncaoStyle(user._userRole || 'Não definida'),
                           fontFamily: 'Poppins', 
                           fontWeight: 500 
                         }}
@@ -907,7 +907,7 @@ const ConfigPage = () => {
                     </TableCell>
                     <TableCell>
                       <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                        {Object.entries(user._userClearance).map(([key, hasPermission]) => {
+                        {Object.entries(user._userClearance || {}).map(([key, hasPermission]) => {
                           const permission = cardPermissions.find(p => p.key === key);
                           return hasPermission ? (
                             <Chip
@@ -960,7 +960,7 @@ const ConfigPage = () => {
                         <Tooltip title="Excluir">
                           <IconButton
                             size="small"
-                            onClick={() => handleDeleteUser(user._id)}
+                            onClick={() => handleDeleteUser(user._id || '')}
                             sx={{ 
                               color: 'var(--red)',
                               '&:hover': {
