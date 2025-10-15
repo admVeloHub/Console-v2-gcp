@@ -1,4 +1,4 @@
-// VERSION: v3.7.32 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.7.33 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -473,24 +473,20 @@ const ConfigPage = () => {
       console.log('🔧 Funções administrativas:', permissionsData.funcoesAdministrativas);
       
       // Atualizar usuário com as novas permissões - CORRIGIDO: usar dados do permissionsData
-      await updateAuthorizedUser(selectedUser._userMail, {
+      const updatedUser = await updateAuthorizedUser(selectedUser._userMail, {
         _userClearance: permissionsData.permissoes,
         _userTickets: permissionsData.tiposTickets,
         _funcoesAdministrativas: permissionsData.funcoesAdministrativas
       });
       
       console.log('✅ Permissões salvas com sucesso!');
+      console.log('📊 Usuário atualizado retornado pelo backend:', updatedUser);
       
-      // ✅ Atualizar estado local em vez de recarregar do backend
+      // ✅ Atualizar estado local com dados retornados pelo backend
       setUsers(prevUsers => 
         prevUsers.map(user => 
           user._userMail === selectedUser._userMail 
-            ? { 
-                ...user, 
-                _userClearance: permissionsData.permissoes,
-                _userTickets: permissionsData.tiposTickets,
-                _funcoesAdministrativas: permissionsData.funcoesAdministrativas
-              }
+            ? updatedUser // Usar dados retornados pelo backend
             : user
         )
       );
