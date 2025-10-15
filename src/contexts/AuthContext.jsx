@@ -1,4 +1,4 @@
-// VERSION: v3.7.6 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.7.7 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { sendUserPing, debugUserPermissions } from '../services/userPingService';
 
@@ -84,15 +84,14 @@ export const AuthProvider = ({ children }) => {
     
     console.log('🔍 DEBUG - Verificando permissão:', permission, 'para usuário:', user.email || user._userMail);
     
-    // BYPASS TEMPORÁRIO: Usuário Lucas Gravina tem acesso total (TEMPORÁRIO PARA PRODUÇÃO)
+    // DESENVOLVIMENTO: Usuário Lucas Gravina tem acesso total (APENAS EM DEV)
     const isDevelopment = window.location.hostname === 'localhost' || 
                          window.location.hostname === '127.0.0.1' ||
                          window.location.hostname.includes('dev') ||
                          process.env.NODE_ENV === 'development';
     
-    // BYPASS TEMPORÁRIO: Lucas Gravina tem acesso total em qualquer ambiente
-    if (user.email === 'lucas.gravina@velotax.com.br' || user._userMail === 'lucas.gravina@velotax.com.br') {
-      console.log('🔓 BYPASS TEMPORÁRIO: Acesso total liberado para Lucas Gravina');
+    if (isDevelopment && (user.email === 'lucas.gravina@velotax.com.br' || user._userMail === 'lucas.gravina@velotax.com.br')) {
+      console.log('🔓 DESENVOLVIMENTO: Acesso total liberado para Lucas Gravina');
       return true;
     }
     

@@ -1,4 +1,4 @@
-// VERSION: v3.7.35 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.7.37 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -484,9 +484,9 @@ const ConfigPage = () => {
       
       // ✅ Atualizar estado local com dados retornados pelo backend
       setUsers(prevUsers => 
-        prevUsers.map(user => 
+        (prevUsers || []).map(user => 
           user._userMail === selectedUser._userMail 
-            ? updatedUser // Usar dados retornados pelo backend
+            ? updatedUser.data // Usar dados do backend (estrutura correta)
             : user
         )
       );
@@ -557,7 +557,7 @@ const ConfigPage = () => {
 
   const handleDeleteUser = async (userId) => {
     try {
-      const userToDelete = users.find(user => user._id === userId);
+      const userToDelete = users?.find(user => user._id === userId);
     if (userToDelete) {
         await removeAuthorizedUser(userToDelete._userMail);
         await loadUsers(); // Recarregar lista de usuários
@@ -618,9 +618,9 @@ const ConfigPage = () => {
         
         // ✅ Atualizar estado local em vez de recarregar do backend
         setUsers(prevUsers => 
-          prevUsers.map(user => 
+          (prevUsers || []).map(user => 
             user._userMail === selectedUser._userMail 
-              ? updatedUser
+              ? updatedUser.data
               : user
           )
         );
@@ -664,9 +664,9 @@ const ConfigPage = () => {
         
         // ✅ Atualizar estado local em vez de recarregar do backend
         setUsers(prevUsers => 
-          prevUsers.map(user => 
+          (prevUsers || []).map(user => 
             user._userMail === selectedUser._userMail 
-              ? updatedUser
+              ? updatedUser.data
               : user
           )
         );
