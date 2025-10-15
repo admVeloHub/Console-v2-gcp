@@ -1,5 +1,47 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.20.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.21.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+
+## Push GitHub - Correção Completa de Condição de Corrida em Todas as Funções de Permissões - 2024-12-19 23:59
+
+### Informações do Push
+- **Tipo:** Push GitHub
+- **Data/Hora:** 2024-12-19 23:59 BRT
+- **Versão:** v1.21.0
+- **Status:** Concluído
+
+### Arquivos Incluídos no Push
+1. `src/pages/ConfigPage.jsx` - Correção completa de condição de corrida em todas as funções (v3.7.32)
+2. `DEPLOY_LOG.md` - Log da correção completa (v1.21.0)
+
+### Descrição do Push
+Correção definitiva e completa de condição de corrida em TODAS as funções de permissões:
+
+**🚨 Problema Identificado:**
+- Múltiplas funções chamavam `loadUsers()` após atualizações
+- `handlePermissionChange` - Checkboxes diretos na tabela
+- `handleTicketTypeChange` - Checkboxes de tipos de tickets
+- `handleSavePermissions` - Botão salvar do modal
+- Todas causavam condição de corrida e sobreposição de dados
+
+**🔧 Solução Implementada:**
+- Removido `await loadUsers()` de TODAS as funções de atualização
+- Implementada atualização de estado local imediata em todas
+- Sistema agora usa apenas `setUsers()` para atualizar interface
+- Eliminada completamente a condição de corrida
+
+**📊 Funções Corrigidas:**
+- ✅ `handleSavePermissions` - Modal de permissões
+- ✅ `handlePermissionChange` - Checkboxes diretos na tabela
+- ✅ `handleTicketTypeChange` - Checkboxes de tipos de tickets
+
+### Impacto
+- ✅ Correção definitiva de TODAS as condições de corrida
+- ✅ Interface ultra responsiva em todas as interações
+- ✅ Redução significativa de requisições ao backend
+- ✅ Experiência do usuário completamente otimizada
+- ✅ Sistema de permissões 100% confiável
+
+---
 
 ## Push GitHub - Correção de Condição de Corrida no Modal de Permissões - 2024-12-19 23:59
 

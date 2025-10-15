@@ -1,4 +1,4 @@
-// VERSION: v3.7.31 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.7.32 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -619,7 +619,15 @@ const ConfigPage = () => {
       
       // Atualizar no serviço de usuários
         await updateAuthorizedUser(selectedUser._userMail, updatedUser);
-        await loadUsers(); // Recarregar lista de usuários
+        
+        // ✅ Atualizar estado local em vez de recarregar do backend
+        setUsers(prevUsers => 
+          prevUsers.map(user => 
+            user._userMail === selectedUser._userMail 
+              ? updatedUser
+              : user
+          )
+        );
 
       // Se é o usuário logado, atualizar o AuthContext e localStorage
         if (currentUser && currentUser.email === selectedUser._userMail) {
@@ -657,7 +665,15 @@ const ConfigPage = () => {
       
       // Atualizar no serviço de usuários
         await updateAuthorizedUser(selectedUser._userMail, updatedUser);
-        await loadUsers(); // Recarregar lista de usuários
+        
+        // ✅ Atualizar estado local em vez de recarregar do backend
+        setUsers(prevUsers => 
+          prevUsers.map(user => 
+            user._userMail === selectedUser._userMail 
+              ? updatedUser
+              : user
+          )
+        );
 
       // Se é o usuário logado, atualizar o AuthContext e localStorage
         if (currentUser && currentUser.email === selectedUser._userMail) {
