@@ -1,5 +1,4 @@
-// VERSION: v3.4.14 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
-
+// VERSION: v1.2.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import { usersAPI } from './api';
 
 // Cache local para melhor performance
@@ -59,7 +58,12 @@ const mapToMongoSchema = (userData) => {
       ...userData.permissoes,
       servicos: userData.permissoes?.servicos || false
     },
-    _userTickets: userData.tiposTickets || {}
+    _userTickets: userData.tiposTickets || {},
+    _funcoesAdministrativas: userData.funcoesAdministrativas || {
+      avaliador: false,
+      auditoria: false,
+      relatoriosGestao: false
+    }
   };
 };
 

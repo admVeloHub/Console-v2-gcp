@@ -1,5 +1,48 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.17.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.18.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+
+## Push GitHub - Reorganização de Funções e Correções no Sistema de Permissões - 2024-12-19 23:59
+
+### Informações do Push
+- **Tipo:** Push GitHub
+- **Data/Hora:** 2024-12-19 23:59 BRT
+- **Versão:** v1.18.0
+- **Status:** Concluído
+- **Commit:** c8480f8
+
+### Arquivos Incluídos no Push
+1. `src/pages/ConfigPage.jsx` - Reorganização de funções e correções no sistema de permissões (v3.7.28)
+
+### Descrição do Push
+Implementação de melhorias significativas no sistema de configurações e permissões:
+
+**🔄 Reorganização das Funções dos Usuários:**
+- Nova organização: Administrador, Gestão, Monitor (novo), Editor
+- Removida função "Desenvolvedor"
+- Adicionada função "Monitor" com gradiente Verde → Azul Claro único
+
+**🔧 Correções Críticas no Modal de Permissões:**
+- Corrigido erro 404 na API (mapeamento incorreto de ID vs email)
+- Modal agora fecha automaticamente após salvamento bem-sucedido
+- Implementado sistema de Snackbar para feedback visual elegante
+
+**🆕 Novas Funções Administrativas:**
+- Adicionada função "Auditoria" - Acesso às funcionalidades de auditoria
+- Adicionada função "Relatórios De Gestão" - Acesso aos relatórios gerenciais
+- Funções disponíveis para Administrador, Gestão e Monitor
+
+**🎨 Melhorias na Interface:**
+- Feedback visual aprimorado com Material-UI Snackbar
+- Tratamento de erros mais robusto
+- Experiência do usuário mais fluida e profissional
+
+### Impacto
+- Sistema de permissões mais robusto e confiável
+- Nova função Monitor com identidade visual única
+- Interface mais intuitiva e responsiva
+- Correção de bugs críticos que impediam o salvamento de permissões
+
+---
 
 ## Push GitHub - Correção Bot Análises e Remoção Aba Relatório da Gestão - 2024-12-19 23:59
 

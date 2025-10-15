@@ -1,4 +1,4 @@
-// VERSION: v3.7.28 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.7.30 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -410,6 +410,39 @@ const ConfigPage = () => {
 
   const handleOpenPermissionsModal = (user) => {
     setSelectedUser(user);
+    
+    // Inicializar permissionsData com os dados atuais do usuário
+    setPermissionsData({
+      permissoes: user._userClearance || {
+        artigos: false,
+        velonews: false,
+        botPerguntas: false,
+        botAnalises: false,
+        chamadosInternos: false,
+        igp: false,
+        qualidade: false,
+        capacity: false,
+        config: false,
+        servicos: false
+      },
+      tiposTickets: user._userTickets || {
+        artigos: false,
+        processos: false,
+        roteiros: false,
+        treinamentos: false,
+        funcionalidades: false,
+        recursos: false,
+        gestao: false,
+        rhFin: false,
+        facilities: false
+      },
+      funcoesAdministrativas: user._funcoesAdministrativas || {
+        avaliador: false,
+        auditoria: false,
+        relatoriosGestao: false
+      }
+    });
+    
     setOpenPermissionsModal(true);
   };
 
@@ -435,15 +468,15 @@ const ConfigPage = () => {
     
     try {
       console.log('💾 Salvando permissões para usuário:', selectedUser._userMail);
-      console.log('📋 Permissões dos cards:', selectedUser._userClearance);
-      console.log('🎫 Tipos de tickets:', selectedUser._userTickets);
-      console.log('🔧 Funções administrativas:', selectedUser._funcoesAdministrativas);
+      console.log('📋 Permissões dos cards:', permissionsData.permissoes);
+      console.log('🎫 Tipos de tickets:', permissionsData.tiposTickets);
+      console.log('🔧 Funções administrativas:', permissionsData.funcoesAdministrativas);
       
-      // Atualizar usuário com as novas permissões - CORRIGIDO: usar email em vez de _id
+      // Atualizar usuário com as novas permissões - CORRIGIDO: usar dados do permissionsData
       await updateAuthorizedUser(selectedUser._userMail, {
-        _userClearance: selectedUser._userClearance,
-        _userTickets: selectedUser._userTickets,
-        _funcoesAdministrativas: selectedUser._funcoesAdministrativas
+        _userClearance: permissionsData.permissoes,
+        _userTickets: permissionsData.tiposTickets,
+        _funcoesAdministrativas: permissionsData.funcoesAdministrativas
       });
       
       console.log('✅ Permissões salvas com sucesso!');
@@ -476,16 +509,24 @@ const ConfigPage = () => {
       if (editingUser) {
         // Editar usuário existente - incluir permissões se estiver na etapa 2
         const updateData = modalStep === 2 ? {
-          ...formData,
+          _userMail: formData.email,
+          _userId: formData.nome,
+          _userRole: formData.funcao,
           _userClearance: permissionsData.permissoes,
           _userTickets: permissionsData.tiposTickets,
           _funcoesAdministrativas: permissionsData.funcoesAdministrativas
-        } : formData;
+        } : {
+          _userMail: formData.email,
+          _userId: formData.nome,
+          _userRole: formData.funcao
+        };
         await updateAuthorizedUser(editingUser._userMail, updateData);
       } else {
         // Adicionar novo usuário
         const newUser = {
-          ...formData,
+          _userMail: formData.email,
+          _userId: formData.nome,
+          _userRole: formData.funcao,
           _userClearance: permissionsData.permissoes,
           _userTickets: permissionsData.tiposTickets,
           _funcoesAdministrativas: permissionsData.funcoesAdministrativas
@@ -495,12 +536,15 @@ const ConfigPage = () => {
       
       // Recarregar lista de usuários
       await loadUsers();
-    handleCloseUserModal();
+      handleCloseUserModal();
+      
+      // Mostrar feedback de sucesso
+      showSnackbar('✅ Usuário salvo com sucesso!', 'success');
     } catch (error) {
       console.error('Erro ao salvar usuário:', error);
       // Melhorar feedback de erro
       const errorMessage = error.response?.data?.message || error.message || 'Erro desconhecido ao salvar usuário';
-      alert(`Erro: ${errorMessage}`);
+      showSnackbar(`❌ Erro ao salvar usuário: ${errorMessage}`, 'error');
     }
   };
 

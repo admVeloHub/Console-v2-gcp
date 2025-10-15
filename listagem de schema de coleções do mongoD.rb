@@ -114,6 +114,7 @@ _userClearance: {               // Permissões do usuário
   artigos: Boolean,
   velonews: Boolean,
   botPerguntas: Boolean,
+  botAnalises: Boolean,         // Permissão para Bot Análises
   chamadosInternos: Boolean,
   igp: Boolean,
   qualidade: Boolean,
@@ -121,9 +122,21 @@ _userClearance: {               // Permissões do usuário
   config: Boolean,
   servicos: Boolean
 },
-_userTickets: Object,           // Tipos de tickets
+_userTickets: {                 // Tipos de tickets
+  artigos: Boolean,
+  processos: Boolean,
+  roteiros: Boolean,
+  treinamentos: Boolean,
+  funcionalidades: Boolean,
+  recursos: Boolean,
+  gestao: Boolean,
+  rhFin: Boolean,
+  facilities: Boolean
+},
 _funcoesAdministrativas: {      // Funções administrativas
-  avaliador: Boolean            // Se é avaliador no módulo Qualidade
+  avaliador: Boolean,           // Se é avaliador no módulo Qualidade
+  auditoria: Boolean,           // Acesso às funcionalidades de auditoria
+  relatoriosGestao: Boolean     // Acesso aos relatórios gerenciais
 }
 }
 

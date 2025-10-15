@@ -25,6 +25,9 @@ Quero tudo analisado e pensado, e decisões acertadas com 100% de certeza da imp
 - Sempre certifique-se de estar fazendo o deploy ou o push para o destino correto.Pushes do git jamais deverão ser trocados de reporitório acidentalmente e deploys no vercel ou no GCP deverão ocorrer com precisão.
 - Se a solicitação feita para uma tarefa ser excutada depende de mais informações, de confirmações de dados ou mais recursos, solicite essas informações antes de iniciar a tarefa.Mantenha o compliance com a diretiva nro 4 e não crie aleatóriamente dados adicionais para completar as tarefas.
 - Ao final da leitura das diretrizes, leia a lista de arquivos de referencia obrigatoria para manter a padronização e ter uma visão geral do projeto e das alterações realizadas.
+- A documentação indicada é a fonte da verdade. O código deverá ser colocado em compliance com a documentação indicada. Nunca o oposto. 
+- A documentação não deverá ser modificada ou alterada sem aprovação. Alterar a documentação para gerar falso compliance é proibido.
+
 
 ## 📋 ARQUIVOS OBRIGATÓRIOS PARA LEITURA
 
