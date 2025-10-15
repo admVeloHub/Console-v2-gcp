@@ -1,4 +1,4 @@
-// VERSION: v1.16.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.17.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 
@@ -522,12 +522,6 @@ const QualidadeModulePage = () => {
             value="relatorio-agente" 
             label="Relatório do Agente" 
             icon={<People />}
-            iconPosition="start"
-          />
-          <Tab 
-            value="relatorio-gestao" 
-            label="Relatório da Gestão" 
-            icon={<BarChart />}
             iconPosition="start"
           />
           <Tab 
@@ -1239,20 +1233,6 @@ const QualidadeModulePage = () => {
         </Box>
       )}
 
-      {currentView === 'relatorio-gestao' && (
-        <Box>
-          <Card sx={{ borderRadius: '16px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}>
-            <CardContent>
-              <Typography variant="h6" sx={{ fontFamily: 'Poppins', color: '#000058', fontWeight: 600, mb: 3 }}>
-                Relatório Gerencial
-              </Typography>
-              <Alert severity="info" sx={{ fontFamily: 'Poppins' }}>
-                Visualize o desempenho geral da equipe e rankings de qualidade.
-              </Alert>
-            </CardContent>
-          </Card>
-        </Box>
-      )}
 
       {currentView === 'gpt' && (
         <Box>

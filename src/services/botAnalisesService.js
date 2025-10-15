@@ -1,4 +1,4 @@
-// VERSION: v2.7.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 // Configuração da API
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://back-console.vercel.app/api';
@@ -19,8 +19,8 @@ class BotAnalisesService {
       isActive: false // Indica se o módulo está ativo
     };
     
-    // Períodos que usam cache (≤ 90 dias)
-    this.periodosCache = ['1dia', '7dias', '30dias', '90dias'];
+    // Períodos que usam cache (≤ 30 dias)
+    this.periodosCache = ['1dia', '7dias', '30dias'];
     
     // Cache para cálculos pesados
     this.calculosCache = new Map();
@@ -67,9 +67,17 @@ class BotAnalisesService {
 
   // Verificar se pode usar cache
   podeUsarCache(periodo) {
-    return this.cache.isActive && 
-           this.cache.dados && 
-           this.periodosCache.includes(periodo);
+    if (!this.cache.isActive || !this.cache.dados) return false;
+    
+    // Cache válido apenas para períodos <= 30 dias
+    const periodosComCache = ['1dia', '7dias', '30dias'];
+    if (!periodosComCache.includes(periodo)) return false;
+    
+    const agora = Date.now();
+    const tempoDecorrido = agora - this.cache.timestamp;
+    const CACHE_VALIDO = 5 * 60 * 1000; // 5 minutos
+    
+    return tempoDecorrido < CACHE_VALIDO && this.cache.periodoCache === periodo;
   }
 
   // Filtrar dados do cache
@@ -86,17 +94,53 @@ class BotAnalisesService {
   // Buscar novos dados (períodos > 90 dias) com retry
   async buscarNovosDados(periodo, exibicao) {
     try {
-      // Buscar dados brutos do backend com retry
-      const dadosBrutos = await this.makeRequestWithRetry('/bot-analises/metricas-gerais', {
-        params: {
-          periodo: periodo
-        }
+      // Chamar APENAS /metricas-gerais (retorna tudo)
+      const response = await this.makeRequestWithRetry('/bot-analises/metricas-gerais', {
+        params: { periodo }
       });
 
-      // Processar dados brutos para o formato esperado pelo frontend
-      const dadosProcessados = this.processarDadosBrutos(dadosBrutos, periodo, exibicao);
+      // Validar resposta
+      if (!response.success || !response.data) {
+        throw new Error('Resposta inválida do backend');
+      }
 
-      // Atualizar cache se for período de 90 dias ou menor
+      console.log('✅ Dados recebidos do backend:', {
+        success: response.success,
+        totalRegistros: response.data.resumo?.totalRegistros || 0,
+        totalAtividades: response.data.dadosBrutos?.atividades?.length || 0
+      });
+
+      // Extrair dados
+      const { resumo, metadados, dadosBrutos } = response.data;
+      const atividades = dadosBrutos?.atividades || [];
+
+      // Montar métricas dos cards usando resumo e metadados
+      const metricasGerais = {
+        totalPerguntas: resumo.totalRegistros || 0,
+        usuariosAtivos: resumo.totalUsuarios || 0,
+        horarioPico: this.extrairHorarioPico(metadados.horariosPico),
+        crescimento: metadados.crescimento || { percentual: 0, positivo: true },
+        mediaDiaria: this.calcularMediaDiaria(resumo.totalRegistros, this.obterDiasDoPeriodo(periodo))
+      };
+
+      // Calcular dados processados no frontend a partir de dadosBrutos
+      const dadosProcessados = {
+        metricasGerais,
+        dadosGrafico: this.calcularDadosGrafico(atividades, exibicao),
+        perguntasFrequentes: this.calcularPerguntasFrequentes(atividades),
+        rankingAgentes: this.calcularRankingAgentes(atividades),
+        listaAtividades: this.calcularListaAtividades(atividades)
+      };
+
+      console.log('📊 Dados processados:', {
+        metricas: dadosProcessados.metricasGerais,
+        grafico: Object.keys(dadosProcessados.dadosGrafico.totalUso).length + ' períodos',
+        perguntas: dadosProcessados.perguntasFrequentes.length + ' itens',
+        ranking: dadosProcessados.rankingAgentes.length + ' agentes',
+        atividades: dadosProcessados.listaAtividades.length + ' atividades'
+      });
+
+      // Atualizar cache se for período de 30 dias ou menor
       if (this.periodosCache.includes(periodo)) {
         this.cache.dados = dadosProcessados;
         this.cache.periodoCache = periodo;
@@ -104,149 +148,190 @@ class BotAnalisesService {
         this.cache.timestamp = Date.now();
       }
 
-      this.logSuccess('buscarNovosDados', { 
-        periodo, 
-        exibicao,
-        totalRegistros: dadosBrutos.data?.resumo?.totalRegistros || 0
-      });
-
       return dadosProcessados;
     } catch (error) {
-      this.logError('buscarNovosDados', error, { periodo, exibicao });
+      console.error('❌ Erro ao buscar dados:', error);
       throw error;
     }
   }
 
-  // Processar dados brutos do backend para o formato esperado pelo frontend
-  processarDadosBrutos(dadosBrutos, periodo, exibicao) {
-    console.log('🔍 DEBUG - Dados brutos recebidos:', dadosBrutos);
-    
-    // Validar estrutura de dados
-    if (!this.validarEstruturaDados(dadosBrutos)) {
-      throw new Error('Estrutura de dados inválida recebida do backend');
+  // Método auxiliar para extrair horário pico
+  extrairHorarioPico(horariosPico) {
+    if (!horariosPico || !Array.isArray(horariosPico) || horariosPico.length === 0) {
+      return '00:00-01:00';
     }
     
-    // Acessar dados aninhados do backend
-    const resumo = dadosBrutos.data?.resumo || {};
-    const metadados = dadosBrutos.data?.metadados || {};
+    // Backend já retorna array de horários, pegar o mais frequente
+    const horarioMaisFrequente = horariosPico[0];
     
-    console.log('🔍 DEBUG - Resumo extraído:', resumo);
-    console.log('🔍 DEBUG - Metadados extraídos:', metadados);
+    if (typeof horarioMaisFrequente === 'string') {
+      return horarioMaisFrequente;
+    }
     
-    // Processar métricas gerais com dados reais
-    const metricasGerais = {
-      totalPerguntas: resumo.totalRegistros || 0,
-      usuariosAtivos: resumo.totalUsuarios || 0,
-      horarioPico: this.calcularHorarioPico(metadados),
-      crescimento: this.calcularCrescimento(metadados, resumo),
-      mediaDiaria: this.calcularMediaDiaria(resumo.totalRegistros, this.obterDiasDoPeriodo(periodo))
-    };
+    if (typeof horarioMaisFrequente === 'number') {
+      const inicio = horarioMaisFrequente.toString().padStart(2, '0');
+      const fim = (horarioMaisFrequente + 1).toString().padStart(2, '0');
+      return `${inicio}:00-${fim}:00`;
+    }
     
-    console.log('🔍 DEBUG - Métricas gerais processadas:', metricasGerais);
+    return '00:00-01:00';
+  }
+
+  // Calcular dados do gráfico a partir das atividades
+  calcularDadosGrafico(atividades, exibicao) {
+    // Filtrar apenas perguntas
+    const perguntas = atividades.filter(item => item.action === 'question_asked');
+
+    // Agrupar por período baseado na exibição
+    const totalUso = {};
     
-    // Processar outros dados usando metadados reais
-    const perguntasFrequentes = this.processarPerguntasFrequentes(metadados);
-    const rankingAgentes = this.processarRankingAgentes(metadados.agentes, resumo);
-    const listaAtividades = this.processarListaAtividades(metadados);
-    
+    perguntas.forEach(item => {
+      const data = new Date(item.timestamp);
+      let chave;
+
+      switch (exibicao) {
+        case 'dia':
+          chave = data.toISOString().split('T')[0]; // YYYY-MM-DD
+          break;
+        case 'semana':
+          const inicioSemana = new Date(data);
+          inicioSemana.setDate(data.getDate() - data.getDay());
+          chave = inicioSemana.toISOString().split('T')[0];
+          break;
+        case 'mes':
+          chave = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
+          break;
+        default:
+          chave = data.toISOString().split('T')[0];
+      }
+
+      totalUso[chave] = (totalUso[chave] || 0) + 1;
+    });
+
     return {
-      metricasGerais,
-      dadosGrafico: { totalUso: {}, feedbacksPositivos: {}, feedbacksNegativos: {} },
-      perguntasFrequentes,
-      rankingAgentes,
-      listaAtividades,
-      analisesEspecificas: {
-        perguntasFrequentes,
-        padroesUso: this.processarPadroesUso(resumo, metadados),
-        analiseSessoes: this.processarAnaliseSessoes(resumo, metadados)
-      }
+      totalUso,
+      feedbacksPositivos: {}, // Não usado nesta aba ainda
+      feedbacksNegativos: {}  // Não usado nesta aba ainda
     };
   }
-  
-  // Validação robusta de estrutura de dados
-  validarEstruturaDados(dadosBrutos) {
-    try {
-      const erros = [];
-      
-      // Verificar se a estrutura básica existe
-      if (!dadosBrutos || typeof dadosBrutos !== 'object') {
-        erros.push('Dados brutos inválidos: não é um objeto');
-      }
-      
-      if (!dadosBrutos.data || typeof dadosBrutos.data !== 'object') {
-        erros.push('Campo "data" ausente ou inválido');
-      }
-      
-      if (!dadosBrutos.data.resumo || typeof dadosBrutos.data.resumo !== 'object') {
-        erros.push('Campo "data.resumo" ausente ou inválido');
-      }
-      
-      if (!dadosBrutos.data.metadados || typeof dadosBrutos.data.metadados !== 'object') {
-        erros.push('Campo "data.metadados" ausente ou inválido');
-      }
-      
-      // Validação de campos críticos no resumo
-      if (dadosBrutos.data?.resumo) {
-        const resumo = dadosBrutos.data.resumo;
-        
-        if (typeof resumo.totalRegistros !== 'number' || resumo.totalRegistros < 0) {
-          erros.push('totalRegistros deve ser um número não negativo');
-        }
-        
-        if (typeof resumo.totalUsuarios !== 'number' || resumo.totalUsuarios < 0) {
-          erros.push('totalUsuarios deve ser um número não negativo');
-        }
-        
-        if (typeof resumo.totalSessoes !== 'number' || resumo.totalSessoes < 0) {
-          erros.push('totalSessoes deve ser um número não negativo');
-        }
-        
-        if (typeof resumo.totalBotFeedbacks !== 'number' || resumo.totalBotFeedbacks < 0) {
-          erros.push('totalBotFeedbacks deve ser um número não negativo');
-        }
-      }
-      
-      // Validação de campos críticos nos metadados
-      if (dadosBrutos.data?.metadados) {
-        const metadados = dadosBrutos.data.metadados;
-        
-        if (!Array.isArray(metadados.agentes)) {
-          erros.push('metadados.agentes deve ser um array');
-        }
-        
-        if (!Array.isArray(metadados.usuarios)) {
-          erros.push('metadados.usuarios deve ser um array');
-        }
-        
-        if (!Array.isArray(metadados.tiposAcao)) {
-          erros.push('metadados.tiposAcao deve ser um array');
-        }
-        
-        if (!Array.isArray(metadados.tiposFeedback)) {
-          erros.push('metadados.tiposFeedback deve ser um array');
-        }
-        
-        if (!Array.isArray(metadados.sessoes)) {
-          erros.push('metadados.sessoes deve ser um array');
-        }
-      }
-      
-      if (erros.length > 0) {
-        this.logError('validarEstruturaDados', new Error('Dados inválidos'), { erros });
-        return false;
-      }
-      
-      this.logSuccess('validarEstruturaDados', { 
-        totalRegistros: dadosBrutos.data.resumo.totalRegistros,
-        totalUsuarios: dadosBrutos.data.resumo.totalUsuarios,
-        totalSessoes: dadosBrutos.data.resumo.totalSessoes
+
+  // Calcular perguntas frequentes a partir das atividades
+  calcularPerguntasFrequentes(atividades) {
+    // Filtrar e normalizar perguntas
+    const perguntas = atividades
+      .filter(item => {
+        const question = item.details?.question;
+        return item.action === 'question_asked' && 
+               question && 
+               !question.includes('@velotax.com.br') &&
+               question.trim().length > 0;
+      })
+      .map(item => {
+        let pergunta = item.details.question.toLowerCase().trim();
+        pergunta = pergunta.replace(/[.!?]+$/, '');
+        return pergunta;
       });
-      return true;
-    } catch (error) {
-      this.logError('validarEstruturaDados', error);
-      return false;
-    }
+
+    // Contar frequência
+    const frequencia = {};
+    perguntas.forEach(pergunta => {
+      frequencia[pergunta] = (frequencia[pergunta] || 0) + 1;
+    });
+
+    // Ordenar e pegar top 10
+    const topPerguntas = Object.entries(frequencia)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 10);
+
+    return topPerguntas.map(([pergunta, count]) => ({
+      name: pergunta.length > 30 ? pergunta.substring(0, 30) + '...' : pergunta,
+      value: count
+    }));
   }
+
+  // Calcular ranking de agentes a partir das atividades
+  calcularRankingAgentes(atividades) {
+    // Agrupar por usuário
+    const atividadePorUsuario = {};
+    
+    atividades.forEach(item => {
+      if (item.userId && item.userId.includes('@velotax.com.br')) {
+        if (!atividadePorUsuario[item.userId]) {
+          atividadePorUsuario[item.userId] = {
+            nome: this.getNomeUsuario(item.userId),
+            perguntas: 0,
+            sessoes: new Set()
+          };
+        }
+        
+        if (item.action === 'question_asked') {
+          atividadePorUsuario[item.userId].perguntas++;
+        }
+        
+        if (item.sessionId) {
+          atividadePorUsuario[item.userId].sessoes.add(item.sessionId);
+        }
+      }
+    });
+
+    // Calcular score e ordenar
+    const ranking = Object.entries(atividadePorUsuario)
+      .map(([userId, data]) => ({
+        name: data.nome,
+        perguntas: data.perguntas,
+        sessoes: data.sessoes.size,
+        score: data.perguntas + (data.sessoes.size * 0.5)
+      }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10); // Top 10
+
+    return ranking;
+  }
+
+  // Método auxiliar para extrair nome do usuário do email
+  getNomeUsuario(email) {
+    if (!email) return 'Desconhecido';
+    
+    // Extrair nome do email
+    const nome = email.split('@')[0];
+    
+    // Capitalizar cada palavra
+    return nome.split(/[._-]/)
+      .map(palavra => palavra.charAt(0).toUpperCase() + palavra.slice(1).toLowerCase())
+      .join(' ');
+  }
+
+  // Calcular lista de atividades a partir das atividades
+  calcularListaAtividades(atividades) {
+    // Processar atividades recentes
+    const lista = atividades
+      .filter(item => 
+        item.action === 'question_asked' && 
+        item.details?.question && 
+        !item.details.question.includes('@velotax.com.br')
+      )
+      .map(item => ({
+        usuario: this.getNomeUsuario(item.userId),
+        pergunta: item.details.question.length > 60 
+          ? item.details.question.substring(0, 60) + '...' 
+          : item.details.question,
+        data: new Date(item.timestamp).toLocaleDateString('pt-BR'),
+        horario: new Date(item.timestamp).toLocaleTimeString('pt-BR', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        }),
+        acao: 'question_asked'
+      }))
+      .sort((a, b) => {
+        const dataA = new Date(a.data.split('/').reverse().join('-') + ' ' + a.horario);
+        const dataB = new Date(b.data.split('/').reverse().join('-') + ' ' + b.horario);
+        return dataB - dataA;
+      })
+      .slice(0, 20); // Top 20 mais recentes
+
+    return lista;
+  }
+
 
   // ========================================
   // SISTEMA DE CACHE DE CÁLCULOS
@@ -422,106 +507,8 @@ class BotAnalisesService {
     return dados;
   }
   
-  processarPerguntasFrequentes(metadados) {
-    try {
-      console.log('🔍 DEBUG - Processando perguntas frequentes:', metadados.perguntasFrequentes);
-      
-      // Verificar se metadados.perguntasFrequentes existe e tem dados
-      if (!metadados.perguntasFrequentes || !Array.isArray(metadados.perguntasFrequentes) || metadados.perguntasFrequentes.length === 0) {
-        console.warn('⚠️ Nenhuma pergunta frequente encontrada nos metadados');
-        return [];
-      }
-      
-      // Usar dados reais das perguntas frequentes do backend
-      const perguntas = metadados.perguntasFrequentes
-        .slice(0, 10) // Top 10
-        .map(item => ({
-          name: item.name || item.pergunta || 'Pergunta não identificada',
-          value: item.value || item.frequencia || 0
-        }));
-      
-      console.log('✅ Perguntas frequentes processadas:', perguntas.length);
-      return perguntas;
-    } catch (error) {
-      console.error('❌ Erro ao processar perguntas frequentes:', error);
-      return [];
-    }
-  }
   
-  processarRankingAgentes(agentes, resumo) {
-    try {
-      console.log('🔍 DEBUG - Processando ranking de agentes:', agentes);
-      
-      // Verificar se agentes existe e tem dados
-      if (!agentes || !Array.isArray(agentes) || agentes.length === 0) {
-        console.warn('⚠️ Nenhum agente encontrado nos metadados');
-        return [];
-      }
-      
-      // Calcular métricas baseadas nos dados reais
-      const totalRegistros = resumo.totalRegistros || 0;
-      const totalUsuarios = resumo.totalUsuarios || 0;
-      const totalSessoes = resumo.totalSessoes || 0;
-      
-      const ranking = agentes.map((agente, index) => {
-        // Calcular métricas baseadas na posição e dados totais
-        const basePerguntas = Math.floor(totalRegistros / agentes.length);
-        const baseSessoes = Math.floor(totalSessoes / agentes.length);
-        const variacao = (index % 3) + 1; // Variação de 1 a 3
-        
-        return {
-          name: agente.split('@')[0].replace('.', ' ').toUpperCase(),
-          perguntas: Math.max(1, basePerguntas + variacao),
-          sessoes: Math.max(1, baseSessoes + variacao),
-          score: Math.min(100, Math.max(50, 70 + (index * 5)))
-        };
-      });
-      
-      console.log('✅ Ranking de agentes processado:', ranking.length);
-      return ranking;
-    } catch (error) {
-      console.error('❌ Erro ao processar ranking de agentes:', error);
-      return [];
-    }
-  }
   
-  processarListaAtividades(metadados) {
-    try {
-      console.log('🔍 DEBUG - Processando lista de atividades:', metadados.tiposAcao);
-      
-      // Verificar se metadados.tiposAcao existe e tem dados
-      if (!metadados.tiposAcao || !Array.isArray(metadados.tiposAcao) || metadados.tiposAcao.length === 0) {
-        console.warn('⚠️ Nenhum tipo de ação encontrado nos metadados');
-        return [];
-      }
-      
-      // Verificar se temos agentes para associar às atividades
-      if (!metadados.agentes || !Array.isArray(metadados.agentes) || metadados.agentes.length === 0) {
-        console.warn('⚠️ Nenhum agente encontrado para associar às atividades');
-        return [];
-      }
-      
-      // Processar lista de atividades baseada nos dados reais
-      const atividades = metadados.tiposAcao.slice(0, 10).map((tipo, index) => {
-        const agente = metadados.agentes[index % metadados.agentes.length];
-        const agora = new Date();
-        
-        return {
-          usuario: agente.split('@')[0].replace('.', ' ').toUpperCase(),
-          pergunta: this.gerarPerguntaBaseadaNoTipo(tipo),
-          data: agora.toLocaleDateString('pt-BR'),
-          horario: agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-          acao: tipo
-        };
-      });
-      
-      console.log('✅ Lista de atividades processada:', atividades.length);
-      return atividades;
-    } catch (error) {
-      console.error('❌ Erro ao processar lista de atividades:', error);
-      return [];
-    }
-  }
 
   // Gerar pergunta baseada no tipo de ação
   gerarPerguntaBaseadaNoTipo(tipo) {
@@ -535,59 +522,6 @@ class BotAnalisesService {
     return perguntasMap[tipo] || `Ação: ${tipo.replace('_', ' ')}`;
   }
   
-  processarPadroesUso(resumo, metadados) {
-    try {
-      console.log('🔍 DEBUG - Processando padrões de uso:', { resumo, metadados });
-      
-      const totalUsuarios = resumo.totalUsuarios || 0;
-      const totalRegistros = resumo.totalRegistros || 0;
-      const totalBotFeedbacks = resumo.totalBotFeedbacks || 0;
-      
-      // Calcular métricas baseadas nos dados reais
-      const mediaDiariaPorAgente = totalUsuarios > 0 ? Math.round(totalRegistros / totalUsuarios) : 0;
-      const taxaSatisfacao = totalBotFeedbacks > 0 ? Math.min(100, Math.max(60, 80 + (totalBotFeedbacks % 20))) : 75;
-      
-      // Calcular feedbacks baseado nos tipos disponíveis
-      const tiposFeedback = metadados.tiposFeedback || [];
-      const feedbacksPositivos = tiposFeedback.filter(tipo => tipo === 'positive').length;
-      const feedbacksNegativos = tiposFeedback.filter(tipo => tipo === 'negative').length;
-      
-      return [
-        { metrica: 'Taxa de Satisfação', valor: `${taxaSatisfacao}%` },
-        { metrica: 'Média Diária por Agente', valor: `${mediaDiariaPorAgente}` },
-        { metrica: 'Feedbacks Positivos', valor: `${feedbacksPositivos}` },
-        { metrica: 'Feedbacks Negativos', valor: `${feedbacksNegativos}` },
-        { metrica: 'Total de Feedbacks', valor: `${totalBotFeedbacks}` }
-      ];
-    } catch (error) {
-      console.error('❌ Erro ao processar padrões de uso:', error);
-      return [];
-    }
-  }
-  
-  processarAnaliseSessoes(resumo, metadados) {
-    try {
-      console.log('🔍 DEBUG - Processando análise de sessões:', { resumo, metadados });
-      
-      const totalSessoes = resumo.totalSessoes || 0;
-      const totalUsuarios = resumo.totalUsuarios || 0;
-      const totalRegistros = resumo.totalRegistros || 0;
-      
-      // Calcular métricas baseadas nos dados reais
-      const mediaPerguntasPorSessao = totalSessoes > 0 ? Math.round(totalRegistros / totalSessoes) : 0;
-      const taxaEngajamento = totalUsuarios > 0 ? Math.min(100, Math.max(70, 80 + (totalSessoes % 20))) : 75;
-      
-      return [
-        { metrica: 'Sessões Únicas', valor: `${totalSessoes}` },
-        { metrica: 'Usuários Únicos', valor: `${totalUsuarios}` },
-        { metrica: 'Média Perguntas/Sessão', valor: `${mediaPerguntasPorSessao}` },
-        { metrica: 'Taxa de Engajamento', valor: `${taxaEngajamento}%` }
-      ];
-    } catch (error) {
-      console.error('❌ Erro ao processar análise de sessões:', error);
-      return [];
-    }
-  }
 
   // Dados padrão vazios (sem fallbacks)
   getDadosPadrao() {

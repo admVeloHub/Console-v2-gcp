@@ -1,5 +1,71 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.14.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.16.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+
+## Implementação - Remoção da Aba "Relatório da Gestão" - 2024-12-19 23:59
+
+### Informações da Implementação
+- **Tipo:** Remoção de Funcionalidade
+- **Data/Hora:** 2024-12-19 23:59 BRT
+- **Versão:** v1.16.0
+- **Status:** Concluído
+
+### Arquivos Modificados
+1. `src/pages/QualidadeModulePage.jsx` (v1.17.0) - Remoção da aba "Relatório da Gestão"
+2. `DEPLOY_LOG.md` (v1.16.0) - Log da remoção
+
+### Funcionalidade Removida
+- **Aba "Relatório da Gestão"** - Removida do módulo de qualidade
+- **Tab de navegação** - Removido da interface
+- **Conteúdo da aba** - Removido completamente
+
+### Detalhes da Remoção
+- ✅ **Tab removido** - "Relatório da Gestão" removido da navegação
+- ✅ **Conteúdo removido** - Seção relatorio-gestao removida
+- ✅ **Versionamento atualizado** - v1.16.0 → v1.17.0
+- ✅ **Interface limpa** - Navegação simplificada
+
+### Resultado
+- ✅ **Interface simplificada** - Apenas 3 abas: Avaliações, Relatório do Agente, Análise GPT
+- ✅ **Navegação otimizada** - Remoção de funcionalidade não utilizada
+- ✅ **Código limpo** - Remoção de código desnecessário
+
+---
+
+## Implementação - Correção Definitiva Bot Análises - 2024-12-19 23:59
+
+### Informações da Implementação
+- **Tipo:** Correção Crítica
+- **Data/Hora:** 2024-12-19 23:59 BRT
+- **Versão:** v1.15.0
+- **Status:** Concluído
+
+### Arquivos Modificados
+1. `src/services/botAnalisesService.js` (v3.0.0) - Correção definitiva da integração frontend-backend
+2. `DEPLOY_LOG.md` (v1.15.0) - Log da correção
+
+### Problema Resolvido
+- **Problema:** Inconsistência entre estrutura esperada pelo frontend e dados retornados pelo backend
+- **Causa:** Frontend esperava estrutura aninhada (data.resumo, data.metadados) mas backend retornava estrutura real (success/data/resumo/metadados/dadosBrutos)
+- **Solução:** Adaptação completa do frontend para trabalhar com a estrutura real do backend
+
+### Detalhes da Correção
+- ✅ **Método buscarNovosDados() reescrito** - Adaptado para estrutura real do backend
+- ✅ **Métodos auxiliares criados** - extrairHorarioPico, calcularDadosGrafico, calcularPerguntasFrequentes, calcularRankingAgentes, getNomeUsuario, calcularListaAtividades
+- ✅ **Métodos obsoletos removidos** - processarDadosBrutos, validarEstruturaDados, processar*
+- ✅ **Cache corrigido** - Limitado a períodos <= 30 dias com validação de tempo
+- ✅ **Cálculos no frontend** - Gráfico, perguntas frequentes e ranking calculados a partir de dadosBrutos.atividades
+- ✅ **Versionamento atualizado** - v2.7.2 → v3.0.0
+
+### Resultado
+- ✅ **5 cards de métricas** - Carregam corretamente de resumo/metadados
+- ✅ **Gráfico de linhas** - Exibe uso por período (calculado no front a partir de dadosBrutos)
+- ✅ **Top 10 perguntas frequentes** - Calculado no frontend a partir de atividades
+- ✅ **Top 10 ranking de agentes** - Com score calculado no frontend
+- ✅ **Sistema de cache funcional** - Para períodos <= 30 dias
+- ✅ **Todos os filtros operacionais** - Período e exibição funcionam corretamente
+- ✅ **Exportação XLS/PDF funcional** - Continua operacional
+
+---
 
 ## Implementação - Correção de Estrutura de Dados dos Cards de Métricas - 2024-12-19 23:59
 
