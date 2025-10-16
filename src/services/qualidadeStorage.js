@@ -1,4 +1,4 @@
-// VERSION: v1.2.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.3.0 | DATE: 2025-01-10 | AUTHOR: VeloHub Development Team
 
 import { 
   generateId, 
@@ -406,11 +406,6 @@ const fileToBase64 = (file) => {
   });
 };
 
-// Migrar arquivos antigos (placeholder)
-export const migrarArquivosAntigos = async () => {
-  console.log('🔄 Migração de arquivos antigos não implementada ainda');
-  return { total: 0, migrados: 0, removidos: 0 };
-};
 
 // Exportar dados para Excel
 export const exportToExcel = () => {

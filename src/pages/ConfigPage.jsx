@@ -1,4 +1,4 @@
-// VERSION: v3.7.38 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.7.40 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -123,8 +123,14 @@ const ConfigPage = () => {
           }
         }
         
-        // Recarregar lista de usuários
-        loadUsers();
+        // ✅ Atualizar estado local em vez de recarregar do backend
+        setUsers(prevUsers => 
+          (prevUsers || []).map(user => 
+            user._userMail === devUserEmail 
+              ? existingDevUser
+              : user
+          )
+        );
         return;
       }
       
@@ -175,8 +181,8 @@ const ConfigPage = () => {
           console.log('✅ Usuário de desenvolvimento criado localmente!');
         }
         
-        // Recarregar lista de usuários
-        loadUsers();
+        // ✅ Atualizar estado local em vez de recarregar do backend
+        setUsers(prevUsers => [...(prevUsers || []), devUser]);
       }
     } catch (error) {
       console.error('Erro ao criar usuário de desenvolvimento:', error);
@@ -318,10 +324,10 @@ const ConfigPage = () => {
           rhFin: false,
           facilities: false
         },
-        funcoesAdministrativas: user._funcoesAdministrativas || {
-          avaliador: false,
-          auditoria: false,
-          relatoriosGestao: false
+        funcoesAdministrativas: {
+          avaliador: user._funcoesAdministrativas?.avaliador || false,
+          auditoria: user._funcoesAdministrativas?.auditoria || false,
+          relatoriosGestao: user._funcoesAdministrativas?.relatoriosGestao || false
         }
       });
       setModalStep(1); // Para edição, sempre começar na etapa 1
@@ -436,10 +442,10 @@ const ConfigPage = () => {
         rhFin: false,
         facilities: false
       },
-      funcoesAdministrativas: user._funcoesAdministrativas || {
-        avaliador: false,
-        auditoria: false,
-        relatoriosGestao: false
+      funcoesAdministrativas: {
+        avaliador: user._funcoesAdministrativas?.avaliador || false,
+        auditoria: user._funcoesAdministrativas?.auditoria || false,
+        relatoriosGestao: user._funcoesAdministrativas?.relatoriosGestao || false
       }
     });
     
@@ -486,7 +492,7 @@ const ConfigPage = () => {
       setUsers(prevUsers => 
         (prevUsers || []).map(user => 
           user._userMail === selectedUser._userMail 
-            ? updatedUser.data // Usar dados do backend (estrutura correta)
+            ? (updatedUser.data || user) // Usar dados do backend (estrutura correta)
             : user
         )
       );
@@ -541,8 +547,20 @@ const ConfigPage = () => {
         await addAuthorizedUser(newUser);
       }
       
-      // Recarregar lista de usuários
-      await loadUsers();
+      // ✅ Atualizar estado local em vez de recarregar do backend
+      if (editingUser) {
+        // Para edição, atualizar o usuário existente na lista
+        setUsers(prevUsers => 
+          (prevUsers || []).map(user => 
+            user._userMail === editingUser._userMail 
+              ? { ...user, ...updateData }
+              : user
+          )
+        );
+      } else {
+        // Para novo usuário, recarregar apenas se necessário
+        await loadUsers();
+      }
       handleCloseUserModal();
       
       // Mostrar feedback de sucesso
@@ -560,7 +578,10 @@ const ConfigPage = () => {
       const userToDelete = users?.find(user => user._id === userId);
     if (userToDelete) {
         await removeAuthorizedUser(userToDelete._userMail);
-        await loadUsers(); // Recarregar lista de usuários
+        // ✅ Atualizar estado local em vez de recarregar do backend
+        setUsers(prevUsers => 
+          (prevUsers || []).filter(user => user._id !== userId)
+        );
       }
     } catch (error) {
       console.error('Erro ao remover usuário:', error);

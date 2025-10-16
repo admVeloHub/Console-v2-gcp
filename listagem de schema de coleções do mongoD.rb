@@ -1,5 +1,5 @@
 listagem de schema de coleções do mongoDB
-<!-- VERSION: v1.7.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.7.4 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
 
   🗄️ Database Principal: console_conteudo
 
@@ -135,9 +135,11 @@ _userTickets: {                 // Tipos de tickets
 },
 _funcoesAdministrativas: {      // Funções administrativas
   avaliador: Boolean,           // Se é avaliador no módulo Qualidade
-  auditoria: Boolean,           // Acesso às funcionalidades de auditoria
-  relatoriosGestao: Boolean     // Acesso aos relatórios gerenciais
-}
+  auditoria: Boolean,           // Se tem permissão para auditoria
+  relatoriosGestao: Boolean     // Se tem permissão para relatórios de gestão
+},
+createdAt: Date,                // Data de criação
+updatedAt: Date                 // Data de atualização
 }
 
 Collection console_config.module_status com 2 documentos: status dos módulos e perguntas frequentes do bot

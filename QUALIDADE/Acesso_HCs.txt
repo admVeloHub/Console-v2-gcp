@@ -1,7 +1,0 @@
-Para usar o sistema:
-Execute iniciar_servidor.bat para iniciar
-
-Acesse http://localhost:3001 localmente
-
-Outras máquinas da rede: http://172.16.50.30:3001/
-Login: velotax2024
