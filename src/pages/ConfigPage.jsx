@@ -1,4 +1,4 @@
-// VERSION: v3.7.41 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.8.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -63,131 +63,8 @@ const ConfigPage = () => {
   // Carregar usuários ao montar o componente
   useEffect(() => {
     loadUsers();
-    createDevUserIfNeeded();
   }, []);
 
-  // Criar usuário de desenvolvimento se não existir (APENAS EM DESENVOLVIMENTO)
-  const createDevUserIfNeeded = async () => {
-    // Verificar se estamos em desenvolvimento
-    const isDevelopment = window.location.hostname === 'localhost' || 
-                         window.location.hostname === '127.0.0.1' ||
-                         window.location.hostname.includes('dev') ||
-                         process.env.NODE_ENV === 'development';
-    
-    if (!isDevelopment) {
-      console.log('🚀 Ambiente de PRODUÇÃO detectado - bypass de desenvolvimento desabilitado');
-      return;
-    }
-    
-    console.log('🔧 Ambiente de DESENVOLVIMENTO detectado - ativando bypass');
-    
-    try {
-      const devUserEmail = 'lucas.gravina@velotax.com.br';
-      
-      // Tentar buscar usuários da API primeiro
-      let existingUsers = [];
-      try {
-        existingUsers = await getAllAuthorizedUsers();
-      } catch (apiError) {
-        console.log('⚠️ API não disponível, usando fallback local');
-        // Fallback: verificar localStorage
-        const localUsers = JSON.parse(localStorage.getItem('authorizedUsers') || '[]');
-        existingUsers = localUsers;
-      }
-      
-      // Verificar se o usuário de desenvolvimento já existe
-      const devUserExists = existingUsers?.some(user => user._userMail === devUserEmail);
-      const existingDevUser = existingUsers?.find(user => user._userMail === devUserEmail);
-      
-      console.log('🔍 DEBUG - Usuário de desenvolvimento existe?', devUserExists);
-      console.log('🔍 DEBUG - Usuário existente:', existingDevUser);
-      console.log('🔍 DEBUG - Usuários existentes:', existingUsers);
-      
-      // Se o usuário existe mas tem função incorreta, atualizar
-      if (existingDevUser && existingDevUser._userRole !== 'Administrador') {
-        console.log('🔄 Atualizando função do usuário de desenvolvimento...');
-        existingDevUser._userRole = 'Administrador';
-        
-        try {
-          await updateAuthorizedUser(existingDevUser._userMail, existingDevUser);
-          console.log('✅ Usuário de desenvolvimento atualizado via API!');
-        } catch (apiError) {
-          console.log('⚠️ API não disponível, atualizando localmente...');
-          // Fallback: atualizar no localStorage
-          const localUsers = JSON.parse(localStorage.getItem('authorizedUsers') || '[]');
-          const userIndex = localUsers.findIndex(user => user._userMail === devUserEmail);
-          if (userIndex !== -1) {
-            localUsers[userIndex] = existingDevUser;
-            localStorage.setItem('authorizedUsers', JSON.stringify(localUsers));
-            console.log('✅ Usuário de desenvolvimento atualizado localmente!');
-          }
-        }
-        
-        // ✅ Atualizar estado local em vez de recarregar do backend
-        setUsers(prevUsers => 
-          (prevUsers || []).map(user => 
-            user._userMail === devUserEmail 
-              ? existingDevUser
-              : user
-          )
-        );
-        return;
-      }
-      
-      if (!devUserExists) {
-        console.log('🔧 Criando usuário de desenvolvimento...');
-        
-        const devUser = {
-          _userMail: devUserEmail,
-          _userId: 'Lucas Gravina',
-          _userRole: 'Administrador',
-          _userClearance: {
-            artigos: true,
-            velonews: true,
-            botPerguntas: true,
-            botAnalises: true,
-            chamadosInternos: true,
-            igp: true,
-            qualidade: true,
-            capacity: true,
-            config: true,
-            servicos: true
-          },
-          _userTickets: {
-            artigos: true,
-            processos: true,
-            roteiros: true,
-            treinamentos: true,
-            funcionalidades: true,
-            recursos: true,
-            gestao: true,
-            rhFin: true,
-            facilities: true
-          },
-          _funcoesAdministrativas: {
-            avaliador: true
-          }
-        };
-
-        try {
-          await addAuthorizedUser(devUser);
-          console.log('✅ Usuário de desenvolvimento criado via API!');
-        } catch (apiError) {
-          console.log('⚠️ API não disponível, criando localmente...');
-          // Fallback: criar no localStorage
-          const localUsers = JSON.parse(localStorage.getItem('authorizedUsers') || '[]');
-          localUsers.push(devUser);
-          localStorage.setItem('authorizedUsers', JSON.stringify(localUsers));
-          console.log('✅ Usuário de desenvolvimento criado localmente!');
-        }
-        
-        // ✅ Atualizar estado local em vez de recarregar do backend
-        setUsers(prevUsers => [...(prevUsers || []), devUser]);
-      }
-    } catch (error) {
-      console.error('Erro ao criar usuário de desenvolvimento:', error);
-    }
-  };
 
   const loadUsers = async () => {
     try {
@@ -497,11 +374,22 @@ const ConfigPage = () => {
         )
       );
       
+      // 🔄 Invalidar cache do usuário logado se for o mesmo usuário
+      if (currentUser && currentUser.email === selectedUser._userMail) {
+        console.log('🔄 Invalidando cache do usuário logado');
+        updateUser(updatedUser.data);
+      }
+      
+      // 📢 Notificar outros usuários sobre mudança de permissões
+      console.log('📢 Notificando mudança de permissões para outros usuários');
+      // Em um sistema real, aqui seria enviado um WebSocket ou Server-Sent Events
+      // Para agora, apenas logamos a notificação
+      
       // Fechar modal
       handleClosePermissionsModal();
       
       // Mostrar feedback de sucesso
-      showSnackbar('✅ Permissões salvas com sucesso!', 'success');
+      showSnackbar('✅ Permissões salvas com sucesso! Cache invalidado.', 'success');
       
     } catch (error) {
       console.error('❌ Erro ao salvar permissões:', error);

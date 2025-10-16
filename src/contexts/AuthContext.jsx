@@ -1,8 +1,14 @@
-// VERSION: v3.7.7 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.8.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { sendUserPing, debugUserPermissions } from '../services/userPingService';
+import { getAuthorizedUser } from '../services/userService';
 
 const AuthContext = createContext();
+
+// Configurações de sessão e sincronização
+const SESSION_TIMEOUT = 8 * 60 * 60 * 1000; // 8 horas
+const SYNC_INTERVAL = 30 * 60 * 1000; // 30 minutos
+const SESSION_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutos
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -23,16 +29,27 @@ export const AuthProvider = ({ children }) => {
       try {
         const storedUser = localStorage.getItem('user');
         const storedAuth = localStorage.getItem('isAuthenticated');
+        const lastActivity = localStorage.getItem('lastActivity');
+        
+        // Verificar se a sessão expirou
+        if (lastActivity && Date.now() - parseInt(lastActivity) > SESSION_TIMEOUT) {
+          console.log('⏰ Sessão expirada - forçando logout');
+          logout();
+          return;
+        }
         
         if (storedUser && storedAuth === 'true') {
           setUser(JSON.parse(storedUser));
           setIsAuthenticated(true);
+          // Atualizar timestamp de atividade
+          localStorage.setItem('lastActivity', Date.now().toString());
         }
       } catch (error) {
         console.error('Erro ao verificar autenticação:', error);
         // Limpar dados corrompidos
         localStorage.removeItem('user');
         localStorage.removeItem('isAuthenticated');
+        localStorage.removeItem('lastActivity');
       } finally {
         setLoading(false);
       }
@@ -41,11 +58,84 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
+  // Sistema de verificação de expiração de sessão
+  useEffect(() => {
+    const checkSessionExpiry = () => {
+      const lastActivity = localStorage.getItem('lastActivity');
+      if (lastActivity && Date.now() - parseInt(lastActivity) > SESSION_TIMEOUT) {
+        console.log('⏰ Sessão expirada automaticamente');
+        logout();
+      }
+    };
+    
+    // Verificar expiração a cada 5 minutos
+    const sessionInterval = setInterval(checkSessionExpiry, SESSION_CHECK_INTERVAL);
+    
+    return () => clearInterval(sessionInterval);
+  }, []);
+
+  // Sistema de sincronização automática de permissões
+  useEffect(() => {
+    if (!user?.email) return;
+
+    const syncUserPermissions = async () => {
+      try {
+        console.log('🔄 Sincronizando permissões do usuário:', user.email);
+        const freshUser = await getAuthorizedUser(user.email);
+        
+        if (freshUser && freshUser.success) {
+          const updatedUserData = freshUser.data;
+          
+          // Verificar se houve mudanças nas permissões
+          const currentPermissions = user._userClearance || user.permissoes;
+          const newPermissions = updatedUserData._userClearance;
+          
+          if (JSON.stringify(currentPermissions) !== JSON.stringify(newPermissions)) {
+            console.log('🔄 Permissões atualizadas via sincronização automática');
+            updateUser(updatedUserData);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Erro na sincronização automática:', error);
+      }
+    };
+
+    // Sincronizar imediatamente após login
+    syncUserPermissions();
+    
+    // Sincronizar a cada 30 minutos
+    const syncInterval = setInterval(syncUserPermissions, SYNC_INTERVAL);
+    
+    return () => clearInterval(syncInterval);
+  }, [user?.email]);
+
+  // Atualizar timestamp de atividade em interações do usuário
+  useEffect(() => {
+    const updateActivity = () => {
+      if (isAuthenticated) {
+        localStorage.setItem('lastActivity', Date.now().toString());
+      }
+    };
+
+    // Atualizar atividade em eventos de interação
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+    events.forEach(event => {
+      document.addEventListener(event, updateActivity, true);
+    });
+
+    return () => {
+      events.forEach(event => {
+        document.removeEventListener(event, updateActivity, true);
+      });
+    };
+  }, [isAuthenticated]);
+
   const login = async (userData) => {
     setUser(userData);
     setIsAuthenticated(true);
     localStorage.setItem('user', JSON.stringify(userData));
     localStorage.setItem('isAuthenticated', 'true');
+    localStorage.setItem('lastActivity', Date.now().toString());
 
     // Enviar ping para o backend após login bem-sucedido
     try {
@@ -73,27 +163,18 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    console.log('🚪 Logout realizado - limpando dados de sessão');
     setUser(null);
     setIsAuthenticated(false);
     localStorage.removeItem('user');
     localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('lastActivity');
   };
 
   const hasPermission = (permission) => {
     if (!user) return false;
     
     console.log('🔍 DEBUG - Verificando permissão:', permission, 'para usuário:', user.email || user._userMail);
-    
-    // DESENVOLVIMENTO: Usuário Lucas Gravina tem acesso total (APENAS EM DEV)
-    const isDevelopment = window.location.hostname === 'localhost' || 
-                         window.location.hostname === '127.0.0.1' ||
-                         window.location.hostname.includes('dev') ||
-                         process.env.NODE_ENV === 'development';
-    
-    if (isDevelopment && (user.email === 'lucas.gravina@velotax.com.br' || user._userMail === 'lucas.gravina@velotax.com.br')) {
-      console.log('🔓 DESENVOLVIMENTO: Acesso total liberado para Lucas Gravina');
-      return true;
-    }
     
     // Verificar permissões reais do usuário
     if (!user.permissoes && !user._userClearance) {
@@ -114,16 +195,20 @@ export const AuthProvider = ({ children }) => {
   const canViewTicketType = (ticketType) => {
     if (!user) return false;
     
-    // DESENVOLVIMENTO: Qualquer usuário logado tem acesso total
-    console.log('🎫 DESENVOLVIMENTO: Acesso total a tickets para:', user.email || user._userMail);
-    return true;
+    // Verificar permissões reais do usuário
+    if (!user.tiposTickets && !user._userTickets) {
+      console.log('❌ Usuário sem tipos de tickets definidos:', user.email || user._userMail);
+      return false;
+    }
     
-    // Código original comentado para desenvolvimento
-    // if (user.email === 'gravina.dev@localhost' || user._userMail === 'gravina.dev@localhost') {
-    //   return true;
-    // }
-    // if (!user.tiposTickets) return false;
-    // return user.tiposTickets[ticketType] === true;
+    // Usar _userTickets (formato MongoDB) ou tiposTickets (formato frontend)
+    const userTicketTypes = user._userTickets || user.tiposTickets;
+    const hasAccess = userTicketTypes[ticketType] === true;
+    
+    console.log(`🔍 Verificando tipo de ticket '${ticketType}' para ${user.email || user._userMail}:`, hasAccess);
+    console.log('🎫 Tipos de tickets do usuário:', userTicketTypes);
+    
+    return hasAccess;
   };
 
   const updateUser = (updatedUserData) => {
@@ -132,9 +217,30 @@ export const AuthProvider = ({ children }) => {
       const newUserData = { ...user, ...updatedUserData };
       setUser(newUserData);
       localStorage.setItem('user', JSON.stringify(newUserData));
+      localStorage.setItem('lastActivity', Date.now().toString());
+      console.log('✅ Usuário atualizado no contexto e localStorage');
       return true; // Indica que a atualização foi feita
     }
     return false; // Indica que não foi o usuário logado
+  };
+
+  // Função para forçar sincronização manual
+  const forceSync = async () => {
+    if (!user?.email) return false;
+    
+    try {
+      console.log('🔄 Forçando sincronização manual de permissões');
+      const freshUser = await getAuthorizedUser(user.email);
+      
+      if (freshUser && freshUser.success) {
+        updateUser(freshUser.data);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('❌ Erro na sincronização manual:', error);
+      return false;
+    }
   };
 
   const value = {
@@ -145,7 +251,8 @@ export const AuthProvider = ({ children }) => {
     logout,
     hasPermission,
     canViewTicketType,
-    updateUser
+    updateUser,
+    forceSync
   };
 
   return (

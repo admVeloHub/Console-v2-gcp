@@ -50,45 +50,9 @@ const LoginPage = () => {
                            window.location.hostname === '127.0.0.1' ||
                            window.location.hostname.includes('dev');
       
-      if (isAuthorized || (isDevelopment && userInfo.email === 'lucas.gravina@velotax.com.br')) {
-        let registeredUser;
-        
-        if (isAuthorized) {
-          // Obter dados do usuário registrado via API
-          registeredUser = await getAuthorizedUser(userInfo.email);
-        } else {
-          // Fallback para desenvolvimento - criar usuário dev
-          console.log('🔧 MODO DESENVOLVIMENTO: Criando usuário dev automaticamente');
-          registeredUser = {
-            _userId: 'Lucas Gravina',
-            _userMail: userInfo.email,
-            _userRole: 'Administrador',
-            _userClearance: {
-              artigos: true,
-              velonews: true,
-              botPerguntas: true,
-              botAnalises: true,
-              chamadosInternos: true,
-              igp: true,
-              qualidade: true,
-              capacity: true,
-              config: true,
-              servicos: true
-            },
-            _userTickets: {
-              artigos: true,
-              processos: true,
-              roteiros: true,
-              treinamentos: true,
-              recursos: true,
-              funcionalidades: true,
-              gestao: true,
-              rhfin: true,
-              facilities: true,
-              geral: true
-            }
-          };
-        }
+      if (isAuthorized) {
+        // Obter dados do usuário registrado via API
+        const registeredUser = await getAuthorizedUser(userInfo.email);
         
         if (registeredUser) {
           // Usar dados do MongoDB com campos corretos
@@ -125,45 +89,6 @@ const LoginPage = () => {
   };
 
   // Função de fallback para desenvolvimento
-  const handleDevLogin = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      // Simular processo de login para desenvolvimento
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const devEmail = 'lucas.gravina@velotax.com.br';
-      
-      // Verificar se o usuário de desenvolvimento está registrado
-      const isAuthorized = await isUserAuthorized(devEmail);
-      if (isAuthorized) {
-        const registeredUser = await getAuthorizedUser(devEmail);
-        if (registeredUser) {
-          const user = {
-            id: registeredUser._userId,
-            email: registeredUser._userMail,
-            nome: registeredUser._userId, // Nome do usuário (campo _userId)
-            funcao: registeredUser._userRole,
-            permissoes: registeredUser._userClearance,
-            tiposTickets: registeredUser._userTickets,
-            picture: 'https://ui-avatars.com/api/?name=Lucas+Gravina&background=1634FF&color=fff&size=32&bold=true'
-          };
-          await login(user);
-        } else {
-          setError('Erro ao obter dados do usuário de desenvolvimento.');
-        }
-      } else {
-        setError('Usuário de desenvolvimento não registrado no sistema.');
-      }
-      
-    } catch (err) {
-      setError('Erro ao fazer login. Tente novamente.');
-      console.error('Erro no login:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Verificar se o OAuth está configurado
   const isOAuthConfigured = GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID.includes('278491073220');
@@ -238,7 +163,7 @@ const LoginPage = () => {
                   variant="contained"
                   size="large"
                   startIcon={<Google />}
-                  onClick={handleDevLogin}
+                  onClick={handleGoogleLogin}
                   sx={{
                     backgroundColor: 'var(--blue-medium)',
                     color: 'white',

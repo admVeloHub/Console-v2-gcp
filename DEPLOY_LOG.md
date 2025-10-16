@@ -1,5 +1,100 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.25.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.27.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+
+## Push GitHub - Implementação de Sincronização Automática e Expiração de Sessão - 2024-12-19 18:30
+
+### Informações do Push
+- **Tipo:** Push GitHub
+- **Data/Hora:** 2024-12-19 18:30 BRT
+- **Versão:** v1.27.0
+- **Status:** Concluído
+
+### Arquivos Incluídos no Push
+1. `src/contexts/AuthContext.jsx` - Sistema de sincronização automática e expiração de sessão (v3.8.0)
+2. `src/pages/ConfigPage.jsx` - Invalidação de cache e notificação de mudanças (v3.8.0)
+3. `DEPLOY_LOG.md` - Log da implementação (v1.27.0)
+
+### Descrição do Push
+Implementação completa do sistema híbrido de **Sincronização Automática + Expiração de Sessão** para resolver problemas de cache permanente e melhorar segurança:
+
+**🔧 Sistema de Expiração de Sessão:**
+- Sessões expiram automaticamente após 8 horas de inatividade
+- Verificação automática a cada 5 minutos
+- Logout forçado quando sessão expira
+- Timestamp de atividade atualizado em interações do usuário
+
+**🔄 Sistema de Sincronização Automática:**
+- Sincronização de permissões a cada 30 minutos
+- Verificação imediata após login
+- Comparação de permissões para detectar mudanças
+- Atualização automática do cache quando necessário
+
+**📢 Invalidação de Cache:**
+- Cache invalidado imediatamente quando permissões são alteradas
+- Notificação de mudanças para outros usuários
+- Atualização do usuário logado em tempo real
+- Feedback visual de invalidação de cache
+
+**🎯 Configurações Implementadas:**
+- `SESSION_TIMEOUT`: 8 horas (8 * 60 * 60 * 1000ms)
+- `SYNC_INTERVAL`: 30 minutos (30 * 60 * 1000ms)
+- `SESSION_CHECK_INTERVAL`: 5 minutos (5 * 60 * 1000ms)
+
+**📊 Funcionalidades Adicionadas:**
+- Função `forceSync()` para sincronização manual
+- Atualização de timestamp em eventos de interação
+- Limpeza automática de dados de sessão expirada
+- Logs detalhados para monitoramento
+
+### Impacto
+- ✅ **Segurança aprimorada** - Sessões expiram automaticamente
+- ✅ **Cache sempre atualizado** - Sincronização automática de permissões
+- ✅ **Conformidade com boas práticas** - Seguindo padrões de segurança
+- ✅ **UX otimizada** - Usuário não precisa re-logar constantemente
+- ✅ **Performance mantida** - Cache + sincronização periódica
+- ✅ **Sistema confiável** - Eliminação de problemas de cache permanente
+
+---
+
+## Push GitHub - Correção de Chamadas API Duplicadas no Config - 2024-12-19 17:15
+
+### Informações do Push
+- **Tipo:** Push GitHub
+- **Data/Hora:** 2024-12-19 17:15 BRT
+- **Versão:** v1.26.0
+- **Status:** Concluído
+
+### Arquivos Incluídos no Push
+1. `src/pages/ConfigPage.jsx` - Correção de chamadas API duplicadas (v3.7.41)
+2. `DEPLOY_LOG.md` - Log da correção (v1.26.0)
+
+### Descrição do Push
+Correção crítica do problema de chamadas API duplicadas no módulo Config:
+
+**🚨 Problema Identificado:**
+- Checkboxes faziam chamadas API imediatas
+- Botão "Salvar" fazia segunda chamada API com dados antigos
+- Resultado: duas chamadas PUT, segunda sobrescrevia a primeira
+
+**🔧 Correção Aplicada:**
+- Removidas chamadas API dos checkboxes (handlePermissionChange e handleTicketTypeChange)
+- Checkboxes agora apenas atualizam estado local
+- Apenas botão "Salvar" faz chamada API
+- Sincronização correta entre permissionsData e selectedUser
+
+**📊 Comportamento Corrigido:**
+- ANTES: Checkbox → PUT API → Salvar → PUT API (dados antigos)
+- DEPOIS: Checkbox → Estado Local → Salvar → PUT API (dados corretos)
+
+**🎯 Resultado:**
+- Uma única operação de salvamento por sessão
+- Monitor backend mostra apenas 1 PUT request
+- Dados salvos refletem exatamente as alterações feitas
+
+**📋 Versão Atualizada:**
+- ConfigPage.jsx: v3.7.40 → v3.7.41
+
+---
 
 ## Push GitHub - Debug Total do Módulo Config e Compliance MongoDB - 2024-12-19 16:45
 
