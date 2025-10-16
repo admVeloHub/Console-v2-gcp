@@ -1,8 +1,8 @@
-// VERSION: v3.8.1 | DATE: 2025-01-10 | AUTHOR: VeloHub Development Team
+// VERSION: v3.9.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import axios from 'axios';
 
 // Configuração base da API
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://back-console.vercel.app/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://inova-console-back.vercel.app/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

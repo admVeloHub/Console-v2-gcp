@@ -1,4 +1,4 @@
-// VERSION: v1.17.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.25.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 
@@ -49,6 +49,7 @@ import {
   VolumeUp,
   VolumeOff,
   MicOff,
+  Mic,
   Upload,
   AttachFile
 } from '@mui/icons-material';
@@ -74,9 +75,15 @@ import {
   getStatusPontuacao, 
   generateId 
 } from '../types/qualidade';
+import UploadAudioModal from '../components/qualidade/UploadAudioModal';
+import AnaliseGPTAccordion from '../components/qualidade/AnaliseGPTAccordion';
+import DetalhesAnaliseModal from '../components/qualidade/DetalhesAnaliseModal';
+import { uploadAudioParaAnalise, listarAnalisesPorColaborador } from '../services/qualidadeAudioService';
+import { useAuth } from '../contexts/AuthContext';
 
 const QualidadeModulePage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   // Estados principais
   const [currentView, setCurrentView] = useState('avaliacoes');
@@ -96,8 +103,10 @@ const QualidadeModulePage = () => {
   // Estados dos modais
   const [modalAvaliacaoAberto, setModalAvaliacaoAberto] = useState(false);
   const [modalGPTAberto, setModalGPTAberto] = useState(false);
+  const [modalUploadAberto, setModalUploadAberto] = useState(false);
   const [avaliacaoEditando, setAvaliacaoEditando] = useState(null);
   const [avaliacaoSelecionada, setAvaliacaoSelecionada] = useState(null);
+  const [avaliacaoParaUpload, setAvaliacaoParaUpload] = useState(null);
   
   // Estados dos formulários
   const [formData, setFormData] = useState({
@@ -127,6 +136,17 @@ const QualidadeModulePage = () => {
   const [filtroAno, setFiltroAno] = useState(new Date().getFullYear());
   const [relatorioAgente, setRelatorioAgente] = useState(null);
   const [relatorioGestao, setRelatorioGestao] = useState(null);
+
+  // Estados para Análise GPT
+  const [filtrosGPT, setFiltrosGPT] = useState({
+    colaborador: '',
+    mes: '',
+    ano: new Date().getFullYear()
+  });
+  const [analisesGPT, setAnalisesGPT] = useState([]);
+  const [loadingAnalisesGPT, setLoadingAnalisesGPT] = useState(false);
+  const [modalDetalhesAberto, setModalDetalhesAberto] = useState(false);
+  const [analiseSelecionada, setAnaliseSelecionada] = useState(null);
 
   // Carregar dados
   useEffect(() => {
@@ -370,6 +390,112 @@ const QualidadeModulePage = () => {
     }
   };
 
+  // ===== FUNÇÕES DO MODAL DE UPLOAD =====
+
+  const abrirModalUpload = (avaliacao) => {
+    setAvaliacaoParaUpload(avaliacao);
+    setModalUploadAberto(true);
+  };
+
+  const fecharModalUpload = () => {
+    setModalUploadAberto(false);
+    setAvaliacaoParaUpload(null);
+  };
+
+  const handleUploadAudio = async (avaliacaoId, audioFile) => {
+    try {
+      const result = await uploadAudioParaAnalise(avaliacaoId, audioFile);
+      
+      // Atualizar estado da avaliação para mostrar que está processando
+      setAvaliacoes(prev => prev.map(avaliacao => 
+        avaliacao._id === avaliacaoId 
+          ? { ...avaliacao, uploadingAudio: true, audioUploadId: result.uploadId }
+          : avaliacao
+      ));
+      
+      return result;
+    } catch (error) {
+      console.error('Erro no upload:', error);
+      throw error;
+    }
+  };
+
+  // Função para determinar status do áudio
+  const getAudioStatus = (avaliacao) => {
+    if (avaliacao.audioGptId) return 'completo'; // Verde
+    if (avaliacao.uploadingAudio) return 'enviando'; // Amarelo
+    return 'sem_audio'; // Cinza opaco
+  };
+
+  // Função para renderizar ícone de áudio
+  const renderAudioIcon = (avaliacao) => {
+    const status = getAudioStatus(avaliacao);
+    
+    const iconProps = {
+      sx: { 
+        cursor: 'pointer',
+        transition: 'all 0.3s ease',
+        '&:hover': {
+          transform: 'scale(1.1)'
+        }
+      },
+      onClick: () => abrirModalUpload(avaliacao)
+    };
+
+    switch (status) {
+      case 'completo':
+        return <Mic sx={{ ...iconProps.sx, color: '#15A237' }} {...iconProps} />;
+      case 'enviando':
+        return <Mic sx={{ ...iconProps.sx, color: '#FCC200' }} {...iconProps} />;
+      default:
+        return <MicOff sx={{ ...iconProps.sx, color: '#B0BEC5' }} {...iconProps} />;
+    }
+  };
+
+  // ===== FUNÇÕES DA ABA ANÁLISE GPT =====
+
+  const carregarAnalisesGPT = async () => {
+    if (!filtrosGPT.colaborador) return;
+    
+    try {
+      setLoadingAnalisesGPT(true);
+      
+      const result = await listarAnalisesPorColaborador(
+        filtrosGPT.colaborador, 
+        filtrosGPT.mes, 
+        filtrosGPT.ano
+      );
+      setAnalisesGPT(result.analises || []);
+      
+      if (result.analises && result.analises.length > 0) {
+        mostrarSnackbar(`${result.analises.length} análise(s) encontrada(s)`, 'success');
+      } else {
+        mostrarSnackbar('Nenhuma análise encontrada para este colaborador', 'info');
+      }
+    } catch (error) {
+      console.error('Erro ao carregar análises GPT:', error);
+      mostrarSnackbar('Erro ao carregar análises GPT', 'error');
+    } finally {
+      setLoadingAnalisesGPT(false);
+    }
+  };
+
+  const abrirModalDetalhesGPT = (analise) => {
+    setAnaliseSelecionada(analise);
+    setModalDetalhesAberto(true);
+  };
+
+  const fecharModalDetalhes = () => {
+    setModalDetalhesAberto(false);
+    setAnaliseSelecionada(null);
+  };
+
+  const abrirModalAuditoria = (analise) => {
+    // TODO: Implementar modal de auditoria
+    console.log('Abrir modal de auditoria para:', analise);
+    mostrarSnackbar('Modal de auditoria será implementado na próxima fase', 'info');
+  };
+
   // ===== FUNÇÕES DOS RELATÓRIOS =====
 
   const gerarRelatorioAgenteHandler = async () => {
@@ -441,7 +567,14 @@ const QualidadeModulePage = () => {
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ mt: 6, mb: 8, pb: 4, position: 'relative' }}>
+      <Container maxWidth={false} sx={{ 
+        mt: 6, 
+        mb: 8, 
+        pb: 4, 
+        position: 'relative',
+        px: 3.125, // 25px padding nas laterais
+        maxWidth: '100%'
+      }}>
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
           <LinearProgress sx={{ width: '50%' }} />
         </Box>
@@ -450,7 +583,14 @@ const QualidadeModulePage = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 2, mb: 8, pb: 4, position: 'relative' }}>
+    <Container maxWidth={false} sx={{ 
+      mt: 2, 
+      mb: 8, 
+      pb: 4, 
+      position: 'relative',
+      px: 3.125, // 25px padding nas laterais
+      maxWidth: '100%'
+    }}>
       {/* Botão Voltar - Canto esquerdo superior do dashboard */}
       <Button
         variant="outlined"
@@ -769,19 +909,7 @@ const QualidadeModulePage = () => {
                             />
                           </TableCell>
                           <TableCell>
-                            {avaliacao.arquivoLigacao ? (
-                              <IconButton
-                                size="small"
-                                onClick={() => mostrarSnackbar('Reprodução de áudio em desenvolvimento', 'info')}
-                                sx={{ color: '#15A237' }}
-                              >
-                                <VolumeUp />
-                              </IconButton>
-                            ) : (
-                              <IconButton size="small" disabled>
-                                <MicOff sx={{ color: '#666666' }} />
-                              </IconButton>
-                            )}
+                            {renderAudioIcon(avaliacao)}
                           </TableCell>
                           <TableCell>
                             <Box sx={{ display: 'flex', gap: 1 }}>
@@ -1239,11 +1367,139 @@ const QualidadeModulePage = () => {
           <Card sx={{ borderRadius: '16px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}>
             <CardContent>
               <Typography variant="h6" sx={{ fontFamily: 'Poppins', color: '#000058', fontWeight: 600, mb: 3 }}>
-                Análise com Inteligência Artificial
+                Análise GPT - Avaliações por Inteligência Artificial
               </Typography>
-              <Alert severity="info" sx={{ fontFamily: 'Poppins' }}>
-                Selecione uma avaliação para realizar análise automática com GPT.
-              </Alert>
+              
+              {/* Filtros */}
+              <Box sx={{ 
+                display: 'flex', 
+                gap: 2, 
+                mb: 3, 
+                flexWrap: 'wrap',
+                alignItems: 'center'
+              }}>
+                <FormControl sx={{ minWidth: 200 }}>
+                  <InputLabel sx={{ fontFamily: 'Poppins' }}>Colaborador *</InputLabel>
+                  <Select
+                    value={filtrosGPT.colaborador}
+                    onChange={(e) => setFiltrosGPT({ ...filtrosGPT, colaborador: e.target.value })}
+                    label="Colaborador *"
+                    sx={{
+                      fontFamily: 'Poppins',
+                      '&:hover .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#1694FF'
+                      },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#000058'
+                      }
+                    }}
+                  >
+                    {funcionarios.map((funcionario) => {
+                      const nomeColaborador = funcionario.colaboradorNome || funcionario.nomeCompleto;
+                      return (
+                        <MenuItem key={funcionario._id} value={nomeColaborador} sx={{ fontFamily: 'Poppins' }}>
+                          {nomeColaborador}
+                        </MenuItem>
+                      );
+                    })}
+                  </Select>
+                </FormControl>
+
+                <FormControl sx={{ minWidth: 150 }}>
+                  <InputLabel sx={{ fontFamily: 'Poppins' }}>Mês</InputLabel>
+                  <Select
+                    value={filtrosGPT.mes}
+                    onChange={(e) => setFiltrosGPT({ ...filtrosGPT, mes: e.target.value })}
+                    label="Mês"
+                    sx={{
+                      fontFamily: 'Poppins',
+                      '&:hover .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#1694FF'
+                      },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#000058'
+                      }
+                    }}
+                  >
+                    {MESES.map((mes) => (
+                      <MenuItem key={mes} value={mes} sx={{ fontFamily: 'Poppins' }}>
+                        {mes}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                <FormControl sx={{ minWidth: 120 }}>
+                  <InputLabel sx={{ fontFamily: 'Poppins' }}>Ano</InputLabel>
+                  <Select
+                    value={filtrosGPT.ano}
+                    onChange={(e) => setFiltrosGPT({ ...filtrosGPT, ano: e.target.value })}
+                    label="Ano"
+                    sx={{
+                      fontFamily: 'Poppins',
+                      '&:hover .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#1694FF'
+                      },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#000058'
+                      }
+                    }}
+                  >
+                    {ANOS.map((ano) => (
+                      <MenuItem key={ano} value={ano} sx={{ fontFamily: 'Poppins' }}>
+                        {ano}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                <Button
+                  variant="contained"
+                  onClick={carregarAnalisesGPT}
+                  disabled={!filtrosGPT.colaborador}
+                  sx={{
+                    fontFamily: 'Poppins',
+                    fontWeight: 600,
+                    bgcolor: 'var(--blue-medium)',
+                    '&:hover': {
+                      bgcolor: 'var(--blue-dark)'
+                    },
+                    '&:disabled': {
+                      bgcolor: 'var(--gray)',
+                      color: 'white'
+                    }
+                  }}
+                >
+                  Buscar Análises
+                </Button>
+              </Box>
+
+              {/* Mensagem de instrução */}
+              {!filtrosGPT.colaborador && (
+                <Alert severity="info" sx={{ fontFamily: 'Poppins', mb: 3 }}>
+                  Selecione um colaborador para visualizar as análises GPT.
+                </Alert>
+              )}
+
+              {/* Lista de Análises GPT */}
+              {filtrosGPT.colaborador && (
+                <Box>
+                  {loadingAnalisesGPT && (
+                    <Box sx={{ textAlign: 'center', py: 4 }}>
+                      <LinearProgress sx={{ mb: 2 }} />
+                      <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666' }}>
+                        Carregando análises GPT...
+                      </Typography>
+                    </Box>
+                  )}
+                  
+                  <AnaliseGPTAccordion 
+                    analises={analisesGPT}
+                    onVerDetalhes={abrirModalDetalhesGPT}
+                    loading={loadingAnalisesGPT}
+                  />
+                </Box>
+              )}
             </CardContent>
           </Card>
         </Box>
@@ -1788,6 +2044,24 @@ const QualidadeModulePage = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Modal de Upload de Áudio */}
+      <UploadAudioModal
+        open={modalUploadAberto}
+        onClose={fecharModalUpload}
+        onUpload={handleUploadAudio}
+        avaliacaoId={avaliacaoParaUpload?._id}
+        avaliacaoNome={avaliacaoParaUpload?.colaboradorNome}
+      />
+
+      {/* Modal Detalhes da Análise GPT */}
+      <DetalhesAnaliseModal
+        open={modalDetalhesAberto}
+        onClose={fecharModalDetalhes}
+        analise={analiseSelecionada}
+        onAuditar={abrirModalAuditoria}
+        podeAuditar={user?._funcoesAdministrativas?.auditoria === true}
+      />
 
       {/* Snackbar */}
       <Snackbar

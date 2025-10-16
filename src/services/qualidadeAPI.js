@@ -1,4 +1,4 @@
-// VERSION: v1.24.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.25.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 import { qualidadeFuncionariosAPI, qualidadeAvaliacoesAPI } from './api';
 import axios from 'axios';
@@ -599,7 +599,7 @@ export const getAvaliacoesPorColaborador = async (colaboradorNome) => {
 
 // Configuração do axios para API GPT
 const gptAPI = axios.create({
-  baseURL: 'https://back-console.vercel.app/api/qualidade',
+  baseURL: 'https://inova-console-back.vercel.app/api/qualidade',
   headers: {
     'Content-Type': 'application/json'
   },
