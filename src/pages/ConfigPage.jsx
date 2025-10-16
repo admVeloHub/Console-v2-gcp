@@ -1,4 +1,4 @@
-// VERSION: v3.7.40 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.7.41 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -620,95 +620,47 @@ const ConfigPage = () => {
     }));
   };
 
-  const handlePermissionChange = async (permission, checked) => {
+  const handlePermissionChange = (permission, checked) => {
     if (selectedUser) {
-      try {
-      const updatedUser = {
-        ...selectedUser,
-          _userClearance: {
-            ...selectedUser._userClearance,
+      // Apenas atualizar o estado local do modal (sem chamada API)
+      setPermissionsData(prev => ({
+        ...prev,
+        permissoes: {
+          ...prev.permissoes,
           [permission]: checked
         }
-      };
+      }));
       
-      // Atualizar o selectedUser para refletir imediatamente no modal
-      setSelectedUser(updatedUser);
-      
-      // Atualizar no serviço de usuários
-        await updateAuthorizedUser(selectedUser._userMail, updatedUser);
-        
-        // ✅ Atualizar estado local em vez de recarregar do backend
-        setUsers(prevUsers => 
-          (prevUsers || []).map(user => 
-            user._userMail === selectedUser._userMail 
-              ? (updatedUser.data || user)
-              : user
-          )
-        );
-
-      // Se é o usuário logado, atualizar o AuthContext e localStorage
-        if (currentUser && currentUser.email === selectedUser._userMail) {
-          // Mapear dados do MongoDB para o formato que o AuthContext espera
-          const contextUser = {
-            ...currentUser,
-            permissoes: updatedUser._userClearance,
-            tiposTickets: updatedUser._userTickets
-          };
-          updateUser(contextUser);
+      // Atualizar selectedUser para refletir no modal
+      setSelectedUser(prev => ({
+        ...prev,
+        _userClearance: {
+          ...prev._userClearance,
+          [permission]: checked
         }
-      } catch (error) {
-        console.error('Erro ao atualizar permissão:', error);
-        // Reverter a mudança no selectedUser em caso de erro
-        setSelectedUser(selectedUser);
-        const errorMessage = error.response?.data?.message || error.message || 'Erro ao atualizar permissão';
-        alert(`Erro: ${errorMessage}`);
-      }
+      }));
     }
   };
 
-  const handleTicketTypeChange = async (ticketType, checked) => {
+  const handleTicketTypeChange = (ticketType, checked) => {
     if (selectedUser) {
-      try {
-      const updatedUser = {
-        ...selectedUser,
-          _userTickets: {
-            ...selectedUser._userTickets,
+      // Apenas atualizar o estado local do modal (sem chamada API)
+      setPermissionsData(prev => ({
+        ...prev,
+        tiposTickets: {
+          ...prev.tiposTickets,
           [ticketType]: checked
         }
-      };
+      }));
       
-      // Atualizar o selectedUser para refletir imediatamente no modal
-      setSelectedUser(updatedUser);
-      
-      // Atualizar no serviço de usuários
-        await updateAuthorizedUser(selectedUser._userMail, updatedUser);
-        
-        // ✅ Atualizar estado local em vez de recarregar do backend
-        setUsers(prevUsers => 
-          (prevUsers || []).map(user => 
-            user._userMail === selectedUser._userMail 
-              ? (updatedUser.data || user)
-              : user
-          )
-        );
-
-      // Se é o usuário logado, atualizar o AuthContext e localStorage
-        if (currentUser && currentUser.email === selectedUser._userMail) {
-          // Mapear dados do MongoDB para o formato que o AuthContext espera
-          const contextUser = {
-            ...currentUser,
-            permissoes: updatedUser._userClearance,
-            tiposTickets: updatedUser._userTickets
-          };
-          updateUser(contextUser);
+      // Atualizar selectedUser para refletir no modal
+      setSelectedUser(prev => ({
+        ...prev,
+        _userTickets: {
+          ...prev._userTickets,
+          [ticketType]: checked
         }
-      } catch (error) {
-        console.error('Erro ao atualizar tipo de ticket:', error);
-        // Reverter a mudança no selectedUser em caso de erro
-        setSelectedUser(selectedUser);
-        const errorMessage = error.response?.data?.message || error.message || 'Erro ao atualizar tipo de ticket';
-        alert(`Erro: ${errorMessage}`);
-      }
+      }));
     }
   };
 
