@@ -1,4 +1,4 @@
-// VERSION: v3.4.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.5.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState } from 'react';
 import {
   Box,
@@ -35,20 +35,8 @@ const LoginPage = () => {
       
       const userInfo = JSON.parse(jsonPayload);
       
-      // Debug: verificar dados do usuário
-      console.log('Dados do usuário do Google:', {
-        email: userInfo.email,
-        name: userInfo.name,
-        picture: userInfo.picture
-      });
-      
       // Verificar se o usuário está registrado no sistema
       const isAuthorized = await isUserAuthorized(userInfo.email);
-      
-      // Fallback para desenvolvimento quando API não está disponível
-      const isDevelopment = window.location.hostname === 'localhost' || 
-                           window.location.hostname === '127.0.0.1' ||
-                           window.location.hostname.includes('dev');
       
       if (isAuthorized) {
         // Obter dados do usuário registrado via API
@@ -59,14 +47,14 @@ const LoginPage = () => {
           const user = {
             id: registeredUser._userId,
             email: registeredUser._userMail,
-            nome: registeredUser._userId, // Nome do usuário (campo _userId)
+            nome: registeredUser._userId,
             funcao: registeredUser._userRole,
             permissoes: registeredUser._userClearance,
             tiposTickets: registeredUser._userTickets,
-            picture: userInfo.picture // Foto do Google
+            picture: userInfo.picture
           };
           
-          // Fazer login via AuthContext (agora assíncrono)
+          // Fazer login via AuthContext
           await login(user);
         } else {
           setError('Erro ao obter dados do usuário. Tente novamente.');
@@ -87,11 +75,6 @@ const LoginPage = () => {
     setError('Erro ao fazer login com Google. Tente novamente.');
     setLoading(false);
   };
-
-  // Função de fallback para desenvolvimento
-
-  // Verificar se o OAuth está configurado
-  const isOAuthConfigured = GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID.length > 0;
 
   return (
     <Box
@@ -143,7 +126,7 @@ const LoginPage = () => {
                   Processando login...
                 </Typography>
               </Box>
-            ) : isOAuthConfigured ? (
+            ) : (
               <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                 <GoogleLogin
                   onSuccess={handleGoogleSuccess}
@@ -156,45 +139,6 @@ const LoginPage = () => {
                   width="280"
                   useOneTap={false}
                 />
-              </Box>
-            ) : (
-              <Box sx={{ textAlign: 'center' }}>
-                <Button
-                  variant="contained"
-                  size="large"
-                  startIcon={<Google />}
-                  onClick={handleGoogleSuccess}
-                  sx={{
-                    backgroundColor: 'var(--blue-medium)',
-                    color: 'white',
-                    fontFamily: 'Poppins',
-                    fontWeight: 600,
-                    fontSize: '1.1rem',
-                    padding: '12px 32px',
-                    borderRadius: '12px',
-                    textTransform: 'none',
-                    boxShadow: '0 4px 20px rgba(22, 52, 255, 0.3)',
-                    '&:hover': {
-                      backgroundColor: 'var(--blue-dark)',
-                      boxShadow: '0 6px 25px rgba(22, 52, 255, 0.4)',
-                      transform: 'translateY(-2px)'
-                    },
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  Entrar (Desenvolvimento)
-                </Button>
-                <Typography 
-                  variant="body2" 
-                  sx={{ 
-                    mt: 1, 
-                    fontFamily: 'Poppins', 
-                    color: 'var(--gray)',
-                    fontSize: '0.8rem'
-                  }}
-                >
-                  OAuth não configurado - Modo desenvolvimento
-                </Typography>
               </Box>
             )}
           </Box>
