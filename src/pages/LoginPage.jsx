@@ -163,7 +163,7 @@ const LoginPage = () => {
                   variant="contained"
                   size="large"
                   startIcon={<Google />}
-                  onClick={handleGoogleLogin}
+                  onClick={handleGoogleSuccess}
                   sx={{
                     backgroundColor: 'var(--blue-medium)',
                     color: 'white',
