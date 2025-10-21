@@ -10,7 +10,7 @@ import {
   Alert
 } from '@mui/material';
 import { Google } from '@mui/icons-material';
-import { GoogleLogin } from '@react-oauth/google';
+import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 import consoleLogo from '../assets/console.png';
 import { AUTHORIZED_EMAILS, GOOGLE_CLIENT_ID } from '../config/google';
 import { useAuth } from '../contexts/AuthContext';
@@ -128,17 +128,19 @@ const LoginPage = () => {
               </Box>
             ) : (
               <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={handleGoogleError}
-                  theme="outline"
-                  size="large"
-                  text="signin_with"
-                  shape="rectangular"
-                  logo_alignment="left"
-                  width="280"
-                  useOneTap={false}
-                />
+                <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={handleGoogleError}
+                    theme="outline"
+                    size="large"
+                    text="signin_with"
+                    shape="rectangular"
+                    logo_alignment="left"
+                    width="280"
+                    useOneTap={false}
+                  />
+                </GoogleOAuthProvider>
               </Box>
             )}
           </Box>
