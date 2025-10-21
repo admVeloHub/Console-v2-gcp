@@ -7,7 +7,7 @@
  * AUTHOR: VeloHub Development Team
  */
 
-const API_URL = 'https://inova-console-back.vercel.app';
+const API_URL = 'https://back-console.vercel.app';
 
 /**
  * Upload de áudio para análise GPT

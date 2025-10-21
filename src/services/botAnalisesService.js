@@ -1,7 +1,7 @@
 // VERSION: v3.1.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 // Configuração da API
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://inova-console-back.vercel.app/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://back-console.vercel.app/api';
 
 // Import do novo endpoint FAQ
 import { faqBotAPI } from './api';

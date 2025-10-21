@@ -96,7 +96,7 @@ export const sendUserPing = async (user) => {
     console.log('Enviando ping do usuário:', pingData);
 
     // URL do backend - usar a mesma configuração da API principal
-    const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://inova-console-back.vercel.app/api';
+    const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://back-console.vercel.app/api';
     const apiUrl = `${API_BASE_URL}/user-ping`;
 
     const response = await fetch(apiUrl, {
