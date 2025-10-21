@@ -5,9 +5,9 @@ export const VELOINSIGHTS_CONFIG = {
   // ID da planilha Google Sheets do VeloInsights
   SPREADSHEET_ID: '1F1VJrAzGage7YyX1tLCUCaIgB2GhvHSqJRVnmwwYhkA',
   
-  // Configurações de autenticação (reutilizar do Console)
-  GOOGLE_CLIENT_ID: process.env.REACT_APP_GOOGLE_CLIENT_ID,
-  GOOGLE_API_KEY: process.env.REACT_APP_GOOGLE_API_KEY,
+  // Configurações de autenticação (VeloInsights específico)
+  GOOGLE_CLIENT_ID: process.env.VITE_GOOGLE_CLIENT_ID || process.env.REACT_APP_GOOGLE_CLIENT_ID,
+  GOOGLE_API_KEY: process.env.VITE_GOOGLE_API_KEY || process.env.REACT_APP_GOOGLE_API_KEY,
   
   // Configurações de permissões
   PERMISSIONS: {
