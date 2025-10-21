@@ -1,199 +1,319 @@
-// VERSION: v3.1.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
-import React, { useState, useEffect } from 'react';
-import { Container, Typography, Box, Grid, Card, CardContent, CircularProgress, Alert, Snackbar } from '@mui/material';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
-// import { igpAPI } from '../services/api'; // Removido - usando dados locais
-import BackButton from '../components/common/BackButton';
+// VERSION: v1.7.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+import React, { useState, useEffect } from 'react'
+import { Container, Tabs, Tab, Box, CircularProgress, Alert, Typography, Button, ButtonGroup } from '@mui/material'
+import { useAuth } from '../contexts/AuthContext'
+import { useGoogleSheetsDirectSimple } from './IGP/hooks/useGoogleSheetsDirectSimple'
+import MetricsDashboard from './IGP/components/MetricsDashboardNovo'
+import AgentAnalysis from './IGP/components/AgentAnalysis'
+import ChartsDetailedTab from './IGP/components/ChartsDetailedTab'
+import BackButton from '../components/common/BackButton'
+import { VELOINSIGHTS_CONFIG } from '../config/veloinsights'
 
 const IGPPage = () => {
-  const [metrics, setMetrics] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
+  const { user } = useAuth()
+  const [activeTab, setActiveTab] = useState(0)
+  const [activeDataSource, setActiveDataSource] = useState('telefonia') // 'telefonia' ou 'tickets'
+  
+  // Debug: verificar dados do usuário
+  console.log('🔍 IGP DEBUG - Usuário:', user)
+  console.log('🔍 IGP DEBUG - Email:', user?.email || user?._userMail)
+  console.log('🔍 IGP DEBUG - _funcoesAdministrativas:', user?._funcoesAdministrativas)
+  
+  // Verificar permissões (HIERARQUIA: Avaliador < Auditor < Relatórios de Gestão)
+  const hasAvaliadorPermission = user?._funcoesAdministrativas?.avaliador === true
+  const hasAuditorPermission = user?._funcoesAdministrativas?.auditor === true
+  const hasRelatoriosPermission = user?._funcoesAdministrativas?.relatoriosGestao === true
+  
+  console.log('🔍 IGP DEBUG - Permissões:')
+  console.log('  - Avaliador:', hasAvaliadorPermission)
+  console.log('  - Auditor:', hasAuditorPermission)
+  console.log('  - Relatórios:', hasRelatoriosPermission)
+  
+  // Controlar visualização de nomes (pelo menos Avaliador)
+  const canViewNames = hasAvaliadorPermission || hasAuditorPermission || hasRelatoriosPermission
+  
+  // Controlar acesso à aba Gráficos Detalhados (Auditor+)
+  const canViewDetailedCharts = hasAuditorPermission || hasRelatoriosPermission
+  
+  // Controlar acesso à aba Análise por Agente (Relatórios de Gestão)
+  const canViewAgentAnalysis = hasRelatoriosPermission
+  
+  // Hook de dados do Google Sheets
+  const {
+    data,
+    metrics,
+    operatorMetrics,
+    rankings,
+    octaData,
+    isAuthenticated,
+    loading,
+    error,
+    signIn,
+    signOut,
+    loadDataOnDemand,
+    selectedPeriod,
+    fullDataset
+  } = useGoogleSheetsDirectSimple()
+  
+  // Auto-login com credenciais do Console
   useEffect(() => {
-    const loadMetrics = () => {
-      setLoading(true);
-      // Usar dados simulados locais (sem chamada para API)
-      setMetrics({
-        counts: {
-          artigos: 45,
-          velonews: 12,
-          botPerguntas: 28
-        },
-        performance: {
-          responseTime: 120,
-          uptime: 99.9,
-          errorRate: 0.1
-        },
-        systemHealth: 'healthy',
-        lastUpdated: new Date().toISOString()
-      });
-      setError(null);
-      setLoading(false);
-    };
-
-    loadMetrics();
-  }, []);
-
-  const chartData = [
-    { name: 'Jan', artigos: 12, velonews: 3, bot: 8 },
-    { name: 'Fev', artigos: 15, velonews: 2, bot: 6 },
-    { name: 'Mar', artigos: 18, velonews: 4, bot: 10 },
-    { name: 'Abr', artigos: 22, velonews: 3, bot: 12 },
-    { name: 'Mai', artigos: 25, velonews: 5, bot: 15 },
-    { name: 'Jun', artigos: 28, velonews: 4, bot: 18 },
-  ];
-
-  const pieData = [
-    { name: 'Artigos', value: metrics?.counts?.artigos || 45, color: '#1634FF' },
-    { name: 'Velonews', value: metrics?.counts?.velonews || 12, color: '#006AB9' },
-    { name: 'Bot Perguntas', value: metrics?.counts?.botPerguntas || 28, color: '#15A237' },
-  ];
-
-  if (loading) {
+    if (user && !isAuthenticated && !loading) {
+      console.log('🔄 Iniciando autenticação Google Sheets para VeloInsights...')
+      signIn() // Usar sessão Google existente do Console
+    }
+  }, [user, isAuthenticated, loading, signIn])
+  
+  // Carregar dados iniciais
+  useEffect(() => {
+    if (isAuthenticated && !data && !loading) {
+      console.log('📊 Carregando dados iniciais do VeloInsights...')
+      loadDataOnDemand('last15Days')
+    }
+  }, [isAuthenticated, data, loading, loadDataOnDemand])
+  
+  // Definir abas disponíveis baseado nas permissões
+  const availableTabs = [
+    { id: 0, label: "Dashboard Geral", permission: true },
+    { id: 1, label: "Gráficos Detalhados", permission: canViewDetailedCharts },
+    { id: 2, label: "Análise por Agente", permission: canViewAgentAnalysis }
+  ].filter(tab => tab.permission)
+  
+  console.log('🔍 IGP DEBUG - Abas disponíveis:', availableTabs)
+  console.log('🔍 IGP DEBUG - canViewDetailedCharts:', canViewDetailedCharts)
+  console.log('🔍 IGP DEBUG - canViewAgentAnalysis:', canViewAgentAnalysis)
+  console.log('🔍 IGP DEBUG - Fonte de dados ativa:', activeDataSource)
+  
+  // Se não há abas disponíveis, mostrar erro
+  if (availableTabs.length === 0) {
+    return (
+      <Container maxWidth="xl" sx={{ mt: 4, mb: 8, pb: 4 }}>
+        <BackButton />
+        <Alert severity="warning" sx={{ mt: 2, fontFamily: 'Poppins' }}>
+          Você não tem permissões suficientes para acessar o VeloInsights. 
+          Entre em contato com o administrador.
+        </Alert>
+      </Container>
+    )
+  }
+  
+  // Loading state
+  if (loading && !data) {
     return (
       <Container maxWidth="xl" sx={{ mt: 4, mb: 8, pb: 4, textAlign: 'center' }}>
-        <CircularProgress size={60} />
-        <Typography variant="h6" sx={{ mt: 2, fontFamily: 'Poppins' }}>
-          Carregando métricas...
-        </Typography>
+        <BackButton />
+        <Box sx={{ mt: 4 }}>
+          <CircularProgress size={60} />
+          <Typography variant="h6" sx={{ mt: 2, fontFamily: 'Poppins' }}>
+            Carregando VeloInsights...
+          </Typography>
+        </Box>
       </Container>
-    );
+    )
   }
-
+  
+  // Error state
+  if (error && !data) {
+    return (
+      <Container maxWidth="xl" sx={{ mt: 4, mb: 8, pb: 4 }}>
+        <BackButton />
+        <Alert severity="error" sx={{ mt: 2, fontFamily: 'Poppins' }}>
+          Erro ao carregar dados: {error}
+        </Alert>
+      </Container>
+    )
+  }
+  
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 8, pb: 4 }}>
       <BackButton />
-      <Box sx={{ mb: 4 }}>
-        <Typography 
-          variant="h4" 
-          component="h1" 
-          gutterBottom
-          sx={{ 
-            fontFamily: 'Poppins',
-            fontWeight: 700,
-            color: 'var(--blue-dark)'
+      
+      {/* Tabs e Botões de Fonte de Dados */}
+      <Box sx={{
+        borderBottom: 1,
+        borderColor: 'divider',
+        mb: 3,
+        mt: 1,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        position: 'relative'
+      }}>
+        {/* Abas do lado esquerdo */}
+        <Tabs 
+          value={availableTabs.findIndex(tab => tab.id === activeTab)} 
+          onChange={(e, v) => setActiveTab(availableTabs[v]?.id || 0)}
+          aria-label="veloinsights tabs"
+          sx={{
+            '& .MuiTab-root': {
+              fontSize: '1.25rem',
+              fontWeight: 600,
+              textTransform: 'none',
+              minHeight: 48,
+              '&.Mui-selected': {
+                color: 'var(--blue-medium)',
+              },
+              '&:not(.Mui-selected)': {
+                color: 'var(--gray)',
+                opacity: 0.6,
+              }
+            },
+            '& .MuiTabs-indicator': {
+              backgroundColor: 'var(--blue-medium)',
+              height: 3,
+            }
           }}
         >
-          Dashboard IGP
-        </Typography>
-        <Typography 
-          variant="subtitle1" 
-          color="text.secondary"
-          sx={{ fontFamily: 'Poppins' }}
+          {availableTabs.map((tab) => (
+            <Tab 
+              key={tab.id}
+              label={tab.label} 
+              value={tab.id}
+              id={`veloinsights-tab-${tab.id}`}
+              aria-controls={`veloinsights-tabpanel-${tab.id}`}
+            />
+          ))}
+        </Tabs>
+
+        {/* Botões de Fonte de Dados - Lado Direito */}
+        <ButtonGroup 
+          variant="outlined" 
+          sx={{
+            position: 'absolute',
+            right: 0,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            '& .MuiButton-root': {
+              fontFamily: "'Poppins', sans-serif",
+              fontWeight: 600,
+              fontSize: '0.875rem',
+              textTransform: 'none',
+              borderColor: 'var(--blue-dark)',
+              color: 'var(--gray)',
+              padding: '8px 16px',
+              minWidth: '100px',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                backgroundColor: 'var(--blue-medium)',
+                color: 'var(--white)',
+                borderColor: 'var(--blue-medium)',
+                transform: 'translateY(-2px)',
+                boxShadow: '0 4px 12px rgba(22, 52, 255, 0.3)',
+              },
+              '&.Mui-selected': {
+                backgroundColor: 'var(--blue-medium)',
+                color: 'var(--white)',
+                borderColor: 'var(--blue-medium)',
+                '&:hover': {
+                  backgroundColor: 'var(--blue-dark)',
+                  borderColor: 'var(--blue-dark)',
+                }
+              }
+            }
+          }}
         >
-          Métricas e relatórios do sistema VeloHub
-        </Typography>
+          <Button
+            variant="outlined"
+            onClick={() => setActiveDataSource('telefonia')}
+            sx={{
+              backgroundColor: 'transparent !important',
+              color: activeDataSource === 'telefonia' ? '#1634FF !important' : '#272A30 !important',
+              borderColor: activeDataSource === 'telefonia' ? '#1634FF !important' : '#272A30 !important',
+              borderWidth: '1px',
+              fontWeight: 600,
+              opacity: activeDataSource === 'telefonia' ? 1 : 0.7,
+              '&:hover': {
+                backgroundColor: 'transparent !important',
+                color: activeDataSource === 'telefonia' ? '#1634FF !important' : '#272A30 !important',
+                borderColor: activeDataSource === 'telefonia' ? '#1634FF !important' : '#272A30 !important',
+              },
+              '&:focus': {
+                backgroundColor: 'transparent !important',
+                color: activeDataSource === 'telefonia' ? '#1634FF !important' : '#272A30 !important',
+                borderColor: activeDataSource === 'telefonia' ? '#1634FF !important' : '#272A30 !important',
+              },
+              '&:active': {
+                backgroundColor: 'transparent !important',
+                color: activeDataSource === 'telefonia' ? '#1634FF !important' : '#272A30 !important',
+                borderColor: activeDataSource === 'telefonia' ? '#1634FF !important' : '#272A30 !important',
+              }
+            }}
+          >
+            Telefonia
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={() => setActiveDataSource('tickets')}
+            sx={{
+              backgroundColor: 'transparent !important',
+              color: activeDataSource === 'tickets' ? '#1634FF !important' : '#272A30 !important',
+              borderColor: activeDataSource === 'tickets' ? '#1634FF !important' : '#272A30 !important',
+              borderWidth: '1px',
+              fontWeight: 600,
+              opacity: activeDataSource === 'tickets' ? 1 : 0.7,
+              '&:hover': {
+                backgroundColor: 'transparent !important',
+                color: activeDataSource === 'tickets' ? '#1634FF !important' : '#272A30 !important',
+                borderColor: activeDataSource === 'tickets' ? '#1634FF !important' : '#272A30 !important',
+              },
+              '&:focus': {
+                backgroundColor: 'transparent !important',
+                color: activeDataSource === 'tickets' ? '#1634FF !important' : '#272A30 !important',
+                borderColor: activeDataSource === 'tickets' ? '#1634FF !important' : '#272A30 !important',
+              },
+              '&:active': {
+                backgroundColor: 'transparent !important',
+                color: activeDataSource === 'tickets' ? '#1634FF !important' : '#272A30 !important',
+                borderColor: activeDataSource === 'tickets' ? '#1634FF !important' : '#272A30 !important',
+              }
+            }}
+          >
+            Tickets
+          </Button>
+        </ButtonGroup>
       </Box>
-
-      {/* Cards de Métricas */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ backgroundColor: 'var(--cor-container)' }}>
-            <CardContent>
-              <Typography color="text.secondary" gutterBottom sx={{ fontFamily: 'Poppins' }}>
-                Total Artigos
-              </Typography>
-              <Typography variant="h4" sx={{ fontFamily: 'Poppins', fontWeight: 700, color: 'var(--blue-medium)' }}>
-                {metrics.counts.artigos}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ backgroundColor: 'var(--cor-container)' }}>
-            <CardContent>
-              <Typography color="text.secondary" gutterBottom sx={{ fontFamily: 'Poppins' }}>
-                Total Velonews
-              </Typography>
-              <Typography variant="h4" sx={{ fontFamily: 'Poppins', fontWeight: 700, color: 'var(--blue-opaque)' }}>
-                {metrics.counts.velonews}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ backgroundColor: 'var(--cor-container)' }}>
-            <CardContent>
-              <Typography color="text.secondary" gutterBottom sx={{ fontFamily: 'Poppins' }}>
-                Bot Perguntas
-              </Typography>
-              <Typography variant="h4" sx={{ fontFamily: 'Poppins', fontWeight: 700, color: 'var(--green)' }}>
-                {metrics.counts.botPerguntas}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ backgroundColor: 'var(--cor-container)' }}>
-            <CardContent>
-              <Typography color="text.secondary" gutterBottom sx={{ fontFamily: 'Poppins' }}>
-                Usuários Ativos
-              </Typography>
-              <Typography variant="h4" sx={{ fontFamily: 'Poppins', fontWeight: 700, color: 'var(--yellow)' }}>
-                {metrics.performance?.uptime || 99.9}%
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      {/* Gráficos */}
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={8}>
-          <Card sx={{ backgroundColor: 'var(--cor-container)', p: 2 }}>
-            <Typography variant="h6" gutterBottom sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>
-              Crescimento Mensal
-            </Typography>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="artigos" fill="#1634FF" name="Artigos" />
-                <Bar dataKey="velonews" fill="#006AB9" name="Velonews" />
-                <Bar dataKey="bot" fill="#15A237" name="Bot Perguntas" />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <Card sx={{ backgroundColor: 'var(--cor-container)', p: 2 }}>
-            <Typography variant="h6" gutterBottom sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>
-              Distribuição de Conteúdo
-            </Typography>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </Card>
-        </Grid>
-      </Grid>
-
-      {/* Alerta de erro se houver */}
-      {error && (
-        <Alert severity="warning" sx={{ mt: 2, fontFamily: 'Poppins' }}>
-          Aviso: {error}. Exibindo dados simulados.
-        </Alert>
+      
+      {/* Tab Content */}
+      {activeTab === 0 && (
+        <MetricsDashboard 
+          metrics={metrics}
+          rankings={rankings}
+          octaData={octaData}
+          data={data}
+          periodo={selectedPeriod}
+          fullDataset={fullDataset}
+          hideNames={!canViewNames}
+          dataSource={activeDataSource}
+        />
+      )}
+      
+      {activeTab === 1 && canViewDetailedCharts && (
+        <ChartsDetailedTab 
+          data={data}
+          operatorMetrics={operatorMetrics}
+          rankings={rankings}
+          selectedPeriod={selectedPeriod}
+          isLoading={loading}
+          pauseData={null}
+          userData={user}
+          filters={{}}
+          originalData={fullDataset}
+          onFiltersChange={() => {}}
+          loadDataOnDemand={loadDataOnDemand}
+          dataSource={activeDataSource}
+        />
+      )}
+      
+      {activeTab === 2 && canViewAgentAnalysis && (
+        <AgentAnalysis 
+          data={data}
+          operatorMetrics={operatorMetrics}
+          rankings={rankings}
+          hideNames={!canViewNames}
+          dataSource={activeDataSource}
+        />
       )}
     </Container>
-  );
-};
+  )
+}
 
-export default IGPPage;
+export default IGPPage

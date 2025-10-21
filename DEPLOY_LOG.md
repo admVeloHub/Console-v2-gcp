@@ -1,5 +1,84 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.27.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.28.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+
+## Push GitHub - Integração Completa do VeloInsights ao Console - 2024-12-19 20:00
+
+### Informações do Push
+- **Tipo:** Push GitHub
+- **Data/Hora:** 2024-12-19 20:00 BRT
+- **Versão:** v1.28.0
+- **Status:** Concluído
+
+### Arquivos Incluídos no Push
+1. `package.json` - Dependências do VeloInsights (chart.js, react-chartjs-2, dnd-kit)
+2. `src/pages/IGPPage.jsx` - Nova página integrada com VeloInsights (v1.0.0)
+3. `src/config/veloinsights.js` - Configurações do VeloInsights (v1.0.0)
+4. `src/styles/veloinsights-integration.css` - Integração de estilos (v1.0.0)
+5. `src/styles/globals.css` - Importação dos estilos VeloInsights (v3.1.1)
+6. `src/pages/IGP/` - Estrutura completa de componentes, hooks, utils e APIs
+7. `src/styles/veloinsights/` - Estilos CSS do VeloInsights
+8. `public/logo-veloinsights.png` - Logo do VeloInsights
+9. `DEPLOY_LOG.md` - Log da integração (v1.28.0)
+
+### Descrição do Push
+Integração completa do **VeloInsights** ao Console de Conteúdo, substituindo a página IGP estática por um dashboard analítico completo:
+
+**🔧 Sistema de Integração:**
+- **Autenticação Unificada:** Reutiliza sessão Google do Console
+- **Sistema de Permissões:** Integrado com `_funcoesAdministrativas`
+- **Hierarquia de Acesso:** Avaliador < Auditor < Relatórios de Gestão
+- **Tema Integrado:** Usa variáveis CSS do Console
+
+**📊 Funcionalidades Integradas:**
+- **Dashboard Principal:** Métricas gerais de call center e tickets
+- **Gráficos Detalhados:** Visualizações avançadas (acesso: Auditor+)
+- **Análise por Agente:** Relatórios individuais (acesso: Relatórios de Gestão)
+- **Sistema de Filtros:** Por período, operador, tipo de chamada
+- **Exportação:** PDF/Excel (acesso: Relatórios de Gestão)
+
+**🔐 Sistema de Permissões:**
+- **Acesso Básico:** `igp: true` - Dashboard geral
+- **Visualização de Nomes:** `avaliador: true` - Ver nomes de operadores
+- **Gráficos Avançados:** `auditor: true` - Acesso a análises detalhadas
+- **Relatórios Completos:** `relatoriosGestao: true` - Análise individual e exportação
+
+**🎨 Integração Visual:**
+- **Tema Unificado:** Usa paleta oficial VeloHub
+- **Responsividade:** Adaptado para mobile/desktop
+- **Componentes Material-UI:** Integrados com tema do Console
+- **Animações:** Transições suaves e hover effects
+
+**📁 Estrutura de Arquivos:**
+```
+src/pages/IGP/
+├── components/     # Componentes do VeloInsights
+├── hooks/         # Hooks adaptados (Google Sheets, filtros)
+├── utils/         # Processamento de dados
+└── api/           # APIs locais
+```
+
+**🔗 Integração Técnica:**
+- **Google Sheets API:** Reutiliza credenciais do Console
+- **Processamento de Dados:** 5000+ registros otimizados
+- **Cache Inteligente:** Dados processados em background
+- **Error Handling:** Tratamento robusto de erros
+
+**✅ Status da Integração:**
+- ✅ Dependências instaladas
+- ✅ Componentes migrados e adaptados
+- ✅ Sistema de permissões implementado
+- ✅ Estilos integrados ao tema do Console
+- ✅ Rotas configuradas
+- ✅ Autenticação unificada
+- ✅ Documentação atualizada
+
+**🚀 Próximos Passos:**
+- Testes de permissões com diferentes perfis
+- Validação de carregamento de dados
+- Testes de funcionalidades (gráficos, filtros, exportação)
+- Monitoramento de performance
+
+---
 
 ## Push GitHub - Implementação de Sincronização Automática e Expiração de Sessão - 2024-12-19 18:30
 

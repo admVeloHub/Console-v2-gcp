@@ -1,0 +1,307 @@
+/* ========================================
+   HEADER STYLES
+   ======================================== */
+
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: var(--color-bg-header);
+  color: var(--color-text-light);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0 2rem;
+  z-index: 1000;
+  box-shadow: 0 2px 20px var(--color-shadow);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-title {
+  display: flex;
+  flex-direction: column;
+}
+
+.header-logo-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.header-logo-image {
+  max-height: 50px;
+  max-width: 200px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(22, 148, 255, 0.2));
+  transition: all 0.3s ease;
+}
+
+.header-logo-image:hover {
+  transform: scale(1.05);
+  filter: drop-shadow(0 4px 15px rgba(22, 148, 255, 0.4));
+}
+
+/* Melhorar visibilidade do logo no tema escuro */
+.theme-dark .header-logo-image {
+  filter: drop-shadow(0 2px 8px rgba(22, 148, 255, 0.4)) 
+          drop-shadow(0 0 15px rgba(255, 255, 255, 0.1))
+          brightness(1.1) 
+          contrast(1.1);
+}
+
+.theme-dark .header-logo-image:hover {
+  filter: drop-shadow(0 4px 15px rgba(22, 148, 255, 0.6)) 
+          drop-shadow(0 0 20px rgba(255, 255, 255, 0.15))
+          brightness(1.2) 
+          contrast(1.15);
+}
+
+.logo-text {
+  font-family: var(--font-display);
+  color: var(--color-text-light);
+  margin: 0;
+}
+
+.logo-subtitle {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-blue-light);
+  margin-top: var(--space-1);
+  font-weight: 500;
+}
+
+.sidebar-toggle {
+  background: none;
+  border: none;
+  color: var(--color-text-light);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.sidebar-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.hamburger {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+
+.hamburger span {
+  width: 100%;
+  height: 2px;
+  background-color: var(--color-text-light);
+  transition: all 0.3s ease;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Botão Seletor de Período */
+.period-selector-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid var(--brand-primary);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(22, 52, 255, 0.15);
+  height: 44px;
+}
+
+.period-selector-btn:hover {
+  border-color: var(--brand-secondary);
+  background: var(--brand-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(22, 52, 255, 0.3);
+}
+
+.period-selector-btn i {
+  font-size: 20px;
+  color: var(--brand-primary);
+  transition: color 0.3s ease;
+  flex-shrink: 0;
+}
+
+.period-selector-btn:hover i,
+.period-selector-btn:hover .period-text {
+  color: #FFFFFF;
+}
+
+.period-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Tema escuro - ajustar cores */
+.theme-dark .period-selector-btn {
+  background: rgba(30, 30, 30, 0.95);
+  border-color: var(--brand-secondary);
+}
+
+.theme-dark .period-selector-btn:hover {
+  background: var(--brand-primary);
+}
+
+.theme-dark .period-text {
+  color: #FFFFFF;
+}
+
+/* ========================================
+   TABS DE NAVEGAÇÃO - ESTILO PÍLULA
+   ======================================== */
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  justify-content: center;
+}
+
+.nav-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: 2px solid var(--brand-secondary);
+  border-radius: 50px;
+  background: var(--bg-tertiary);
+  color: var(--brand-primary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.nav-tab i {
+  font-size: 16px;
+}
+
+/* Tab Ativa - Gradiente Azul */
+.nav-tab.active {
+  background: var(--gradient-primary);
+  color: #FFFFFF;
+  border-color: var(--brand-primary);
+}
+
+/* Hover - Fundo Azul */
+.nav-tab:not(.active):not(.disabled):hover {
+  background: var(--brand-secondary);
+  color: #FFFFFF;
+  border-color: var(--brand-secondary);
+  transform: translateY(-1px);
+}
+
+/* Tab Desabilitada */
+.nav-tab.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Status indicator styles removed */
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .header {
+    height: 70px;
+    padding: 0 1rem;
+  }
+  
+  .logo-text {
+    font-size: 1.6rem;
+  }
+  
+  .logo-subtitle {
+    font-size: 0.8rem;
+  }
+  
+  .header-logo-image {
+    max-height: 40px;
+    max-width: 160px;
+  }
+  
+  .status-indicator {
+    padding: 0.4rem 0.8rem;
+  }
+  
+  .status-text {
+    font-size: 0.8rem;
+  }
+  
+  /* Tabs responsivas */
+  .header-nav {
+    gap: 8px;
+  }
+  
+  .nav-tab {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+  
+  .nav-tab i {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    height: 60px;
+    padding: 0 0.75rem;
+  }
+  
+  .logo-text {
+    font-size: 1.4rem;
+  }
+  
+  .logo-subtitle {
+    font-size: 0.75rem;
+  }
+  
+  .header-left {
+    gap: 0.75rem;
+  }
+  
+  .header-logo-image {
+    max-height: 35px;
+    max-width: 140px;
+  }
+  
+  .status-indicator {
+    padding: 0.3rem 0.6rem;
+  }
+  
+  .status-text {
+    font-size: 0.75rem;
+  }
+}

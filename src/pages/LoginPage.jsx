@@ -91,7 +91,7 @@ const LoginPage = () => {
   // Função de fallback para desenvolvimento
 
   // Verificar se o OAuth está configurado
-  const isOAuthConfigured = GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID.includes('278491073220');
+  const isOAuthConfigured = GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID.length > 0;
 
   return (
     <Box

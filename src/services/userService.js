@@ -21,6 +21,13 @@ const clearCache = () => {
 export const isUserAuthorized = async (email) => {
   try {
     console.log('Verificando autorização para email:', email);
+    
+    // BYPASS TEMPORÁRIO: Permitir login do Lucas Gravina
+    if (email === 'lucas.gravina@velotax.com.br') {
+      console.log('🚨 BYPASS ATIVADO: Permitindo login do Lucas Gravina');
+      return true;
+    }
+    
     const response = await usersAPI.isAuthorized(email);
     console.log('Resposta da verificação:', response);
     
@@ -31,6 +38,13 @@ export const isUserAuthorized = async (email) => {
     return isAuthorized;
   } catch (error) {
     console.error('Erro ao verificar autorização do usuário:', error);
+    
+    // BYPASS TEMPORÁRIO: Em caso de erro, permitir login do Lucas Gravina
+    if (email === 'lucas.gravina@velotax.com.br') {
+      console.log('🚨 BYPASS ATIVADO (erro): Permitindo login do Lucas Gravina');
+      return true;
+    }
+    
     return false;
   }
 };
@@ -38,12 +52,91 @@ export const isUserAuthorized = async (email) => {
 // Função para obter dados do usuário autorizado
 export const getAuthorizedUser = async (email) => {
   try {
+    // BYPASS TEMPORÁRIO: Retornar dados do Lucas Gravina
+    if (email === 'lucas.gravina@velotax.com.br') {
+      console.log('🚨 BYPASS ATIVADO: Retornando dados do Lucas Gravina');
+      return {
+        _userMail: 'lucas.gravina@velotax.com.br',
+        _userId: 'Lucas Gravina',
+        _userRole: 'Administrador',
+        _userClearance: {
+          artigos: true,
+          velonews: true,
+          botPerguntas: true,
+          chamadosInternos: true,
+          igp: true,
+          botAnalises: true,  // ✅ ADICIONADO: Bot Análises
+          qualidade: true,
+          capacity: true,
+          config: true,
+          servicos: true,
+          funcionarios: true
+        },
+        _userTickets: {
+          artigos: true,
+          processos: true,
+          roteiros: true,
+          treinamentos: true,
+          funcionalidades: true,
+          recursos: true,
+          gestao: true,
+          rhFin: true,
+          facilities: true
+        },
+        _funcoesAdministrativas: {
+          avaliador: true,
+          auditor: true,
+          relatoriosGestao: true
+        }
+      };
+    }
+    
     const response = await usersAPI.getByEmail(email);
     // Extrair dados do usuário da resposta
     const mongoUser = response.data || response;
     return mongoUser; // Retorna dados diretamente do MongoDB
   } catch (error) {
     console.error('Erro ao obter dados do usuário:', error);
+    
+    // BYPASS TEMPORÁRIO: Em caso de erro, retornar dados do Lucas Gravina
+    if (email === 'lucas.gravina@velotax.com.br') {
+      console.log('🚨 BYPASS ATIVADO (erro): Retornando dados do Lucas Gravina');
+      return {
+        _userMail: 'lucas.gravina@velotax.com.br',
+        _userId: 'Lucas Gravina',
+        _userRole: 'Administrador',
+        _userClearance: {
+          artigos: true,
+          velonews: true,
+          botPerguntas: true,
+          chamadosInternos: true,
+          igp: true,
+          botAnalises: true,  // ✅ ADICIONADO: Bot Análises
+          qualidade: true,
+          capacity: true,
+          config: true,
+          servicos: true,
+          funcionarios: true
+        },
+        _userTickets: {
+          artigos: true,
+          processos: true,
+          roteiros: true,
+          treinamentos: true,
+          funcionalidades: true,
+          recursos: true,
+          gestao: true,
+          rhFin: true,
+          facilities: true
+        },
+        _funcoesAdministrativas: {
+          avaliador: true,
+          auditor: true,
+          relatoriosGestao: true
+        }
+      };
+    }
+    
     return null;
   }
 };

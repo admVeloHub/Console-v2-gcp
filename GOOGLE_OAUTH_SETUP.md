@@ -53,18 +53,18 @@ https://front-console.vercel.app
 ### 6. Obter Client ID
 
 1. Após criar as credenciais, copie o **Client ID**
-2. **Client ID Configurado:** `278491073220-eb4ogvn3aifu0ut9mq3rvu5r9r9l3137.apps.googleusercontent.com`
+2. **Client ID:** Copie o Client ID gerado
 
 ### 7. Configurar Variáveis de Ambiente
 
 #### Arquivo `.env` (criar na raiz do projeto):
 ```env
-REACT_APP_GOOGLE_CLIENT_ID=278491073220-eb4ogvn3aifu0ut9mq3rvu5r9r9l3137.apps.googleusercontent.com
+REACT_APP_GOOGLE_CLIENT_ID=seu_google_client_id_aqui
 ```
 
 #### Arquivo `env.example` (já atualizado):
 ```env
-REACT_APP_GOOGLE_CLIENT_ID=278491073220-eb4ogvn3aifu0ut9mq3rvu5r9r9l3137.apps.googleusercontent.com
+REACT_APP_GOOGLE_CLIENT_ID=seu_google_client_id_aqui
 ```
 
 ### 8. Configurar Emails Autorizados

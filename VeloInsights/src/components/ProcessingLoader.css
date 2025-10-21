@@ -1,0 +1,266 @@
+/* ProcessingLoader.css */
+.processing-loader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.processing-loader-container {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  border-radius: 20px;
+  padding: 40px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+  animation: slideUp 0.4s ease-out;
+}
+
+.processing-loader-header {
+  margin-bottom: 30px;
+}
+
+.processing-icon {
+  font-size: 3rem;
+  margin-bottom: 15px;
+  animation: pulse 2s infinite;
+}
+
+.processing-loader-header h2 {
+  color: #ffffff;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 10px 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.processing-loader-header p {
+  color: #b8c5d6;
+  font-size: 1rem;
+  margin: 0;
+  opacity: 0.9;
+}
+
+.processing-progress {
+  margin-bottom: 30px;
+}
+
+.progress-bar-container {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 25px;
+  height: 12px;
+  overflow: hidden;
+  margin-bottom: 15px;
+  position: relative;
+}
+
+.progress-bar-fill {
+  background: linear-gradient(90deg, #00d4ff 0%, #0099cc 50%, #0066aa 100%);
+  height: 100%;
+  border-radius: 25px;
+  transition: width 0.3s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-bar-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
+  animation: shimmer 2s infinite;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.progress-percentage {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #00d4ff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.progress-details {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #b8c5d6;
+  font-size: 0.9rem;
+}
+
+.processed-count {
+  color: #00d4ff;
+  font-weight: 600;
+}
+
+.total-count {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.separator {
+  color: #8a9ba8;
+}
+
+.records-label {
+  color: #8a9ba8;
+  font-size: 0.8rem;
+}
+
+.processing-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.stat-item {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 15px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.stat-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+}
+
+.stat-icon {
+  font-size: 1.2rem;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  display: block;
+  font-size: 0.8rem;
+  color: #8a9ba8;
+  margin-bottom: 5px;
+}
+
+.stat-value {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.processing-message {
+  color: #b8c5d6;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.processing-message p {
+  margin: 0 0 10px 0;
+}
+
+.processing-note {
+  font-size: 0.8rem;
+  color: #8a9ba8;
+  font-style: italic;
+}
+
+/* Animações */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .processing-loader-container {
+    padding: 30px 20px;
+    margin: 20px;
+  }
+  
+  .processing-loader-header h2 {
+    font-size: 1.3rem;
+  }
+  
+  .processing-stats {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .progress-info {
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .progress-percentage {
+    font-size: 1.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .processing-loader-container {
+    padding: 25px 15px;
+  }
+  
+  .processing-icon {
+    font-size: 2.5rem;
+  }
+  
+  .processing-loader-header h2 {
+    font-size: 1.2rem;
+  }
+  
+  .progress-percentage {
+    font-size: 1.6rem;
+  }
+}

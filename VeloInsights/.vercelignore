@@ -1,0 +1,24 @@
+# Arquivos desnecessários para o deploy
+node_modules
+.git
+.gitignore
+README.md
+*.md
+tests/
+uploads/
+Base_teste/
+api/
+html-version/
+*.bat
+test-api.js
+.vscode/
+.idea/
+
+# Manter apenas o necessário para React/Vite
+!dist/
+!package.json
+!package-lock.json
+!vercel.json
+!src/
+!index.html
+!vite.config.js

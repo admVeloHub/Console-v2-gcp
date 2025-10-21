@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Isolado - Formatação de Horário</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .result { margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 5px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Teste Isolado - Formatação de Horário</h1>
+    
+    <div class="test-section">
+        <h3>1. Teste Direto da Função formatTime</h3>
+        <button onclick="testFormatTimeDirect()">Testar formatTime</button>
+        <div id="format-time-result" class="result">Aguardando teste...</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>2. Simulação de Dados do Sistema</h3>
+        <button onclick="testSystemSimulation()">Simular Sistema</button>
+        <div id="system-result" class="result">Aguardando simulação...</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>3. Teste de Processamento CSV</h3>
+        <button onclick="testCSVProcessing()">Testar CSV</button>
+        <div id="csv-result" class="result">Aguardando teste...</div>
+    </div>
+    
+    <script>
+        // Função formatTime exatamente como está no sistema
+        function formatTime(timeString) {
+            console.log(`🔍 formatTime recebeu: "${timeString}" (tipo: ${typeof timeString})`);
+            
+            // Se for null, undefined ou vazio, retornar erro
+            if (!timeString || timeString === '') {
+                console.log('❌ Valor vazio ou inválido');
+                return 'N/A';
+            }
+            
+            // Converter para string e remover espaços
+            const cleanString = timeString.toString().trim();
+            console.log(`🧹 String limpa: "${cleanString}"`);
+            
+            // Se já estiver no formato HH:MM ou HH:MM:SS, retornar como está
+            if (cleanString.includes(':')) {
+                console.log(`✅ Já tem ":", retornando: ${cleanString}`);
+                return cleanString;
+            }
+            
+            // Se for apenas um número (ex: 8, 9, 10), formatar como HH:00:00
+            const hour = parseInt(cleanString, 10);
+            console.log(`🕐 Parseado como hora: ${hour}`);
+            
+            if (!isNaN(hour) && hour >= 0 && hour <= 23) {
+                const formatted = `${hour.toString().padStart(2, '0')}:00:00`;
+                console.log(`✨ Formatado como: ${formatted}`);
+                return formatted;
+            }
+            
+            // Se for outro formato, retornar como está
+            console.log(`⚠️ Formato não reconhecido, retornando: ${cleanString}`);
+            return cleanString;
+        }
+        
+        function testFormatTimeDirect() {
+            const resultDiv = document.getElementById('format-time-result');
+            const testCases = [8, 9, 10, '10:00', '11:30', '', null, 'abc', 0];
+            
+            let results = '<h4>Resultados dos Testes Diretos:</h4>';
+            
+            testCases.forEach(testCase => {
+                const result = formatTime(testCase);
+                const status = result !== 'N/A' && result !== testCase ? 'success' : 'error';
+                results += `<p class="${status}"><strong>Entrada:</strong> ${testCase} (${typeof testCase}) → <strong>Saída:</strong> ${result}</p>`;
+            });
+            
+            resultDiv.innerHTML = results;
+        }
+        
+        function testSystemSimulation() {
+            const resultDiv = document.getElementById('system-result');
+            
+            // Simular dados como seriam processados pelo sistema
+            const testData = [
+                { intervalo: '8', quantidade: 15 },
+                { intervalo: '9', quantidade: 25 },
+                { intervalo: '10', quantidade: 30 }
+            ];
+            
+            let results = '<h4>Simulação do Sistema:</h4>';
+            results += '<table border="1" style="border-collapse: collapse; width: 100%;">';
+            results += '<tr><th>Original</th><th>Formatado</th><th>Quantidade</th></tr>';
+            
+            testData.forEach(item => {
+                const formatted = formatTime(item.intervalo);
+                results += `<tr><td>${item.intervalo}</td><td>${formatted}</td><td>${item.quantidade}</td></tr>`;
+            });
+            
+            results += '</table>';
+            
+            resultDiv.innerHTML = results;
+        }
+        
+        function testCSVProcessing() {
+            const resultDiv = document.getElementById('csv-result');
+            
+            // Simular dados CSV como seriam lidos
+            const csvData = [
+                ['8', '15'],
+                ['9', '25'],
+                ['10', '30']
+            ];
+            
+            let results = '<h4>Processamento CSV Simulado:</h4>';
+            
+            csvData.forEach((row, index) => {
+                const intervalo = row[0];
+                const quantidade = parseFloat(row[1]);
+                const formattedTime = formatTime(intervalo);
+                
+                results += `<p><strong>Linha ${index + 1}:</strong> ${intervalo} → ${formattedTime} | Quantidade: ${quantidade}</p>`;
+            });
+            
+            resultDiv.innerHTML = results;
+        }
+        
+        // Executar teste automático
+        window.onload = function() {
+            console.log('🚀 Teste isolado carregado');
+            testFormatTimeDirect();
+        };
+    </script>
+</body>
+</html>

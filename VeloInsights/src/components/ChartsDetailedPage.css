@@ -1,0 +1,1353 @@
+/* Seletor de Período para Gráficos Avançados */
+.advanced-period-selector {
+  margin: 20px 0;
+  padding: 20px;
+  background: var(--color-bg-secondary);
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+}
+
+.advanced-period-selector .period-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 15px;
+}
+
+.advanced-period-selector .period-option {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px;
+  background: var(--color-bg-primary);
+  border: 2px solid var(--color-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+}
+
+.advanced-period-selector .period-option:hover {
+  border-color: var(--color-primary);
+  background: var(--color-bg-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.advanced-period-selector .period-option.active {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+  box-shadow: 0 4px 12px rgba(22, 148, 255, 0.2);
+}
+
+.advanced-period-selector .period-icon {
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-secondary);
+  border-radius: 8px;
+}
+
+.advanced-period-selector .period-option.active .period-icon {
+  background: var(--color-primary);
+  color: white;
+}
+
+.advanced-period-selector .period-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--color-text-primary);
+  margin-bottom: 2px;
+}
+
+.advanced-period-selector .period-subtitle {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.advanced-period-selector .period-count {
+  margin-left: auto;
+  text-align: right;
+}
+
+.advanced-period-selector .count-number {
+  display: block;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--color-primary);
+}
+
+.advanced-period-selector .count-label {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.charts-page {
+  padding: 20px;
+  background: var(--color-bg-primary);
+  min-height: 100vh;
+  color: var(--color-text-primary);
+}
+
+.charts-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 30px;
+  padding: 30px;
+  background: #272A30;
+  background: linear-gradient(135deg, #272A30 0%, #2D3138 50%, #272A30 100%);
+  border-radius: 12px;
+  border-bottom: 3px solid #1694FF;
+  position: relative;
+  overflow: hidden;
+}
+
+.charts-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(22, 148, 255, 0.3) 50%, transparent 100%);
+}
+
+.header-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-content {
+  text-align: center;
+  flex: 1;
+}
+
+.header-content h2 {
+  color: #FFFFFF;
+  font-size: 2rem;
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.header-content p {
+  color: #E5E7EB;
+  font-size: 1.1rem;
+  margin: 0;
+  font-weight: 400;
+  opacity: 0.9;
+}
+
+/* Seletor de Período */
+.period-selector-section {
+  margin-bottom: 30px;
+  padding: 20px;
+  background: var(--color-card-bg);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px var(--color-shadow);
+  border: 1px solid var(--color-card-border);
+}
+
+.period-selector-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.period-selector-header h3 {
+  color: var(--color-text-primary);
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.period-selector-header p {
+  color: var(--color-text-secondary);
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Header com Tabs e Seletor de Período */
+.charts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding: 0 20px;
+  gap: 20px;
+  overflow: visible;
+  position: relative;
+  z-index: 1;
+}
+
+/* Abas de Navegação */
+.charts-tabs {
+  display: flex;
+  gap: 10px;
+}
+
+/* Seletor de Período para Gráficos */
+.charts-period-selector {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1001;
+}
+
+.charts-period-selector .period-selector {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 200px;
+}
+
+.charts-period-selector .period-selector:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.charts-period-selector .period-text {
+  flex: 1;
+  color: #ffffff;
+}
+
+.charts-period-selector .scroll-indicator {
+  color: #ffffff;
+  transition: all 0.3s ease;
+}
+
+.charts-period-selector .period-selector:hover .scroll-indicator {
+  color: #ffffff;
+  transform: translateY(2px);
+}
+
+/* Dropdown do Seletor de Período */
+.charts-period-selector .period-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #2a2a2a;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  margin-top: 4px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  z-index: 9999;
+  transition: all 0.3s ease;
+  max-height: 300px;
+  overflow-y: auto;
+  min-width: 200px;
+  width: 100%;
+  animation: dropdownFadeIn 0.2s ease;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.charts-period-selector .period-option {
+  padding: 12px 16px;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.charts-period-selector .period-option:last-child {
+  border-bottom: none;
+}
+
+.charts-period-selector .period-option:hover {
+  background: rgba(22, 148, 255, 0.2);
+  color: #1694FF;
+}
+
+/* CSS específico para tema claro - seletor de período */
+[data-theme="light"] .charts-period-selector .period-selector {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  color: #374151 !important;
+}
+
+[data-theme="light"] .charts-period-selector .period-selector:hover {
+  background: rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-theme="light"] .charts-period-selector .period-text {
+  color: #6B7280 !important;
+}
+
+[data-theme="light"] .charts-period-selector .scroll-indicator {
+  color: #64748B !important;
+}
+
+[data-theme="light"] .charts-period-selector .period-selector:hover .scroll-indicator {
+  color: #374151 !important;
+}
+
+[data-theme="light"] .charts-period-selector .period-dropdown {
+  background: #FFFFFF !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-theme="light"] .charts-period-selector .period-option {
+  color: #374151 !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-theme="light"] .charts-period-selector .period-option:hover {
+  background: rgba(22, 148, 255, 0.1) !important;
+  color: #1634FF !important;
+}
+
+/* Garantir que o dropdown apareça */
+.charts-detailed-page {
+  overflow: visible !important;
+}
+
+.charts-detailed-page > * {
+  overflow: visible !important;
+}
+
+.charts-detailed-page .charts-grid {
+  overflow: visible !important;
+}
+
+.charts-detailed-page .charts-grid > * {
+  overflow: visible !important;
+}
+
+.charts-detailed-page .charts-grid .chart-card {
+  overflow: visible !important;
+}
+
+/* Forçar que todos os containers permitam overflow */
+.charts-detailed-page,
+.charts-detailed-page *,
+.charts-detailed-page .charts-header,
+.charts-detailed-page .charts-grid,
+.charts-detailed-page .charts-grid *,
+.charts-detailed-page .chart-card,
+.charts-detailed-page .chart-card * {
+  overflow: visible !important;
+}
+
+.charts-detailed-page .charts-header {
+  overflow: visible !important;
+}
+
+.charts-detailed-page .charts-period-selector {
+  overflow: visible !important;
+}
+
+.charts-detailed-page .charts-period-selector .period-dropdown {
+  overflow: visible !important;
+}
+
+
+.tab-button {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-primary);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.tab-button:hover {
+  background: var(--color-card-hover);
+  border-color: var(--color-blue-primary);
+  transform: translateY(-2px);
+}
+
+.tab-button.active {
+  background: var(--color-blue-primary);
+  color: var(--color-text-light);
+  border-color: var(--color-blue-primary);
+  box-shadow: 0 4px 15px var(--color-shadow-strong);
+}
+
+.tab-button.active:hover {
+  background: var(--color-blue-light);
+  transform: translateY(-2px);
+}
+
+.tab-button.disabled {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+  border-color: var(--color-border-secondary);
+  cursor: not-allowed;
+  opacity: 0.6;
+  position: relative;
+}
+
+.tab-button.disabled:hover {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border-secondary);
+  transform: none;
+}
+
+.coming-soon-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #f59e0b;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  line-height: 1;
+}
+
+/* Tema claro - abas */
+.theme-light .tab-button {
+  background: #FFFFFF !important;
+  color: #000000 !important;
+  border: 1px solid #E5E7EB !important;
+}
+
+.theme-light .tab-button:hover {
+  background: #F9FAFB !important;
+  border-color: #1634FF !important;
+}
+
+.theme-light .tab-button.active {
+  background: #1634FF !important;
+  color: #FFFFFF !important;
+  border-color: #1634FF !important;
+}
+
+.theme-light .tab-button.active:hover {
+  background: #1694FF !important;
+}
+
+.theme-light .tab-button.disabled {
+  background: #F3F4F6 !important;
+  color: #9CA3AF !important;
+  border-color: #D1D5DB !important;
+}
+
+.theme-light .tab-button.disabled:hover {
+  background: #F3F4F6 !important;
+  border-color: #D1D5DB !important;
+}
+
+/* Tema escuro - abas */
+.theme-dark .tab-button {
+  background: #1F2937 !important;
+  color: #FFFFFF !important;
+  border: 1px solid #374151 !important;
+}
+
+.theme-dark .tab-button:hover {
+  background: #374151 !important;
+  border-color: #1694FF !important;
+}
+
+.theme-dark .tab-button.active {
+  background: #1694FF !important;
+  color: #FFFFFF !important;
+  border-color: #1694FF !important;
+}
+
+.theme-dark .tab-button.active:hover {
+  background: #1634FF !important;
+}
+
+.theme-dark .tab-button.disabled {
+  background: #374151 !important;
+  color: #6B7280 !important;
+  border-color: #4B5563 !important;
+}
+
+.theme-dark .tab-button.disabled:hover {
+  background: #374151 !important;
+  border-color: #4B5563 !important;
+}
+
+/* Removido - header agora tem estilo fixo */
+
+/* ========================================
+   GRÁFICOS AVANÇADOS - MESMO LAYOUT DO DASHBOARD MODERNO
+   ======================================== */
+
+/* Forçar cores para tema escuro nos Gráficos Avançados */
+[data-theme="dark"] .metric-item,
+[data-theme="dark"] .performer-item,
+[data-theme="dark"] .distribution-card,
+[data-theme="dark"] .quality-item {
+  background: #2a2a2a !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Garantir que os títulos dos cards sejam brancos no tema escuro */
+[data-theme="dark"] .chart-card-header-title,
+[data-theme="dark"] .chart-card-header p {
+  color: #FFFFFF !important;
+}
+
+/* Garantir que os títulos dos cards sejam escuros no tema claro */
+[data-theme="light"] .chart-card-header-title,
+[data-theme="light"] .chart-card-header p {
+  color: #374151 !important;
+}
+
+/* CSS específico para tema escuro - elementos com background branco */
+[data-theme="dark"] .theme-light .tab-button {
+  background: #2a2a2a !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+[data-theme="dark"] .chart-container {
+  background: #2a2a2a !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Sobrescrever apenas o que for necessário para Gráficos Avançados */
+.modern-dashboard .dashboard-header .header-content h1 {
+  background: linear-gradient(135deg, #8B5CF6, #1694FF);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Ajustes específicos para os gráficos de qualidade */
+.quality-metrics-container {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  width: 100%;
+  flex-grow: 1;
+  gap: 1rem;
+  padding: 1rem 0;
+}
+
+.radial-chart-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  min-width: 100px;
+  max-width: 150px;
+}
+
+.radial-chart-wrapper canvas {
+  width: 80px !important;
+  height: 80px !important;
+  max-width: 80px !important;
+  max-height: 80px !important;
+  object-fit: contain !important;
+}
+
+.radial-label {
+  color: #cbd5e1;
+  font-size: 0.75rem;
+  text-align: center;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+/* Container para o gráfico de barras */
+.call-distribution-chart {
+  height: 200px;
+  flex-grow: 1;
+  position: relative;
+  width: 100%;
+}
+
+.call-distribution-chart canvas {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+}
+
+/* Responsividade para gráficos de qualidade */
+@media (min-width: 768px) {
+  .radial-chart-wrapper canvas {
+    width: 100px !important;
+    height: 100px !important;
+    max-width: 100px !important;
+    max-height: 100px !important;
+  }
+  
+  .radial-label {
+    font-size: 0.8rem;
+  }
+  
+  .call-distribution-chart {
+    height: 220px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .radial-chart-wrapper canvas {
+    width: 120px !important;
+    height: 120px !important;
+    max-width: 120px !important;
+    max-height: 120px !important;
+  }
+  
+  .radial-label {
+    font-size: 0.85rem;
+  }
+  
+  .call-distribution-chart {
+    height: 250px;
+  }
+}
+
+@media (max-width: 768px) {
+  .quality-metrics-container {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 0.5rem 0;
+  }
+  
+  .radial-chart-wrapper {
+    min-width: none;
+    width: 100%;
+    max-width: none;
+  }
+  
+  .radial-chart-wrapper canvas {
+    width: 70px !important;
+    height: 70px !important;
+    max-width: 70px !important;
+    max-height: 70px !important;
+  }
+  
+  .radial-label {
+    font-size: 0.7rem;
+  }
+  
+  .call-distribution-chart {
+    height: 180px;
+  }
+}
+
+
+.period-info {
+  position: absolute;
+  bottom: 10px;
+  right: 20px;
+  background: rgba(22, 148, 255, 0.1);
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(22, 148, 255, 0.3);
+  font-size: 0.85rem;
+  color: #E5E7EB;
+  backdrop-filter: blur(10px);
+}
+
+.period-info span {
+  color: #E5E7EB;
+  font-weight: 500;
+}
+
+/* Removido - período info agora é fixo no banner */
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.chart-card {
+  background: var(--color-card-bg);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid var(--color-card-border);
+  box-shadow: 0 4px 20px var(--color-shadow);
+  transition: all 0.3s ease;
+  animation: fadeInUp 0.6s ease-out forwards;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.chart-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px var(--color-shadow-strong);
+  border-color: var(--color-blue-primary);
+}
+
+.chart-header {
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.chart-header h3 {
+  color: var(--color-text-primary);
+  font-size: 1.4rem;
+  margin-bottom: 5px;
+  font-weight: 600;
+}
+
+.chart-header p {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
+/* Tema claro - textos mais escuros para melhor contraste */
+.theme-light .chart-header h3 {
+  color: #000000;
+  font-weight: 700;
+}
+
+.theme-light .chart-header p {
+  color: #333333;
+  font-weight: 500;
+}
+
+/* Tema escuro - textos brancos */
+.theme-dark .chart-header h3 {
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+.theme-dark .chart-header p {
+  color: #FFFFFF;
+  opacity: 0.9;
+}
+
+.chart-container {
+  position: relative;
+  height: 250px;
+  width: 100%;
+  border-radius: 8px;
+  padding: 10px;
+  overflow: hidden;
+}
+
+.chart-container canvas {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* Tema claro - container branco */
+.theme-light .chart-container {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+}
+
+/* Tema escuro - container escuro */
+.theme-dark .chart-container {
+  background: #1F2937;
+  border: 1px solid #374151;
+}
+
+.chart-card.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Animações */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsividade */
+@media (max-width: 1200px) {
+  .charts-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+  
+  .chart-container {
+    height: 350px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .charts-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+  
+  .chart-container {
+    height: 320px;
+  }
+  
+  .charts-page {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 768px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .charts-page {
+    padding: 15px;
+  }
+
+  .advanced-row {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .advanced-chart-card.narrow,
+  .advanced-chart-card.wide,
+  .advanced-chart-card.full-width {
+    max-width: none;
+    flex: 1;
+  }
+
+  .advanced-chart-card {
+    min-height: 300px;
+    padding: 15px;
+  }
+
+  .advanced-chart-card.narrow,
+  .advanced-chart-card.wide,
+  .advanced-chart-card.full-width {
+    min-width: 200px;
+    max-width: none;
+  }
+
+  .chart-icon {
+    font-size: 1.8rem;
+  }
+
+  .advanced-chart-card h3 {
+    font-size: 0.9rem;
+  }
+
+  .advanced-chart-card .chart-container {
+    height: 200px;
+  }
+
+  .period-info {
+    position: static;
+    margin-top: 10px;
+    align-self: center;
+  }
+  
+  .chart-container {
+    height: 280px;
+  }
+  
+  .charts-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+  }
+  
+  .charts-tabs {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .charts-period-selector {
+    align-self: center;
+  }
+  
+  .tab-button {
+    padding: 10px 16px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .charts-page {
+    padding: 12px;
+  }
+  
+  .advanced-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .advanced-chart-card {
+    min-height: 250px;
+    padding: 12px;
+  }
+
+  .advanced-chart-card.narrow,
+  .advanced-chart-card.wide,
+  .advanced-chart-card.full-width {
+    min-width: 150px;
+    max-width: none;
+  }
+
+  .chart-icon {
+    font-size: 1.5rem;
+  }
+
+  .advanced-chart-card h3 {
+    font-size: 0.8rem;
+  }
+
+  .advanced-chart-card .chart-container {
+    height: 150px;
+  }
+
+  .period-info {
+    position: static;
+    margin-top: 8px;
+    align-self: center;
+  }
+  
+  .chart-container {
+    height: 250px;
+  }
+  
+  .charts-header {
+    padding: 0 10px;
+  }
+  
+  .charts-tabs {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .charts-period-selector .period-selector {
+    min-width: 180px;
+  }
+  
+  .tab-button {
+    width: 100%;
+    max-width: 200px;
+    padding: 12px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .charts-page {
+    padding: 10px;
+  }
+  
+  .advanced-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .advanced-chart-card {
+    min-height: 200px;
+    padding: 10px;
+  }
+
+  .advanced-chart-card.narrow,
+  .advanced-chart-card.wide,
+  .advanced-chart-card.full-width {
+    min-width: 120px;
+    max-width: none;
+  }
+
+  .chart-icon {
+    font-size: 1.3rem;
+  }
+
+  .advanced-chart-card h3 {
+    font-size: 0.75rem;
+  }
+
+  .advanced-chart-card .chart-container {
+    height: 120px;
+  }
+
+  .period-info {
+    position: static;
+    margin-top: 6px;
+    align-self: center;
+    font-size: 0.75rem;
+  }
+  
+  .chart-container {
+    height: 220px;
+  }
+  
+  .charts-grid {
+    gap: 12px;
+  }
+}
+
+/* Card: Melhores Desempenhos - Gráfico */
+.chart-card .chart-container {
+  height: 300px;
+  padding: 1rem;
+  position: relative;
+}
+
+.chart-card .chart-container canvas {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+}
+
+/* Responsividade para Melhores Desempenhos */
+@media (min-width: 768px) {
+  .chart-card .chart-container {
+    height: 350px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .chart-card .chart-container {
+    height: 400px;
+  }
+}
+
+
+/* Loading State */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(59, 130, 246, 0.2);
+  border-left: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-state p {
+  color: #94a3b8;
+  font-size: 1rem;
+  margin: 0;
+}
+.simple-chart {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.bar-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.bar-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+.bar-container {
+  position: relative;
+  background: rgba(148, 163, 184, 0.1);
+  border-radius: 8px;
+  height: 24px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 8px;
+  transition: width 0.8s ease;
+  position: relative;
+}
+
+.bar-value {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.quality-metrics-simple {
+  display: flex;
+  gap: 2rem;
+  padding: 1rem;
+  justify-content: center;
+}
+
+.quality-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.quality-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+}
+
+.quality-percentage {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.quality-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #94a3b8;
+  text-align: center;
+}
+
+/* Responsividade para gráficos simples */
+@media (max-width: 768px) {
+  .quality-metrics-simple {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .bar-container {
+    height: 20px;
+  }
+  
+  .quality-circle {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .quality-percentage {
+    font-size: 1rem;
+  }
+}
+
+/* Cards de Distribuição - COMPACTOS COM PREENCHIMENTO */
+.distribution-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+  padding: 20px 0;
+}
+
+.distribution-card {
+  background: var(--surface-secondary);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+  overflow: hidden;
+  min-height: 80px;
+}
+
+.distribution-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.distribution-card-content {
+  padding: 20px 16px;
+  text-align: center;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.distribution-month {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.distribution-count {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Dados simples - COM CORES para performance máxima */
+.quality-data-simple,
+.performers-data-simple {
+  padding: 20px 0;
+}
+
+.quality-item,
+.performer-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  background: var(--surface-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+}
+
+.quality-item:hover,
+.performer-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.quality-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.performer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.performer-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.performer-calls {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.performer-rating {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.quality-value,
+.performer-score {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* Card de Período Separado */
+.period-card {
+  background: linear-gradient(135deg, var(--color-card-bg) 0%, rgba(22, 148, 255, 0.1) 100%);
+  border: 1px solid var(--color-card-border);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px;
+  box-shadow: 0 4px 16px var(--color-shadow);
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.period-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px var(--color-shadow-strong);
+}
+
+.period-label {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.period-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 8px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.period-details {
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+/* Tema escuro específico para o card de período */
+[data-theme="dark"] .period-card {
+  background: linear-gradient(135deg, #2a2a2a 0%, rgba(22, 148, 255, 0.15) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .period-label {
+  color: #a0a0a0;
+}
+
+[data-theme="dark"] .period-value {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .period-details {
+  color: #a0a0a0;
+}
+
+/* Tema claro específico para o card de período */
+[data-theme="light"] .period-card {
+  background: linear-gradient(135deg, #ffffff 0%, rgba(22, 148, 255, 0.05) 100%);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .period-label {
+  color: #64748b;
+}
+
+[data-theme="light"] .period-value {
+  color: #1e293b;
+}
+
+[data-theme="light"] .period-details {
+  color: #64748b;
+}

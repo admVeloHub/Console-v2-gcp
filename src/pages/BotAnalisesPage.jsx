@@ -1,4 +1,4 @@
-// VERSION: v2.4.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v2.5.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useCallback, useEffect } from 'react';
 import { Typography, Box, Tabs, Tab, Container, Grid, Card, CardContent, FormControl, InputLabel, Select, MenuItem, Button } from '@mui/material';
 import { QuestionAnswer, People, Schedule, TrendingUp, TrendingDown, DateRange, BarChart, Timeline, PieChart as PieChartIcon, ShowChart, Person, FileDownload, PictureAsPdf } from '@mui/icons-material';
@@ -1126,7 +1126,11 @@ const BotAnalisesPage = () => {
                               ...Object.keys(dadosGrafico.feedbacksNegativos)
                             ]);
                             
-                            return Array.from(todosPeriodos).sort().map(periodo => {
+                            return Array.from(todosPeriodos).sort((a, b) => {
+                              const dateA = new Date(a);
+                              const dateB = new Date(b);
+                              return dateA - dateB; // Ordem cronológica crescente
+                            }).map(periodo => {
                               // Formatar data para exibição mantendo identificação única
                               let dataFormatada;
                               if (periodo.includes('-')) {

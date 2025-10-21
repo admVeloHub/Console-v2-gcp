@@ -1,4 +1,4 @@
-// VERSION: v3.0.5 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.1.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 // Configuração da API
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://inova-console-back.vercel.app/api';
@@ -45,6 +45,36 @@ class BotAnalisesService {
     
     // Inicializar agendamento automático
     this.inicializarAgendamentoDiario();
+  }
+
+  // ========================================
+  // MÉTODOS HELPER
+  // ========================================
+
+  // Converter período em número de dias
+  obterDiasDoPeriodo(periodo) {
+    const map = {
+      '1dia': 1,
+      '7dias': 7,
+      '30dias': 30,
+      '90dias': 90,
+      '180dias': 180,
+      '365dias': 365
+    };
+    return map[periodo] || 30;
+  }
+
+  // Limpar cache do módulo
+  limparCache() {
+    console.log('🧹 Limpando cache do Bot Análises');
+    this.cache = {
+      dados: null,
+      dadosBrutos: null,
+      periodoCache: null,
+      exibicaoCache: null,
+      timestamp: null,
+      isActive: false
+    };
   }
 
   // Ativar cache quando entrar no módulo Bot Análises
@@ -128,7 +158,7 @@ class BotAnalisesService {
       // Calcular dados processados no frontend a partir de dadosBrutos
       const dadosProcessados = {
         metricasGerais,
-        dadosGrafico: this.calcularDadosGrafico(atividades, exibicao),
+        dadosGrafico: this.calcularDadosGrafico(atividades, exibicao, periodo),
         perguntasFrequentes: this.calcularPerguntasFrequentes(atividades),
         rankingAgentes: this.calcularRankingAgentes(atividades),
         listaAtividades: this.calcularListaAtividades(atividades),
@@ -186,9 +216,29 @@ class BotAnalisesService {
   }
 
   // Calcular dados do gráfico a partir das atividades
-  calcularDadosGrafico(atividades, exibicao) {
+  calcularDadosGrafico(atividades, exibicao, periodoFiltro = null) {
     // Filtrar apenas perguntas
-    const perguntas = atividades.filter(item => item.action === 'question_asked');
+    let perguntas = atividades.filter(item => item.action === 'question_asked');
+    
+    // Se periodoFiltro fornecido, filtrar pelos últimos N dias com dados
+    if (periodoFiltro) {
+      const diasPeriodo = this.obterDiasDoPeriodo(periodoFiltro);
+      
+      // Ordenar atividades por data (mais recente primeiro)
+      perguntas.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      
+      // Pegar data da atividade mais recente
+      if (perguntas.length > 0) {
+        const dataUltimaAtividade = new Date(perguntas[0].createdAt);
+        const dataLimite = new Date(dataUltimaAtividade.getTime() - (diasPeriodo * 24 * 60 * 60 * 1000));
+        
+        // Filtrar apenas atividades dentro do período
+        perguntas = perguntas.filter(item => {
+          const dataAtividade = new Date(item.createdAt);
+          return dataAtividade >= dataLimite;
+        });
+      }
+    }
 
     // Agrupar por período baseado na exibição
     const totalUso = {};
@@ -864,16 +914,19 @@ class BotAnalisesService {
     try {
       console.log(`🔄 getDadosUsoOperacao chamado: periodo=${periodoFiltro}, exibicao=${exibicaoFiltro}`);
       
-      // Verificar se pode usar cache (mas sempre recalcular gráfico para exibição correta)
+      // Verificar se pode usar cache
       if (this.podeUsarCache(periodoFiltro)) {
         console.log('📦 Usando cache, recalculando gráfico para exibição:', exibicaoFiltro);
         const dadosCache = this.filtrarCache(periodoFiltro);
         if (dadosCache && dadosCache.dadosBrutos) {
-          // Recalcular gráfico com a exibição correta
-          const dadosGrafico = this.calcularDadosGrafico(dadosCache.dadosBrutos.atividades, exibicaoFiltro);
+          // Recalcular gráfico com a exibição correta E período correto
+          const dadosGrafico = this.calcularDadosGrafico(dadosCache.dadosBrutos.atividades, exibicaoFiltro, periodoFiltro);
           console.log('📊 Gráfico recalculado:', Object.keys(dadosGrafico.totalUso).length, 'períodos');
           return dadosGrafico;
         }
+      } else {
+        // Se não pode usar cache, limpar cache antigo
+        this.limparCache();
       }
 
       console.log('🆕 Buscando novos dados do backend');

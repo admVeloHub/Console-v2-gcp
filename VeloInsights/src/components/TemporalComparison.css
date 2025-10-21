@@ -1,0 +1,194 @@
+/* ========================================
+   TEMPORAL COMPARISON STYLES
+   ======================================== */
+
+.temporal-comparison {
+  background: var(--color-bg-secondary, #1A1A1A);
+  border: 2px solid var(--color-border, #404040);
+  border-radius: var(--radius-lg, 12px);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  transition: all 0.3s ease;
+}
+
+.temporal-comparison:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Trending Up Styles */
+.temporal-comparison.trend-up {
+  border-color: rgba(34, 197, 94, 0.3);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.05) 0%, transparent 100%);
+}
+
+.temporal-comparison.trend-up-significant {
+  border-color: var(--color-success, #22C55E);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
+}
+
+/* Trending Down Styles */
+.temporal-comparison.trend-down {
+  border-color: rgba(239, 68, 68, 0.3);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, transparent 100%);
+}
+
+.temporal-comparison.trend-down-significant {
+  border-color: var(--color-error, #EF4444);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
+}
+
+.metric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.metric-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #FFFFFF);
+  font-family: var(--font-body, 'Poppins'), sans-serif;
+}
+
+.metric-icon {
+  font-size: 1.5rem;
+  opacity: 0.8;
+}
+
+.metric-values {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.current-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #FFFFFF);
+  font-family: var(--font-display, 'Anton'), sans-serif;
+  flex: 1;
+}
+
+.previous-value {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--color-text-secondary, #B0B0B0);
+  text-align: right;
+  opacity: 0.7;
+}
+
+.metric-comparison {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.percentage-change {
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.temporal-comparison.trend-up .percentage-change,
+.temporal-comparison.trend-up-significant .percentage-change {
+  color: var(--color-success, #22C55E);
+}
+
+.temporal-comparison.trend-down .percentage-change,
+.temporal-comparison.trend-down-significant .percentage-change {
+  color: var(--color-error, #EF4444);
+}
+
+.absolute-change {
+  font-size: 1rem;
+  color: var(--color-text-secondary, #B0B0B0);
+}
+
+.change-label {
+  font-size: 0.8rem;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.interpretation {
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.5rem;
+  border-radius: var(--radius-sm, 6px);
+  text-align: center;
+}
+
+.temporal-comparison.trend-up .interpretation {
+  background: rgba(34, 197, 94, 0.1);
+  color: var(--color-success, #22C55E);
+}
+
+.temporal-comparison.trend-up-significant .interpretation {
+  background: rgba(34, 197, 94, 0.2);
+  color: var(--color-success, #22C55E);
+  font-weight: 600;
+}
+
+.temporal-comparison.trend-down .interpretation {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-error, #EF4444);
+}
+
+.temporal-comparison.trend-down-significant .interpretation {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--color-error, #EF4444);
+  font-weight: 600;
+}
+
+.metric-percentage-bar {
+  height: 4px;
+  background: var(--color-border, #404040);
+  border-radius: var(--radius-sm, 6px);
+  overflow: hidden;
+}
+
+.percentage-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-sm, 6px);
+  transition: width 0.3s ease;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .metric-values {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .previous-value {
+    text-align: left;
+    font-size: 1rem;
+  }
+  
+  .current-value {
+    font-size: 1.8rem;
+  }
+  
+  .percentage-change {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .temporal-comparison {
+    padding: 1rem;
+  }
+  
+  .current-value {
+    font-size: 1.6rem;
+  }
+  
+  .metric-comparison {
+    gap: 0.3rem;
+  }
+}

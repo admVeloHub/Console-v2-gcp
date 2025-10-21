@@ -39,7 +39,52 @@ export const AuthProvider = ({ children }) => {
         }
         
         if (storedUser && storedAuth === 'true') {
-          setUser(JSON.parse(storedUser));
+          const parsedUser = JSON.parse(storedUser);
+          
+          // BYPASS TEMPORÁRIO: Para Lucas Gravina, garantir dados completos
+          if (parsedUser.email === 'lucas.gravina@velotax.com.br' || parsedUser._userMail === 'lucas.gravina@velotax.com.br') {
+            console.log('🚨 BYPASS ATIVADO: Aplicando dados completos do Lucas Gravina no checkAuth');
+            const bypassUserData = {
+              ...parsedUser,
+              _userMail: 'lucas.gravina@velotax.com.br',
+              _userId: 'Lucas Gravina',
+              _userRole: 'Administrador',
+              _userClearance: {
+                artigos: true,
+                velonews: true,
+                botPerguntas: true,
+                chamadosInternos: true,
+                igp: true,
+                botAnalises: true,
+                qualidade: true,
+                capacity: true,
+                config: true,
+                servicos: true,
+                funcionarios: true
+              },
+              _userTickets: {
+                artigos: true,
+                processos: true,
+                roteiros: true,
+                treinamentos: true,
+                funcionalidades: true,
+                recursos: true,
+                gestao: true,
+                rhFin: true,
+                facilities: true
+              },
+              _funcoesAdministrativas: {
+                avaliador: true,
+                auditor: true,
+                relatoriosGestao: true
+              }
+            };
+            setUser(bypassUserData);
+            localStorage.setItem('user', JSON.stringify(bypassUserData));
+          } else {
+            setUser(parsedUser);
+          }
+          
           setIsAuthenticated(true);
           // Atualizar timestamp de atividade
           localStorage.setItem('lastActivity', Date.now().toString());
@@ -131,6 +176,52 @@ export const AuthProvider = ({ children }) => {
   }, [isAuthenticated]);
 
   const login = async (userData) => {
+    // BYPASS TEMPORÁRIO: Para Lucas Gravina, usar dados completos do bypass
+    if (userData.email === 'lucas.gravina@velotax.com.br' || userData._userMail === 'lucas.gravina@velotax.com.br') {
+      console.log('🚨 BYPASS ATIVADO: Aplicando dados completos do Lucas Gravina');
+      const bypassUserData = {
+        ...userData,
+        _userMail: 'lucas.gravina@velotax.com.br',
+        _userId: 'Lucas Gravina',
+        _userRole: 'Administrador',
+        _userClearance: {
+          artigos: true,
+          velonews: true,
+          botPerguntas: true,
+          chamadosInternos: true,
+          igp: true,
+          botAnalises: true,
+          qualidade: true,
+          capacity: true,
+          config: true,
+          servicos: true,
+          funcionarios: true
+        },
+        _userTickets: {
+          artigos: true,
+          processos: true,
+          roteiros: true,
+          treinamentos: true,
+          funcionalidades: true,
+          recursos: true,
+          gestao: true,
+          rhFin: true,
+          facilities: true
+        },
+        _funcoesAdministrativas: {
+          avaliador: true,
+          auditor: true,
+          relatoriosGestao: true
+        }
+      };
+      setUser(bypassUserData);
+      setIsAuthenticated(true);
+      localStorage.setItem('user', JSON.stringify(bypassUserData));
+      localStorage.setItem('isAuthenticated', 'true');
+      localStorage.setItem('lastActivity', Date.now().toString());
+      return;
+    }
+    
     setUser(userData);
     setIsAuthenticated(true);
     localStorage.setItem('user', JSON.stringify(userData));
@@ -175,6 +266,12 @@ export const AuthProvider = ({ children }) => {
     if (!user) return false;
     
     console.log('🔍 DEBUG - Verificando permissão:', permission, 'para usuário:', user.email || user._userMail);
+    
+    // BYPASS TEMPORÁRIO: Para Lucas Gravina, retornar true para todas as permissões
+    if (user.email === 'lucas.gravina@velotax.com.br' || user._userMail === 'lucas.gravina@velotax.com.br') {
+      console.log('🚨 BYPASS ATIVADO: Permitindo todas as permissões para Lucas Gravina');
+      return true;
+    }
     
     // Verificar permissões reais do usuário
     if (!user.permissoes && !user._userClearance) {

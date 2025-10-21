@@ -1,0 +1,284 @@
+/* DataFetcher.css - Carregador de dados com tema claro/escuro */
+
+.data-fetcher-modern {
+  position: relative;
+  min-height: 100vh;
+  background: var(--color-bg-primary);
+  overflow: hidden;
+  padding: 20px;
+}
+
+/* Fundo com efeitos visuais */
+.fetcher-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.background-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(rgba(22, 52, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(22, 52, 255, 0.1) 1px, transparent 1px);
+  background-size: 50px 50px;
+  animation: gridMove 20s linear infinite;
+}
+
+@keyframes gridMove {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(50px, 50px); }
+}
+
+.background-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 800px;
+  height: 800px;
+  background: radial-gradient(circle, rgba(22, 52, 255, 0.15) 0%, transparent 70%);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: backgroundPulse 6s ease-in-out infinite;
+}
+
+@keyframes backgroundPulse {
+  0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 0.6; transform: translate(-50%, -50%) scale(1.1); }
+}
+
+/* Container principal */
+.fetcher-container {
+  position: relative;
+  z-index: 2;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.fetcher-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.fetcher-title {
+  color: var(--color-text-primary);
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 15px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.fetcher-subtitle {
+  color: var(--color-text-secondary);
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+  font-weight: 400;
+}
+
+/* Cards de status */
+.status-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.status-card {
+  background: var(--color-card-bg);
+  border-radius: 16px;
+  padding: 30px;
+  border: 1px solid var(--color-card-border);
+  box-shadow: 0 8px 32px var(--color-shadow-strong);
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.status-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 16px 48px rgba(22, 52, 255, 0.2);
+  border-color: rgba(22, 52, 255, 0.3);
+}
+
+.status-icon {
+  font-size: 3rem;
+  margin-bottom: 20px;
+  color: var(--color-blue-primary);
+}
+
+.status-title {
+  color: var(--color-text-primary);
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.status-description {
+  color: var(--color-text-secondary);
+  font-size: 1rem;
+  margin-bottom: 20px;
+}
+
+.status-value {
+  color: var(--color-blue-primary);
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.status-label {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Botões de ação */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 40px;
+}
+
+.btn-primary {
+  background: var(--color-blue-primary);
+  color: var(--color-text-light);
+  border: none;
+  padding: 15px 30px;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(22, 52, 255, 0.3);
+}
+
+.btn-primary:hover {
+  background: var(--color-blue-light);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(22, 52, 255, 0.4);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--color-text-primary);
+  border: 2px solid rgba(22, 52, 255, 0.3);
+  padding: 15px 30px;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  border-color: var(--color-blue-primary);
+  color: var(--color-blue-primary);
+  background: rgba(22, 52, 255, 0.05);
+}
+
+/* Progress indicator */
+.progress-section {
+  margin-top: 40px;
+  text-align: center;
+}
+
+.progress-bar {
+  width: 100%;
+  max-width: 500px;
+  height: 8px;
+  background: rgba(22, 52, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 20px auto;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-blue-primary), var(--color-blue-light));
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  animation: progressGlow 2s ease-in-out infinite;
+}
+
+@keyframes progressGlow {
+  0%, 100% { box-shadow: 0 0 5px rgba(22, 52, 255, 0.5); }
+  50% { box-shadow: 0 0 20px rgba(22, 52, 255, 0.8); }
+}
+
+.progress-text {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  margin-top: 10px;
+}
+
+/* Estados de erro */
+.error-state {
+  background: var(--color-bg-dark);
+  border-radius: 16px;
+  padding: 40px;
+  text-align: center;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  box-shadow: 0 8px 32px rgba(239, 68, 68, 0.1);
+}
+
+.error-icon {
+  font-size: 4rem;
+  color: #ef4444;
+  margin-bottom: 20px;
+}
+
+.error-title {
+  color: var(--color-text-light);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+
+.error-message {
+  color: rgba(243, 247, 252, 0.8);
+  font-size: 1rem;
+  margin-bottom: 30px;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .data-fetcher-modern {
+    padding: 15px;
+  }
+  
+  .fetcher-container {
+    padding: 20px 15px;
+  }
+  
+  .fetcher-title {
+    font-size: 2rem;
+  }
+  
+  .fetcher-subtitle {
+    font-size: 1rem;
+  }
+  
+  .status-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+    max-width: 300px;
+  }
+}

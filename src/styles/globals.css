@@ -3,6 +3,9 @@
 /* Importar fontes VeloHub */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Anton&display=swap');
 
+/* Importar integração do VeloInsights */
+@import './veloinsights-integration.css';
+
 /* Variáveis CSS - VeloHub */
 :root {
   /* PALETA OFICIAL VELOHUB */
@@ -214,4 +217,30 @@ body {
   .velohub-card {
     padding: 12px;
   }
+}
+
+/* Containers VeloHub */
+.container-main {
+  background-color: var(--cor-container);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  margin: 16px 0;
+}
+
+.container-secondary {
+  background: transparent;
+  border: 1.5px solid var(--blue-dark);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 8px;
+  box-shadow: none;
+}
+
+.velohub-card {
+  background-color: var(--cor-card);
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  margin: 12px 0;
 }

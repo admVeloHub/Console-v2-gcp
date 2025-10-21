@@ -1,0 +1,130 @@
+.operator-analysis {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.selected-operator {
+  background: rgba(22, 52, 255, 0.1) !important;
+  border-left: 3px solid var(--color-blue-primary);
+}
+
+.selected-indicator {
+  margin-left: 8px;
+  color: var(--color-blue-primary);
+  font-size: 1.2rem;
+}
+
+.performance {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 0.8rem;
+}
+
+.performance.excellent {
+  background: rgba(21, 162, 55, 0.2);
+  color: var(--color-green);
+}
+
+.performance.good {
+  background: rgba(22, 52, 255, 0.2);
+  color: var(--color-blue-primary);
+}
+
+.performance.average {
+  background: rgba(252, 194, 0, 0.2);
+  color: var(--color-yellow);
+}
+
+.temporal-analysis {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.temporal-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  padding: 20px;
+  background: rgba(22, 52, 255, 0.05);
+  border-radius: var(--border-radius);
+  border: 1px solid rgba(22, 52, 255, 0.1);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 1.1rem;
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.temporal-chart {
+  background: var(--color-bg-dark);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  min-height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.temporal-chart canvas {
+  max-width: 100%;
+  max-height: 200px;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .temporal-stats {
+    grid-template-columns: 1fr;
+    padding: 15px;
+  }
+  
+  .temporal-chart {
+    padding: 15px;
+    min-height: 200px;
+  }
+  
+  .selected-indicator {
+    font-size: 1rem;
+  }
+  
+  .performance {
+    font-size: 0.75rem;
+    padding: 3px 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .temporal-stats {
+    padding: 10px;
+  }
+  
+  .temporal-chart {
+    padding: 10px;
+    min-height: 150px;
+  }
+  
+  .stat-label {
+    font-size: 0.8rem;
+  }
+  
+  .stat-value {
+    font-size: 1rem;
+  }
+}

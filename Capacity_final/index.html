@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Velotax Capacity - Sistema de Dimensionamento de Call Center</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        // Verificar se XLSX está carregado corretamente
+        window.addEventListener('load', function() {
+            if (typeof XLSX === 'undefined') {
+                console.error('XLSX library not loaded');
+            } else {
+                console.log('XLSX library loaded successfully');
+                console.log('Available XLSX methods:', Object.keys(XLSX.utils));
+            }
+        });
+    </script>
+</head>
+<body>
+    <!-- Tela de Login -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-container">
+            <div class="login-header">
+                <h1>🔐 Velotax Capacity</h1>
+                <p>Sistema de Dimensionamento de Call Center</p>
+            </div>
+            <div class="login-form">
+                <div class="input-group">
+                    <label for="passwordInput">Senha de Acesso:</label>
+                    <input type="password" id="passwordInput" placeholder="Digite a senha" autocomplete="off">
+                </div>
+                <button id="loginBtn" class="login-btn">🔓 Acessar Sistema</button>
+                <div id="loginError" class="login-error" style="display: none;"></div>
+            </div>
+            <div class="login-info">
+                <p>Entre em contato com o administrador para obter a senha de acesso.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interface Principal (Oculta até login) -->
+    <div id="mainInterface" class="main-interface" style="display: none;">
+        <header class="header">
+            <h1>Velotax Capacity</h1>
+            <p>Sistema de Dimensionamento de Call Center usando Modelo Erlang C</p>
+            <button id="logoutBtn" class="logout-btn">🚪 Sair</button>
+        </header>
+
+        <main class="main-content">
+            <section class="info-section">
+                <h2>ℹ️ Informações do Sistema</h2>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h3>🎯 Objetivo</h3>
+                        <p>Calcular a quantidade ideal de pessoas (HCs) necessárias para atender a demanda de ligações em um call center, considerando diferentes jornadas de trabalho para dias úteis e sábados.</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>📈 Metodologia</h3>
+                        <p>Utiliza o modelo matemático Erlang C para análise de filas, considerando volume de ligações, tempo médio de atendimento (TMA) e nível de serviço desejado.</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>📊 Entrada de Dados</h3>
+                        <p>Arquivos CSV com 2 colunas: "Intervalo de ligações" (horário) e "Quantidade média de ligações recebidas por intervalo".</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="parameters-section">
+                <h2>⚙️ Parâmetros do Sistema</h2>
+                <div class="parameters-grid">
+                    <div class="param-group">
+                        <h3>📅 Dias Úteis (Segunda à Sexta)</h3>
+                        <div class="param-item">
+                            <span class="param-label">Horário de Trabalho:</span>
+                            <div class="param-input-group">
+                                <input type="number" id="horarioTrabalho" value="10" min="1" max="24" step="0.5" class="param-input">
+                                <span class="param-unit">horas/dia</span>
+                            </div>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-label">Horário de Almoço:</span>
+                            <div class="param-input-group">
+                                <input type="number" id="horarioAlmoco" value="1" min="0" max="8" step="0.5" class="param-input">
+                                <span class="param-unit">horas</span>
+                            </div>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-label">Outras Pausas:</span>
+                            <div class="param-input-group">
+                                <input type="number" id="outrasPausas" value="0.5" min="0" max="4" step="0.25" class="param-input">
+                                <span class="param-unit">horas</span>
+                            </div>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-label">Horas Efetivas:</span>
+                            <span class="param-value" id="horasEfetivas">8.5 horas</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-label">Capacidade por HC:</span>
+                            <span class="param-value" id="capacidadePorHC">9.6 ligações/hora</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-label">Capacidade Segura:</span>
+                            <span class="param-value" id="capacidadeSegura">7.7 ligações/hora</span>
+                        </div>
+                    </div>
+                    <div class="param-group">
+                        <h3>📅 Sábado</h3>
+                        <div class="param-item">
+                            <span class="param-label">Horário de Trabalho:</span>
+                            <div class="param-input-group">
+                                <input type="number" id="horarioTrabalhoSabado" value="6" min="1" max="12" step="0.5" class="param-input">
+                                <span class="param-unit">horas/dia</span>
+                            </div>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-label">Horário de Almoço:</span>
+                            <div class="param-input-group">
+                                <input type="number" id="horarioAlmocoSabado" value="0" min="0" max="3" step="0.5" class="param-input">
+                                <span class="param-unit">horas</span>
+                            </div>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-label">Outras Pausas:</span>
+                            <div class="param-input-group">
+                                <input type="number" id="outrasPausasSabado" value="30" min="0" max="120" step="5" class="param-input">
+                                <span class="param-unit">minutos</span>
+                            </div>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-label">Horas Efetivas:</span>
+                            <span class="param-value" id="horasEfetivasSabado">5.5 horas</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-label">Capacidade por HC:</span>
+                            <span class="param-value" id="capacidadePorHCSabado">9.6 ligações/hora</span>
+                        </div>
+                        <div class="param-item">
+                            <span class="param-label">Capacidade Segura:</span>
+                            <span class="param-value" id="capacidadeSeguraSabado">7.7 ligações/hora</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="global-params">
+                    <div class="param-item">
+                        <span class="param-label">Tempo Médio de Atendimento (TMA):</span>
+                        <div class="param-input-group">
+                            <input type="number" id="tmaValue" value="5" min="1" max="60" step="0.5" class="param-input">
+                            <select id="tmaUnit" class="param-select">
+                                <option value="minutos">minutos</option>
+                                <option value="segundos">segundos</option>
+                            </select>
+                        </div>
+                        <span class="param-value" id="tmaDisplay">5 minutos (300 segundos)</span>
+                    </div>
+                    <div class="param-item">
+                        <span class="param-label">Nível de Serviço:</span>
+                        <span class="param-value">70% das ligações atendidas em até 20 segundos</span>
+                    </div>
+                    <div class="param-item">
+                        <span class="param-label">Abandono:</span>
+                        <span class="param-value">5%</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="upload-section">
+                <h2>📁 Upload de Arquivos</h2>
+                <div class="upload-grid">
+                    <div class="upload-card">
+                        <h3>📅 Dias Úteis (Segunda à Sexta)</h3>
+                        <div class="file-input-container">
+                            <input type="file" id="fileInputWeekdays" accept=".xlsx,.xls,.csv" class="file-input">
+                            <label for="fileInputWeekdays" class="file-label">
+                                <span class="file-icon">📁</span>
+                                <span class="file-text">Selecionar arquivo (XLS, XLSX, CSV)</span>
+                            </label>
+                        </div>
+                        <div id="fileInfoWeekdays" class="file-info"></div>
+                    </div>
+                    <div class="upload-card">
+                        <h3>📅 Sábado</h3>
+                        <div class="file-input-container">
+                            <input type="file" id="fileInputSaturday" accept=".xlsx,.xls,.csv" class="file-input">
+                            <label for="fileInputSaturday" class="file-label">
+                                <span class="file-icon">📁</span>
+                                <span class="file-text">Selecionar arquivo (XLS, XLSX, CSV)</span>
+                            </label>
+                        </div>
+                        <div id="fileInfoSaturday" class="file-info"></div>
+                    </div>
+                </div>
+                <div class="upload-info">
+                    <p><strong>Formato esperado:</strong> Arquivo com cabeçalho "Intervalo de ligações,Quantidade média de ligações recebidas por intervalo"</p>
+                    <p><strong>Formatos aceitos:</strong> Excel (.xlsx, .xls) ou CSV (.csv)</p>
+                    <p><strong>Exemplo:</strong> 8,30 (para 8:00 com 30 ligações)</p>
+                </div>
+            </section>
+
+            <section class="process-section">
+                <button id="processBtn" class="process-btn" disabled>
+                    🚀 Processar Dimensionamento
+                </button>
+                <div class="process-info">
+                    Faça upload dos arquivos para habilitar o processamento
+                </div>
+            </section>
+
+            <div class="export-section" id="exportSection" style="display: none;">
+                <button id="exportBtn" class="export-btn">
+                    📊 Exportar para Excel
+                </button>
+                <div class="export-info">
+                    Exporta as tabelas de dimensionamento para arquivo Excel
+                </div>
+            </div>
+
+            <section id="results-container" class="results-container" style="display: none;">
+                <!-- Resultados serão inseridos aqui -->
+            </section>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

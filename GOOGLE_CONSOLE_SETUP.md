@@ -10,7 +10,7 @@
 
 #### 2. Vá para Credenciais OAuth:
 - Menu lateral → "APIs e serviços" → "Credenciais"
-- Clique no Client ID: `278491073220-eb4ogvn3aifu0ut9mq3rvu5r9r9l3137.apps.googleusercontent.com`
+- Clique no Client ID configurado
 
 #### 3. Adicione URIs Autorizados:
 ```
@@ -61,6 +61,5 @@ https://seu-dominio.com
 
 ---
 
-**Client ID:** `278491073220-eb4ogvn3aifu0ut9mq3rvu5r9r9l3137.apps.googleusercontent.com`  
 **Versão:** v3.3.4  
 **Data:** 2024-12-19

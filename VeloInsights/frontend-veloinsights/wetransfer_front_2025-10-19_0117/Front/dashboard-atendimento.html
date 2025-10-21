@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VeloInsights - Dashboard de Atendimento Velotax</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Anton&display=swap" rel="stylesheet">
+  
+  <!-- BoxIcons -->
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <link rel="stylesheet" href="PeriodSelector.css">
+  
+  <style>
+    :root {
+      --bg-primary: #F3F7FC;
+      --bg-secondary: #FFFFFF;
+      --bg-tertiary: #F3F7FC;
+      --text-primary: #272A30;
+      --text-muted: #6c757d;
+      --border-color: rgba(22, 52, 255, 0.1);
+      --shadow-color: rgba(39, 42, 48, 0.08);
+      --hover-bg: rgba(22, 148, 255, 0.05);
+      --brand-primary: #1634FF;
+      --brand-secondary: #1694FF;
+      --success-color: #28a745;
+      --danger-color: #dc3545;
+      --warning-color: #ffc107;
+      --gradient-primary: linear-gradient(135deg, #1634FF, #1694FF);
+      --chart-text-color: #272A30;
+      --chart-grid-color: rgba(22, 52, 255, 0.1);
+    }
+
+    [data-theme="dark"] {
+      --bg-primary: #121212;
+      --bg-secondary: #1e1e1e;
+      --bg-tertiary: #2a2a2a;
+      --text-primary: #FFFFFF;
+      --text-muted: rgba(255, 255, 255, 0.7);
+      --border-color: rgba(255, 255, 255, 0.1);
+      --shadow-color: rgba(0, 0, 0, 0.3);
+      --hover-bg: rgba(22, 148, 255, 0.1);
+      --brand-primary: #4FC3F7;
+      --success-color: #20c997;
+      --danger-color: #ff6b6b;
+      --warning-color: #ffd60a;
+      --chart-text-color: #FFFFFF;
+      --chart-grid-color: rgba(255, 255, 255, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* Header */
+    .header {
+      background-color: var(--bg-secondary);
+      border-radius: 20px;
+      padding: 20px 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 8px 32px var(--shadow-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      transition: background-color 0.3s ease;
+    }
+
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logo {
+      font-family: 'Anton', sans-serif;
+      font-size: 32px;
+      color: var(--brand-primary);
+      font-weight: 400;
+    }
+
+    .period-selector {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 20px;
+      background-color: var(--bg-tertiary);
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .period-selector:hover {
+      border-color: var(--brand-secondary);
+      transform: translateY(-2px);
+    }
+
+    .period-selector i {
+      font-size: 20px;
+      color: var(--brand-primary);
+    }
+
+    .period-text {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .theme-toggle {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 2px solid var(--border-color);
+      background-color: var(--bg-tertiary);
+      color: var(--text-primary);
+      font-size: 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .theme-toggle:hover {
+      transform: scale(1.1) rotate(360deg);
+      border-color: var(--brand-secondary);
+    }
+
+    /* Navigation Tabs */
+    .nav-tabs {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .nav-tab {
+      padding: 12px 24px;
+      border-radius: 50px;
+      border: 2px solid var(--border-color);
+      background-color: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-tab:hover:not(.active) {
+      background-color: var(--brand-secondary);
+      color: #FFFFFF;
+      border-color: var(--brand-secondary);
+    }
+
+    .nav-tab.active {
+      background: var(--gradient-primary);
+      color: #FFFFFF;
+      border-color: var(--brand-primary);
+    }
+
+    /* Section Title */
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .section-title i {
+      font-size: 32px;
+      color: var(--brand-primary);
+    }
+
+    .section-title h2 {
+      font-size: 28px;
+      font-weight: 600;
+    }
+
+    /* Cards */
+    .card {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 8px 32px var(--shadow-color);
+      transition: all 0.3s ease;
+      margin-bottom: 20px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-family: 'Anton', sans-serif;
+      font-size: 24px;
+      font-weight: 400;
+      color: var(--text-primary);
+    }
+
+    .card-icon {
+      font-size: 24px;
+      color: var(--brand-primary);
+    }
+
+    /* Charts Grid */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .chart-container {
+      height: 350px;
+      position: relative;
+    }
+
+    .chart-full {
+      grid-column: 1 / -1;
+    }
+
+    /* Indicators Grid */
+    .indicators-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .indicator-card {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .indicator-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px var(--shadow-color);
+      border-color: var(--brand-secondary);
+    }
+
+    .indicator-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+    }
+
+    .indicator-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--brand-primary);
+    }
+
+    .indicator-icon {
+      font-size: 32px;
+      color: var(--brand-primary);
+      margin-bottom: 10px;
+    }
+
+    /* Views */
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .header {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .nav-tabs {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .chart-container {
+        height: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo-section">
+        <div class="logo">VELOINSIGHTS</div>
+      </div>
+
+      <div class="period-selector" onclick="openPeriodModal()">
+        <i class='bx bx-calendar'></i>
+        <div class="period-text">
+          <strong>Últimos 15 dias</strong>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button class="theme-toggle" onclick="toggleTheme()">
+          <i class='bx bx-moon'></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Navigation -->
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="showView('55pbx')">
+        <i class='bx bx-phone'></i>
+        55pbx - Telefonia
+      </button>
+      <button class="nav-tab" onclick="showView('octadesk')">
+        <i class='bx bx-support'></i>
+        Octadesk - Tickets
+      </button>
+    </div>
+
+    <!-- View 55pbx -->
+    <div id="view-55pbx" class="view active">
+      <div class="section-title">
+        <i class='bx bxs-phone'></i>
+        <h2>55pbx - Sistema de Telefonia</h2>
+      </div>
+
+      <!-- Indicadores -->
+      <div class="indicators-grid">
+        <div class="indicator-card">
+          <i class='bx bx-phone-call indicator-icon'></i>
+          <div class="indicator-label">Total de Chamadas</div>
+          <div class="indicator-value">2,847</div>
+        </div>
+        <div class="indicator-card">
+          <i class='bx bx-time-five indicator-icon'></i>
+          <div class="indicator-label">TMA Geral</div>
+          <div class="indicator-value">5:32</div>
+        </div>
+        <div class="indicator-card">
+          <i class='bx bx-check-circle indicator-icon'></i>
+          <div class="indicator-label">Taxa de Atendimento</div>
+          <div class="indicator-value">87%</div>
+        </div>
+        <div class="indicator-card">
+          <i class='bx bx-coffee indicator-icon'></i>
+          <div class="indicator-label">Tempo em Pausa</div>
+          <div class="indicator-value">2:15</div>
+        </div>
+      </div>
+
+      <!-- 1. Volume Histórico Geral -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Volume Histórico Geral</h3>
+          <i class='bx bx-trending-up card-icon'></i>
+        </div>
+        <div class="chart-container">
+          <canvas id="chart-55pbx-volume-geral"></canvas>
+        </div>
+      </div>
+
+      <!-- CSAT -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">CSAT - Satisfação do Cliente</h3>
+          <i class='bx bx-star card-icon'></i>
+        </div>
+        <div class="chart-container">
+          <canvas id="chart-55pbx-csat"></canvas>
+        </div>
+      </div>
+
+      <!-- Gráficos em Grid -->
+      <div class="charts-grid">
+        <!-- 2. Volume por Produto (URA) -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Volume por Produto URA</h3>
+            <i class='bx bx-line-chart card-icon'></i>
+          </div>
+          <div class="chart-container">
+            <canvas id="chart-55pbx-volume-produto"></canvas>
+          </div>
+        </div>
+
+        <!-- 3. Volume por Hora -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Volume por Hora</h3>
+            <i class='bx bx-bar-chart-alt-2 card-icon'></i>
+          </div>
+          <div class="chart-container">
+            <canvas id="chart-55pbx-volume-hora"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. TMA Atendimento -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">TMA por Produto</h3>
+          <i class='bx bx-time card-icon'></i>
+        </div>
+        <div class="chart-container">
+          <canvas id="chart-55pbx-tma-produto"></canvas>
+        </div>
+      </div>
+
+      <!-- 5. Tempo de Pausa -->
+      <div class="charts-grid">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Tempo de Pausa Geral</h3>
+            <i class='bx bx-coffee card-icon'></i>
+          </div>
+          <div class="chart-container">
+            <canvas id="chart-55pbx-pausa-geral"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Pausa por Motivo</h3>
+            <i class='bx bx-list-ul card-icon'></i>
+          </div>
+          <div class="chart-container">
+            <canvas id="chart-55pbx-pausa-motivo"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- View Octadesk -->
+    <div id="view-octadesk" class="view">
+      <div class="section-title">
+        <i class='bx bxs-message-square-detail'></i>
+        <h2>Octadesk - Sistema de Tickets</h2>
+      </div>
+
+      <!-- Indicadores -->
+      <div class="indicators-grid">
+        <div class="indicator-card">
+          <i class='bx bx-message-detail indicator-icon'></i>
+          <div class="indicator-label">Total de Tickets</div>
+          <div class="indicator-value">1,523</div>
+        </div>
+        <div class="indicator-card">
+          <i class='bx bx-time-five indicator-icon'></i>
+          <div class="indicator-label">Tempo Médio Resolução</div>
+          <div class="indicator-value">4:20</div>
+        </div>
+        <div class="indicator-card">
+          <i class='bx bx-check-circle indicator-icon'></i>
+          <div class="indicator-label">Taxa de Resolução</div>
+          <div class="indicator-value">92%</div>
+        </div>
+        <div class="indicator-card">
+          <i class='bx bx-coffee indicator-icon'></i>
+          <div class="indicator-label">Tempo em Pausa</div>
+          <div class="indicator-value">1:45</div>
+        </div>
+      </div>
+
+      <!-- 1. Volume Histórico Geral -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Volume Histórico Geral</h3>
+          <i class='bx bx-trending-up card-icon'></i>
+        </div>
+        <div class="chart-container">
+          <canvas id="chart-octadesk-volume-geral"></canvas>
+        </div>
+      </div>
+
+      <!-- CSAT -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">CSAT - Satisfação do Cliente</h3>
+          <i class='bx bx-star card-icon'></i>
+        </div>
+        <div class="chart-container">
+          <canvas id="chart-octadesk-csat"></canvas>
+        </div>
+      </div>
+
+      <!-- Gráficos em Grid -->
+      <div class="charts-grid">
+        <!-- 2. Volume por Assunto -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Volume por Assunto</h3>
+            <i class='bx bx-line-chart card-icon'></i>
+          </div>
+          <div class="chart-container">
+            <canvas id="chart-octadesk-volume-assunto"></canvas>
+          </div>
+        </div>
+
+        <!-- 3. Volume por Hora -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Volume por Hora</h3>
+            <i class='bx bx-bar-chart-alt-2 card-icon'></i>
+          </div>
+          <div class="chart-container">
+            <canvas id="chart-octadesk-volume-hora"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Tempo Abertura/Fechamento -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Tempo de Abertura até Fechamento</h3>
+          <i class='bx bx-time card-icon'></i>
+        </div>
+        <div class="chart-container">
+          <canvas id="chart-octadesk-tempo-resolucao"></canvas>
+        </div>
+      </div>
+
+      <!-- 5. Tempo de Pausa -->
+      <div class="charts-grid">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Tempo de Pausa Geral</h3>
+            <i class='bx bx-coffee card-icon'></i>
+          </div>
+          <div class="chart-container">
+            <canvas id="chart-octadesk-pausa-geral"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Pausa por Motivo</h3>
+            <i class='bx bx-list-ul card-icon'></i>
+          </div>
+          <div class="chart-container">
+            <canvas id="chart-octadesk-pausa-motivo"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="dashboard-charts.js"></script>
+  <script>
+    // Theme Toggle
+    function toggleTheme() {
+      const body = document.body;
+      const themeIcon = document.querySelector('.theme-toggle i');
+      
+      if (body.getAttribute('data-theme') === 'dark') {
+        body.removeAttribute('data-theme');
+        themeIcon.classList.remove('bx-sun');
+        themeIcon.classList.add('bx-moon');
+        localStorage.setItem('theme', 'light');
+      } else {
+        body.setAttribute('data-theme', 'dark');
+        themeIcon.classList.remove('bx-moon');
+        themeIcon.classList.add('bx-sun');
+        localStorage.setItem('theme', 'dark');
+      }
+      
+      // Atualizar todos os gráficos
+      updateAllCharts();
+    }
+
+    // Carregar tema salvo
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark') {
+        document.body.setAttribute('data-theme', 'dark');
+        document.querySelector('.theme-toggle i').classList.replace('bx-moon', 'bx-sun');
+      }
+    });
+
+    // View Navigation
+    function showView(viewName) {
+      // Remover active de todas as views e tabs
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      
+      // Adicionar active na view e tab selecionadas
+      document.getElementById(`view-${viewName}`).classList.add('active');
+      event.target.closest('.nav-tab').classList.add('active');
+    }
+
+    // Period Modal (placeholder)
+    function openPeriodModal() {
+      alert('Modal de período será integrado aqui com o PeriodSelector.jsx');
+    }
+
+    // Inicializar gráficos quando o DOM estiver pronto
+    window.addEventListener('DOMContentLoaded', () => {
+      initializeAllCharts();
+    });
+  </script>
+</body>
+</html>
+

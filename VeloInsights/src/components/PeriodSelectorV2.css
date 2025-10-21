@@ -1,0 +1,224 @@
+/* ========================================
+   PERIOD SELECTOR V2 STYLES
+   ======================================== */
+
+.period-selector-v2 {
+  margin-bottom: 2rem;
+}
+
+.period-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.period-header h2 {
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-text-primary, #FFFFFF);
+  font-family: var(--font-display, 'Anton'), sans-serif;
+}
+
+.period-header p {
+  color: var(--color-text-secondary, #B0B0B0);
+  font-size: 1rem;
+}
+
+.period-options {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.period-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.period-card {
+  background: var(--color-bg-secondary, #1A1A1A);
+  border: 2px solid var(--color-border, #404040);
+  border-radius: var(--radius-lg, 12px);
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.period-card:hover:not(:disabled) {
+  border-color: var(--color-primary, #1634FF);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(22, 148, 255, 0.2);
+}
+
+.period-card.active {
+  border-color: var(--color-primary, #1634FF);
+  background: linear-gradient(135deg, 
+    rgba(22, 148, 255, 0.1) 0%, 
+    rgba(22, 148, 255, 0.05) 100%);
+}
+
+.period-card.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--gradient-primary, linear-gradient(135deg, #1634FF 0%, #1694FF 100%));
+}
+
+.period-card:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.period-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.period-label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #FFFFFF);
+  margin-bottom: 0.5rem;
+}
+
+.period-month {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary, #B0B0B0);
+  font-weight: 500;
+}
+
+.period-subtitle {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary, #B0B0B0);
+  font-style: italic;
+}
+
+/* Formulário Personalizado */
+.custom-period-form {
+  background: var(--color-bg-secondary, #1A1A1A);
+  border: 2px solid var(--color-border, #404040);
+  border-radius: var(--radius-lg, 12px);
+  padding: 2rem;
+  margin-top: 1rem;
+}
+
+.custom-period-form h3 {
+  margin-bottom: 1.5rem;
+  color: var(--color-text-primary, #FFFFFF);
+  font-family: var(--font-display, 'Anton'), sans-serif;
+  text-align: center;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 1rem;
+  align-items: end;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--color-text-secondary, #B0B0B0);
+  font-size: 0.9rem;
+}
+
+.form-group input {
+  padding: 0.75rem;
+  border: 2px solid var(--color-border, #404040);
+  border-radius: var(--radius-md, 8px);
+  background: var(--color-bg-primary, #2A2A2A);
+  color: var(--color-text-primary, #FFFFFF);
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--color-primary, #1634FF);
+  box-shadow: 0 0 0 3px rgba(22, 148, 255, 0.2);
+}
+
+.form-group input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: var(--radius-md, 8px);
+  background: var(--gradient-primary, linear-gradient(135deg, #1634FF 0%, #1694FF 100%));
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(22, 148, 255, 0.4);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .period-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .period-card {
+    padding: 1rem;
+  }
+  
+  .period-icon {
+    font-size: 2rem;
+  }
+  
+  .period-label {
+    font-size: 1rem;
+  }
+  
+  .period-month,
+  .period-subtitle {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .period-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .custom-period-form {
+    padding: 1rem;
+  }
+  
+  .btn-primary {
+    width: 100%;
+    padding: 1rem;
+  }
+}
