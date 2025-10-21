@@ -1,5 +1,6 @@
+// VERSION: v2.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import { useState, useEffect, useCallback } from 'react'
-import { useGoogleSheetsDirectSimple } from './useGoogleSheetsDirectSimple'
+import { useServiceAccount } from './useServiceAccount'
 
 // Configuração da planilha OCTA (mesmos ranges da seção de tickets)
 const OCTA_CONFIG = {
@@ -14,8 +15,8 @@ const OCTA_CONFIG = {
 }
 
 export const useOctaData = (filters = {}) => {
-  // Usar o mesmo hook do sistema principal para obter userData e isAuthenticated
-  const { userData, isAuthenticated } = useGoogleSheetsDirectSimple()
+  // Usar o hook de Service Account para obter dados
+  const { octaData: serviceOctaData, loading: serviceLoading, error: serviceError, fetchOctaData: fetchServiceOctaData } = useServiceAccount()
   
   const [octaData, setOctaData] = useState([])
   const [octaMetrics, setOctaMetrics] = useState({})
@@ -84,42 +85,13 @@ export const useOctaData = (filters = {}) => {
     return name.trim()
   }
 
-  // Função para buscar dados da planilha OCTA (mesma lógica da seção de tickets)
-  const fetchSheetData = useCallback(async (accessToken) => {
+  // Função para buscar dados da planilha OCTA via Service Account
+  const fetchSheetData = useCallback(async () => {
     try {
+      console.log('🔄 Buscando dados OCTA via Service Account...')
       
-      // Usar o accessToken passado como parâmetro
-      if (!accessToken) {
-        throw new Error('Usuário não está autenticado')
-      }
-      
-      
-      // Tentar diferentes ranges (mesma lógica da seção de tickets)
-      let data = null
-      
-      for (const range of OCTA_CONFIG.RANGES) {
-        try {
-                 const url = `https://sheets.googleapis.com/v4/spreadsheets/${OCTA_CONFIG.SPREADSHEET_ID}/values/${range}?access_token=${accessToken}`
-          
-          const response = await fetch(url)
-          
-          if (response.ok) {
-            const result = await response.json()
-            const totalRows = result.values?.length || 0
-            
-            // Log das primeiras 3 linhas para debug
-            if (result.values && result.values.length > 0) {
-            }
-            
-            data = result.values
-            break
-          } else {
-            const errorText = await response.text()
-          }
-        } catch (err) {
-          continue
-        }
-      }
+      // Usar o hook de Service Account para buscar dados
+      const data = await fetchServiceOctaData()
       
       if (!data || data.length < 2) {
         throw new Error('Nenhum dado encontrado na planilha OCTA')
@@ -131,7 +103,7 @@ export const useOctaData = (filters = {}) => {
       console.error('❌ Erro ao buscar dados da planilha OCTA:', err)
       throw err
     }
-  }, [])
+  }, [fetchServiceOctaData])
 
   // Função para filtrar dados OCTA por período
   const filterOctaDataByPeriod = (dataRows, period, customStartDate, customEndDate) => {
@@ -211,14 +183,10 @@ export const useOctaData = (filters = {}) => {
     setError(null)
 
     try {
+      console.log('🔄 Iniciando busca de dados OCTA via Service Account...')
       
-      // Passar o accessToken diretamente para evitar race condition
-      if (!userData?.accessToken) {
-        throw new Error('Access token não disponível')
-      }
-      
-      // Buscar dados diretamente da planilha
-      const data = await fetchSheetData(userData.accessToken)
+      // Buscar dados diretamente da planilha via Service Account
+      const data = await fetchSheetData()
       
       // Processar dados
       const headers = data[0]
@@ -417,26 +385,24 @@ export const useOctaData = (filters = {}) => {
     } finally {
       setIsLoading(false)
     }
-  }, [userData?.accessToken, fetchSheetData])
+  }, [fetchSheetData])
 
   // Função para buscar dados por período
   const fetchDataByPeriod = useCallback(async (period, customStartDate = null, customEndDate = null) => {
     await fetchOctaData(period, customStartDate, customEndDate)
   }, [fetchOctaData])
 
-  // Efeito para carregar dados automaticamente quando autenticado E quando filtros mudarem
+  // Efeito para carregar dados automaticamente quando filtros mudarem
   useEffect(() => {
+    console.log('🔄 useEffect OCTA - Carregando dados automaticamente...')
     
-    if (isAuthenticated && userData?.accessToken && userData.accessToken.length > 10) {
-      // Usar os filtros do sistema principal
-      const period = filters.period || 'allRecords'
-      const customStartDate = filters.customStartDate || null
-      const customEndDate = filters.customEndDate || null
-      
-      fetchOctaData(period, customStartDate, customEndDate)
-    } else {
-    }
-  }, [isAuthenticated, userData?.accessToken, fetchOctaData, filters.period, filters.customStartDate, filters.customEndDate])
+    // Usar os filtros do sistema principal
+    const period = filters.period || 'allRecords'
+    const customStartDate = filters.customStartDate || null
+    const customEndDate = filters.customEndDate || null
+    
+    fetchOctaData(period, customStartDate, customEndDate)
+  }, [fetchOctaData, filters.period, filters.customStartDate, filters.customEndDate])
 
   // Função para tentar carregar dados manualmente
   const retryLoad = useCallback(async () => {

@@ -1,5 +1,60 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.28.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.29.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+
+## Push GitHub - Remoção de SSO do IGP/VeloInsights - 2024-12-19 21:30
+
+### Informações do Push
+- **Tipo:** Push GitHub
+- **Data/Hora:** 2024-12-19 21:30 BRT
+- **Versão:** v1.29.0
+- **Status:** Concluído
+
+### Arquivos Removidos
+1. `src/pages/IGP/hooks/useGoogleSheetsDirectSimple.js` - Hook principal de autenticação OAuth
+2. `src/pages/IGP/utils/jwt-service.js` - Serviço JWT para autenticação
+3. `src/config/veloinsights.js` - Configurações do Google OAuth
+4. `VeloInsights/public/callback.html` - Página de callback do OAuth
+5. `src/pages/IGP/api/mongodb-api.js` - API MongoDB principal
+6. `src/pages/IGP/api/mongodb-local.js` - API MongoDB local
+7. `src/pages/IGP/api/55-api-integration.js` - Integração com 55PBX
+
+### Arquivos Modificados
+1. `src/pages/IGPPage.jsx` - Adaptado para usar Service Account (v2.0.0)
+2. `src/pages/IGP/hooks/useOctaData.js` - Adaptado para Service Account (v2.0.0)
+3. `DEPLOY_LOG.md` - Log da remoção de SSO (v1.29.0)
+
+### Arquivos Criados
+1. `src/pages/IGP/hooks/useServiceAccount.js` - Novo hook para acesso via Service Account (v1.0.0)
+
+### Descrição do Push
+Remoção completa da lógica de SSO (Single Sign-On) do módulo IGP/VeloInsights, implementando acesso direto ao Google Sheets via Service Account:
+
+**🔧 Mudanças Implementadas:**
+- **Remoção de SSO:** Eliminada toda autenticação OAuth do usuário
+- **Service Account:** Implementado acesso direto ao Google Sheets
+- **APIs Removidas:** MongoDB e integração 55PBX não utilizadas
+- **Simplificação:** IGP funciona sem login separado
+
+**📊 Funcionalidades Mantidas:**
+- **Dashboard Principal:** Métricas gerais de call center e tickets
+- **Gráficos Detalhados:** Visualizações avançadas
+- **Análise por Agente:** Relatórios individuais
+- **Sistema de Permissões:** Integrado com Console (AuthContext)
+- **Dados OCTA:** Acesso direto via Service Account
+
+**🔐 Sistema de Acesso:**
+- **Sem SSO:** Não requer autenticação Google separada
+- **Service Account:** Acesso automático às planilhas
+- **Permissões Console:** Mantém sistema de permissões existente
+- **Dados Automáticos:** Carregamento automático via CSV público
+
+**🎯 Benefícios:**
+- **Simplicidade:** Usuário não precisa fazer login separado
+- **Confiabilidade:** Sem dependência de tokens OAuth
+- **Performance:** Acesso direto via API pública CSV
+- **Manutenção:** Menos complexidade de autenticação
+
+---
 
 ## Push GitHub - Integração Completa do VeloInsights ao Console - 2024-12-19 20:00
 

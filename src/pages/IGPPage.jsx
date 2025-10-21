@@ -1,13 +1,12 @@
-// VERSION: v1.7.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v2.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react'
 import { Container, Tabs, Tab, Box, CircularProgress, Alert, Typography, Button, ButtonGroup } from '@mui/material'
 import { useAuth } from '../contexts/AuthContext'
-import { useGoogleSheetsDirectSimple } from './IGP/hooks/useGoogleSheetsDirectSimple'
+import { useServiceAccount } from './IGP/hooks/useServiceAccount'
 import MetricsDashboard from './IGP/components/MetricsDashboardNovo'
 import AgentAnalysis from './IGP/components/AgentAnalysis'
 import ChartsDetailedTab from './IGP/components/ChartsDetailedTab'
 import BackButton from '../components/common/BackButton'
-import { VELOINSIGHTS_CONFIG } from '../config/veloinsights'
 
 const IGPPage = () => {
   const { user } = useAuth()
@@ -38,38 +37,25 @@ const IGPPage = () => {
   // Controlar acesso à aba Análise por Agente (Relatórios de Gestão)
   const canViewAgentAnalysis = hasRelatoriosPermission
   
-  // Hook de dados do Google Sheets
+  // Hook de dados via Service Account
   const {
     data,
-    metrics,
-    operatorMetrics,
-    rankings,
     octaData,
-    isAuthenticated,
     loading,
     error,
-    signIn,
-    signOut,
-    loadDataOnDemand,
-    selectedPeriod,
-    fullDataset
-  } = useGoogleSheetsDirectSimple()
+    fetchAllData,
+    clearData
+  } = useServiceAccount()
   
-  // Auto-login com credenciais do Console
+  // Carregar dados iniciais automaticamente
   useEffect(() => {
-    if (user && !isAuthenticated && !loading) {
-      console.log('🔄 Iniciando autenticação Google Sheets para VeloInsights...')
-      signIn() // Usar sessão Google existente do Console
+    if (user && !data && !loading) {
+      console.log('📊 Carregando dados iniciais do VeloInsights via Service Account...')
+      fetchAllData().catch(err => {
+        console.error('Erro ao carregar dados:', err)
+      })
     }
-  }, [user, isAuthenticated, loading, signIn])
-  
-  // Carregar dados iniciais
-  useEffect(() => {
-    if (isAuthenticated && !data && !loading) {
-      console.log('📊 Carregando dados iniciais do VeloInsights...')
-      loadDataOnDemand('last15Days')
-    }
-  }, [isAuthenticated, data, loading, loadDataOnDemand])
+  }, [user, data, loading, fetchAllData])
   
   // Definir abas disponíveis baseado nas permissões
   const availableTabs = [
@@ -275,12 +261,12 @@ const IGPPage = () => {
       {/* Tab Content */}
       {activeTab === 0 && (
         <MetricsDashboard 
-          metrics={metrics}
-          rankings={rankings}
+          metrics={null}
+          rankings={null}
           octaData={octaData}
           data={data}
-          periodo={selectedPeriod}
-          fullDataset={fullDataset}
+          periodo="Service Account"
+          fullDataset={data}
           hideNames={!canViewNames}
           dataSource={activeDataSource}
         />
@@ -289,16 +275,16 @@ const IGPPage = () => {
       {activeTab === 1 && canViewDetailedCharts && (
         <ChartsDetailedTab 
           data={data}
-          operatorMetrics={operatorMetrics}
-          rankings={rankings}
-          selectedPeriod={selectedPeriod}
+          operatorMetrics={null}
+          rankings={null}
+          selectedPeriod="Service Account"
           isLoading={loading}
           pauseData={null}
           userData={user}
           filters={{}}
-          originalData={fullDataset}
+          originalData={data}
           onFiltersChange={() => {}}
-          loadDataOnDemand={loadDataOnDemand}
+          loadDataOnDemand={() => {}}
           dataSource={activeDataSource}
         />
       )}
@@ -306,8 +292,8 @@ const IGPPage = () => {
       {activeTab === 2 && canViewAgentAnalysis && (
         <AgentAnalysis 
           data={data}
-          operatorMetrics={operatorMetrics}
-          rankings={rankings}
+          operatorMetrics={null}
+          rankings={null}
           hideNames={!canViewNames}
           dataSource={activeDataSource}
         />
