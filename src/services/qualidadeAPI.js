@@ -1,6 +1,6 @@
-// VERSION: v1.25.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.27.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
-import { qualidadeFuncionariosAPI, qualidadeAvaliacoesAPI } from './api';
+import { qualidadeFuncionariosAPI, qualidadeAvaliacoesAPI, qualidadeFuncoesAPI } from './api';
 import axios from 'axios';
 import { generateId, calcularPontuacaoTotal, PONTUACAO } from '../types/qualidade';
 import { getAvaliadoresValidos as getUserAvaliadoresValidos, getAllAuthorizedUsers } from './userService';
@@ -79,58 +79,89 @@ export const getFuncionariosAtivos = async () => {
 // Adicionar funcionário
 export const addFuncionario = async (funcionarioData) => {
   try {
+    // Validar campos obrigatórios
+    if (!funcionarioData.colaboradorNome?.trim()) {
+      throw new Error('Nome do colaborador é obrigatório');
+    }
+    
+    // Função para converter datas com validação
+    const converterData = (dataString) => {
+      if (!dataString || dataString.trim() === '') return null;
+      const data = new Date(dataString);
+      return isNaN(data.getTime()) ? null : data;
+    };
+    
     // Converter strings de data para Date conforme schema MongoDB
     const novoFuncionario = {
-      colaboradorNome: funcionarioData.nomeCompleto || funcionarioData.colaboradorNome,
-      dataAniversario: funcionarioData.dataAniversario ? new Date(funcionarioData.dataAniversario) : null,
-      empresa: funcionarioData.empresa,
-      dataContratado: funcionarioData.dataContratado ? new Date(funcionarioData.dataContratado) : null,
-      telefone: funcionarioData.telefone,
-      atuacao: funcionarioData.atuacao,
-      escala: funcionarioData.escala,
-      acessos: funcionarioData.acessos || [],
+      colaboradorNome: funcionarioData.colaboradorNome.trim(),
+      dataAniversario: converterData(funcionarioData.dataAniversario),
+      empresa: funcionarioData.empresa || '',
+      dataContratado: converterData(funcionarioData.dataContratado),
+      telefone: funcionarioData.telefone || '',
+      atuacao: funcionarioData.atuacao || '',
+      escala: funcionarioData.escala || '',
+      acessos: (funcionarioData.acessos || []).map(acesso => ({
+        sistema: acesso.sistema || '',
+        perfil: acesso.perfil || '',
+        observacoes: acesso.observacoes || '',
+        updatedAt: new Date()
+      })),
       desligado: funcionarioData.desligado || false,
-      dataDesligamento: funcionarioData.dataDesligamento ? new Date(funcionarioData.dataDesligamento) : null,
+      dataDesligamento: converterData(funcionarioData.dataDesligamento),
       afastado: funcionarioData.afastado || false,
-      dataAfastamento: funcionarioData.dataAfastamento ? new Date(funcionarioData.dataAfastamento) : null,
+      dataAfastamento: converterData(funcionarioData.dataAfastamento),
       createdAt: new Date(),
       updatedAt: new Date()
     };
     
-    console.log('🔍 Debug - Dados para POST funcionário:', novoFuncionario);
+    console.log('🔍 Debug - Dados validados para POST funcionário:', novoFuncionario);
     
     const response = await qualidadeFuncionariosAPI.create(novoFuncionario);
-    console.log(`✅ Funcionário adicionado via API: ${response.colaboradorNome || response.nomeCompleto}`);
+    console.log(`✅ Funcionário adicionado via API: ${response.colaboradorNome}`);
     return response;
   } catch (error) {
     console.error('❌ Erro ao adicionar funcionário via API:', error);
     console.error('❌ Detalhes do erro:', error.response?.data || error.message);
-    // Fallback para localStorage se API falhar
-    return addFuncionarioLocalStorage(funcionarioData);
+    throw error; // Não fazer fallback automático para identificar problemas reais
   }
 };
 
 // Atualizar funcionário
 export const updateFuncionario = async (id, funcionarioData) => {
   try {
+    // Validar campos obrigatórios
+    if (!funcionarioData.colaboradorNome?.trim()) {
+      throw new Error('Nome do colaborador é obrigatório');
+    }
+    
+    // Função para converter datas com validação
+    const converterData = (dataString) => {
+      if (!dataString || dataString.trim() === '') return null;
+      const data = new Date(dataString);
+      return isNaN(data.getTime()) ? null : data;
+    };
+    
     // Converter strings de data para Date conforme schema
     const funcionarioAtualizado = {
       ...funcionarioData,
-      colaboradorNome: funcionarioData.nomeCompleto || funcionarioData.colaboradorNome,
-      dataAniversario: funcionarioData.dataAniversario ? new Date(funcionarioData.dataAniversario) : null,
-      dataContratado: funcionarioData.dataContratado ? new Date(funcionarioData.dataContratado) : null,
-      dataDesligamento: funcionarioData.dataDesligamento ? new Date(funcionarioData.dataDesligamento) : null,
-      dataAfastamento: funcionarioData.dataAfastamento ? new Date(funcionarioData.dataAfastamento) : null,
+      colaboradorNome: funcionarioData.colaboradorNome.trim(),
+      dataAniversario: converterData(funcionarioData.dataAniversario),
+      dataContratado: converterData(funcionarioData.dataContratado),
+      dataDesligamento: converterData(funcionarioData.dataDesligamento),
+      dataAfastamento: converterData(funcionarioData.dataAfastamento),
+      acessos: (funcionarioData.acessos || []).map(acesso => ({
+        ...acesso,
+        updatedAt: new Date()
+      })),
       updatedAt: new Date()
     };
     
     const response = await qualidadeFuncionariosAPI.update(id, funcionarioAtualizado);
-    console.log(`✅ Funcionário atualizado via API: ${response.colaboradorNome || response.nomeCompleto}`);
+    console.log(`✅ Funcionário atualizado via API: ${response.colaboradorNome}`);
     return response;
   } catch (error) {
     console.error('❌ Erro ao atualizar funcionário via API:', error);
-    // Fallback para localStorage se API falhar
-    return updateFuncionarioLocalStorage(id, funcionarioData);
+    throw error; // Não fazer fallback automático para identificar problemas reais
   }
 };
 
@@ -685,6 +716,62 @@ export const deleteAvaliacaoGPT = async (id) => {
   } catch (error) {
     console.error('❌ Erro ao deletar avaliação GPT:', error);
     return null;
+  }
+};
+
+// ========================================
+// 🎯 FUNÇÕES - CRUD OPERATIONS
+// ========================================
+
+// Listar todas as funções
+export const getFuncoes = async () => {
+  try {
+    console.log('🔍 Carregando funções da API...');
+    const response = await qualidadeFuncoesAPI.getAll();
+    console.log('📊 Funções carregadas:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Erro ao carregar funções:', error);
+    throw error;
+  }
+};
+
+// Criar nova função
+export const addFuncao = async (funcaoData) => {
+  try {
+    console.log('🔍 Criando nova função:', funcaoData);
+    const response = await qualidadeFuncoesAPI.create(funcaoData);
+    console.log('✅ Função criada:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Erro ao criar função:', error);
+    throw error;
+  }
+};
+
+// Atualizar função
+export const updateFuncao = async (id, funcaoData) => {
+  try {
+    console.log('🔍 Atualizando função:', id, funcaoData);
+    const response = await qualidadeFuncoesAPI.update(id, funcaoData);
+    console.log('✅ Função atualizada:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Erro ao atualizar função:', error);
+    throw error;
+  }
+};
+
+// Deletar função
+export const deleteFuncao = async (id) => {
+  try {
+    console.log('🔍 Deletando função:', id);
+    const response = await qualidadeFuncoesAPI.delete(id);
+    console.log('✅ Função deletada:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Erro ao deletar função:', error);
+    throw error;
   }
 };
 

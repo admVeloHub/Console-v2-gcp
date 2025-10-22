@@ -1,4 +1,4 @@
-// VERSION: v1.5.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.8.3 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 
@@ -28,7 +28,10 @@ import {
   Collapse,
   Grid,
   Alert,
-  Snackbar
+  Snackbar,
+  FormControlLabel,
+  Checkbox,
+  Divider
 } from '@mui/material';
 import { 
   ArrowBack, 
@@ -45,7 +48,10 @@ import {
   Phone,
   CalendarToday,
   Work,
-  Schedule
+  Schedule,
+  BarChart,
+  PersonAdd,
+  Security
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -69,6 +75,13 @@ const FuncionariosPage = () => {
   const [funcionariosFiltrados, setFuncionariosFiltrados] = useState([]);
   const [loading, setLoading] = useState(true);
   
+  // Estados para gestão de funções
+  const [funcoes, setFuncoes] = useState([]); // Lista de funções disponíveis
+  const [showModalNovo, setShowModalNovo] = useState(false); // Modal "Novo"
+  const [showModalFuncao, setShowModalFuncao] = useState(false); // Modal "Função"
+  const [novaFuncao, setNovaFuncao] = useState({ funcao: '', descricao: '' });
+  const [funcaoEditando, setFuncaoEditando] = useState(null);
+  
   // Estados dos filtros
   const [filtros, setFiltros] = useState({
     nome: '',
@@ -87,13 +100,12 @@ const FuncionariosPage = () => {
   
   // Estados dos formulários
   const [formData, setFormData] = useState({
-    nomeCompleto: '', // Mantido para compatibilidade com frontend
-    colaboradorNome: '', // Campo padronizado conforme schema
+    colaboradorNome: '', // Campo padronizado conforme schema MongoDB
     dataAniversario: '',
     empresa: '',
     dataContratado: '',
     telefone: '',
-    atuacao: '',
+    atuacao: [], // Array de referências para funções
     escala: '',
     acessos: [], // Array de acessos conforme schema
     desligado: false,
@@ -111,10 +123,12 @@ const FuncionariosPage = () => {
   // Estados de UI
   const [linhasExpandidas, setLinhasExpandidas] = useState(new Set());
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [showStats, setShowStats] = useState(false);
 
   // Carregar funcionários
   useEffect(() => {
     carregarFuncionarios();
+    carregarFuncoes(); // Adicionar esta linha
   }, []);
 
   // Aplicar filtros
@@ -159,7 +173,7 @@ const FuncionariosPage = () => {
 
     if (filtros.nome) {
       filtrados = filtrados.filter(f => 
-        (f.colaboradorNome || f.nomeCompleto || '').toLowerCase().includes(filtros.nome.toLowerCase())
+        (f.colaboradorNome || '').toLowerCase().includes(filtros.nome.toLowerCase())
       );
     }
 
@@ -170,9 +184,19 @@ const FuncionariosPage = () => {
     }
 
     if (filtros.atuacao) {
-      filtrados = filtrados.filter(f => 
-        f.atuacao && f.atuacao.toLowerCase().includes(filtros.atuacao.toLowerCase())
-      );
+      filtrados = filtrados.filter(f => {
+        if (Array.isArray(f.atuacao)) {
+          // Para array, verificar se alguma função contém o filtro
+          return f.atuacao.some(id => {
+            const funcao = funcoes.find(fun => fun._id === id);
+            return funcao && funcao.funcao.toLowerCase().includes(filtros.atuacao.toLowerCase());
+          });
+        } else if (typeof f.atuacao === 'string') {
+          // Para string (dados antigos), usar busca normal
+          return f.atuacao.toLowerCase().includes(filtros.atuacao.toLowerCase());
+        }
+        return false;
+      });
     }
 
     if (filtros.escala) {
@@ -213,17 +237,103 @@ const FuncionariosPage = () => {
     });
   };
 
+  const carregarFuncoes = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/qualidade/funcoes`);
+      const data = await response.json();
+      if (data.success) {
+        setFuncoes(data.data);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar funções:', error);
+      mostrarSnackbar('Erro ao carregar funções', 'error');
+    }
+  };
+
+  const salvarFuncao = async () => {
+    try {
+      if (!novaFuncao.funcao.trim()) {
+        mostrarSnackbar('Nome da função é obrigatório', 'error');
+        return;
+      }
+
+      const url = funcaoEditando 
+        ? `${API_BASE_URL}/qualidade/funcoes/${funcaoEditando._id}`
+        : `${API_BASE_URL}/qualidade/funcoes`;
+      
+      const method = funcaoEditando ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(novaFuncao)
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        mostrarSnackbar(
+          funcaoEditando ? 'Função atualizada com sucesso!' : 'Função criada com sucesso!', 
+          'success'
+        );
+        setNovaFuncao({ funcao: '', descricao: '' });
+        setFuncaoEditando(null);
+        carregarFuncoes();
+      } else {
+        mostrarSnackbar(data.error || 'Erro ao salvar função', 'error');
+      }
+    } catch (error) {
+      console.error('Erro ao salvar função:', error);
+      mostrarSnackbar('Erro ao salvar função', 'error');
+    }
+  };
+
+  const editarFuncao = (funcao) => {
+    setFuncaoEditando(funcao);
+    setNovaFuncao({ funcao: funcao.funcao, descricao: funcao.descricao || '' });
+  };
+
+  const deletarFuncao = async (id) => {
+    try {
+      if (window.confirm('Tem certeza que deseja deletar esta função?')) {
+        const response = await fetch(`${API_BASE_URL}/qualidade/funcoes/${id}`, {
+          method: 'DELETE'
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+          mostrarSnackbar('Função deletada com sucesso!', 'success');
+          carregarFuncoes();
+        } else {
+          mostrarSnackbar(data.error || 'Erro ao deletar função', 'error');
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao deletar função:', error);
+      mostrarSnackbar('Erro ao deletar função', 'error');
+    }
+  };
+
   const abrirModal = (funcionario = null) => {
     if (funcionario) {
       setFuncionarioEditando(funcionario);
+      
+      // Verificar se há dados antigos (atuacao como string)
+      const temDadosAntigos = funcionario.atuacao && typeof funcionario.atuacao === 'string';
+      if (temDadosAntigos) {
+        mostrarSnackbar('Dados antigos detectados. Atualize selecionando as funções.', 'warning');
+      }
+      
       setFormData({
-        nomeCompleto: funcionario.nomeCompleto || funcionario.colaboradorNome,
-        colaboradorNome: funcionario.colaboradorNome || funcionario.nomeCompleto,
+        colaboradorNome: funcionario.colaboradorNome || '',
         dataAniversario: funcionario.dataAniversario,
         empresa: funcionario.empresa,
         dataContratado: funcionario.dataContratado,
         telefone: funcionario.telefone || '',
-        atuacao: funcionario.atuacao || '',
+        atuacao: Array.isArray(funcionario.atuacao) ? funcionario.atuacao : [], // Array de referências para funções
         escala: funcionario.escala || '',
         acessos: funcionario.acessos || [], // Carregar acessos conforme schema
         desligado: funcionario.desligado,
@@ -234,13 +344,12 @@ const FuncionariosPage = () => {
     } else {
       setFuncionarioEditando(null);
       setFormData({
-        nomeCompleto: '',
         colaboradorNome: '',
         dataAniversario: '',
         empresa: '',
         dataContratado: '',
         telefone: '',
-        atuacao: '',
+        atuacao: [], // Array de referências para funções
         escala: '',
         acessos: [],
         desligado: false,
@@ -256,7 +365,7 @@ const FuncionariosPage = () => {
     setModalAberto(false);
     setFuncionarioEditando(null);
     setFormData({
-      nomeCompleto: '',
+      colaboradorNome: '',
       dataAniversario: '',
       empresa: '',
       dataContratado: '',
@@ -273,6 +382,28 @@ const FuncionariosPage = () => {
 
   const salvarFuncionario = async () => {
     try {
+      // Validar campos obrigatórios
+      if (!formData.colaboradorNome?.trim()) {
+        mostrarSnackbar('Nome do colaborador é obrigatório', 'error');
+        return;
+      }
+      
+      if (!formData.atuacao || formData.atuacao.length === 0) {
+        mostrarSnackbar('Selecione ao menos uma função', 'error');
+        return;
+      }
+      
+      // Validar datas quando status está marcado
+      if (formData.desligado && !formData.dataDesligamento) {
+        mostrarSnackbar('Data de desligamento é obrigatória quando funcionário está desligado', 'error');
+        return;
+      }
+      
+      if (formData.afastado && !formData.dataAfastamento) {
+        mostrarSnackbar('Data de afastamento é obrigatória quando funcionário está afastado', 'error');
+        return;
+      }
+      
       if (funcionarioEditando) {
         await updateFuncionario(funcionarioEditando._id || funcionarioEditando.id, formData);
         mostrarSnackbar('Funcionário atualizado com sucesso!', 'success');
@@ -284,7 +415,8 @@ const FuncionariosPage = () => {
       fecharModal();
     } catch (error) {
       console.error('Erro ao salvar funcionário:', error);
-      mostrarSnackbar('Erro ao salvar funcionário', 'error');
+      const errorMessage = error.response?.data?.error || error.message || 'Erro ao salvar funcionário';
+      mostrarSnackbar(errorMessage, 'error');
     }
   };
 
@@ -417,6 +549,145 @@ const FuncionariosPage = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
+  // Funções para calcular estatísticas
+  const calcularEstatisticas = () => {
+    const stats = {
+      porEmpresa: funcionarios.reduce((acc, func) => {
+        const empresa = func.empresa || 'Não informado';
+        acc[empresa] = (acc[empresa] || 0) + 1;
+        return acc;
+      }, {}),
+      
+      porEscala: funcionarios.reduce((acc, func) => {
+        const escala = func.escala || 'Não informado';
+        acc[escala] = (acc[escala] || 0) + 1;
+        return acc;
+      }, {}),
+      
+      porAtuacao: funcionarios.reduce((acc, func) => {
+        if (func.atuacao && Array.isArray(func.atuacao)) {
+          func.atuacao.forEach(funcaoId => {
+            const funcao = funcoes.find(f => f._id === funcaoId);
+            if (funcao) {
+              acc[funcao.funcao] = (acc[funcao.funcao] || 0) + 1;
+            }
+          });
+        } else {
+          acc['Não informado'] = (acc['Não informado'] || 0) + 1;
+        }
+        return acc;
+      }, {})
+    };
+
+    // Calcular estatísticas de atuação por empresa
+    const statsAtuacaoPorEmpresa = funcionarios.reduce((acc, func) => {
+      const empresa = func.empresa || 'Não informado';
+      
+      if (func.atuacao && Array.isArray(func.atuacao)) {
+        func.atuacao.forEach(funcaoId => {
+          const funcao = funcoes.find(f => f._id === funcaoId);
+          if (funcao) {
+            const atuacao = funcao.funcao;
+            
+            if (!acc[atuacao]) {
+              acc[atuacao] = {
+                Velotax: 0,
+                Job: 0,
+                Total: 0
+              };
+            }
+            
+            // Contar por empresa
+            if (empresa === 'Velotax') {
+              acc[atuacao].Velotax++;
+            } else if (empresa === 'Job Center' || empresa === 'Job') {
+              acc[atuacao].Job++;
+            }
+            
+            // Total geral
+            acc[atuacao].Total++;
+          }
+        });
+      } else {
+        const atuacao = 'Não informado';
+        
+        if (!acc[atuacao]) {
+          acc[atuacao] = {
+            Velotax: 0,
+            Job: 0,
+            Total: 0
+          };
+        }
+        
+        // Contar por empresa
+        if (empresa === 'Velotax') {
+          acc[atuacao].Velotax++;
+        } else if (empresa === 'Job Center' || empresa === 'Job') {
+          acc[atuacao].Job++;
+        }
+        
+        // Total geral
+        acc[atuacao].Total++;
+      }
+      
+      return acc;
+    }, {});
+
+    // Calcular estatísticas específicas por status
+    const funcionariosAtivos = funcionarios.filter(f => !f.desligado && !f.afastado);
+    const funcionariosDesligados = funcionarios.filter(f => f.desligado);
+    const funcionariosAfastados = funcionarios.filter(f => f.afastado);
+
+    // Calcular estatísticas por empresa separadas por status
+    const statsPorEmpresaStatus = {
+      'JOB': {
+        ativos: funcionarios.filter(f => 
+          (f.empresa === 'Job Center' || f.empresa === 'Job') && 
+          !f.desligado && !f.afastado
+        ).length,
+        afastados: funcionarios.filter(f => 
+          (f.empresa === 'Job Center' || f.empresa === 'Job') && 
+          f.afastado
+        ).length,
+        desligados: funcionarios.filter(f => 
+          (f.empresa === 'Job Center' || f.empresa === 'Job') && 
+          f.desligado
+        ).length
+      },
+      'Velotax': {
+        ativos: funcionarios.filter(f => 
+          f.empresa === 'Velotax' && 
+          !f.desligado && !f.afastado
+        ).length,
+        afastados: funcionarios.filter(f => 
+          f.empresa === 'Velotax' && 
+          f.afastado
+        ).length,
+        desligados: funcionarios.filter(f => 
+          f.empresa === 'Velotax' && 
+          f.desligado
+        ).length
+      }
+    };
+
+    // Calcular Job 6x1 apenas com status Ativo
+    const job6x1Ativos = funcionarios.filter(f => 
+      (f.empresa === 'Job Center' || f.empresa === 'Job') && 
+      f.escala === '6x1' && 
+      !f.desligado && !f.afastado
+    ).length;
+
+    return {
+      stats,
+      statsAtuacaoPorEmpresa,
+      statsPorEmpresaStatus,
+      funcionariosAtivos,
+      funcionariosDesligados,
+      funcionariosAfastados,
+      job6x1Ativos
+    };
+  };
+
   if (loading) {
     return (
       <Container maxWidth="lg" sx={{ mt: 6, mb: 8, pb: 4, position: 'relative' }}>
@@ -430,7 +701,7 @@ const FuncionariosPage = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 6, mb: 8, pb: 4, position: 'relative' }}>
+    <Container maxWidth="lg" sx={{ mt: 6, mb: 8, pb: 4, position: 'relative', padding: '40px 20px' }}>
       {/* Botão Voltar */}
       <Button
         startIcon={<ArrowBack />}
@@ -480,18 +751,30 @@ const FuncionariosPage = () => {
             <Box sx={{ display: 'flex', gap: 1 }}>
               <Button
                 startIcon={<Add />}
-                onClick={() => abrirModal()}
+                onClick={() => setShowModalNovo(true)}
+                variant="contained"
                 sx={{
-                  backgroundColor: '#000058',
+                  backgroundColor: '#1694FF',
+                  fontFamily: 'Poppins',
+                  '&:hover': { backgroundColor: '#0D7AE5' }
+                }}
+              >
+                Novo
+              </Button>
+              <Button
+                startIcon={<BarChart />}
+                onClick={() => setShowStats(true)}
+                sx={{
+                  backgroundColor: '#1694FF',
                   color: '#ffffff',
                   fontFamily: 'Poppins',
                   fontWeight: 500,
                   '&:hover': {
-                    backgroundColor: '#000040'
+                    backgroundColor: '#0D7AE5'
                   }
                 }}
               >
-                Novo Funcionário
+                Estatísticas
               </Button>
               <Button
                 startIcon={<Person />}
@@ -693,7 +976,7 @@ const FuncionariosPage = () => {
                       <TableCell sx={{ fontFamily: 'Poppins' }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <Person sx={{ color: '#666666', fontSize: 20 }} />
-                          {funcionario.colaboradorNome || funcionario.nomeCompleto}
+                          {funcionario.colaboradorNome}
                         </Box>
                       </TableCell>
                       <TableCell sx={{ fontFamily: 'Poppins' }}>
@@ -775,6 +1058,22 @@ const FuncionariosPage = () => {
                                       <strong>Contratado:</strong> {formatarData(funcionario.dataContratado)}
                                     </Typography>
                                   </Box>
+                                  {funcionario.dataDesligamento && (
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                      <CalendarToday sx={{ color: '#EF4444', fontSize: 16 }} />
+                                      <Typography variant="body2" sx={{ fontFamily: 'Poppins' }}>
+                                        <strong>Desligado em:</strong> {formatarData(funcionario.dataDesligamento)}
+                                      </Typography>
+                                    </Box>
+                                  )}
+                                  {funcionario.dataAfastamento && (
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                      <CalendarToday sx={{ color: '#F59E0B', fontSize: 16 }} />
+                                      <Typography variant="body2" sx={{ fontFamily: 'Poppins' }}>
+                                        <strong>Afastado em:</strong> {formatarData(funcionario.dataAfastamento)}
+                                      </Typography>
+                                    </Box>
+                                  )}
                                   {funcionario.telefone && (
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                       <Phone sx={{ color: '#666666', fontSize: 16 }} />
@@ -790,14 +1089,19 @@ const FuncionariosPage = () => {
                                   Informações Profissionais
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                                  {funcionario.atuacao && (
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                      <Work sx={{ color: '#666666', fontSize: 16 }} />
-                                      <Typography variant="body2" sx={{ fontFamily: 'Poppins' }}>
-                                        <strong>Atuação:</strong> {funcionario.atuacao}
-                                      </Typography>
-                                    </Box>
-                                  )}
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Work sx={{ color: '#666666', fontSize: 16 }} />
+                                    <Typography variant="body2" sx={{ fontFamily: 'Poppins' }}>
+                                      <strong>Atuação:</strong> {funcionario.atuacao && Array.isArray(funcionario.atuacao) && funcionario.atuacao.length > 0
+                                        ? funcionario.atuacao.map(id => {
+                                            const funcao = funcoes.find(f => f._id === id);
+                                            return funcao ? funcao.funcao : '';
+                                          }).filter(Boolean).join(', ')
+                                        : typeof funcionario.atuacao === 'string' && funcionario.atuacao
+                                        ? funcionario.atuacao
+                                        : 'Não informado'}
+                                    </Typography>
+                                  </Box>
                                   {funcionario.escala && (
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                       <Schedule sx={{ color: '#666666', fontSize: 16 }} />
@@ -860,8 +1164,8 @@ const FuncionariosPage = () => {
               <TextField
                 fullWidth
                 label="Nome Completo"
-                value={formData.nomeCompleto}
-                onChange={(e) => setFormData({ ...formData, nomeCompleto: e.target.value })}
+                value={formData.colaboradorNome}
+                onChange={(e) => setFormData({ ...formData, colaboradorNome: e.target.value })}
                 required
                 sx={{
                   '& .MuiOutlinedInput-root': {
@@ -974,26 +1278,46 @@ const FuncionariosPage = () => {
               />
             </Grid>
             <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Atuação"
-                value={formData.atuacao}
-                onChange={(e) => setFormData({ ...formData, atuacao: e.target.value })}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    fontFamily: 'Poppins',
-                    '&:hover fieldset': {
-                      borderColor: '#1694FF'
+              <FormControl fullWidth>
+                <InputLabel sx={{ fontFamily: 'Poppins' }}>Atuações *</InputLabel>
+                <Select
+                  multiple
+                  value={formData.atuacao}
+                  onChange={(e) => setFormData({...formData, atuacao: e.target.value})}
+                  required
+                  renderValue={(selected) => (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {selected.map((id) => {
+                        const funcao = funcoes.find(f => f._id === id);
+                        return funcao ? (
+                          <Chip key={id} label={funcao.funcao} size="small" />
+                        ) : null;
+                      })}
+                    </Box>
+                  )}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      fontFamily: 'Poppins',
+                      '&:hover fieldset': {
+                        borderColor: '#1694FF'
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#000058'
+                      }
                     },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#000058'
+                    '& .MuiInputLabel-root': {
+                      fontFamily: 'Poppins'
                     }
-                  },
-                  '& .MuiInputLabel-root': {
-                    fontFamily: 'Poppins'
-                  }
-                }}
-              />
+                  }}
+                >
+                  {funcoes.map((funcao) => (
+                    <MenuItem key={funcao._id} value={funcao._id}>
+                      <Checkbox checked={formData.atuacao.indexOf(funcao._id) > -1} />
+                      {funcao.funcao}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
@@ -1017,6 +1341,132 @@ const FuncionariosPage = () => {
                 }}
               />
             </Grid>
+
+            {/* Campos de Status do Funcionário */}
+            <Grid item xs={12}>
+              <Typography variant="subtitle2" sx={{ 
+                fontFamily: 'Poppins', 
+                fontWeight: 600, 
+                color: '#000058', 
+                mb: 2 
+              }}>
+                Status do Funcionário
+              </Typography>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.desligado}
+                    onChange={(e) => setFormData({ 
+                      ...formData, 
+                      desligado: e.target.checked,
+                      // Se desmarcar desligado, limpar data de desligamento
+                      dataDesligamento: e.target.checked ? formData.dataDesligamento : ''
+                    })}
+                    sx={{
+                      color: '#EF4444',
+                      '&.Mui-checked': {
+                        color: '#EF4444'
+                      }
+                    }}
+                  />
+                }
+                label={
+                  <Typography sx={{ fontFamily: 'Poppins', color: '#EF4444', fontWeight: 500 }}>
+                    Funcionário Desligado
+                  </Typography>
+                }
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.afastado}
+                    onChange={(e) => setFormData({ 
+                      ...formData, 
+                      afastado: e.target.checked,
+                      // Se desmarcar afastado, limpar data de afastamento
+                      dataAfastamento: e.target.checked ? formData.dataAfastamento : ''
+                    })}
+                    sx={{
+                      color: '#F59E0B',
+                      '&.Mui-checked': {
+                        color: '#F59E0B'
+                      }
+                    }}
+                  />
+                }
+                label={
+                  <Typography sx={{ fontFamily: 'Poppins', color: '#F59E0B', fontWeight: 500 }}>
+                    Funcionário Afastado
+                  </Typography>
+                }
+              />
+            </Grid>
+
+            {/* Campo Data de Desligamento - Exibido condicionalmente */}
+            {formData.desligado && (
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Data de Desligamento"
+                  type="date"
+                  value={formData.dataDesligamento}
+                  onChange={(e) => setFormData({ ...formData, dataDesligamento: e.target.value })}
+                  required={formData.desligado}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      fontFamily: 'Poppins',
+                      '&:hover fieldset': {
+                        borderColor: '#EF4444'
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#EF4444'
+                      }
+                    },
+                    '& .MuiInputLabel-root': {
+                      fontFamily: 'Poppins',
+                      color: '#EF4444'
+                    }
+                  }}
+                />
+              </Grid>
+            )}
+
+            {/* Campo Data de Afastamento - Exibido condicionalmente */}
+            {formData.afastado && (
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Data de Afastamento"
+                  type="date"
+                  value={formData.dataAfastamento}
+                  onChange={(e) => setFormData({ ...formData, dataAfastamento: e.target.value })}
+                  required={formData.afastado}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      fontFamily: 'Poppins',
+                      '&:hover fieldset': {
+                        borderColor: '#F59E0B'
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#F59E0B'
+                      }
+                    },
+                    '& .MuiInputLabel-root': {
+                      fontFamily: 'Poppins',
+                      color: '#F59E0B'
+                    }
+                  }}
+                />
+              </Grid>
+            )}
           </Grid>
         </DialogContent>
         <DialogActions>
@@ -1043,7 +1493,7 @@ const FuncionariosPage = () => {
       {/* Modal Acesso */}
       <Dialog open={modalAcessoAberto} onClose={fecharModalAcesso} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>
-          {acessoEditando ? 'Editar Acesso' : 'Novo Acesso'} - {funcionarioSelecionado?.nomeCompleto}
+          {acessoEditando ? 'Editar Acesso' : 'Novo Acesso'} - {funcionarioSelecionado?.colaboradorNome}
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
@@ -1135,6 +1585,503 @@ const FuncionariosPage = () => {
             }}
           >
             Salvar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Modal de Estatísticas */}
+      <Dialog open={showStats} onClose={() => setShowStats(false)} maxWidth="xl" fullWidth>
+        <DialogTitle sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', display: 'flex', alignItems: 'center' }}>
+          <BarChart sx={{ mr: 1, color: '#1694FF' }} />
+          Estatísticas do Sistema
+        </DialogTitle>
+        <DialogContent>
+          {(() => {
+            const {
+              stats,
+              statsAtuacaoPorEmpresa,
+              statsPorEmpresaStatus,
+              funcionariosAtivos,
+              funcionariosDesligados,
+              funcionariosAfastados,
+              job6x1Ativos
+            } = calcularEstatisticas();
+
+            return (
+              <Grid container spacing={3}>
+                {/* Estatísticas por Empresa */}
+                <Grid item xs={12} lg={5}>
+                  <Card sx={{ backgroundColor: '#E3F2FD', border: '1px solid #BBDEFB' }}>
+                    <CardContent>
+                      <Typography variant="h6" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#1976D2', mb: 2, display: 'flex', alignItems: 'center' }}>
+                        <Business sx={{ mr: 1 }} />
+                        Por Empresa
+                      </Typography>
+                      
+                      {/* Tabela de Empresa por Status */}
+                      <TableContainer component={Paper} sx={{ mb: 2 }}>
+                        <Table size="small">
+                          <TableHead>
+                            <TableRow sx={{ backgroundColor: '#BBDEFB' }}>
+                              <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#1976D2' }}>Empresa</TableCell>
+                              <TableCell align="center" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#1976D2' }}>Ativos</TableCell>
+                              <TableCell align="center" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#1976D2' }}>Afastados</TableCell>
+                              <TableCell align="center" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#1976D2' }}>Desligados</TableCell>
+                              <TableCell align="center" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#1976D2' }}>Total</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {/* JOB */}
+                            <TableRow>
+                              <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 500, color: '#1976D2' }}>JOB</TableCell>
+                              <TableCell align="center">
+                                <Chip label={statsPorEmpresaStatus['JOB'].ativos} size="small" sx={{ backgroundColor: '#C8E6C9', color: '#2E7D32', fontFamily: 'Poppins', fontWeight: 600 }} />
+                              </TableCell>
+                              <TableCell align="center">
+                                <Chip label={statsPorEmpresaStatus['JOB'].afastados} size="small" sx={{ backgroundColor: '#FFF3E0', color: '#F57C00', fontFamily: 'Poppins', fontWeight: 600 }} />
+                              </TableCell>
+                              <TableCell align="center">
+                                <Chip label={statsPorEmpresaStatus['JOB'].desligados} size="small" sx={{ backgroundColor: '#FFCDD2', color: '#D32F2F', fontFamily: 'Poppins', fontWeight: 600 }} />
+                              </TableCell>
+                              <TableCell align="center">
+                                <Chip label={statsPorEmpresaStatus['JOB'].ativos + statsPorEmpresaStatus['JOB'].afastados + statsPorEmpresaStatus['JOB'].desligados} size="small" sx={{ backgroundColor: '#BBDEFB', color: '#1976D2', fontFamily: 'Poppins', fontWeight: 600 }} />
+                              </TableCell>
+                            </TableRow>
+                            
+                            {/* Velotax */}
+                            <TableRow>
+                              <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 500, color: '#1976D2' }}>Velotax</TableCell>
+                              <TableCell align="center">
+                                <Chip label={statsPorEmpresaStatus['Velotax'].ativos} size="small" sx={{ backgroundColor: '#C8E6C9', color: '#2E7D32', fontFamily: 'Poppins', fontWeight: 600 }} />
+                              </TableCell>
+                              <TableCell align="center">
+                                <Chip label={statsPorEmpresaStatus['Velotax'].afastados} size="small" sx={{ backgroundColor: '#FFF3E0', color: '#F57C00', fontFamily: 'Poppins', fontWeight: 600 }} />
+                              </TableCell>
+                              <TableCell align="center">
+                                <Chip label={statsPorEmpresaStatus['Velotax'].desligados} size="small" sx={{ backgroundColor: '#FFCDD2', color: '#D32F2F', fontFamily: 'Poppins', fontWeight: 600 }} />
+                              </TableCell>
+                              <TableCell align="center">
+                                <Chip label={statsPorEmpresaStatus['Velotax'].ativos + statsPorEmpresaStatus['Velotax'].afastados + statsPorEmpresaStatus['Velotax'].desligados} size="small" sx={{ backgroundColor: '#BBDEFB', color: '#1976D2', fontFamily: 'Poppins', fontWeight: 600 }} />
+                              </TableCell>
+                            </TableRow>
+                            
+                            {/* Total Geral */}
+                            <TableRow sx={{ backgroundColor: '#E1F5FE' }}>
+                              <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 700, color: '#01579B' }}>TOTAL GERAL</TableCell>
+                              <TableCell align="center">
+                                <Chip label={statsPorEmpresaStatus['JOB'].ativos + statsPorEmpresaStatus['Velotax'].ativos} size="small" sx={{ backgroundColor: '#A5D6A7', color: '#1B5E20', fontFamily: 'Poppins', fontWeight: 700 }} />
+                              </TableCell>
+                              <TableCell align="center">
+                                <Chip label={statsPorEmpresaStatus['JOB'].afastados + statsPorEmpresaStatus['Velotax'].afastados} size="small" sx={{ backgroundColor: '#FFE0B2', color: '#E65100', fontFamily: 'Poppins', fontWeight: 700 }} />
+                              </TableCell>
+                              <TableCell align="center">
+                                <Chip label={statsPorEmpresaStatus['JOB'].desligados + statsPorEmpresaStatus['Velotax'].desligados} size="small" sx={{ backgroundColor: '#FFAB91', color: '#BF360C', fontFamily: 'Poppins', fontWeight: 700 }} />
+                              </TableCell>
+                              <TableCell align="center">
+                                <Chip label={funcionarios.length} size="small" sx={{ backgroundColor: '#90CAF9', color: '#0D47A1', fontFamily: 'Poppins', fontWeight: 700 }} />
+                              </TableCell>
+                            </TableRow>
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                {/* Estatísticas por Escala */}
+                <Grid item xs={12} lg={2}>
+                  <Card sx={{ backgroundColor: '#E8F5E8', border: '1px solid #C8E6C9' }}>
+                    <CardContent>
+                      <Typography variant="h6" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#2E7D32', mb: 2, display: 'flex', alignItems: 'center' }}>
+                        <Schedule sx={{ mr: 1 }} />
+                        Por Escala
+                      </Typography>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        {Object.entries(stats.porEscala)
+                          .sort(([,a], [,b]) => b - a)
+                          .map(([escala, count]) => (
+                            <Box key={escala} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#2E7D32', fontWeight: escala.toLowerCase() === 'afastada' ? 600 : 400 }}>
+                                {escala}
+                              </Typography>
+                              <Chip 
+                                label={count} 
+                                size="small" 
+                                sx={{ 
+                                  backgroundColor: escala.toLowerCase() === 'afastada' ? '#FFF3E0' : '#C8E6C9', 
+                                  color: escala.toLowerCase() === 'afastada' ? '#F57C00' : '#2E7D32',
+                                  fontFamily: 'Poppins', 
+                                  fontWeight: 600 
+                                }} 
+                              />
+                            </Box>
+                          ))}
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                {/* Estatísticas por Atuação */}
+                <Grid item xs={12} lg={5}>
+                  <Card sx={{ backgroundColor: '#F3E5F5', border: '1px solid #E1BEE7' }}>
+                    <CardContent>
+                      <Typography variant="h6" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#7B1FA2', mb: 2, display: 'flex', alignItems: 'center' }}>
+                        <Work sx={{ mr: 1 }} />
+                        Por Atuação
+                      </Typography>
+                      
+                      {/* Tabela de Atuação por Empresa */}
+                      <TableContainer component={Paper} sx={{ mb: 2 }}>
+                        <Table size="small">
+                          <TableHead>
+                            <TableRow sx={{ backgroundColor: '#E1BEE7' }}>
+                              <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#7B1FA2' }}>Atuação</TableCell>
+                              <TableCell align="center" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#7B1FA2' }}>Velotax</TableCell>
+                              <TableCell align="center" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#7B1FA2' }}>Job</TableCell>
+                              <TableCell align="center" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#7B1FA2' }}>Total</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {Object.entries(statsAtuacaoPorEmpresa)
+                              .sort(([,a], [,b]) => b.Total - a.Total)
+                              .map(([atuacao, dados]) => (
+                                <TableRow key={atuacao}>
+                                  <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 500, color: '#7B1FA2' }}>{atuacao}</TableCell>
+                                  <TableCell align="center">
+                                    <Chip 
+                                      label={dados.Velotax} 
+                                      size="small" 
+                                      sx={{ 
+                                        backgroundColor: dados.Velotax > 0 ? '#BBDEFB' : '#F5F5F5', 
+                                        color: dados.Velotax > 0 ? '#1976D2' : '#9E9E9E',
+                                        fontFamily: 'Poppins', 
+                                        fontWeight: 600 
+                                      }} 
+                                    />
+                                  </TableCell>
+                                  <TableCell align="center">
+                                    <Chip 
+                                      label={dados.Job} 
+                                      size="small" 
+                                      sx={{ 
+                                        backgroundColor: dados.Job > 0 ? '#C8E6C9' : '#F5F5F5', 
+                                        color: dados.Job > 0 ? '#2E7D32' : '#9E9E9E',
+                                        fontFamily: 'Poppins', 
+                                        fontWeight: 600 
+                                      }} 
+                                    />
+                                  </TableCell>
+                                  <TableCell align="center">
+                                    <Chip 
+                                      label={dados.Total} 
+                                      size="small" 
+                                      sx={{ 
+                                        backgroundColor: '#E1BEE7', 
+                                        color: '#7B1FA2',
+                                        fontFamily: 'Poppins', 
+                                        fontWeight: 600 
+                                      }} 
+                                    />
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                {/* Resumo Geral */}
+                <Grid item xs={12}>
+                  <Card sx={{ backgroundColor: '#FAFAFA', border: '1px solid #E0E0E0' }}>
+                    <CardContent>
+                      <Typography variant="h6" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#424242', mb: 3 }}>
+                        Resumo Geral
+                      </Typography>
+                      <Grid container spacing={3}>
+                        <Grid item xs={6} sm={3}>
+                          <Box sx={{ textAlign: 'center' }}>
+                            <Typography variant="h4" sx={{ fontFamily: 'Poppins', fontWeight: 700, color: '#1976D2' }}>
+                              {funcionariosAtivos.length}
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666' }}>
+                              Funcionários Ativos
+                            </Typography>
+                          </Box>
+                        </Grid>
+                        <Grid item xs={6} sm={3}>
+                          <Box sx={{ textAlign: 'center' }}>
+                            <Typography variant="h4" sx={{ fontFamily: 'Poppins', fontWeight: 700, color: '#D32F2F' }}>
+                              {funcionariosDesligados.length}
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666' }}>
+                              Funcionários Desligados
+                            </Typography>
+                          </Box>
+                        </Grid>
+                        <Grid item xs={6} sm={3}>
+                          <Box sx={{ textAlign: 'center' }}>
+                            <Typography variant="h4" sx={{ fontFamily: 'Poppins', fontWeight: 700, color: '#F57C00' }}>
+                              {funcionariosAfastados.length}
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666' }}>
+                              Funcionários Afastados
+                            </Typography>
+                          </Box>
+                        </Grid>
+                        <Grid item xs={6} sm={3}>
+                          <Box sx={{ textAlign: 'center' }}>
+                            <Typography variant="h4" sx={{ fontFamily: 'Poppins', fontWeight: 700, color: '#FF9800' }}>
+                              {job6x1Ativos}
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666' }}>
+                              Job 6x1 (sábado)
+                            </Typography>
+                          </Box>
+                        </Grid>
+                      </Grid>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+            );
+          })()}
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => setShowStats(false)} 
+            sx={{ 
+              fontFamily: 'Poppins', 
+              color: '#666666',
+              '&:hover': {
+                backgroundColor: '#F5F5F5'
+              }
+            }}
+          >
+            Fechar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Modal Novo */}
+      <Dialog open={showModalNovo} onClose={() => setShowModalNovo(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', textAlign: 'center' }}>
+          Novo
+        </DialogTitle>
+        <DialogContent sx={{ textAlign: 'center', py: 4 }}>
+          <Typography variant="body1" sx={{ fontFamily: 'Poppins', color: '#666666', mb: 3 }}>
+            O que você gostaria de criar?
+          </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Button
+              variant="contained"
+              startIcon={<PersonAdd />}
+              onClick={() => {
+                setShowModalNovo(false);
+                abrirModal();
+              }}
+              sx={{
+                backgroundColor: '#1694FF',
+                fontFamily: 'Poppins',
+                py: 1.5,
+                '&:hover': { backgroundColor: '#0D7AE5' }
+              }}
+            >
+              Funcionário
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<Work />}
+              onClick={() => {
+                setShowModalNovo(false);
+                setShowModalFuncao(true);
+              }}
+              sx={{
+                backgroundColor: '#1694FF',
+                fontFamily: 'Poppins',
+                py: 1.5,
+                '&:hover': { backgroundColor: '#0D7AE5' }
+              }}
+            >
+              Função
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<Security />}
+              disabled
+              sx={{
+                backgroundColor: '#CCCCCC',
+                fontFamily: 'Poppins',
+                py: 1.5,
+                opacity: 0.5
+              }}
+            >
+              Acesso
+            </Button>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: 'center', pb: 3 }}>
+          <Button
+            onClick={() => setShowModalNovo(false)}
+            sx={{ 
+              fontFamily: 'Poppins', 
+              color: '#666666',
+              '&:hover': {
+                backgroundColor: '#F5F5F5'
+              }
+            }}
+          >
+            Cancelar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Modal Gestão de Funções */}
+      <Dialog open={showModalFuncao} onClose={() => setShowModalFuncao(false)} maxWidth="md" fullWidth>
+        <DialogTitle sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>
+          Gestão de Funções
+        </DialogTitle>
+        <DialogContent>
+          {/* Seção Superior - Formulário */}
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="h6" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', mb: 2 }}>
+              {funcaoEditando ? 'Editar Função' : 'Nova Função'}
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Nome da Função"
+                  value={novaFuncao.funcao}
+                  onChange={(e) => setNovaFuncao({...novaFuncao, funcao: e.target.value})}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      fontFamily: 'Poppins',
+                      '&:hover fieldset': {
+                        borderColor: '#1694FF'
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#000058'
+                      }
+                    },
+                    '& .MuiInputLabel-root': {
+                      fontFamily: 'Poppins'
+                    }
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Descrição (opcional)"
+                  value={novaFuncao.descricao}
+                  onChange={(e) => setNovaFuncao({...novaFuncao, descricao: e.target.value})}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      fontFamily: 'Poppins',
+                      '&:hover fieldset': {
+                        borderColor: '#1694FF'
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#000058'
+                      }
+                    },
+                    '& .MuiInputLabel-root': {
+                      fontFamily: 'Poppins'
+                    }
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <Button
+                    variant="contained"
+                    onClick={salvarFuncao}
+                    sx={{
+                      backgroundColor: '#1694FF',
+                      fontFamily: 'Poppins',
+                      px: 3,
+                      '&:hover': { backgroundColor: '#0D7AE5' }
+                    }}
+                  >
+                    {funcaoEditando ? 'Atualizar' : 'Salvar'}
+                  </Button>
+                </Box>
+              </Grid>
+            </Grid>
+          </Box>
+
+          <Divider sx={{ my: 3 }} />
+
+          {/* Seção Inferior - Lista */}
+          <Box>
+            {funcoes.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Typography variant="body1" sx={{ fontFamily: 'Poppins', color: '#666666' }}>
+                  Nenhuma função cadastrada
+                </Typography>
+              </Box>
+            ) : (
+              <TableContainer component={Paper} sx={{ maxHeight: 400 }}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow sx={{ backgroundColor: '#F5F5F5' }}>
+                      <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>Item</TableCell>
+                      <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>Desc</TableCell>
+                      <TableCell align="center" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>Editar</TableCell>
+                      <TableCell align="center" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>Remover</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {funcoes.map((funcao) => (
+                      <TableRow key={funcao._id}>
+                        <TableCell sx={{ fontFamily: 'Poppins' }}>{funcao.funcao}</TableCell>
+                        <TableCell sx={{ fontFamily: 'Poppins', color: '#666666' }}>
+                          {funcao.descricao || '-'}
+                        </TableCell>
+                        <TableCell align="center">
+                          <IconButton
+                            size="small"
+                            onClick={() => editarFuncao(funcao)}
+                            sx={{ color: '#1694FF' }}
+                          >
+                            <Edit />
+                          </IconButton>
+                        </TableCell>
+                        <TableCell align="center">
+                          <IconButton
+                            size="small"
+                            onClick={() => deletarFuncao(funcao._id)}
+                            sx={{ color: '#FF4444' }}
+                          >
+                            <Delete />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: 'center', pb: 3 }}>
+          <Button
+            onClick={() => {
+              setShowModalFuncao(false);
+              setFuncaoEditando(null);
+              setNovaFuncao({ funcao: '', descricao: '' });
+            }}
+            sx={{ 
+              fontFamily: 'Poppins', 
+              color: '#666666',
+              '&:hover': {
+                backgroundColor: '#F5F5F5'
+              }
+            }}
+          >
+            Fechar
           </Button>
         </DialogActions>
       </Dialog>

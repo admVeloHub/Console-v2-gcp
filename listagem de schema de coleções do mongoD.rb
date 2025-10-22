@@ -1,5 +1,5 @@
 listagem de schema de coleções do mongoDB
-<!-- VERSION: v1.7.4 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.7.5 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
 
   🗄️ Database Principal: console_conteudo
 
@@ -159,15 +159,6 @@ createdAt: Date,         // Data de criação
 updatedAt: Date          // Data de atualização
 }
 
-//schema console_config.module_status
-// 
-{
-_id: "faq",                      // ID fixo para identificação no backend
-dados: [String],                 // Array com as 10 perguntas mais feitas (apenas os textos)
-totalPerguntas: Number,          // Total de perguntas no período
-updatedAt: Date                  // Data de atualização (controle de versionamento)
-}
-
 
 //🗄️ Schema de Ping de Usuário
 // de login ou refresh
@@ -211,7 +202,7 @@ dataAniversario: Date,          // Data de aniversário
 empresa: String,                // Empresa
 dataContratado: Date,           // Data de contratação
 telefone: String,               // Telefone
-atuacao: String,                // Atuação
+atuacao: [ObjectId],            // Array de referências para qualidade_funcoes
 escala: String,                 // Escala
 acessos: [{                     // Array de acessos
   sistema: String,
@@ -247,6 +238,24 @@ palavrasCriticas: [String],     // Palavras-chave críticas mencionadas
 calculoDetalhado: [String],     // Explicação do cálculo da pontuação
 createdAt: Date,                // Data de criação
 updatedAt: Date                 // Data de atualização (padronizado)
+}
+
+//schema console_analises.qualidade_funcoes
+{
+_id: ObjectId,
+funcao: String,              // Nome da função (ex: "Atendimento", "Suporte Técnico")
+descricao: String,           // Descrição opcional da função
+createdAt: Date,             // Data de criação
+updatedAt: Date              // Data de atualização
+}
+
+//schema console_config.faq_bot
+// 
+{
+_id: "faq",                      // ID fixo para identificação no backend
+dados: [String],                 // Array com as 10 perguntas mais feitas (apenas os textos)
+totalPerguntas: Number,          // Total de perguntas no período
+updatedAt: Date                  // Data de atualização (controle de versionamento)
 }
 
 // ========================================

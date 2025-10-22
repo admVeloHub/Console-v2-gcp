@@ -1,4 +1,4 @@
-// VERSION: v3.9.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.10.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import axios from 'axios';
 
 // Configuração base da API
@@ -255,6 +255,39 @@ export const qualidadeFuncionariosAPI = {
   // Deletar funcionário
   delete: async (id) => {
     const response = await api.delete(`/qualidade/funcionarios/${id}`);
+    return response.data;
+  }
+};
+
+// API para Qualidade - Funções
+export const qualidadeFuncoesAPI = {
+  // Listar todas as funções
+  getAll: async () => {
+    const response = await api.get('/qualidade/funcoes');
+    return response.data;
+  },
+
+  // Obter função por ID
+  getById: async (id) => {
+    const response = await api.get(`/qualidade/funcoes/${id}`);
+    return response.data;
+  },
+
+  // Criar nova função
+  create: async (data) => {
+    const response = await api.post('/qualidade/funcoes', data);
+    return response.data;
+  },
+
+  // Atualizar função
+  update: async (id, data) => {
+    const response = await api.put(`/qualidade/funcoes/${id}`, data);
+    return response.data;
+  },
+
+  // Deletar função
+  delete: async (id) => {
+    const response = await api.delete(`/qualidade/funcoes/${id}`);
     return response.data;
   }
 };
