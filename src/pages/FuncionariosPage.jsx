@@ -1,4 +1,4 @@
-// VERSION: v1.8.3 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.8.4 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 
@@ -67,6 +67,9 @@ import {
 import { exportFuncionariosToExcel, exportFuncionariosToPDF } from '../services/qualidadeExport';
 import { generateId } from '../types/qualidade';
 
+// ✅ CORREÇÃO 1: Importar API_BASE_URL do arquivo de configuração
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://back-console.vercel.app/api';
+
 const FuncionariosPage = () => {
   const navigate = useNavigate();
   
@@ -124,6 +127,29 @@ const FuncionariosPage = () => {
   const [linhasExpandidas, setLinhasExpandidas] = useState(new Set());
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [showStats, setShowStats] = useState(false);
+
+  // ✅ CORREÇÃO 2: Função para converter data ISO para formato yyyy-MM-dd
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return '';
+    
+    try {
+      // Se já está no formato yyyy-MM-dd, retorna diretamente
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+        return dateString;
+      }
+      
+      // Se é uma data ISO, converte para yyyy-MM-dd
+      const date = new Date(dateString);
+      if (!isNaN(date.getTime())) {
+        return date.toISOString().split('T')[0];
+      }
+      
+      return '';
+    } catch (error) {
+      console.error('Erro ao formatar data:', dateString, error);
+      return '';
+    }
+  };
 
   // Carregar funcionários
   useEffect(() => {
@@ -329,17 +355,17 @@ const FuncionariosPage = () => {
       
       setFormData({
         colaboradorNome: funcionario.colaboradorNome || '',
-        dataAniversario: funcionario.dataAniversario,
+        dataAniversario: formatDateForInput(funcionario.dataAniversario), // ✅ CORREÇÃO 3: Formatar data
         empresa: funcionario.empresa,
-        dataContratado: funcionario.dataContratado,
+        dataContratado: formatDateForInput(funcionario.dataContratado), // ✅ CORREÇÃO 3: Formatar data
         telefone: funcionario.telefone || '',
         atuacao: Array.isArray(funcionario.atuacao) ? funcionario.atuacao : [], // Array de referências para funções
         escala: funcionario.escala || '',
         acessos: funcionario.acessos || [], // Carregar acessos conforme schema
         desligado: funcionario.desligado,
-        dataDesligamento: funcionario.dataDesligamento || '',
+        dataDesligamento: formatDateForInput(funcionario.dataDesligamento), // ✅ CORREÇÃO 3: Formatar data
         afastado: funcionario.afastado,
-        dataAfastamento: funcionario.dataAfastamento || ''
+        dataAfastamento: formatDateForInput(funcionario.dataAfastamento) // ✅ CORREÇÃO 3: Formatar data
       });
     } else {
       setFuncionarioEditando(null);
