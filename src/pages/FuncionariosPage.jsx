@@ -1,4 +1,4 @@
-// VERSION: v1.8.4 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.8.6 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 
@@ -289,6 +289,13 @@ const FuncionariosPage = () => {
       
       const method = funcaoEditando ? 'PUT' : 'POST';
       
+      // ✅ LOG: Exibir payload das funções antes do envio
+      console.log('🔍 DEBUG - Salvando função:');
+      console.log('📋 URL:', url);
+      console.log('🔧 Método:', method);
+      console.log('📦 Payload:', novaFuncao);
+      console.log('🆔 Função editando:', funcaoEditando ? funcaoEditando._id : 'Nova função');
+      
       const response = await fetch(url, {
         method,
         headers: {
@@ -298,6 +305,10 @@ const FuncionariosPage = () => {
       });
 
       const data = await response.json();
+      
+      // ✅ LOG: Exibir resposta da API
+      console.log('📥 Resposta da API:', data);
+      console.log('✅ Status da resposta:', data.success ? 'Sucesso' : 'Erro');
       
       if (data.success) {
         mostrarSnackbar(
@@ -396,7 +407,7 @@ const FuncionariosPage = () => {
       empresa: '',
       dataContratado: '',
       telefone: '',
-      atuacao: '',
+      atuacao: [], // ✅ CORREÇÃO: Array vazio em vez de string vazia
       escala: '',
       acessos: [],
       desligado: false,
@@ -1336,9 +1347,9 @@ const FuncionariosPage = () => {
                     }
                   }}
                 >
-                  {funcoes.map((funcao) => (
+                  {funcoes && funcoes.length > 0 && funcoes.map((funcao) => (
                     <MenuItem key={funcao._id} value={funcao._id}>
-                      <Checkbox checked={formData.atuacao.indexOf(funcao._id) > -1} />
+                      <Checkbox checked={Array.isArray(formData.atuacao) && formData.atuacao.indexOf(funcao._id) > -1} />
                       {funcao.funcao}
                     </MenuItem>
                   ))}
@@ -2060,7 +2071,7 @@ const FuncionariosPage = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {funcoes.map((funcao) => (
+                    {funcoes && funcoes.length > 0 && funcoes.map((funcao) => (
                       <TableRow key={funcao._id}>
                         <TableCell sx={{ fontFamily: 'Poppins' }}>{funcao.funcao}</TableCell>
                         <TableCell sx={{ fontFamily: 'Poppins', color: '#666666' }}>
