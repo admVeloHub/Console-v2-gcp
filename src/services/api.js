@@ -1,4 +1,4 @@
-// VERSION: v3.10.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.10.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import axios from 'axios';
 
 // Configuração base da API
@@ -19,7 +19,23 @@ api.interceptors.response.use(
     console.error('API Error:', error);
     
     if (error.response) {
-      // Erro do servidor
+      // Erro do servidor - preservar detalhes para debug
+      console.error('❌ Erro detalhado da API:', {
+        status: error.response.status,
+        data: error.response.data,
+        headers: error.response.headers,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          data: error.config?.data
+        }
+      });
+      
+      // Para erros 400, preservar o erro original
+      if (error.response.status === 400) {
+        throw error; // Não mascarar erro 400
+      }
+      
       const message = error.response.data?.error || 'Erro do servidor';
       throw new Error(message);
     } else if (error.request) {

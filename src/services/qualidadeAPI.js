@@ -1,4 +1,4 @@
-// VERSION: v1.29.7 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.29.8 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 import { qualidadeFuncionariosAPI, qualidadeAvaliacoesAPI, qualidadeFuncoesAPI } from './api';
 import axios from 'axios';
@@ -377,9 +377,28 @@ export const getAvaliacoes = async () => {
   }
 };
 
+// Função para validar dados da avaliação
+const validarDadosAvaliacao = (dados) => {
+  if (!dados.colaboradorNome?.trim()) {
+    throw new Error('Nome do colaborador é obrigatório');
+  }
+  if (!dados.avaliador?.trim()) {
+    throw new Error('Nome do avaliador é obrigatório');
+  }
+  if (!dados.mes?.trim()) {
+    throw new Error('Mês é obrigatório');
+  }
+  if (!dados.ano || dados.ano < 2020 || dados.ano > 2030) {
+    throw new Error('Ano deve estar entre 2020 e 2030');
+  }
+  return true;
+};
+
 // Adicionar avaliação
 export const addAvaliacao = async (avaliacaoData) => {
   try {
+    // Validar dados antes do processamento
+    validarDadosAvaliacao(avaliacaoData);
     
     // Mapear dados conforme schema console_analises.qualidade_avaliacoes
     const novaAvaliacao = {
@@ -402,21 +421,49 @@ export const addAvaliacao = async (avaliacaoData) => {
       observacoes: avaliacaoData.observacoes || '', // String
       dataLigacao: avaliacaoData.dataLigacao ? new Date(avaliacaoData.dataLigacao) : new Date(), // Date
       pontuacaoTotal: 0, // Será calculado
-      createdAt: new Date().toISOString(), // String ISO
-      updatedAt: new Date().toISOString() // String ISO
+      createdAt: new Date(), // Date
+      updatedAt: new Date() // Date
     };
     
     // Calcular pontuação total
     novaAvaliacao.pontuacaoTotal = calcularPontuacaoTotal(novaAvaliacao);
     
-    // DEBUG TEMPORÁRIO - REMOVER APÓS CORREÇÃO
-    console.log('🔍 PAYLOAD FINAL:', JSON.stringify(novaAvaliacao, null, 2));
+    // DEBUG ESTRUTURADO - REMOVER APÓS CORREÇÃO
+    console.log('🔍 DEBUG ESTRUTURADO:', {
+      payload: novaAvaliacao,
+      tipos: {
+        dataAvaliacao: typeof novaAvaliacao.dataAvaliacao,
+        dataLigacao: typeof novaAvaliacao.dataLigacao,
+        createdAt: typeof novaAvaliacao.createdAt,
+        updatedAt: typeof novaAvaliacao.updatedAt,
+        ano: typeof novaAvaliacao.ano
+      },
+      valores: {
+        ano: novaAvaliacao.ano,
+        mes: novaAvaliacao.mes,
+        colaboradorNome: novaAvaliacao.colaboradorNome,
+        avaliador: novaAvaliacao.avaliador,
+        pontuacaoTotal: novaAvaliacao.pontuacaoTotal
+      },
+      validacao: {
+        colaboradorNomeValido: !!novaAvaliacao.colaboradorNome?.trim(),
+        avaliadorValido: !!novaAvaliacao.avaliador?.trim(),
+        mesValido: !!novaAvaliacao.mes?.trim(),
+        anoValido: novaAvaliacao.ano >= 2020 && novaAvaliacao.ano <= 2030
+      }
+    });
     
     const response = await qualidadeAvaliacoesAPI.create(novaAvaliacao);
     console.log(`✅ Avaliação adicionada via API: ${response._id}`);
     return response;
   } catch (error) {
     console.error('❌ Erro ao adicionar avaliação via API:', error);
+    
+    // Se for erro de validação, não fazer fallback
+    if (error.message.includes('obrigatório') || error.message.includes('deve estar entre')) {
+      throw error;
+    }
+    
     // Fallback para localStorage se API falhar
     return addAvaliacaoLocalStorage(avaliacaoData);
   }
@@ -425,6 +472,9 @@ export const addAvaliacao = async (avaliacaoData) => {
 // Atualizar avaliação
 export const updateAvaliacao = async (id, avaliacaoData) => {
   try {
+    // Validar dados antes do processamento
+    validarDadosAvaliacao(avaliacaoData);
+    
     // Mapear dados conforme schema console_analises.qualidade_avaliacoes (igual à criação)
     const avaliacaoAtualizada = {
       colaboradorNome: avaliacaoData.colaboradorNome, // String
@@ -447,7 +497,7 @@ export const updateAvaliacao = async (id, avaliacaoData) => {
       dataLigacao: avaliacaoData.dataLigacao ? new Date(avaliacaoData.dataLigacao) : new Date(), // Date
       // Campos obrigatórios para atualização
       _id: id,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date()
     };
     
     
