@@ -1,4 +1,4 @@
-// VERSION: v1.29.3 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.29.5 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 import { qualidadeFuncionariosAPI, qualidadeAvaliacoesAPI, qualidadeFuncoesAPI } from './api';
 import axios from 'axios';
@@ -380,23 +380,14 @@ export const getAvaliacoes = async () => {
 // Adicionar avaliação
 export const addAvaliacao = async (avaliacaoData) => {
   try {
-    // Debug dos valores originais
-    console.log('🔍 DEBUG - Valores originais dos critérios:');
-    console.log('  - saudacaoAdequada:', typeof avaliacaoData.saudacaoAdequada, avaliacaoData.saudacaoAdequada);
-    console.log('  - escutaAtiva:', typeof avaliacaoData.escutaAtiva, avaliacaoData.escutaAtiva);
-    console.log('  - resolucaoQuestao:', typeof avaliacaoData.resolucaoQuestao, avaliacaoData.resolucaoQuestao);
-    console.log('  - empatiaCordialidade:', typeof avaliacaoData.empatiaCordialidade, avaliacaoData.empatiaCordialidade);
-    console.log('  - direcionouPesquisa:', typeof avaliacaoData.direcionouPesquisa, avaliacaoData.direcionouPesquisa);
-    console.log('  - procedimentoIncorreto:', typeof avaliacaoData.procedimentoIncorreto, avaliacaoData.procedimentoIncorreto);
-    console.log('  - encerramentoBrusco:', typeof avaliacaoData.encerramentoBrusco, avaliacaoData.encerramentoBrusco);
     
     // Mapear dados conforme schema console_analises.qualidade_avaliacoes
     const novaAvaliacao = {
       colaboradorNome: avaliacaoData.colaboradorNome, // String
       avaliador: avaliacaoData.avaliador, // String
       mes: avaliacaoData.mes, // String
-      ano: Number(avaliacaoData.ano), // Number
-      dataAvaliacao: new Date().toISOString(), // String ISO - sempre usar data atual
+      ano: Number(avaliacaoData.ano) || new Date().getFullYear(), // Number
+      dataAvaliacao: new Date(), // Date - sempre usar data atual
       arquivoLigacao: avaliacaoData.arquivoLigacao || '', // String
       nomeArquivo: avaliacaoData.nomeArquivo || '', // String
       saudacaoAdequada: Boolean(avaliacaoData.saudacaoAdequada), // Boolean
@@ -409,7 +400,7 @@ export const addAvaliacao = async (avaliacaoData) => {
       procedimentoIncorreto: Boolean(avaliacaoData.procedimentoIncorreto), // Boolean
       encerramentoBrusco: Boolean(avaliacaoData.encerramentoBrusco), // Boolean
       observacoes: avaliacaoData.observacoes || '', // String
-      dataLigacao: avaliacaoData.dataLigacao || '', // String
+      dataLigacao: avaliacaoData.dataLigacao ? new Date(avaliacaoData.dataLigacao) : new Date(), // Date
       pontuacaoTotal: 0, // Será calculado
       createdAt: new Date().toISOString(), // String ISO
       updatedAt: new Date().toISOString() // String ISO
@@ -418,17 +409,12 @@ export const addAvaliacao = async (avaliacaoData) => {
     // Calcular pontuação total
     novaAvaliacao.pontuacaoTotal = calcularPontuacaoTotal(novaAvaliacao);
     
-    console.log('🔍 DEBUG - Criando avaliação - Pontuação:', novaAvaliacao.pontuacaoTotal);
-    console.log('🔍 DEBUG - Payload completo para API:', JSON.stringify(novaAvaliacao, null, 2));
     
     const response = await qualidadeAvaliacoesAPI.create(novaAvaliacao);
     console.log(`✅ Avaliação adicionada via API: ${response._id}`);
     return response;
   } catch (error) {
     console.error('❌ Erro ao adicionar avaliação via API:', error);
-    console.error('❌ Status do erro:', error.response?.status);
-    console.error('❌ Dados do erro:', error.response?.data);
-    console.error('❌ Mensagem do erro:', error.message);
     // Fallback para localStorage se API falhar
     return addAvaliacaoLocalStorage(avaliacaoData);
   }
@@ -442,8 +428,8 @@ export const updateAvaliacao = async (id, avaliacaoData) => {
       colaboradorNome: avaliacaoData.colaboradorNome, // String
       avaliador: avaliacaoData.avaliador, // String
       mes: avaliacaoData.mes, // String
-      ano: Number(avaliacaoData.ano), // Number
-      dataAvaliacao: avaliacaoData.dataAvaliacao || new Date().toISOString(), // String ISO
+      ano: Number(avaliacaoData.ano) || new Date().getFullYear(), // Number
+      dataAvaliacao: avaliacaoData.dataAvaliacao ? new Date(avaliacaoData.dataAvaliacao) : new Date(), // Date
       arquivoLigacao: avaliacaoData.arquivoLigacao || '', // String
       nomeArquivo: avaliacaoData.nomeArquivo || '', // String
       saudacaoAdequada: Boolean(avaliacaoData.saudacaoAdequada), // Boolean
@@ -456,7 +442,7 @@ export const updateAvaliacao = async (id, avaliacaoData) => {
       procedimentoIncorreto: Boolean(avaliacaoData.procedimentoIncorreto), // Boolean
       encerramentoBrusco: Boolean(avaliacaoData.encerramentoBrusco), // Boolean
       observacoes: avaliacaoData.observacoes || '', // String
-      dataLigacao: avaliacaoData.dataLigacao || '', // String
+      dataLigacao: avaliacaoData.dataLigacao ? new Date(avaliacaoData.dataLigacao) : new Date(), // Date
       // Campos obrigatórios para atualização
       _id: id,
       updatedAt: new Date().toISOString()
@@ -466,17 +452,12 @@ export const updateAvaliacao = async (id, avaliacaoData) => {
     // Calcular pontuação total
     avaliacaoAtualizada.pontuacaoTotal = calcularPontuacaoTotal(avaliacaoAtualizada);
     
-    console.log('🔍 DEBUG - Atualizando avaliação - Pontuação:', avaliacaoAtualizada.pontuacaoTotal);
-    console.log('🔍 DEBUG - Payload completo:', JSON.stringify(avaliacaoAtualizada, null, 2));
     
     const response = await qualidadeAvaliacoesAPI.update(id, avaliacaoAtualizada);
     console.log(`✅ Avaliação atualizada via API: ${response._id}`);
     return response;
   } catch (error) {
     console.error('❌ Erro ao atualizar avaliação via API:', error);
-    console.error('❌ Status:', error.response?.status);
-    console.error('❌ Dados do erro:', error.response?.data);
-    console.error('❌ Mensagem:', error.message);
     // Fallback para localStorage se API falhar
     return updateAvaliacaoLocalStorage(id, avaliacaoData);
   }
