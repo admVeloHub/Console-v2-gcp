@@ -1,4 +1,4 @@
-// VERSION: v3.8.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.8.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -407,9 +407,11 @@ const ConfigPage = () => {
 
   const handleSaveUser = async () => {
     try {
+      let updateData = null;
+      
       if (editingUser) {
         // Editar usuário existente - incluir permissões se estiver na etapa 2
-        const updateData = modalStep === 2 ? {
+        updateData = modalStep === 2 ? {
           _userMail: formData.email,
           _userId: formData.nome,
           _userRole: formData.funcao,
@@ -436,7 +438,7 @@ const ConfigPage = () => {
       }
       
       // ✅ Atualizar estado local em vez de recarregar do backend
-      if (editingUser) {
+      if (editingUser && updateData) {
         // Para edição, atualizar o usuário existente na lista
         setUsers(prevUsers => 
           (prevUsers || []).map(user => 

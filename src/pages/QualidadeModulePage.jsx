@@ -1,4 +1,4 @@
-// VERSION: v1.25.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.28.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 
@@ -44,6 +44,7 @@ import {
   Psychology,
   Search,
   Clear,
+  FilterList,
   CheckCircle,
   Cancel,
   VolumeUp,
@@ -73,7 +74,8 @@ import {
   MESES, 
   ANOS, 
   getStatusPontuacao, 
-  generateId 
+  generateId,
+  formatDate
 } from '../types/qualidade';
 import UploadAudioModal from '../components/qualidade/UploadAudioModal';
 import AnaliseGPTAccordion from '../components/qualidade/AnaliseGPTAccordion';
@@ -95,22 +97,28 @@ const QualidadeModulePage = () => {
   // Estados dos filtros
   const [filtros, setFiltros] = useState({
     colaborador: '',
+    avaliador: '',
+    dataAvaliacaoInicio: '',
+    dataAvaliacaoFim: '',
+    dataLigacaoInicio: '',
+    dataLigacaoFim: '',
     mes: '',
     ano: '',
-    avaliador: ''
+    status: ''
   });
   
   // Estados dos modais
   const [modalAvaliacaoAberto, setModalAvaliacaoAberto] = useState(false);
   const [modalGPTAberto, setModalGPTAberto] = useState(false);
   const [modalUploadAberto, setModalUploadAberto] = useState(false);
+  const [modalFiltrosAberto, setModalFiltrosAberto] = useState(false);
   const [avaliacaoEditando, setAvaliacaoEditando] = useState(null);
   const [avaliacaoSelecionada, setAvaliacaoSelecionada] = useState(null);
   const [avaliacaoParaUpload, setAvaliacaoParaUpload] = useState(null);
   
   // Estados dos formulários
   const [formData, setFormData] = useState({
-    colaboradorId: '',
+    colaboradorNome: '',
     avaliador: '',
     mes: '',
     ano: new Date().getFullYear(),
@@ -123,7 +131,8 @@ const QualidadeModulePage = () => {
     direcionouPesquisa: false,
     procedimentoIncorreto: false,
     encerramentoBrusco: false,
-    observacoesModeracao: ''
+    observacoes: '',
+    dataLigacao: ''
   });
   
   // Estados de UI
@@ -174,38 +183,22 @@ const QualidadeModulePage = () => {
       
       // Debug localStorage
       const funcionariosLocal = localStorage.getItem('funcionarios_velotax');
-      console.log('🔍 Debug - localStorage funcionarios_velotax:', funcionariosLocal);
-      
       const avaliacoesData = await getAvaliacoes();
       const todosFuncionarios = await getFuncionarios();
       const avaliadoresValidos = await getAvaliadoresValidos();
       
-      console.log('🔍 Debug - Todos os funcionários:', todosFuncionarios);
-      console.log('🔍 Debug - Quantidade de funcionários:', todosFuncionarios.length);
-      console.log('🔍 Debug - Avaliadores válidos:', avaliadoresValidos);
-      
-      // Filtrar apenas funcionários ativos (mais permissivo para debug)
-      const funcionariosAtivos = todosFuncionarios.filter(f => {
-        const isAtivo = !f.desligado && !f.afastado;
-        console.log(`🔍 Debug - Funcionário ${f.colaboradorNome || f.nomeCompleto}: desligado=${f.desligado}, afastado=${f.afastado}, isAtivo=${isAtivo}`);
-        return isAtivo;
-      });
-      
-      console.log('🔍 Debug - Funcionários ativos:', funcionariosAtivos);
-      console.log('🔍 Debug - Quantidade de funcionários ativos:', funcionariosAtivos.length);
+      // Filtrar apenas funcionários ativos
+      const funcionariosAtivos = todosFuncionarios.filter(f => !f.desligado && !f.afastado);
       
       // Fallback: se não há funcionários ativos, usar todos os funcionários
       const funcionariosParaUsar = funcionariosAtivos.length > 0 ? funcionariosAtivos : todosFuncionarios;
-      console.log('🔍 Debug - Funcionários para usar no modal:', funcionariosParaUsar);
       
       // Garantir que todos os funcionários tenham um ID válido
       const funcionariosComId = funcionariosParaUsar.map(f => ({
         ...f,
-        id: f._id || f.id, // Usar _id se disponível, senão usar id
-        _id: f._id || f.id // Garantir que _id também esteja disponível
+        id: f._id || f.id,
+        _id: f._id || f.id
       }));
-      
-      console.log('🔍 Debug - Funcionários com ID corrigido:', funcionariosComId);
       
       setAvaliacoes(avaliacoesData);
       setFuncionarios(funcionariosComId);
@@ -222,54 +215,118 @@ const QualidadeModulePage = () => {
     const avaliacoesArray = Array.isArray(avaliacoes) ? avaliacoes : [];
     let filtrados = [...avaliacoesArray];
 
+    // Filtro por colaborador (nome parcial, case-insensitive)
     if (filtros.colaborador) {
       filtrados = filtrados.filter(a => 
         a.colaboradorNome.toLowerCase().includes(filtros.colaborador.toLowerCase())
       );
     }
 
-    if (filtros.mes) {
-      filtrados = filtrados.filter(a => a.mes === filtros.mes);
-    }
-
-    if (filtros.ano) {
-      filtrados = filtrados.filter(a => a.ano === parseInt(filtros.ano));
-    }
-
+    // Filtro por avaliador (nome parcial, case-insensitive)
     if (filtros.avaliador) {
       filtrados = filtrados.filter(a => 
         a.avaliador.toLowerCase().includes(filtros.avaliador.toLowerCase())
       );
     }
 
+    // Filtro por data da avaliação (range)
+    if (filtros.dataAvaliacaoInicio) {
+      filtrados = filtrados.filter(a => 
+        new Date(a.createdAt) >= new Date(filtros.dataAvaliacaoInicio)
+      );
+    }
+    if (filtros.dataAvaliacaoFim) {
+      filtrados = filtrados.filter(a => 
+        new Date(a.createdAt) <= new Date(filtros.dataAvaliacaoFim)
+      );
+    }
+
+    // Filtro por data da ligação (range)
+    if (filtros.dataLigacaoInicio) {
+      filtrados = filtrados.filter(a => 
+        a.dataLigacao && new Date(a.dataLigacao) >= new Date(filtros.dataLigacaoInicio)
+      );
+    }
+    if (filtros.dataLigacaoFim) {
+      filtrados = filtrados.filter(a => 
+        a.dataLigacao && new Date(a.dataLigacao) <= new Date(filtros.dataLigacaoFim)
+      );
+    }
+
+    // Filtro por período (mês/ano)
+    if (filtros.mes) {
+      filtrados = filtrados.filter(a => a.mes === filtros.mes);
+    }
+    if (filtros.ano) {
+      filtrados = filtrados.filter(a => a.ano === parseInt(filtros.ano));
+    }
+
+    // Filtro por status
+    if (filtros.status) {
+      filtrados = filtrados.filter(a => {
+        const status = getStatusPontuacao(a.pontuacaoTotal);
+        return status.status === filtros.status;
+      });
+    }
+
     return filtrados;
+  };
+
+  const limparFiltros = () => {
+    setFiltros({
+      colaborador: '',
+      avaliador: '',
+      dataAvaliacaoInicio: '',
+      dataAvaliacaoFim: '',
+      dataLigacaoInicio: '',
+      dataLigacaoFim: '',
+      mes: '',
+      ano: '',
+      status: ''
+    });
+    setModalFiltrosAberto(false);
   };
 
   const abrirModalAvaliacao = (avaliacao = null) => {
     if (avaliacao) {
       setAvaliacaoEditando(avaliacao);
+      
+      // Debug: Log dos dados da avaliação sendo editada
+      console.log('🔍 DEBUG - Editando avaliação:', avaliacao._id);
+      
+      // Verificar se o usuário atual é avaliador
+      const isAvaliador = user?._funcoesAdministrativas?.avaliador === true;
+      const avaliadorAutomatico = isAvaliador ? user._userId : '';
+      
       setFormData({
-        colaboradorId: avaliacao.colaboradorId,
-        avaliador: avaliacao.avaliador,
+        colaboradorNome: avaliacao.colaboradorNome || avaliacao.colaboradorNome,
+        avaliador: isAvaliador ? user._userId : avaliacao.avaliador,
         mes: avaliacao.mes,
         ano: avaliacao.ano,
         saudacaoAdequada: avaliacao.saudacaoAdequada,
         escutaAtiva: avaliacao.escutaAtiva,
-        clarezaObjetividade: avaliacao.clarezaObjetividade || false,  // NOVO critério
+        clarezaObjetividade: Boolean(avaliacao.clarezaObjetividade),  // NOVO critério - garantir boolean
         resolucaoQuestao: avaliacao.resolucaoQuestao,
-        dominioAssunto: avaliacao.dominioAssunto || false,            // NOVO critério
+        dominioAssunto: Boolean(avaliacao.dominioAssunto),            // NOVO critério - garantir boolean
         empatiaCordialidade: avaliacao.empatiaCordialidade,
         direcionouPesquisa: avaliacao.direcionouPesquisa,
         procedimentoIncorreto: avaliacao.procedimentoIncorreto,
         encerramentoBrusco: avaliacao.encerramentoBrusco,
-        arquivoLigacao: null,
-        observacoesModeracao: avaliacao.observacoesModeracao || ''
+        observacoes: avaliacao.observacoes || '',
+        dataLigacao: avaliacao.dataLigacao ? (avaliacao.dataLigacao.includes('T') ? avaliacao.dataLigacao.split('T')[0] : avaliacao.dataLigacao) : '',
+        arquivoLigacao: null
       });
+      
     } else {
       setAvaliacaoEditando(null);
+      
+      // Verificar se o usuário atual é avaliador para preenchimento automático
+      const isAvaliador = user?._funcoesAdministrativas?.avaliador === true;
+      const avaliadorAutomatico = isAvaliador ? user._userId : '';
+      
       setFormData({
-        colaboradorId: '',
-        avaliador: '',
+        colaboradorNome: '',
+        avaliador: avaliadorAutomatico,
         mes: new Date().toLocaleDateString('pt-BR', { month: 'long' }).replace(/^\w/, c => c.toUpperCase()),
         ano: new Date().getFullYear(),
         saudacaoAdequada: false,
@@ -281,8 +338,9 @@ const QualidadeModulePage = () => {
         direcionouPesquisa: false,
         procedimentoIncorreto: false,
         encerramentoBrusco: false,
-        arquivoLigacao: null,
-        observacoesModeracao: ''
+        observacoes: '',
+        dataLigacao: '',
+        arquivoLigacao: null
       });
     }
     setModalAvaliacaoAberto(true);
@@ -292,7 +350,7 @@ const QualidadeModulePage = () => {
     setModalAvaliacaoAberto(false);
     setAvaliacaoEditando(null);
     setFormData({
-      colaboradorId: '',
+      colaboradorNome: '',
       avaliador: '',
       mes: '',
       ano: new Date().getFullYear(),
@@ -305,15 +363,16 @@ const QualidadeModulePage = () => {
       direcionouPesquisa: false,
       procedimentoIncorreto: false,
       encerramentoBrusco: false,
+      observacoes: '',
+      dataLigacao: '',
       arquivoLigacao: null,
-      observacoesModeracao: ''
     });
   };
 
   const salvarAvaliacao = async () => {
     try {
       // Validações obrigatórias
-      if (!formData.colaboradorId) {
+      if (!formData.colaboradorNome) {
         mostrarSnackbar('Selecione um colaborador', 'error');
         return;
       }
@@ -323,18 +382,17 @@ const QualidadeModulePage = () => {
         return;
       }
       
-      // Mapear colaboradorId (que agora é o nome) para colaboradorNome
+      // Mapear colaboradorNome (que agora é o nome) para colaboradorNome
       const funcionarioSelecionado = funcionarios.find(f => 
-        (f.colaboradorNome || f.nomeCompleto) === formData.colaboradorId
+        (f.colaboradorNome || f.nomeCompleto) === formData.colaboradorNome
       );
       const dadosParaEnvio = {
         ...formData,
-        colaboradorNome: formData.colaboradorId // colaboradorId já é o nome agora
+        colaboradorNome: formData.colaboradorNome // colaboradorNome já é o nome agora
       };
       
       // Debug dos dados antes do envio
-      console.log('🔍 DEBUG - Funcionário selecionado:', funcionarioSelecionado);
-      console.log('🔍 DEBUG - Dados para envio:', dadosParaEnvio);
+      console.log('🔍 DEBUG - Salvando avaliação:', avaliacaoEditando ? 'EDITANDO' : 'CRIANDO');
       
       if (avaliacaoEditando) {
         await updateAvaliacao(avaliacaoEditando._id, dadosParaEnvio);
@@ -347,6 +405,7 @@ const QualidadeModulePage = () => {
       fecharModalAvaliacao();
     } catch (error) {
       console.error('Erro ao salvar avaliação:', error);
+      console.error('🔍 DEBUG - Detalhes do erro:', error.response?.data || error.message);
       mostrarSnackbar('Erro ao salvar avaliação', 'error');
     }
   };
@@ -693,6 +752,21 @@ const QualidadeModulePage = () => {
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 1 }}>
                   <Button
+                    startIcon={<FilterList />}
+                    onClick={() => setModalFiltrosAberto(true)}
+                    sx={{
+                      backgroundColor: '#1694FF',
+                      color: '#ffffff',
+                      fontFamily: 'Poppins',
+                      fontWeight: 500,
+                      '&:hover': {
+                        backgroundColor: '#0F7AD9'
+                      }
+                    }}
+                  >
+                    Filtrar
+                  </Button>
+                  <Button
                     startIcon={<Add />}
                     onClick={() => abrirModalAvaliacao()}
                     sx={{
@@ -740,127 +814,6 @@ const QualidadeModulePage = () => {
                 </Box>
               </Box>
 
-              {/* Filtros */}
-              <Grid container spacing={2}>
-                <Grid item xs={12} md={3}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Colaborador"
-                    value={filtros.colaborador}
-                    onChange={(e) => setFiltros({ ...filtros, colaborador: e.target.value })}
-                    InputProps={{
-                      startAdornment: <Search sx={{ mr: 1, color: '#666666' }} />
-                    }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        fontFamily: 'Poppins',
-                        '&:hover fieldset': {
-                          borderColor: '#1694FF'
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#000058'
-                        }
-                      },
-                      '& .MuiInputLabel-root': {
-                        fontFamily: 'Poppins'
-                      }
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} md={2}>
-                  <FormControl fullWidth size="small">
-                    <InputLabel sx={{ fontFamily: 'Poppins' }}>Mês</InputLabel>
-                    <Select
-                      value={filtros.mes}
-                      onChange={(e) => setFiltros({ ...filtros, mes: e.target.value })}
-                      label="Mês"
-                      sx={{
-                        fontFamily: 'Poppins',
-                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                          borderColor: '#1694FF'
-                        },
-                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                          borderColor: '#000058'
-                        }
-                      }}
-                    >
-                      <MenuItem value="" sx={{ fontFamily: 'Poppins' }}>Todos</MenuItem>
-                      {MESES.map((mes) => (
-                        <MenuItem key={mes} value={mes} sx={{ fontFamily: 'Poppins' }}>
-                          {mes}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12} md={2}>
-                  <FormControl fullWidth size="small">
-                    <InputLabel sx={{ fontFamily: 'Poppins' }}>Ano</InputLabel>
-                    <Select
-                      value={filtros.ano}
-                      onChange={(e) => setFiltros({ ...filtros, ano: e.target.value })}
-                      label="Ano"
-                      sx={{
-                        fontFamily: 'Poppins',
-                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                          borderColor: '#1694FF'
-                        },
-                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                          borderColor: '#000058'
-                        }
-                      }}
-                    >
-                      <MenuItem value="" sx={{ fontFamily: 'Poppins' }}>Todos</MenuItem>
-                      {ANOS.map((ano) => (
-                        <MenuItem key={ano} value={ano} sx={{ fontFamily: 'Poppins' }}>
-                          {ano}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12} md={3}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Avaliador"
-                    value={filtros.avaliador}
-                    onChange={(e) => setFiltros({ ...filtros, avaliador: e.target.value })}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        fontFamily: 'Poppins',
-                        '&:hover fieldset': {
-                          borderColor: '#1694FF'
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#000058'
-                        }
-                      },
-                      '& .MuiInputLabel-root': {
-                        fontFamily: 'Poppins'
-                      }
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} md={2}>
-                  <Button
-                    fullWidth
-                    startIcon={<Clear />}
-                    onClick={() => setFiltros({ colaborador: '', mes: '', ano: '', avaliador: '' })}
-                    sx={{
-                      color: '#666666',
-                      fontFamily: 'Poppins',
-                      fontWeight: 500,
-                      '&:hover': {
-                        backgroundColor: '#f5f5f5'
-                      }
-                    }}
-                  >
-                    Limpar
-                  </Button>
-                </Grid>
-              </Grid>
             </CardContent>
           </Card>
 
@@ -876,6 +829,8 @@ const QualidadeModulePage = () => {
                   <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
                     <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>Colaborador</TableCell>
                     <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>Avaliador</TableCell>
+                    <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>Data da Avaliação</TableCell>
+                    <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>Data da Ligação</TableCell>
                     <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>Período</TableCell>
                     <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>Pontuação</TableCell>
                     <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>Status</TableCell>
@@ -899,6 +854,12 @@ const QualidadeModulePage = () => {
                             </Box>
                           </TableCell>
                           <TableCell sx={{ fontFamily: 'Poppins' }}>{avaliacao.avaliador}</TableCell>
+                          <TableCell sx={{ fontFamily: 'Poppins' }}>
+                            {avaliacao.createdAt ? formatDate(avaliacao.createdAt) : '-'}
+                          </TableCell>
+                          <TableCell sx={{ fontFamily: 'Poppins' }}>
+                            {avaliacao.dataLigacao ? formatDate(avaliacao.dataLigacao) : '-'}
+                          </TableCell>
                           <TableCell sx={{ fontFamily: 'Poppins' }}>
                             {avaliacao.mes}/{avaliacao.ano}
                           </TableCell>
@@ -1524,8 +1485,8 @@ const QualidadeModulePage = () => {
               <FormControl fullWidth required>
                 <InputLabel sx={{ fontFamily: 'Poppins' }}>Colaborador</InputLabel>
                 <Select
-                  value={formData.colaboradorId}
-                  onChange={(e) => setFormData({ ...formData, colaboradorId: e.target.value })}
+                  value={formData.colaboradorNome}
+                  onChange={(e) => setFormData({ ...formData, colaboradorNome: e.target.value })}
                   label="Colaborador"
                   sx={{
                     fontFamily: 'Poppins',
@@ -1539,11 +1500,6 @@ const QualidadeModulePage = () => {
                 >
                   {funcionarios.map((funcionario) => {
                     const nomeColaborador = funcionario.colaboradorNome || funcionario.nomeCompleto;
-                    console.log('🔍 DEBUG - Criando MenuItem:', { 
-                      id: funcionario._id, 
-                      nome: nomeColaborador, 
-                      value: nomeColaborador 
-                    });
                     return (
                       <MenuItem key={funcionario._id || funcionario.id} value={nomeColaborador} sx={{ fontFamily: 'Poppins' }}>
                         {nomeColaborador}
@@ -1554,29 +1510,49 @@ const QualidadeModulePage = () => {
               </FormControl>
             </Grid>
             <Grid item xs={12} md={6}>
-              <FormControl fullWidth required>
-                <InputLabel sx={{ fontFamily: 'Poppins' }}>Avaliador</InputLabel>
-                <Select
-                  value={formData.avaliador}
-                  onChange={(e) => setFormData({ ...formData, avaliador: e.target.value })}
+              {user?._funcoesAdministrativas?.avaliador === true ? (
+                <TextField
+                  value={user._userId}
                   label="Avaliador"
+                  disabled
+                  fullWidth
+                  required
                   sx={{
                     fontFamily: 'Poppins',
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#1694FF'
+                    '& .MuiInputBase-input.Mui-disabled': {
+                      color: '#000058',
+                      fontWeight: 500
                     },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#000058'
+                    '& .MuiInputLabel-root.Mui-disabled': {
+                      color: '#666666'
                     }
                   }}
-                >
-                  {avaliadores.map((avaliador) => (
-                    <MenuItem key={avaliador} value={avaliador} sx={{ fontFamily: 'Poppins' }}>
-                      {avaliador}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+                />
+              ) : (
+                <FormControl fullWidth required>
+                  <InputLabel sx={{ fontFamily: 'Poppins' }}>Avaliador</InputLabel>
+                  <Select
+                    value={formData.avaliador}
+                    onChange={(e) => setFormData({ ...formData, avaliador: e.target.value })}
+                    label="Avaliador"
+                    sx={{
+                      fontFamily: 'Poppins',
+                      '&:hover .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#1694FF'
+                      },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#000058'
+                      }
+                    }}
+                  >
+                    {avaliadores.map((avaliador) => (
+                      <MenuItem key={avaliador} value={avaliador} sx={{ fontFamily: 'Poppins' }}>
+                        {avaliador}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
             </Grid>
             <Grid item xs={12} md={6}>
               <FormControl fullWidth required>
@@ -1627,6 +1603,46 @@ const QualidadeModulePage = () => {
                   ))}
                 </Select>
               </FormControl>
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Data da Ligação Avaliada"
+                type="date"
+                value={formData.dataLigacao}
+                onChange={(e) => setFormData({ ...formData, dataLigacao: e.target.value })}
+                InputLabelProps={{
+                  shrink: true,
+                  style: { fontFamily: 'Poppins' }
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    fontFamily: 'Poppins',
+                    '&:hover fieldset': {
+                      borderColor: '#1694FF'
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#000058'
+                    }
+                  }
+                }}
+              />
+            </Grid>
+            
+            {/* Campo vazio para manter consistência de layout */}
+            <Grid item xs={12} md={6}>
+              <Box sx={{ 
+                height: '56px', // Altura padrão do TextField
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'transparent',
+                fontSize: '14px',
+                fontFamily: 'Poppins'
+              }}>
+                Espaço reservado
+              </Box>
             </Grid>
             
             {/* Critérios de Avaliação */}
@@ -1700,7 +1716,7 @@ const QualidadeModulePage = () => {
             {/* Linha 2: Clareza e Resolução */}
             {[
               { key: 'clarezaObjetividade', label: 'Clareza e Objetividade', pontos: 10, isPositive: true },
-              { key: 'resolucaoQuestao', label: 'Resolução Questão / Seguiu o procedimento', pontos: 25, isPositive: true }
+              { key: 'resolucaoQuestao', label: 'Boa Resolução / Procedimento', pontos: 25, isPositive: true }
             ].map((criterio) => (
               <Grid item xs={12} md={6} key={criterio.key}>
                 <Box sx={{ 
@@ -1987,8 +2003,8 @@ const QualidadeModulePage = () => {
                 label="Observações"
                 multiline
                 rows={3}
-                value={formData.observacoesModeracao}
-                onChange={(e) => setFormData({ ...formData, observacoesModeracao: e.target.value })}
+                value={formData.observacoes || ''}
+                onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     fontFamily: 'Poppins',
@@ -2143,6 +2159,206 @@ const QualidadeModulePage = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      {/* Modal de Filtros Avançados */}
+      <Dialog 
+        open={modalFiltrosAberto} 
+        onClose={() => setModalFiltrosAberto(false)} 
+        maxWidth="md" 
+        fullWidth
+      >
+        <DialogTitle sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>
+          Filtros Avançados
+        </DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            {/* Colaborador */}
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel sx={{ fontFamily: 'Poppins' }}>Colaborador</InputLabel>
+                <Select
+                  value={filtros.colaborador}
+                  onChange={(e) => setFiltros({ ...filtros, colaborador: e.target.value })}
+                  label="Colaborador"
+                  sx={{ fontFamily: 'Poppins' }}
+                >
+                  <MenuItem value="" sx={{ fontFamily: 'Poppins' }}>Todos</MenuItem>
+                  {funcionarios.map((funcionario) => {
+                    const nomeColaborador = funcionario.colaboradorNome || funcionario.nomeCompleto;
+                    return (
+                      <MenuItem key={funcionario._id} value={nomeColaborador} sx={{ fontFamily: 'Poppins' }}>
+                        {nomeColaborador}
+                      </MenuItem>
+                    );
+                  })}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* Avaliador */}
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel sx={{ fontFamily: 'Poppins' }}>Avaliador</InputLabel>
+                <Select
+                  value={filtros.avaliador}
+                  onChange={(e) => setFiltros({ ...filtros, avaliador: e.target.value })}
+                  label="Avaliador"
+                  sx={{ fontFamily: 'Poppins' }}
+                >
+                  <MenuItem value="" sx={{ fontFamily: 'Poppins' }}>Todos</MenuItem>
+                  {avaliadores.map((avaliador) => (
+                    <MenuItem key={avaliador} value={avaliador} sx={{ fontFamily: 'Poppins' }}>
+                      {avaliador}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* Data da Avaliação - Início */}
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Data da Avaliação - Início"
+                type="date"
+                value={filtros.dataAvaliacaoInicio}
+                onChange={(e) => setFiltros({ ...filtros, dataAvaliacaoInicio: e.target.value })}
+                InputLabelProps={{
+                  shrink: true,
+                  style: { fontFamily: 'Poppins' }
+                }}
+                sx={{ fontFamily: 'Poppins' }}
+              />
+            </Grid>
+
+            {/* Data da Avaliação - Fim */}
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Data da Avaliação - Fim"
+                type="date"
+                value={filtros.dataAvaliacaoFim}
+                onChange={(e) => setFiltros({ ...filtros, dataAvaliacaoFim: e.target.value })}
+                InputLabelProps={{
+                  shrink: true,
+                  style: { fontFamily: 'Poppins' }
+                }}
+                sx={{ fontFamily: 'Poppins' }}
+              />
+            </Grid>
+
+            {/* Data da Ligação - Início */}
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Data da Ligação - Início"
+                type="date"
+                value={filtros.dataLigacaoInicio}
+                onChange={(e) => setFiltros({ ...filtros, dataLigacaoInicio: e.target.value })}
+                InputLabelProps={{
+                  shrink: true,
+                  style: { fontFamily: 'Poppins' }
+                }}
+                sx={{ fontFamily: 'Poppins' }}
+              />
+            </Grid>
+
+            {/* Data da Ligação - Fim */}
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Data da Ligação - Fim"
+                type="date"
+                value={filtros.dataLigacaoFim}
+                onChange={(e) => setFiltros({ ...filtros, dataLigacaoFim: e.target.value })}
+                InputLabelProps={{
+                  shrink: true,
+                  style: { fontFamily: 'Poppins' }
+                }}
+                sx={{ fontFamily: 'Poppins' }}
+              />
+            </Grid>
+
+            {/* Mês */}
+            <Grid item xs={12} md={4}>
+              <FormControl fullWidth>
+                <InputLabel sx={{ fontFamily: 'Poppins' }}>Mês</InputLabel>
+                <Select
+                  value={filtros.mes}
+                  onChange={(e) => setFiltros({ ...filtros, mes: e.target.value })}
+                  label="Mês"
+                  sx={{ fontFamily: 'Poppins' }}
+                >
+                  <MenuItem value="" sx={{ fontFamily: 'Poppins' }}>Todos</MenuItem>
+                  {MESES.map((mes) => (
+                    <MenuItem key={mes} value={mes} sx={{ fontFamily: 'Poppins' }}>
+                      {mes}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* Ano */}
+            <Grid item xs={12} md={4}>
+              <FormControl fullWidth>
+                <InputLabel sx={{ fontFamily: 'Poppins' }}>Ano</InputLabel>
+                <Select
+                  value={filtros.ano}
+                  onChange={(e) => setFiltros({ ...filtros, ano: e.target.value })}
+                  label="Ano"
+                  sx={{ fontFamily: 'Poppins' }}
+                >
+                  <MenuItem value="" sx={{ fontFamily: 'Poppins' }}>Todos</MenuItem>
+                  {ANOS.map((ano) => (
+                    <MenuItem key={ano} value={ano} sx={{ fontFamily: 'Poppins' }}>
+                      {ano}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* Status */}
+            <Grid item xs={12} md={4}>
+              <FormControl fullWidth>
+                <InputLabel sx={{ fontFamily: 'Poppins' }}>Status</InputLabel>
+                <Select
+                  value={filtros.status}
+                  onChange={(e) => setFiltros({ ...filtros, status: e.target.value })}
+                  label="Status"
+                  sx={{ fontFamily: 'Poppins' }}
+                >
+                  <MenuItem value="" sx={{ fontFamily: 'Poppins' }}>Todos</MenuItem>
+                  <MenuItem value="excelente" sx={{ fontFamily: 'Poppins' }}>Excelente</MenuItem>
+                  <MenuItem value="bom" sx={{ fontFamily: 'Poppins' }}>Bom</MenuItem>
+                  <MenuItem value="regular" sx={{ fontFamily: 'Poppins' }}>Regular</MenuItem>
+                  <MenuItem value="ruim" sx={{ fontFamily: 'Poppins' }}>Ruim</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={limparFiltros}
+            sx={{ fontFamily: 'Poppins' }}
+          >
+            Limpar
+          </Button>
+          <Button 
+            onClick={aplicarFiltros}
+            variant="contained"
+            sx={{ 
+              fontFamily: 'Poppins',
+              backgroundColor: '#1694FF',
+              '&:hover': { backgroundColor: '#0F7AD9' }
+            }}
+          >
+            Aplicar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

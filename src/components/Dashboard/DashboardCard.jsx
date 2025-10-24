@@ -1,4 +1,4 @@
-// VERSION: v3.6.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.9.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React from 'react';
 import { Card, CardContent, Typography, Box, IconButton } from '@mui/material';
 import { ArrowForward } from '@mui/icons-material';
@@ -24,8 +24,8 @@ const DashboardCard = ({ title, description, icon, color, onClick }) => {
     <Card
       className="velohub-card"
       sx={{
-        height: '220px', // Altura aumentada para melhor proporção
-        width: '85%', // Redução de 15% na largura
+        height: '200px', // Tamanho fixo quadrado
+        width: '200px', // Tamanho fixo quadrado
         display: 'flex',
         flexDirection: 'column',
         cursor: 'pointer',
@@ -35,6 +35,8 @@ const DashboardCard = ({ title, description, icon, color, onClick }) => {
         boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
         position: 'relative',
         overflow: 'hidden',
+        p: 0, // Removido padding
+        m: 0, // Removido margin
         '&::before': {
           content: '""',
           position: 'absolute',
@@ -60,7 +62,8 @@ const DashboardCard = ({ title, description, icon, color, onClick }) => {
       <CardContent sx={{ 
         flexGrow: 1, 
         textAlign: 'center', 
-        p: 3,
+        p: 0, // Removido padding completamente
+        m: 0, // Removido margin
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
@@ -73,7 +76,7 @@ const DashboardCard = ({ title, description, icon, color, onClick }) => {
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            height: '80px',
+            height: '70px', // Ajustado para card quadrado
             color: 'var(--blue-opaque)',
           }}
         >
@@ -87,7 +90,7 @@ const DashboardCard = ({ title, description, icon, color, onClick }) => {
             fontFamily: 'Poppins',
             fontWeight: 600,
             color: 'var(--blue-dark)',
-            fontSize: '1.3rem',
+            fontSize: '1.1rem', // Ajustado para card quadrado
             mb: 2,
           }}
         >
@@ -99,9 +102,9 @@ const DashboardCard = ({ title, description, icon, color, onClick }) => {
             sx={{
               background: getArrowGradient(color),
               color: 'white',
-              width: 40,
-              height: 40,
-              borderRadius: '20px',
+              width: 36, // Ajustado para card quadrado
+              height: 36, // Ajustado para card quadrado
+              borderRadius: '18px', // Ajustado para card quadrado
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
               '&:hover': {
                 transform: 'scale(1.05)',

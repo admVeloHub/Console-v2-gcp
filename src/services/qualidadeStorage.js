@@ -1,4 +1,4 @@
-// VERSION: v1.3.0 | DATE: 2025-01-10 | AUTHOR: VeloHub Development Team
+// VERSION: v1.0.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 import { 
   generateId, 
@@ -199,9 +199,9 @@ export const getAvaliacaoById = (id) => {
 };
 
 // Obter avaliações por colaborador
-export const getAvaliacoesPorColaborador = (colaboradorId) => {
+export const getAvaliacoesPorColaborador = (colaboradorNome) => {
   const avaliacoes = getAvaliacoes();
-  return getAvaliacoesPorColaboradorUtil(colaboradorId, avaliacoes);
+  return getAvaliacoesPorColaboradorUtil(colaboradorNome, avaliacoes);
 };
 
 // Adicionar avaliação
@@ -209,7 +209,7 @@ export const addAvaliacao = async (avaliacaoData) => {
   try {
     const avaliacoes = getAvaliacoes();
     const funcionarios = getFuncionarios();
-    const funcionario = funcionarios.find(f => f.id === avaliacaoData.colaboradorId);
+    const funcionario = funcionarios.find(f => f.id === avaliacaoData.colaboradorNome);
     
     if (!funcionario) {
       throw new Error('Funcionário não encontrado');
@@ -232,7 +232,7 @@ export const addAvaliacao = async (avaliacaoData) => {
 
     const novaAvaliacao = {
       _id: generateId(), // Usar _id em vez de id
-      colaboradorId: avaliacaoData.colaboradorId,
+      colaboradorNome: avaliacaoData.colaboradorNome,
       colaboradorNome: funcionario.nomeCompleto,
       avaliador: avaliacaoData.avaliador,
       mes: avaliacaoData.mes,
@@ -367,16 +367,16 @@ export const getAvaliacaoGPT = (avaliacaoId) => {
 // ===== RELATÓRIOS =====
 
 // Gerar relatório do agente
-export const gerarRelatorioAgente = (colaboradorId) => {
-  const avaliacoes = getAvaliacoesPorColaborador(colaboradorId);
+export const gerarRelatorioAgente = (colaboradorNome) => {
+  const avaliacoes = getAvaliacoesPorColaborador(colaboradorNome);
   const funcionarios = getFuncionarios();
-  const funcionario = funcionarios.find(f => f.id === colaboradorId);
+  const funcionario = funcionarios.find(f => f.id === colaboradorNome);
   
   if (!funcionario || avaliacoes.length === 0) {
     return null;
   }
 
-  return gerarRelatorioAgenteUtil(colaboradorId, funcionario.nomeCompleto, avaliacoes);
+  return gerarRelatorioAgenteUtil(colaboradorNome, funcionario.nomeCompleto, avaliacoes);
 };
 
 // Gerar relatório da gestão

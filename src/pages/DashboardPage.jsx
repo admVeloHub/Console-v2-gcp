@@ -1,4 +1,4 @@
-// VERSION: v3.9.9 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v4.1.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React from 'react';
 import { Container, Grid, Typography, Box, Card, CardContent } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
@@ -32,7 +32,7 @@ const DashboardPage = () => {
     {
       title: 'Artigos',
       description: 'Criar e gerenciar artigos do sistema',
-      icon: <ArticleOutlined sx={{ fontSize: '3.5rem' }} />,
+      icon: <ArticleOutlined sx={{ fontSize: '2.8rem' }} />,
       path: '/artigos',
       color: 'primary',
       permission: 'artigos'
@@ -40,7 +40,7 @@ const DashboardPage = () => {
     {
       title: 'Velonews',
       description: 'Publicar notícias e alertas',
-      icon: <WarningAmberOutlined sx={{ fontSize: '3.5rem' }} />,
+      icon: <WarningAmberOutlined sx={{ fontSize: '2.8rem' }} />,
       path: '/velonews',
       color: 'primary',
       permission: 'velonews'
@@ -48,7 +48,7 @@ const DashboardPage = () => {
     {
       title: 'Bot Perguntas',
       description: 'Processos e Orientações',
-      icon: <SmartToyOutlined sx={{ fontSize: '3.5rem' }} />,
+      icon: <SmartToyOutlined sx={{ fontSize: '2.8rem' }} />,
       path: '/bot-perguntas',
       color: 'primary',
       permission: 'botPerguntas'
@@ -56,7 +56,7 @@ const DashboardPage = () => {
     {
       title: 'Serviços',
       description: 'Serviços ativos no APP',
-      icon: <EngineeringOutlined sx={{ fontSize: '3.5rem' }} />,
+      icon: <EngineeringOutlined sx={{ fontSize: '2.8rem' }} />,
       path: '/servicos',
       color: 'primary',
       permission: 'servicos'
@@ -68,7 +68,7 @@ const DashboardPage = () => {
     {
       title: 'Hub Análises',
       description: 'Análises centralizadas do hub',
-      icon: <AnalyticsOutlined sx={{ fontSize: '3.5rem' }} />,
+      icon: <AnalyticsOutlined sx={{ fontSize: '2.8rem' }} />,
       path: '/hub-analises',
       color: 'success',
       permission: 'hubAnalises'
@@ -76,7 +76,7 @@ const DashboardPage = () => {
     {
       title: 'Bot Análises',
       description: 'Análises e relatórios do bot',
-      icon: <AnalyticsOutlined sx={{ fontSize: '3.5rem' }} />,
+      icon: <AnalyticsOutlined sx={{ fontSize: '2.8rem' }} />,
       path: '/bot-analises',
       color: 'success',
       permission: 'botAnalises'
@@ -84,7 +84,7 @@ const DashboardPage = () => {
     {
       title: 'IGP',
       description: 'Dashboard de métricas e relatórios',
-      icon: <ShowChartOutlined sx={{ fontSize: '3.5rem' }} />,
+      icon: <ShowChartOutlined sx={{ fontSize: '2.8rem' }} />,
       path: '/igp',
       color: 'success',
       permission: 'igp'
@@ -92,7 +92,7 @@ const DashboardPage = () => {
     {
       title: 'Capacity',
       description: 'Monitoramento de capacidade e recursos',
-      icon: <BoltOutlined sx={{ fontSize: '3.5rem' }} />,
+      icon: <BoltOutlined sx={{ fontSize: '2.8rem' }} />,
       path: '/capacity',
       color: 'success',
       permission: 'capacity'
@@ -100,7 +100,7 @@ const DashboardPage = () => {
     {
       title: 'Qualidade',
       description: 'Controle de qualidade e auditoria',
-      icon: <CheckCircleOutlined sx={{ fontSize: '3.5rem' }} />,
+      icon: <CheckCircleOutlined sx={{ fontSize: '2.8rem' }} />,
       path: '/qualidade',
       color: 'success',
       permission: 'qualidade'
@@ -112,7 +112,7 @@ const DashboardPage = () => {
     {
       title: 'Chamados Internos',
       description: 'Sistema de tickets e suporte interno',
-      icon: <ConfirmationNumberOutlined sx={{ fontSize: '3.5rem' }} />,
+      icon: <ConfirmationNumberOutlined sx={{ fontSize: '2.8rem' }} />,
       path: '/chamados-internos',
       color: 'secondary',
       permission: 'chamadosInternos'
@@ -123,7 +123,7 @@ const DashboardPage = () => {
   const configCard = {
     title: 'Config',
     description: 'Configurações do sistema e permissões',
-    icon: <SettingsOutlined sx={{ fontSize: '2rem' }} />,
+    icon: <SettingsOutlined sx={{ fontSize: '1.6rem' }} />,
     path: '/config',
     color: 'secondary',
     permission: 'config'
@@ -150,16 +150,21 @@ const DashboardPage = () => {
     <Container maxWidth="lg" sx={{ mt: 6, mb: 8, pb: 4 }}>
       {/* Primeira fileira: Artigos, Velonews, Bot Perguntas, Serviços */}
       {filteredFirstRowCards.length > 0 && (
-        <Grid container spacing={1.25} sx={{ mb: 4 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          flexWrap: 'wrap', 
+          gap: '20px', 
+          justifyContent: 'center',
+          mb: 2
+        }}>
           {filteredFirstRowCards.map((card) => (
-            <Grid item xs={12} sm={6} md={3} key={card.title}>
-              <DashboardCard 
-                {...card} 
-                onClick={() => handleCardClick(card.path)}
-              />
-            </Grid>
+            <DashboardCard 
+              key={card.title}
+              {...card} 
+              onClick={() => handleCardClick(card.path)}
+            />
           ))}
-        </Grid>
+        </Box>
       )}
 
       {/* Grid 2: Segunda fileira - 5 colunas extrapolando o container */}
@@ -168,56 +173,52 @@ const DashboardPage = () => {
           width: '100vw', 
           marginLeft: 'calc(-50vw + 50%)', 
           paddingX: '30px',
-          mb: 4,
+          mb: 2,
           display: 'flex',
           justifyContent: 'center'
         }}>
-          <Grid container spacing={1.25} sx={{ 
-            maxWidth: 'none',
+          <Box sx={{ 
+            display: 'flex', 
+            flexWrap: 'wrap', 
+            gap: '20px', 
             justifyContent: 'center',
             alignItems: 'center'
           }}>
             {filteredSecondRowCards.map((card) => (
-              <Grid item xs={12} sm={6} md={2.4} key={card.title} sx={{
-                display: 'flex',
-                justifyContent: 'center'
-              }}>
-                <DashboardCard 
-                  {...card} 
-                  onClick={() => handleCardClick(card.path)}
-                />
-              </Grid>
+              <DashboardCard 
+                key={card.title}
+                {...card} 
+                onClick={() => handleCardClick(card.path)}
+              />
             ))}
-          </Grid>
+          </Box>
         </Box>
       )}
 
       {/* Terceira fileira: Chamados Internos (posição 1) + Config (posição 4) */}
-      <Grid container spacing={1.25} sx={{ mb: 4 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        flexWrap: 'wrap', 
+        gap: '20px', 
+        justifyContent: 'center',
+        mb: 2
+      }}>
         {/* Posição 1: Chamados Internos */}
-        <Grid item xs={12} sm={6} md={3}>
-          {filteredThirdRowCards[0] && (
-            <DashboardCard 
-              {...filteredThirdRowCards[0]} 
-              onClick={() => handleCardClick(filteredThirdRowCards[0].path)}
-            />
-          )}
-        </Grid>
-        
-        {/* Posições 2 e 3: Vazias */}
-        <Grid item xs={12} sm={6} md={3} />
-        <Grid item xs={12} sm={6} md={3} />
+        {filteredThirdRowCards[0] && (
+          <DashboardCard 
+            {...filteredThirdRowCards[0]} 
+            onClick={() => handleCardClick(filteredThirdRowCards[0].path)}
+          />
+        )}
         
         {/* Posição 4: Config */}
-        <Grid item xs={12} sm={6} md={3}>
-          {hasConfigPermission && (
-            <DashboardCard 
-              {...configCard} 
-              onClick={() => handleCardClick(configCard.path)}
-            />
-          )}
-        </Grid>
-      </Grid>
+        {hasConfigPermission && (
+          <DashboardCard 
+            {...configCard} 
+            onClick={() => handleCardClick(configCard.path)}
+          />
+        )}
+      </Box>
 
       {/* Mensagem quando usuário não tem permissões */}
       {filteredFirstRowCards.length === 0 && filteredSecondRowCards.length === 0 && filteredThirdRowCards.length === 0 && (

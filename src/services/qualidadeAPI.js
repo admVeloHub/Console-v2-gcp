@@ -1,4 +1,4 @@
-// VERSION: v1.27.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.29.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 import { qualidadeFuncionariosAPI, qualidadeAvaliacoesAPI, qualidadeFuncoesAPI } from './api';
 import axios from 'axios';
@@ -401,13 +401,15 @@ export const addAvaliacao = async (avaliacaoData) => {
       nomeArquivo: avaliacaoData.nomeArquivo || '', // String
       saudacaoAdequada: Boolean(avaliacaoData.saudacaoAdequada), // Boolean
       escutaAtiva: Boolean(avaliacaoData.escutaAtiva), // Boolean
+      clarezaObjetividade: Boolean(avaliacaoData.clarezaObjetividade), // Boolean - NOVO
       resolucaoQuestao: Boolean(avaliacaoData.resolucaoQuestao), // Boolean
+      dominioAssunto: Boolean(avaliacaoData.dominioAssunto), // Boolean - NOVO
       empatiaCordialidade: Boolean(avaliacaoData.empatiaCordialidade), // Boolean
       direcionouPesquisa: Boolean(avaliacaoData.direcionouPesquisa), // Boolean
       procedimentoIncorreto: Boolean(avaliacaoData.procedimentoIncorreto), // Boolean
       encerramentoBrusco: Boolean(avaliacaoData.encerramentoBrusco), // Boolean
-      moderado: Boolean(avaliacaoData.moderado || false), // Boolean
-      observacoesModeracao: avaliacaoData.observacoesModeracao || '', // String
+      observacoes: avaliacaoData.observacoes || '', // String
+      dataLigacao: avaliacaoData.dataLigacao || '', // String
       pontuacaoTotal: 0, // Será calculado
       createdAt: new Date().toISOString(), // String ISO
       updatedAt: new Date().toISOString() // String ISO
@@ -416,24 +418,7 @@ export const addAvaliacao = async (avaliacaoData) => {
     // Calcular pontuação total
     novaAvaliacao.pontuacaoTotal = calcularPontuacaoTotal(novaAvaliacao);
     
-    console.log('🔍 DEBUG - Pontuação calculada:', novaAvaliacao.pontuacaoTotal);
-    console.log('🔍 DEBUG - Dados da avaliação sendo enviados:', novaAvaliacao);
-    console.log('🔍 DEBUG - Tipos dos campos:');
-    console.log('  - colaboradorNome:', typeof novaAvaliacao.colaboradorNome, novaAvaliacao.colaboradorNome);
-    console.log('  - avaliador:', typeof novaAvaliacao.avaliador, novaAvaliacao.avaliador);
-    console.log('  - mes:', typeof novaAvaliacao.mes, novaAvaliacao.mes);
-    console.log('  - ano:', typeof novaAvaliacao.ano, novaAvaliacao.ano);
-    console.log('  - dataAvaliacao:', typeof novaAvaliacao.dataAvaliacao, novaAvaliacao.dataAvaliacao);
-    console.log('🔍 DEBUG - Critérios de avaliação:');
-    console.log('  - saudacaoAdequada:', typeof novaAvaliacao.saudacaoAdequada, novaAvaliacao.saudacaoAdequada);
-    console.log('  - escutaAtiva:', typeof novaAvaliacao.escutaAtiva, novaAvaliacao.escutaAtiva);
-    console.log('  - resolucaoQuestao:', typeof novaAvaliacao.resolucaoQuestao, novaAvaliacao.resolucaoQuestao);
-    console.log('  - empatiaCordialidade:', typeof novaAvaliacao.empatiaCordialidade, novaAvaliacao.empatiaCordialidade);
-    console.log('  - direcionouPesquisa:', typeof novaAvaliacao.direcionouPesquisa, novaAvaliacao.direcionouPesquisa);
-    console.log('  - procedimentoIncorreto:', typeof novaAvaliacao.procedimentoIncorreto, novaAvaliacao.procedimentoIncorreto);
-    console.log('  - encerramentoBrusco:', typeof novaAvaliacao.encerramentoBrusco, novaAvaliacao.encerramentoBrusco);
-    
-    console.log('🔍 DEBUG - Enviando dados para API:', JSON.stringify(novaAvaliacao, null, 2));
+    console.log('🔍 DEBUG - Criando avaliação - Pontuação:', novaAvaliacao.pontuacaoTotal);
     
     const response = await qualidadeAvaliacoesAPI.create(novaAvaliacao);
     console.log(`✅ Avaliação adicionada via API: ${response._id}`);
@@ -448,21 +433,37 @@ export const addAvaliacao = async (avaliacaoData) => {
 // Atualizar avaliação
 export const updateAvaliacao = async (id, avaliacaoData) => {
   try {
+    // Garantir que os novos campos existam com valores padrão para compatibilidade
     const avaliacaoAtualizada = {
       ...avaliacaoData,
+      // Garantir compatibilidade com avaliações antigas que não têm os novos campos
+      clarezaObjetividade: avaliacaoData.clarezaObjetividade || false,
+      dominioAssunto: avaliacaoData.dominioAssunto || false,
+      // Garantir que campos obrigatórios existam
+      observacoes: avaliacaoData.observacoes || '',
+      dataLigacao: avaliacaoData.dataLigacao || '',
+      // Garantir que colaboradorNome esteja presente
+      colaboradorNome: avaliacaoData.colaboradorNome,
+      // Campos obrigatórios para atualização
+      _id: id,
       updatedAt: new Date().toISOString()
     };
+    
     
     // Calcular pontuação total
     avaliacaoAtualizada.pontuacaoTotal = calcularPontuacaoTotal(avaliacaoAtualizada);
     
-    console.log('🔍 DEBUG - Pontuação recalculada:', avaliacaoAtualizada.pontuacaoTotal);
+    console.log('🔍 DEBUG - Atualizando avaliação - Pontuação:', avaliacaoAtualizada.pontuacaoTotal);
+    console.log('🔍 DEBUG - Payload completo:', JSON.stringify(avaliacaoAtualizada, null, 2));
     
     const response = await qualidadeAvaliacoesAPI.update(id, avaliacaoAtualizada);
     console.log(`✅ Avaliação atualizada via API: ${response._id}`);
     return response;
   } catch (error) {
     console.error('❌ Erro ao atualizar avaliação via API:', error);
+    console.error('❌ Status:', error.response?.status);
+    console.error('❌ Dados do erro:', error.response?.data);
+    console.error('❌ Mensagem:', error.message);
     // Fallback para localStorage se API falhar
     return updateAvaliacaoLocalStorage(id, avaliacaoData);
   }

@@ -1,4 +1,4 @@
-// VERSION: v1.5.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.5.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 /**
  * @typedef {Object} Funcionario
@@ -54,7 +54,7 @@
 /**
  * @typedef {Object} Avaliacao
  * @property {string} id
- * @property {string} colaboradorId
+ * @property {string} colaboradorNome
  * @property {string} colaboradorNome
  * @property {string} avaliador
  * @property {string} mes
@@ -100,7 +100,7 @@
 
 /**
  * @typedef {Object} AvaliacaoFormData
- * @property {string} colaboradorId
+ * @property {string} colaboradorNome
  * @property {string} avaliador
  * @property {string} mes
  * @property {number} ano
@@ -117,7 +117,7 @@
 
 /**
  * @typedef {Object} RelatorioAgente
- * @property {string} colaboradorId
+ * @property {string} colaboradorNome
  * @property {string} colaboradorNome
  * @property {Avaliacao[]} avaliacoes
  * @property {number} mediaAvaliador
@@ -134,9 +134,9 @@
  * @property {number} ano
  * @property {number} totalAvaliacoes
  * @property {number} mediaGeral
- * @property {Array<{colaboradorId: string, colaboradorNome: string, nota: number, posicao: number}>} top3Melhores
- * @property {Array<{colaboradorId: string, colaboradorNome: string, nota: number, posicao: number}>} top3Piores
- * @property {Array<{colaboradorId: string, colaboradorNome: string, nota: number, posicao: number}>} colaboradores
+ * @property {Array<{colaboradorNome: string, colaboradorNome: string, nota: number, posicao: number}>} top3Melhores
+ * @property {Array<{colaboradorNome: string, colaboradorNome: string, nota: number, posicao: number}>} top3Piores
+ * @property {Array<{colaboradorNome: string, colaboradorNome: string, nota: number, posicao: number}>} colaboradores
  */
 
 /**
@@ -216,13 +216,13 @@ export const getStatusPontuacao = (pontuacao) => {
 
 /**
  * Busca avaliações por colaborador
- * @param {string} colaboradorId - ID do colaborador
+ * @param {string} colaboradorNome - ID do colaborador
  * @param {Array} avaliacoes - Array de todas as avaliações
  * @returns {Array} Avaliações do colaborador
  */
-export const getAvaliacoesPorColaborador = (colaboradorId, avaliacoes) => {
-  if (!colaboradorId || !Array.isArray(avaliacoes)) return [];
-  return avaliacoes.filter(a => a.colaboradorId === colaboradorId);
+export const getAvaliacoesPorColaborador = (colaboradorNome, avaliacoes) => {
+  if (!colaboradorNome || !Array.isArray(avaliacoes)) return [];
+  return avaliacoes.filter(a => a.colaboradorNome === colaboradorNome);
 };
 
 /**
@@ -239,13 +239,12 @@ export const getAvaliacoesPorMesAno = (mes, ano, avaliacoes) => {
 
 /**
  * Gera relatório individual do agente
- * @param {string} colaboradorId - ID do colaborador
  * @param {string} colaboradorNome - Nome do colaborador
  * @param {Array} avaliacoes - Array de avaliações do colaborador
  * @returns {Object|null} Relatório do agente ou null se não houver dados
  */
-export const gerarRelatorioAgente = (colaboradorId, colaboradorNome, avaliacoes) => {
-  if (!colaboradorId || !colaboradorNome || !Array.isArray(avaliacoes) || avaliacoes.length === 0) {
+export const gerarRelatorioAgente = (colaboradorNome, avaliacoes) => {
+  if (!colaboradorNome || !Array.isArray(avaliacoes) || avaliacoes.length === 0) {
     return null;
   }
 
@@ -310,7 +309,7 @@ export const gerarRelatorioAgente = (colaboradorId, colaboradorNome, avaliacoes)
   });
 
   return {
-    colaboradorId,
+    colaboradorNome,
     colaboradorNome,
     avaliacoes,
     mediaAvaliador: Math.round(mediaAvaliador * 100) / 100,
@@ -340,18 +339,18 @@ export const gerarRelatorioGestao = (mes, ano, avaliacoes) => {
   const colaboradoresMap = new Map();
   
   avaliacoesPeriodo.forEach(avaliacao => {
-    if (!colaboradoresMap.has(avaliacao.colaboradorId)) {
-      colaboradoresMap.set(avaliacao.colaboradorId, { 
+    if (!colaboradoresMap.has(avaliacao.colaboradorNome)) {
+      colaboradoresMap.set(avaliacao.colaboradorNome, { 
         notas: [], 
         nome: avaliacao.colaboradorNome 
       });
     }
-    colaboradoresMap.get(avaliacao.colaboradorId).notas.push(avaliacao.pontuacaoTotal || 0);
+    colaboradoresMap.get(avaliacao.colaboradorNome).notas.push(avaliacao.pontuacaoTotal || 0);
   });
 
   // Calcular médias por colaborador
   const colaboradores = Array.from(colaboradoresMap.entries()).map(([id, data]) => ({
-    colaboradorId: id,
+    colaboradorNome: id,
     colaboradorNome: data.nome,
     nota: Math.round((data.notas.reduce((a, b) => a + b, 0) / data.notas.length) * 100) / 100
   }));
