@@ -1,4 +1,4 @@
-// VERSION: v1.29.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.29.3 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 import { qualidadeFuncionariosAPI, qualidadeAvaliacoesAPI, qualidadeFuncoesAPI } from './api';
 import axios from 'axios';
@@ -437,17 +437,26 @@ export const addAvaliacao = async (avaliacaoData) => {
 // Atualizar avaliação
 export const updateAvaliacao = async (id, avaliacaoData) => {
   try {
-    // Garantir que os novos campos existam com valores padrão para compatibilidade
+    // Mapear dados conforme schema console_analises.qualidade_avaliacoes (igual à criação)
     const avaliacaoAtualizada = {
-      ...avaliacaoData,
-      // Garantir compatibilidade com avaliações antigas que não têm os novos campos
-      clarezaObjetividade: avaliacaoData.clarezaObjetividade || false,
-      dominioAssunto: avaliacaoData.dominioAssunto || false,
-      // Garantir que campos obrigatórios existam
-      observacoes: avaliacaoData.observacoes || '',
-      dataLigacao: avaliacaoData.dataLigacao || '',
-      // Garantir que colaboradorNome esteja presente
-      colaboradorNome: avaliacaoData.colaboradorNome,
+      colaboradorNome: avaliacaoData.colaboradorNome, // String
+      avaliador: avaliacaoData.avaliador, // String
+      mes: avaliacaoData.mes, // String
+      ano: Number(avaliacaoData.ano), // Number
+      dataAvaliacao: avaliacaoData.dataAvaliacao || new Date().toISOString(), // String ISO
+      arquivoLigacao: avaliacaoData.arquivoLigacao || '', // String
+      nomeArquivo: avaliacaoData.nomeArquivo || '', // String
+      saudacaoAdequada: Boolean(avaliacaoData.saudacaoAdequada), // Boolean
+      escutaAtiva: Boolean(avaliacaoData.escutaAtiva), // Boolean
+      clarezaObjetividade: Boolean(avaliacaoData.clarezaObjetividade), // Boolean
+      resolucaoQuestao: Boolean(avaliacaoData.resolucaoQuestao), // Boolean
+      dominioAssunto: Boolean(avaliacaoData.dominioAssunto), // Boolean
+      empatiaCordialidade: Boolean(avaliacaoData.empatiaCordialidade), // Boolean
+      direcionouPesquisa: Boolean(avaliacaoData.direcionouPesquisa), // Boolean
+      procedimentoIncorreto: Boolean(avaliacaoData.procedimentoIncorreto), // Boolean
+      encerramentoBrusco: Boolean(avaliacaoData.encerramentoBrusco), // Boolean
+      observacoes: avaliacaoData.observacoes || '', // String
+      dataLigacao: avaliacaoData.dataLigacao || '', // String
       // Campos obrigatórios para atualização
       _id: id,
       updatedAt: new Date().toISOString()
