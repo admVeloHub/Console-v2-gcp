@@ -1,4 +1,4 @@
-// VERSION: v3.7.6 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.8.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState } from 'react';
 import { 
   Container, 
@@ -10,13 +10,16 @@ import {
   Button, 
   Grid,
   Alert,
-  Snackbar
+  Snackbar,
+  Tabs,
+  Tab
 } from '@mui/material';
 import { Save, Add, SmartToy } from '@mui/icons-material';
 import { botPerguntasAPI } from '../services/api';
 import BackButton from '../components/common/BackButton';
 
 const BotPerguntasPage = () => {
+  const [activeTab, setActiveTab] = useState(0);
   const [formData, setFormData] = useState({
     keywords: '',        // Palavras-chave (movido para posição do tópico)
     sinonimos: '',       // Sinônimos (nova posição)
@@ -105,13 +108,14 @@ const BotPerguntasPage = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 8, pb: 4 }}>
-      <BackButton />
-      <Box sx={{ mb: 4 }}>
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 8, pb: 4 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', mb: 4 }}>
+        <Box sx={{ position: 'absolute', left: 0 }}>
+          <BackButton />
+        </Box>
         <Typography 
           variant="h4" 
-          component="h1" 
-          gutterBottom
+          component="h1"
           sx={{ 
             fontFamily: 'Poppins',
             fontWeight: 700,
@@ -120,16 +124,38 @@ const BotPerguntasPage = () => {
         >
           Bot Perguntas
         </Typography>
-        <Typography 
-          variant="subtitle1" 
-          color="text.secondary"
-          sx={{ fontFamily: 'Poppins' }}
-        >
-          Configurar perguntas e respostas do chatbot
-        </Typography>
       </Box>
 
-      <Card sx={{ backgroundColor: 'var(--cor-container)' }}>
+      {/* Tabs do Material-UI */}
+      <Box sx={{ 
+        borderBottom: 1, 
+        borderColor: 'divider',
+        mb: 3
+      }}>
+        <Tabs 
+          value={activeTab} 
+          onChange={(e, v) => setActiveTab(v)}
+          aria-label="bot perguntas tabs"
+          sx={{
+            '& .MuiTab-root': {
+              fontSize: '1.25rem',
+              fontWeight: 600,
+              textTransform: 'none',
+              minHeight: 48,
+              '&.Mui-selected': {
+                color: 'var(--blue-medium)',
+              }
+            }
+          }}
+        >
+          <Tab label="Adicionar Pergunta" />
+          <Tab label="Gerenciar Perguntas" />
+        </Tabs>
+      </Box>
+
+      {/* Tab 0: Adicionar Pergunta */}
+      {activeTab === 0 && (
+        <Card sx={{ backgroundColor: 'var(--cor-container)' }}>
         <CardContent>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
             <SmartToy sx={{ mr: 1, color: 'var(--blue-medium)' }} />
@@ -254,6 +280,21 @@ const BotPerguntasPage = () => {
           </form>
         </CardContent>
       </Card>
+      )}
+
+      {/* Tab 1: Gerenciar Perguntas */}
+      {activeTab === 1 && (
+        <Card sx={{ backgroundColor: 'var(--cor-container)' }}>
+          <CardContent>
+            <Typography variant="h6" sx={{ mb: 3, color: 'var(--blue-dark)', fontFamily: 'Poppins' }}>
+              Gerenciar Perguntas
+            </Typography>
+            <Typography variant="body1" sx={{ color: 'var(--gray)', fontFamily: 'Poppins' }}>
+              Funcionalidade de listagem e edição de perguntas será implementada aqui.
+            </Typography>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Snackbar para feedback */}
       <Snackbar

@@ -1,3 +1,4 @@
+// VERSION: v1.0.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -180,20 +181,20 @@ const ServicosPage = () => {
   return (
     <Container maxWidth="lg" sx={{ py: 4, pb: 8 }}>
       {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <BackButton />
-        <Typography variant="h4" component="h1" gutterBottom sx={{ 
-          color: 'var(--blue-dark)', 
-          fontWeight: 700,
-          fontFamily: 'Poppins, sans-serif'
-        }}>
-          Console de Serviços
-        </Typography>
-        <Typography variant="body1" color="text.secondary" sx={{ 
-          fontFamily: 'Poppins, sans-serif',
-          mb: 3
-        }}>
-          Controle o status dos serviços do VeloHub - Altere os status e clique em Salvar para aplicar as mudanças
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', mb: 4 }}>
+        <Box sx={{ position: 'absolute', left: 0 }}>
+          <BackButton />
+        </Box>
+        <Typography 
+          variant="h4" 
+          component="h1"
+          sx={{ 
+            fontFamily: 'Poppins',
+            fontWeight: 700,
+            color: 'var(--blue-dark)'
+          }}
+        >
+          Serviços
         </Typography>
       </Box>
 

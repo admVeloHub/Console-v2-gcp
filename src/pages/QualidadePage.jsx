@@ -1,4 +1,4 @@
-// VERSION: v1.2.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.2.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState } from 'react';
 import { Container, Box, Typography, Button, Card, CardContent } from '@mui/material';
 import { ArrowBack, Sync, People, Assessment } from '@mui/icons-material';
@@ -34,68 +34,59 @@ const QualidadePage = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 6, mb: 8, pb: 4, position: 'relative' }}>
-      {/* Botão Voltar - Canto esquerdo superior do dashboard */}
-      <Button
-        variant="outlined"
-        startIcon={<ArrowBack />}
-        onClick={() => navigate('/')}
-        sx={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          color: '#000058',
-          borderColor: '#000058',
-          fontFamily: 'Poppins',
-          fontWeight: 500,
-          '&:hover': {
-            backgroundColor: '#1694FF',
-            color: '#ffffff',
-            borderColor: '#1694FF'
-          }
-        }}
-      >
-        Voltar
-      </Button>
-
-      {/* Botão Sincronização - Canto superior direito */}
-      <Button
-        startIcon={<Sync />}
-        onClick={handleSync}
-        disabled={isSyncing}
-        sx={{
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          backgroundColor: '#000058',
-          color: '#ffffff',
-          fontFamily: 'Poppins',
-          fontWeight: 500,
-          '&:hover': {
-            backgroundColor: '#000040'
-          },
-          '&:disabled': {
-            backgroundColor: '#666666'
-          }
-        }}
-      >
-        {isSyncing ? 'Sincronizando...' : 'Sincronização'}
-      </Button>
-      
-      {/* Título centralizado na parte superior */}
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        mb: 6,
-        pt: 2
-      }}>
-        <Typography variant="h4" sx={{ 
-          fontFamily: 'Poppins', 
-          fontWeight: 700, 
-          color: '#000058',
-          textAlign: 'center'
-        }}>
-          Módulo de Qualidade
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', mb: 4 }}>
+        <Box sx={{ position: 'absolute', left: 0 }}>
+          <Button
+            variant="outlined"
+            startIcon={<ArrowBack />}
+            onClick={() => navigate('/')}
+            sx={{
+              color: '#000058',
+              borderColor: '#000058',
+              fontFamily: 'Poppins',
+              fontWeight: 500,
+              '&:hover': {
+                backgroundColor: '#1694FF',
+                color: '#ffffff',
+                borderColor: '#1694FF'
+              }
+            }}
+          >
+            Voltar
+          </Button>
+        </Box>
+        <Typography 
+          variant="h4" 
+          component="h1"
+          sx={{ 
+            fontFamily: 'Poppins',
+            fontWeight: 700,
+            color: 'var(--blue-dark)'
+          }}
+        >
+          Qualidade
         </Typography>
+        <Box sx={{ position: 'absolute', right: 0 }}>
+          <Button
+            startIcon={<Sync />}
+            onClick={handleSync}
+            disabled={isSyncing}
+            sx={{
+              backgroundColor: '#000058',
+              color: '#ffffff',
+              fontFamily: 'Poppins',
+              fontWeight: 500,
+              '&:hover': {
+                backgroundColor: '#000040'
+              },
+              '&:disabled': {
+                backgroundColor: '#666666'
+              }
+            }}
+          >
+            {isSyncing ? 'Sincronizando...' : 'Sincronização'}
+          </Button>
+        </Box>
       </Box>
 
       {/* Cards dos módulos */}

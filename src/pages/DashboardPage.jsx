@@ -1,4 +1,4 @@
-// VERSION: v3.8.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.9.9 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React from 'react';
 import { Container, Grid, Typography, Box, Card, CardContent } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
@@ -27,14 +27,14 @@ const DashboardPage = () => {
   console.log('🔍 DEBUG - É Gravina@DEV?', (user?.email === 'lucas.gravina@velotax.com.br' || user?._userMail === 'lucas.gravina@velotax.com.br'));
   console.log('🔍 DEBUG - Tem permissão servicos?', hasPermission('servicos'));
 
-  // Primeira fileira: Artigos, Velonews, Bot Perguntas, Serviços
+  // Primeira fileira: Artigos, Velonews, Bot Perguntas, Serviços (ESSENCIAL)
   const firstRowCards = [
     {
       title: 'Artigos',
       description: 'Criar e gerenciar artigos do sistema',
       icon: <ArticleOutlined sx={{ fontSize: '3.5rem' }} />,
       path: '/artigos',
-      color: 'secondary',
+      color: 'primary',
       permission: 'artigos'
     },
     {
@@ -42,7 +42,7 @@ const DashboardPage = () => {
       description: 'Publicar notícias e alertas',
       icon: <WarningAmberOutlined sx={{ fontSize: '3.5rem' }} />,
       path: '/velonews',
-      color: 'success',
+      color: 'primary',
       permission: 'velonews'
     },
     {
@@ -50,7 +50,7 @@ const DashboardPage = () => {
       description: 'Processos e Orientações',
       icon: <SmartToyOutlined sx={{ fontSize: '3.5rem' }} />,
       path: '/bot-perguntas',
-      color: 'warning',
+      color: 'primary',
       permission: 'botPerguntas'
     },
     {
@@ -58,19 +58,27 @@ const DashboardPage = () => {
       description: 'Serviços ativos no APP',
       icon: <EngineeringOutlined sx={{ fontSize: '3.5rem' }} />,
       path: '/servicos',
-      color: 'info',
+      color: 'primary',
       permission: 'servicos'
     }
   ];
 
-  // Segunda fileira: Bot Análises, IGP, Capacity, Qualidade
+  // Segunda fileira: Hub Análises, Bot Análises, IGP, Capacity, Qualidade (RECICLAGEM)
   const secondRowCards = [
+    {
+      title: 'Hub Análises',
+      description: 'Análises centralizadas do hub',
+      icon: <AnalyticsOutlined sx={{ fontSize: '3.5rem' }} />,
+      path: '/hub-analises',
+      color: 'success',
+      permission: 'hubAnalises'
+    },
     {
       title: 'Bot Análises',
       description: 'Análises e relatórios do bot',
       icon: <AnalyticsOutlined sx={{ fontSize: '3.5rem' }} />,
       path: '/bot-analises',
-      color: 'primary',
+      color: 'success',
       permission: 'botAnalises'
     },
     {
@@ -78,7 +86,7 @@ const DashboardPage = () => {
       description: 'Dashboard de métricas e relatórios',
       icon: <ShowChartOutlined sx={{ fontSize: '3.5rem' }} />,
       path: '/igp',
-      color: 'primary',
+      color: 'success',
       permission: 'igp'
     },
     {
@@ -86,7 +94,7 @@ const DashboardPage = () => {
       description: 'Monitoramento de capacidade e recursos',
       icon: <BoltOutlined sx={{ fontSize: '3.5rem' }} />,
       path: '/capacity',
-      color: 'info',
+      color: 'success',
       permission: 'capacity'
     },
     {
@@ -99,19 +107,19 @@ const DashboardPage = () => {
     }
   ];
 
-  // Terceira fileira: Chamados Internos (centralizado)
+  // Terceira fileira: Chamados Internos (OPCIONAL)
   const thirdRowCards = [
     {
       title: 'Chamados Internos',
       description: 'Sistema de tickets e suporte interno',
       icon: <ConfirmationNumberOutlined sx={{ fontSize: '3.5rem' }} />,
       path: '/chamados-internos',
-      color: 'error',
+      color: 'secondary',
       permission: 'chamadosInternos'
     }
   ];
 
-  // Card Config (posicionado no canto inferior direito)
+  // Card Config (OPCIONAL)
   const configCard = {
     title: 'Config',
     description: 'Configurações do sistema e permissões',
@@ -142,7 +150,7 @@ const DashboardPage = () => {
     <Container maxWidth="lg" sx={{ mt: 6, mb: 8, pb: 4 }}>
       {/* Primeira fileira: Artigos, Velonews, Bot Perguntas, Serviços */}
       {filteredFirstRowCards.length > 0 && (
-        <Grid container spacing={4} sx={{ mb: 4 }}>
+        <Grid container spacing={1.25} sx={{ mb: 4 }}>
           {filteredFirstRowCards.map((card) => (
             <Grid item xs={12} sm={6} md={3} key={card.title}>
               <DashboardCard 
@@ -154,51 +162,61 @@ const DashboardPage = () => {
         </Grid>
       )}
 
-      {/* Segunda fileira: Bot Análises, IGP, Capacity, Qualidade */}
+      {/* Grid 2: Segunda fileira - 5 colunas extrapolando o container */}
       {filteredSecondRowCards.length > 0 && (
-        <Grid container spacing={4} sx={{ mb: 4 }}>
-          {filteredSecondRowCards.map((card) => (
-            <Grid item xs={12} sm={6} md={3} key={card.title}>
-              <DashboardCard 
-                {...card} 
-                onClick={() => handleCardClick(card.path)}
-              />
-            </Grid>
-          ))}
-        </Grid>
-      )}
-
-      {/* Terceira fileira: Chamados Internos (centralizado) + Config (alinhado à direita) */}
-      <Grid container spacing={4} sx={{ mb: 4 }}>
-        {/* Chamados Internos - Centralizado */}
-        {filteredThirdRowCards.length > 0 && (
-          <Grid item xs={12} sm={6} md={3} sx={{ display: 'flex', justifyContent: 'center' }}>
-            <Box sx={{ width: '100%', maxWidth: '300px' }}>
-              {filteredThirdRowCards.map((card) => (
+        <Box sx={{ 
+          width: '100vw', 
+          marginLeft: 'calc(-50vw + 50%)', 
+          paddingX: '30px',
+          mb: 4,
+          display: 'flex',
+          justifyContent: 'center'
+        }}>
+          <Grid container spacing={1.25} sx={{ 
+            maxWidth: 'none',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}>
+            {filteredSecondRowCards.map((card) => (
+              <Grid item xs={12} sm={6} md={2.4} key={card.title} sx={{
+                display: 'flex',
+                justifyContent: 'center'
+              }}>
                 <DashboardCard 
-                  key={card.title}
                   {...card} 
                   onClick={() => handleCardClick(card.path)}
                 />
-              ))}
-            </Box>
+              </Grid>
+            ))}
           </Grid>
-        )}
+        </Box>
+      )}
+
+      {/* Terceira fileira: Chamados Internos (posição 1) + Config (posição 4) */}
+      <Grid container spacing={1.25} sx={{ mb: 4 }}>
+        {/* Posição 1: Chamados Internos */}
+        <Grid item xs={12} sm={6} md={3}>
+          {filteredThirdRowCards[0] && (
+            <DashboardCard 
+              {...filteredThirdRowCards[0]} 
+              onClick={() => handleCardClick(filteredThirdRowCards[0].path)}
+            />
+          )}
+        </Grid>
         
-        {/* Espaço vazio para centralizar Chamados */}
-        {filteredThirdRowCards.length > 0 && (
-          <Grid item xs={12} sm={6} md={6} />
-        )}
+        {/* Posições 2 e 3: Vazias */}
+        <Grid item xs={12} sm={6} md={3} />
+        <Grid item xs={12} sm={6} md={3} />
         
-        {/* Config - Alinhado à direita */}
-        {hasConfigPermission && (
-          <Grid item xs={12} sm={6} md={3}>
+        {/* Posição 4: Config */}
+        <Grid item xs={12} sm={6} md={3}>
+          {hasConfigPermission && (
             <DashboardCard 
               {...configCard} 
               onClick={() => handleCardClick(configCard.path)}
             />
-          </Grid>
-        )}
+          )}
+        </Grid>
       </Grid>
 
       {/* Mensagem quando usuário não tem permissões */}

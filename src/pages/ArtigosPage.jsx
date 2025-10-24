@@ -1,4 +1,4 @@
-// VERSION: v3.1.7 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.1.8 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useMemo, useCallback } from 'react';
 import { 
   Container, 
@@ -106,8 +106,23 @@ const ArtigosPage = () => {
 
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4, mb: 8, pb: 4 }}>
-      <BackButton />
+    <Container maxWidth="xl" sx={{ py: 4, mb: 8, pb: 4 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', mb: 4 }}>
+        <Box sx={{ position: 'absolute', left: 0 }}>
+          <BackButton />
+        </Box>
+        <Typography 
+          variant="h4" 
+          component="h1"
+          sx={{ 
+            fontFamily: 'Poppins',
+            fontWeight: 700,
+            color: 'var(--blue-dark)'
+          }}
+        >
+          Artigos
+        </Typography>
+      </Box>
       
       {/* Tabs do Material-UI */}
       <Box sx={{ 

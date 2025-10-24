@@ -1,4 +1,4 @@
-// VERSION: v3.1.10 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.1.11 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 
@@ -272,13 +272,13 @@ const ChamadosInternosPage = () => {
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 8, pb: 4 }}>
-      <BackButton />
-      
-      <Box sx={{ mb: 4 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', mb: 4 }}>
+        <Box sx={{ position: 'absolute', left: 0 }}>
+          <BackButton />
+        </Box>
         <Typography 
           variant="h4" 
-          component="h1" 
-          gutterBottom
+          component="h1"
           sx={{ 
             fontFamily: 'Poppins',
             fontWeight: 700,

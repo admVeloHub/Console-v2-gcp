@@ -1,4 +1,4 @@
-// VERSION: v3.5.4 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.6.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React from 'react';
 import { Card, CardContent, Typography, Box, IconButton } from '@mui/material';
 import { ArrowForward } from '@mui/icons-material';
@@ -7,22 +7,13 @@ const DashboardCard = ({ title, description, icon, color, onClick }) => {
   const getArrowGradient = (color) => {
     switch (color) {
       case 'primary':
-        // IGP - Gradiente Azul Médio → Azul Claro (ESSENCIAL)
+        // ESSENCIAL - Gradiente Azul Médio → Azul Claro
         return 'linear-gradient(135deg, var(--blue-medium) 0%, var(--blue-medium) 60%, var(--blue-light) 100%)';
-      case 'secondary':
-        // Artigos/Config - Gradiente Azul Escuro → Azul Opaco (OPCIONAL)
-        return 'linear-gradient(135deg, var(--blue-dark) 0%, var(--blue-dark) 60%, var(--blue-opaque) 100%)';
       case 'success':
-        // Velonews/Qualidade - Gradiente Amarelo → Azul Médio (RECICLAGEM)
+        // RECICLAGEM - Gradiente Amarelo → Azul Médio
         return 'linear-gradient(135deg, var(--yellow) 0%, var(--yellow) 60%, var(--blue-medium) 100%)';
-      case 'warning':
-        // Bot Perguntas - Gradiente Azul Escuro → Amarelo (ATUALIZAÇÃO)
-        return 'linear-gradient(135deg, var(--blue-dark) 0%, var(--blue-dark) 60%, var(--yellow) 100%)';
-      case 'info':
-        // Capacity - Gradiente Azul Médio → Azul Claro (ESSENCIAL)
-        return 'linear-gradient(135deg, var(--blue-medium) 0%, var(--blue-medium) 60%, var(--blue-light) 100%)';
-      case 'error':
-        // Chamados Internos - Gradiente Azul Escuro → Azul Opaco (OPCIONAL)
+      case 'secondary':
+        // OPCIONAL - Gradiente Azul Escuro → Azul Opaco
         return 'linear-gradient(135deg, var(--blue-dark) 0%, var(--blue-dark) 60%, var(--blue-opaque) 100%)';
       default:
         return 'linear-gradient(135deg, var(--blue-medium) 0%, var(--blue-medium) 60%, var(--blue-light) 100%)';
@@ -34,6 +25,7 @@ const DashboardCard = ({ title, description, icon, color, onClick }) => {
       className="velohub-card"
       sx={{
         height: '220px', // Altura aumentada para melhor proporção
+        width: '85%', // Redução de 15% na largura
         display: 'flex',
         flexDirection: 'column',
         cursor: 'pointer',

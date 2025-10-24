@@ -1,4 +1,4 @@
-// VERSION: v3.5.4 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.6.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { AppBar, Toolbar, Typography, IconButton, Box, Menu, MenuItem, Avatar, Chip } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -62,7 +62,7 @@ const Header = () => {
           alt="VeloHub Logo"
           onClick={() => navigate('/')}
           sx={{
-            height: 40,
+            height: 44,
             width: 'auto',
             cursor: 'pointer',
             mr: 2,
@@ -91,7 +91,7 @@ const Header = () => {
               whiteSpace: 'nowrap'
             }}
           >
-            Console de Conteúdo VeloHub
+            Console de Gestão Velohub
           </Typography>
         </Box>
         

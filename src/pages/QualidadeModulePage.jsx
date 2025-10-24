@@ -68,7 +68,7 @@ import {
 } from '../services/qualidadeAPI';
 import { exportAvaliacoesToExcel, exportAvaliacoesToPDF } from '../services/qualidadeExport';
 import { analyzeCallWithGPT } from '../services/gptService';
-import { getAvaliadoresValidos } from '../services/qualidadeAPI';
+import { getAvaliadoresValidos } from '../services/userService';
 import { 
   MESES, 
   ANOS, 

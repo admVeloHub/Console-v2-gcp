@@ -1,4 +1,4 @@
-// VERSION: v2.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v2.0.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react'
 import { Container, Tabs, Tab, Box, CircularProgress, Alert, Typography, Button, ButtonGroup } from '@mui/material'
 import { useAuth } from '../contexts/AuthContext'
@@ -111,7 +111,22 @@ const IGPPage = () => {
   
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 8, pb: 4 }}>
-      <BackButton />
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', mb: 4 }}>
+        <Box sx={{ position: 'absolute', left: 0 }}>
+          <BackButton />
+        </Box>
+        <Typography 
+          variant="h4" 
+          component="h1"
+          sx={{ 
+            fontFamily: 'Poppins',
+            fontWeight: 700,
+            color: 'var(--blue-dark)'
+          }}
+        >
+          IGP
+        </Typography>
+      </Box>
       
       {/* Tabs e Botões de Fonte de Dados */}
       <Box sx={{

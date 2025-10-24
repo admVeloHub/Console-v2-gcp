@@ -179,51 +179,7 @@ export const deleteFuncionario = async (id) => {
 };
 
 // ===== AVALIADORES =====
-
-// Obter lista de avaliadores válidos
-export const getAvaliadoresValidos = async () => {
-  try {
-    // Buscar usuários que são avaliadores (função admin/gestão + flag avaliador)
-    const users = await getAllAuthorizedUsers();
-    console.log('🔍 DEBUG - Total de usuários encontrados:', users.length);
-    
-    // Filtrar usuários que são avaliadores
-    const avaliadores = users.filter(user => {
-      console.log(`🔍 DEBUG - Analisando usuário: ${user._userMail || user.email}`);
-      console.log(`🔍 DEBUG - Função: ${user._userRole}`);
-      console.log(`🔍 DEBUG - Funções administrativas:`, user._funcoesAdministrativas);
-      
-      // Verificar se tem função de administrador ou gestão (case insensitive)
-      const userRole = user._userRole?.toLowerCase();
-      const isAdminOuGestao = userRole === 'administrador' || userRole === 'gestão' || userRole === 'gestao';
-      console.log(`🔍 DEBUG - É admin/gestão? ${isAdminOuGestao}`);
-      
-      // Verificar se tem flag de avaliador
-      const isAvaliador = user._funcoesAdministrativas && user._funcoesAdministrativas.avaliador === true;
-      console.log(`🔍 DEBUG - É avaliador? ${isAvaliador}`);
-      
-      const isValid = isAdminOuGestao && isAvaliador;
-      console.log(`🔍 DEBUG - É avaliador válido? ${isValid}`);
-      
-      return isValid;
-    });
-    
-    console.log('🔍 DEBUG - Avaliadores filtrados:', avaliadores);
-    
-    // Retornar apenas os nomes dos avaliadores
-    const nomesAvaliadores = avaliadores.map(user => {
-      const nome = user._userId || user._userMail;
-      console.log(`🔍 DEBUG - Mapeando usuário ${user._userMail} para nome: ${nome}`);
-      return nome;
-    });
-    
-    console.log(`📊 Avaliadores válidos carregados: ${nomesAvaliadores.length}`);
-    return nomesAvaliadores;
-  } catch (error) {
-    console.error('❌ Erro ao carregar avaliadores:', error);
-    return [];
-  }
-};
+// Função removida - usar getAvaliadoresValidos de userService.js
 
 // ===== FALLBACK PARA LOCALSTORAGE =====
 

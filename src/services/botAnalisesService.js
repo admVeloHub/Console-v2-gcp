@@ -1,4 +1,4 @@
-// VERSION: v3.1.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.2.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 // Configuração da API
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://back-console.vercel.app/api';
@@ -217,59 +217,88 @@ class BotAnalisesService {
 
   // Calcular dados do gráfico a partir das atividades
   calcularDadosGrafico(atividades, exibicao, periodoFiltro = null) {
-    // Filtrar apenas perguntas
+    // Filtrar perguntas e feedbacks
     let perguntas = atividades.filter(item => item.action === 'question_asked');
+    let feedbacksPositivos = atividades.filter(item => 
+      item.action === 'feedback_given' && 
+      item.details?.feedbackType === 'positive'
+    );
+    let feedbacksNegativos = atividades.filter(item => 
+      item.action === 'feedback_given' && 
+      item.details?.feedbackType === 'negative'
+    );
     
     // Se periodoFiltro fornecido, filtrar pelos últimos N dias com dados
     if (periodoFiltro) {
       const diasPeriodo = this.obterDiasDoPeriodo(periodoFiltro);
       
-      // Ordenar atividades por data (mais recente primeiro)
-      perguntas.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      
-      // Pegar data da atividade mais recente
-      if (perguntas.length > 0) {
-        const dataUltimaAtividade = new Date(perguntas[0].createdAt);
+      // Função auxiliar para filtrar por período
+      const filtrarPorPeriodo = (listaAtividades) => {
+        if (listaAtividades.length === 0) return [];
+        
+        // Ordenar atividades por data (mais recente primeiro)
+        const atividadesOrdenadas = [...listaAtividades].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        
+        // Pegar data da atividade mais recente
+        const dataUltimaAtividade = new Date(atividadesOrdenadas[0].createdAt);
         const dataLimite = new Date(dataUltimaAtividade.getTime() - (diasPeriodo * 24 * 60 * 60 * 1000));
         
         // Filtrar apenas atividades dentro do período
-        perguntas = perguntas.filter(item => {
+        return atividadesOrdenadas.filter(item => {
           const dataAtividade = new Date(item.createdAt);
           return dataAtividade >= dataLimite;
         });
-      }
+      };
+      
+      perguntas = filtrarPorPeriodo(perguntas);
+      feedbacksPositivos = filtrarPorPeriodo(feedbacksPositivos);
+      feedbacksNegativos = filtrarPorPeriodo(feedbacksNegativos);
     }
 
-    // Agrupar por período baseado na exibição
-    const totalUso = {};
-    
-    perguntas.forEach(item => {
-      const data = new Date(item.createdAt);
-      let chave;
-
+    // Função auxiliar para obter chave do período
+    const obterChavePeriodo = (data) => {
       switch (exibicao) {
         case 'dia':
-          chave = data.toISOString().split('T')[0]; // YYYY-MM-DD
-          break;
+          return data.toISOString().split('T')[0]; // YYYY-MM-DD
         case 'semana':
           const inicioSemana = new Date(data);
           inicioSemana.setDate(data.getDate() - data.getDay());
-          chave = inicioSemana.toISOString().split('T')[0];
-          break;
+          return inicioSemana.toISOString().split('T')[0];
         case 'mes':
-          chave = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
-          break;
+          return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
         default:
-          chave = data.toISOString().split('T')[0];
+          return data.toISOString().split('T')[0];
       }
+    };
 
+    // Agrupar perguntas por período
+    const totalUso = {};
+    perguntas.forEach(item => {
+      const data = new Date(item.createdAt);
+      const chave = obterChavePeriodo(data);
       totalUso[chave] = (totalUso[chave] || 0) + 1;
+    });
+
+    // Agrupar feedbacks positivos por período
+    const feedbacksPositivosAgrupados = {};
+    feedbacksPositivos.forEach(item => {
+      const data = new Date(item.createdAt);
+      const chave = obterChavePeriodo(data);
+      feedbacksPositivosAgrupados[chave] = (feedbacksPositivosAgrupados[chave] || 0) + 1;
+    });
+
+    // Agrupar feedbacks negativos por período
+    const feedbacksNegativosAgrupados = {};
+    feedbacksNegativos.forEach(item => {
+      const data = new Date(item.createdAt);
+      const chave = obterChavePeriodo(data);
+      feedbacksNegativosAgrupados[chave] = (feedbacksNegativosAgrupados[chave] || 0) + 1;
     });
 
     return {
       totalUso,
-      feedbacksPositivos: {}, // Não usado nesta aba ainda
-      feedbacksNegativos: {}  // Não usado nesta aba ainda
+      feedbacksPositivos: feedbacksPositivosAgrupados,
+      feedbacksNegativos: feedbacksNegativosAgrupados
     };
   }
 
@@ -340,8 +369,7 @@ class BotAnalisesService {
         sessoes: data.sessoes.size,
         score: data.perguntas + (data.sessoes.size * 0.5)
       }))
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 10); // Top 10
+      .sort((a, b) => b.score - a.score);
 
     return ranking;
   }

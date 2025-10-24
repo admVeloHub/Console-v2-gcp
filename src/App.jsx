@@ -30,6 +30,8 @@ import FuncionariosPage from './pages/FuncionariosPage';
 import QualidadeModulePage from './pages/QualidadeModulePage';
 import ServicosPage from './pages/ServicosPage';
 import BotAnalisesPage from './pages/BotAnalisesPage';
+import CapacityPage from './pages/CapacityPage';
+import HubAnalisesPage from './pages/HubAnalisesPage';
 
 // Componente para rotas protegidas
 const ProtectedRoute = ({ children, requiredPermission }) => {
@@ -144,6 +146,16 @@ const AppContent = () => {
             <BotAnalisesPage />
           </ProtectedRoute>
         } />
+            <Route path="/capacity" element={
+              <ProtectedRoute requiredPermission="capacity">
+                <CapacityPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/hub-analises" element={
+              <ProtectedRoute requiredPermission="hubAnalises">
+                <HubAnalisesPage />
+              </ProtectedRoute>
+            } />
         <Route path="/login" element={<Navigate to="/" replace />} />
       </Routes>
       <Footer />

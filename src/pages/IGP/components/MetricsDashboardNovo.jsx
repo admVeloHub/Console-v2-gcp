@@ -1,3 +1,4 @@
+// VERSION: v1.0.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { memo, useState, useMemo } from 'react'
 import './MetricsDashboard.css'
 import TendenciaSemanalChart from './TendenciaSemanalChart2'
@@ -27,17 +28,17 @@ const MetricsDashboard = memo(({ metrics = {}, rankings = [], octaData = null, d
         <div className="indicator-card">
           <i className='bx bx-phone-call indicator-icon'></i>
           <div className="indicator-label">Total de Chamadas</div>
-          <div className="indicator-value">{(metrics.totalCalls || 0).toLocaleString('pt-BR')}</div>
+          <div className="indicator-value">{(metrics?.totalCalls || 0).toLocaleString('pt-BR')}</div>
         </div>
         <div className="indicator-card">
           <i className='bx bx-time-five indicator-icon'></i>
           <div className="indicator-label">TMA Geral</div>
-          <div className="indicator-value">{metrics.duracaoMediaAtendimento || '0.0'} min</div>
+          <div className="indicator-value">{metrics?.duracaoMediaAtendimento || '0.0'} min</div>
         </div>
         <div className="indicator-card">
           <i className='bx bx-check-circle indicator-icon'></i>
           <div className="indicator-label">Taxa de Atendimento</div>
-          <div className="indicator-value">{((metrics.atendida / metrics.totalCalls * 100) || 0).toFixed(1)}%</div>
+          <div className="indicator-value">{((metrics?.atendida / metrics?.totalCalls * 100) || 0).toFixed(1)}%</div>
         </div>
       </div>
 

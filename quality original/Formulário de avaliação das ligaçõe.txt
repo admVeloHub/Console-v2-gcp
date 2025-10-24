@@ -1,0 +1,52 @@
+Agora que temos a base de funcionários, vamos adicionar no sistem o módulo de qualidade, onde este módulo de ter:
+
+1) colaborador - a lista deve ser da base de funcionários, respeitando o status onde deve ser permitido somente o status " Ativo" 
+2) Avaliador - campo aberto para digitação
+3) Mês - deve ter a lista dos meses de Janeiro a Dezembro
+4) Ano - deve ter a lista dos anos de 2025 a 2028
+
+Formulário de avaliação das ligações de conter, respeitando as pontuações informadas:
+
+1) Saudação Adequada
+>> O colaborador saudou o cliente corretamente, utilizando o script estabelecido.
+
+"Checkbox" SIM (+ 10 pontos) NÃO (0 pontos) 
+
+2) Escuta Ativa / Sondagem
+>> O colaborador demonstrou atenção, não interrompeu e soube dialogar com o cliente.
+"Checkbox" SIM (+ 25 pontos) NÃO (0 pontos) 
+
+3) Resolução Questão / Seguiu o procedimento
+>> A questão do cliente foi resolvida na primeira interação ou o encaminhamento foi correto.
+"Checkbox" SIM (+ 40 pontos) NÃO (0 pontos) 
+
+4) Empatia / Cordialidade
+>> O colaborador manteve a conduta cordial e empática durante o atendimento, sem ríspidez ou agressividade.
+"Checkbox" SIM (+ 15 pontos) NÃO (0 pontos) 
+
+5) Direcionou para pesquisa de satisfação 
+>> O colaborador direcionou o cliente para a pesquisa de satisfação.    
+"Checkbox" SIM (+ 10 pontos) NÃO (0 pontos) 
+
+6) Colaborador repassou um procedimento incorreto
+>> O colaborador repassou ou informou um procedimento indevido, que não resolve a questão do cliente ou que está fora dos procedimentos internos estabelecidos.
+"Checkbox" SIM (- 60 pontos) NÃO (0 pontos) 
+
+7) Colaborador encerrou o contato de forma brusca / Derrubou a ligação
+>> O colaborador encerrou o contato durante a ligação, sem motivos justificáveis (chamada muda, cliente usando palavras de baixo calão, etc.)
+"Checkbox" SIM (- 100 pontos) NÃO (0 pontos) 
+
+
+Inserir um campo para upload do arquivo da ligação monitorada, suportando os formatos mais comuns e, se possível, com capacidade máxima de 1gb cada arquivo. Caso não seja possível, inserir um link para converter o arquivo .wav para .mp3
+
+Inserir uma chamada da API do GPT com nome de "Agente GPT" para que o mesmo possa analisar a ligação e avaliar seguindo os procedimentos que constam disponíveis no link: https://sites.google.com/velotax.com.br/ca-modcod2?usp=sharing na aba "Central de Artigos". Ainda neste campo, para cada resultado da análise do GPT, preciso que tenha um módulo para moderação da avaliação do GPT, assim o ensinamento dele será constante e, após um tempo, ele fará todo este processo de monitoria sozinho, sob a supervisão do agende de monitoria. 
+
+Inserir um módulo de Relatório do agente para que possamos usar para feedback com os agentes, onde deve constar a avaliação do "Avaliador" e a avaliação do "Agente GPT". Deve constar também o histórico de notas por avaliação, comparativo de notas por avaliação e o comparativo da nota do agente quando comparado com a média de toda a equipe. 
+
+Inserir um módulo de Relatório da Gestão onde deveremos ver todas as notas de todos os colaboradores, com comparativos mensais, nota da média do Mês, os 3 melhores analistas do mês, os 3 piores analistas do mês, sempre considerando a nota do "Avaliador". 
+
+Todas as informações registradas neste sistema devem ser armazenadas para que não ocorre perda de dados. Por segurança, gostaria de rodar localmente um backup todos os dias a noite. 
+
+Peço que sugira um melhor layout para uma melhor UX para todos estes campos e informações. 
+
+

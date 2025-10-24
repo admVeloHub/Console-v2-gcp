@@ -1,4 +1,4 @@
-// VERSION: v3.1.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.2.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState } from 'react';
 import { 
   Container, 
@@ -12,13 +12,16 @@ import {
   FormControlLabel,
   Checkbox,
   Alert,
-  Snackbar
+  Snackbar,
+  Tabs,
+  Tab
 } from '@mui/material';
 import { Save, Add, Warning } from '@mui/icons-material';
 import { velonewsAPI } from '../services/api';
 import BackButton from '../components/common/BackButton';
 
 const VelonewsPage = () => {
+  const [activeTab, setActiveTab] = useState(0);
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -87,13 +90,14 @@ const VelonewsPage = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 8, pb: 4 }}>
-      <BackButton />
-      <Box sx={{ mb: 4 }}>
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 8, pb: 4 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', mb: 4 }}>
+        <Box sx={{ position: 'absolute', left: 0 }}>
+          <BackButton />
+        </Box>
         <Typography 
           variant="h4" 
-          component="h1" 
-          gutterBottom
+          component="h1"
           sx={{ 
             fontFamily: 'Poppins',
             fontWeight: 700,
@@ -102,16 +106,39 @@ const VelonewsPage = () => {
         >
           Velonews
         </Typography>
-        <Typography 
-          variant="subtitle1" 
-          color="text.secondary"
-          sx={{ fontFamily: 'Poppins' }}
-        >
-          Publicar notícias e alertas do sistema
-        </Typography>
       </Box>
 
-      {formData.isCritical && (
+      {/* Tabs do Material-UI */}
+      <Box sx={{ 
+        borderBottom: 1, 
+        borderColor: 'divider',
+        mb: 3
+      }}>
+        <Tabs 
+          value={activeTab} 
+          onChange={(e, v) => setActiveTab(v)}
+          aria-label="velonews tabs"
+          sx={{
+            '& .MuiTab-root': {
+              fontSize: '1.25rem',
+              fontWeight: 600,
+              textTransform: 'none',
+              minHeight: 48,
+              '&.Mui-selected': {
+                color: 'var(--blue-medium)',
+              }
+            }
+          }}
+        >
+          <Tab label="Publicar Notícia" />
+          <Tab label="Localizar Notícias" />
+        </Tabs>
+      </Box>
+
+      {/* Tab 0: Publicar Notícia */}
+      {activeTab === 0 && (
+        <>
+          {formData.isCritical && (
         <Alert 
           severity="warning" 
           icon={<Warning />}
@@ -235,6 +262,22 @@ const VelonewsPage = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+        </>
+      )}
+
+      {/* Tab 1: Localizar Notícias */}
+      {activeTab === 1 && (
+        <Card sx={{ backgroundColor: 'var(--cor-container)' }}>
+          <CardContent>
+            <Typography variant="h6" sx={{ mb: 3, color: 'var(--blue-dark)', fontFamily: 'Poppins' }}>
+              Localizar Notícias
+            </Typography>
+            <Typography variant="body1" sx={{ color: 'var(--gray)', fontFamily: 'Poppins' }}>
+              Funcionalidade de busca e listagem de notícias será implementada aqui.
+            </Typography>
+          </CardContent>
+        </Card>
+      )}
     </Container>
   );
 };

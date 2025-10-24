@@ -1,8 +1,8 @@
-// VERSION: v2.5.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v2.10.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useCallback, useEffect } from 'react';
 import { Typography, Box, Tabs, Tab, Container, Grid, Card, CardContent, FormControl, InputLabel, Select, MenuItem, Button } from '@mui/material';
-import { QuestionAnswer, People, Schedule, TrendingUp, TrendingDown, DateRange, BarChart, Timeline, PieChart as PieChartIcon, ShowChart, Person, FileDownload, PictureAsPdf } from '@mui/icons-material';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { QuestionAnswer, People, Schedule, TrendingUp, TrendingDown, DateRange, Timeline, PieChart as PieChartIcon, ShowChart, Person, FileDownload, PictureAsPdf, ListAlt, EmojiEvents, Analytics, Psychology, Refresh, Search } from '@mui/icons-material';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -33,6 +33,30 @@ const BotAnalisesPage = () => {
   const [listaAtividades, setListaAtividades] = useState([]);
   const [analisesEspecificas, setAnalisesEspecificas] = useState({});
   const [filtroUsuario, setFiltroUsuario] = useState('todos');
+
+  // Função para processar dados do gráfico de perguntas (top 5 + outras)
+  const processarDadosGraficoPerguntas = useCallback((dados) => {
+    if (!dados || dados.length === 0) return [];
+    
+    // Pegar top 5
+    const top5 = dados.slice(0, 5);
+    
+    // Calcular total de todas as perguntas
+    const totalGeral = dados.reduce((sum, item) => sum + item.value, 0);
+    
+    // Calcular total das top 5
+    const totalTop5 = top5.reduce((sum, item) => sum + item.value, 0);
+    
+    // Calcular outras
+    const outras = totalGeral - totalTop5;
+    
+    // Se houver outras perguntas além das top 5, adicionar categoria "Outras"
+    if (outras > 0 && dados.length > 5) {
+      return [...top5, { name: 'Outras', value: outras }];
+    }
+    
+    return top5;
+  }, []);
 
   const handleTabChange = useCallback((event, newValue) => {
     setActiveTab(newValue);
@@ -612,22 +636,23 @@ const BotAnalisesPage = () => {
 
 
   return (
-    <>
-      <BackButton />
-      
-      <Typography 
-        variant="h3" 
-        component="h1"
-        sx={{ 
-          fontFamily: 'Poppins', 
-          fontWeight: 600, 
-          color: 'var(--blue-dark)',
-          textAlign: 'center',
-          mt: -5
-        }}
-      >
-        Bot Análises
-      </Typography>
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 8, pb: 4 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', mb: 4 }}>
+        <Box sx={{ position: 'absolute', left: 0 }}>
+          <BackButton />
+        </Box>
+        <Typography 
+          variant="h4" 
+          component="h1"
+          sx={{ 
+            fontFamily: 'Poppins',
+            fontWeight: 700,
+            color: 'var(--blue-dark)'
+          }}
+        >
+          Bot Análises
+        </Typography>
+      </Box>
 
       {/* Tabs do Material-UI com Botões de Exportação */}
       <Box sx={{ 
@@ -1119,40 +1144,51 @@ const BotAnalisesPage = () => {
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart 
                           data={(() => {
-                            // Combinar dados de todos os períodos
-                            const todosPeriodos = new Set([
-                              ...Object.keys(dadosGrafico.totalUso),
-                              ...Object.keys(dadosGrafico.feedbacksPositivos),
-                              ...Object.keys(dadosGrafico.feedbacksNegativos)
-                            ]);
+                            // GARANTIA 100%: Usar apenas períodos com dados reais válidos
+                            const periodosComDados = Object.keys(dadosGrafico.totalUso)
+                              .filter(periodo => {
+                                // VALIDAÇÃO TRIPLA - só incluir se tiver dados reais
+                                const temPerguntas = dadosGrafico.totalUso[periodo] > 0;
+                                const temFeedbacksPos = dadosGrafico.feedbacksPositivos[periodo] > 0;
+                                const temFeedbacksNeg = dadosGrafico.feedbacksNegativos[periodo] > 0;
+                                
+                                // Só incluir se tiver pelo menos um tipo de atividade real
+                                return temPerguntas || temFeedbacksPos || temFeedbacksNeg;
+                              })
+                              .sort((a, b) => {
+                                const dateA = new Date(a);
+                                const dateB = new Date(b);
+                                return dateA - dateB; // Ordem cronológica crescente
+                              })
+                              .map(periodo => {
+                                // Formatar data para exibição mantendo identificação única
+                                let dataFormatada;
+                                if (periodo.includes('-')) {
+                                  const data = new Date(periodo);
+                                  // Formato: DD/MM/YY para economizar espaço mas manter identificação
+                                  dataFormatada = data.toLocaleDateString('pt-BR', { 
+                                    day: '2-digit', 
+                                    month: '2-digit', 
+                                    year: '2-digit' 
+                                  });
+                                } else {
+                                  dataFormatada = periodo;
+                                }
+                                
+                                return {
+                                  periodo: dataFormatada,
+                                  periodoOriginal: periodo, // Manter referência original
+                                  totalUso: dadosGrafico.totalUso[periodo] || undefined, // SEM || 0 - apenas valores reais
+                                  feedbacksPositivos: dadosGrafico.feedbacksPositivos[periodo] || undefined, // SEM || 0
+                                  feedbacksNegativos: dadosGrafico.feedbacksNegativos[periodo] || undefined // SEM || 0
+                                };
+                              })
+                              .filter(item => {
+                                // FILTRO FINAL DE SEGURANÇA - só incluir se tiver pelo menos um valor real
+                                return (item.totalUso > 0) || (item.feedbacksPositivos > 0) || (item.feedbacksNegativos > 0);
+                              });
                             
-                            return Array.from(todosPeriodos).sort((a, b) => {
-                              const dateA = new Date(a);
-                              const dateB = new Date(b);
-                              return dateA - dateB; // Ordem cronológica crescente
-                            }).map(periodo => {
-                              // Formatar data para exibição mantendo identificação única
-                              let dataFormatada;
-                              if (periodo.includes('-')) {
-                                const data = new Date(periodo);
-                                // Formato: DD/MM/YY para economizar espaço mas manter identificação
-                                dataFormatada = data.toLocaleDateString('pt-BR', { 
-                                  day: '2-digit', 
-                                  month: '2-digit', 
-                                  year: '2-digit' 
-                                });
-                              } else {
-                                dataFormatada = periodo;
-                              }
-                              
-                              return {
-                                periodo: dataFormatada,
-                                periodoOriginal: periodo, // Manter referência original
-                                totalUso: dadosGrafico.totalUso[periodo] || 0,
-                                feedbacksPositivos: dadosGrafico.feedbacksPositivos[periodo] || 0,
-                                feedbacksNegativos: dadosGrafico.feedbacksNegativos[periodo] || 0
-                              };
-                            });
+                            return periodosComDados;
                           })()}
                           margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
                           syncId="grafico-uso"
@@ -1301,7 +1337,7 @@ const BotAnalisesPage = () => {
                              <ResponsiveContainer width="100%" height="100%">
                                <PieChart>
                                  <Pie
-                                   data={dadosPerguntasFrequentes.slice(0, 5)}
+                                   data={processarDadosGraficoPerguntas(dadosPerguntasFrequentes)}
                                    cx="50%"
                                    cy="50%"
                                    labelLine={false}
@@ -1310,7 +1346,7 @@ const BotAnalisesPage = () => {
                                    fill="#8884d8"
                                    dataKey="value"
                                  >
-                                   {dadosPerguntasFrequentes.slice(0, 5).map((entry, index) => (
+                                   {processarDadosGraficoPerguntas(dadosPerguntasFrequentes).map((entry, index) => (
                                      <Cell key={`cell-${index}`} fill={coresPizza[index % coresPizza.length]} />
                                    ))}
                                  </Pie>
@@ -1361,21 +1397,19 @@ const BotAnalisesPage = () => {
                     
                            <Box sx={{ height: '300px', width: '100%' }}>
                              <ResponsiveContainer width="100%" height="100%">
-                               <PieChart>
-                                 <Pie
-                                   data={dadosRankingAgentes}
-                                   cx="50%"
-                                   cy="50%"
-                                   labelLine={false}
-                                   label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                                   outerRadius={80}
-                                   fill="#8884d8"
-                                   dataKey="score"
-                                 >
-                                   {dadosRankingAgentes.map((entry, index) => (
-                                     <Cell key={`cell-${index}`} fill={coresPizza[index % coresPizza.length]} />
-                                   ))}
-                                 </Pie>
+                               <BarChart data={dadosRankingAgentes}>
+                                 <CartesianGrid strokeDasharray="3 3" />
+                                 <XAxis 
+                                   dataKey="name" 
+                                   angle={-45}
+                                   textAnchor="end"
+                                   height={100}
+                                   style={{ fontFamily: 'Poppins', fontSize: '11px' }}
+                                 />
+                                 <YAxis 
+                                   label={{ value: 'Score', angle: -90, position: 'insideLeft', style: { fontFamily: 'Poppins' } }}
+                                   style={{ fontFamily: 'Poppins', fontSize: '11px' }}
+                                 />
                                  <Tooltip 
                                    contentStyle={{
                                      backgroundColor: 'white',
@@ -1384,9 +1418,10 @@ const BotAnalisesPage = () => {
                                      fontFamily: 'Poppins',
                                      fontSize: '12px'
                                    }}
-                                   formatter={(value, name) => [value, 'Score']}
+                                   formatter={(value) => [value, 'Score']}
                                  />
-                               </PieChart>
+                                 <Bar dataKey="score" fill="var(--blue-medium)" />
+                               </BarChart>
                              </ResponsiveContainer>
                            </Box>
                   </Card>
@@ -1395,299 +1430,18 @@ const BotAnalisesPage = () => {
             </CardContent>
           </Card>
 
-          {/* Container Principal - Análise de Utilização */}
+          {/* Card Lista de Atividades e Ranking de Utilização */}
           <Card sx={{
             background: 'var(--cor-container)',
             borderRadius: '16px',
             border: '1px solid var(--cor-borda)',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-            mb: 4,
-            mt: 4
+            mb: 4
           }}>
             <CardContent sx={{ p: 4 }}>
-              {/* Título Análise de Utilização */}
-              <Typography variant="h4" sx={{ 
-                fontFamily: 'Poppins', 
-                fontWeight: 600,
-                color: 'var(--blue-dark)',
-                textAlign: 'center',
-                mb: 4
-              }}>
-                Análise de Utilização
-              </Typography>
-
-              <Grid container spacing={4}>
-                {/* Análises Específicas */}
-                <Grid item xs={12}>
-                  <Card sx={{
-                    background: 'transparent',
-                    borderRadius: '8px',
-                    border: '1.5px solid var(--blue-dark)',
-                    padding: '16px',
-                    margin: '8px',
-                    height: '600px'
-                  }}>
-                    <Box sx={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      mb: 3
-                    }}>
-                      <Typography variant="h6" sx={{ 
-                        fontFamily: 'Poppins',
-                        fontWeight: 600,
-                        color: 'var(--blue-dark)'
-                      }}>
-                        🔍 Análises Específicas
-                      </Typography>
-                      
-                      {/* Filtros para Análises Específicas */}
-                      <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                        {/* Filtro de Período */}
-                        <FormControl sx={{ minWidth: 200 }}>
-                          <InputLabel sx={{ 
-                            fontFamily: 'Poppins',
-                            color: 'var(--blue-dark)'
-                          }}>
-                            Período
-                          </InputLabel>
-                          <Select
-                            value={periodoFiltroGrafico}
-                            onChange={handlePeriodoGraficoChange}
-                            label="Período"
-                            sx={{
-                              fontFamily: 'Poppins',
-                              '& .MuiOutlinedInput-notchedOutline': {
-                                borderColor: 'var(--blue-dark)',
-                              },
-                              '&:hover .MuiOutlinedInput-notchedOutline': {
-                                borderColor: 'var(--blue-medium)',
-                              },
-                              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                borderColor: 'var(--blue-medium)',
-                              },
-                            }}
-                          >
-                            {opcoesPeriodo.map((opcao) => (
-                              <MenuItem 
-                                key={opcao.value} 
-                                value={opcao.value}
-                                sx={{ fontFamily: 'Poppins' }}
-                              >
-                                {opcao.label}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-
-                        {/* Filtro de Usuário */}
-                        <FormControl sx={{ minWidth: 200 }}>
-                          <InputLabel sx={{ 
-                            fontFamily: 'Poppins',
-                            color: 'var(--blue-dark)'
-                          }}>
-                            Usuário
-                          </InputLabel>
-                          <Select
-                            value={filtroUsuario}
-                            onChange={handleFiltroUsuarioChange}
-                            label="Usuário"
-                            sx={{
-                              fontFamily: 'Poppins',
-                              '& .MuiOutlinedInput-notchedOutline': {
-                                borderColor: 'var(--blue-dark)',
-                              },
-                              '&:hover .MuiOutlinedInput-notchedOutline': {
-                                borderColor: 'var(--blue-medium)',
-                              },
-                              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                borderColor: 'var(--blue-medium)',
-                              },
-                            }}
-                          >
-                            <MenuItem value="todos" sx={{ fontFamily: 'Poppins' }}>
-                              Todos os usuários
-                            </MenuItem>
-                            <MenuItem value="lucas.gravina@velotax.com.br" sx={{ fontFamily: 'Poppins' }}>
-                              Lucas Gravina
-                            </MenuItem>
-                            <MenuItem value="admin@velotax.com.br" sx={{ fontFamily: 'Poppins' }}>
-                              Admin
-                            </MenuItem>
-                            <MenuItem value="suporte@velotax.com.br" sx={{ fontFamily: 'Poppins' }}>
-                              Suporte
-                            </MenuItem>
-                            <MenuItem value="outros" sx={{ fontFamily: 'Poppins' }}>
-                              Outros usuários
-                            </MenuItem>
-                          </Select>
-                        </FormControl>
-                      </Box>
-                    </Box>
-                    
-                           <Box sx={{ height: '550px', width: '100%' }}>
-                             <Grid container spacing={2} sx={{ height: '100%' }}>
-                               {/* Perguntas Mais Frequentes */}
-                               <Grid item xs={12} md={4}>
-                                 <Box sx={{ 
-                                   p: 2,
-                                   border: '1px solid var(--cor-borda)',
-                                   borderRadius: '8px',
-                                   height: '100%',
-                                   backgroundColor: 'rgba(22, 52, 255, 0.02)'
-                                 }}>
-                                   <Typography variant="subtitle2" sx={{ 
-                                     fontFamily: 'Poppins',
-                                     fontWeight: 600,
-                                     color: 'var(--blue-dark)',
-                                     mb: 2,
-                                     fontSize: '0.9rem'
-                                   }}>
-                                     📊 Perguntas Mais Frequentes
-                                   </Typography>
-                                   <Box sx={{ maxHeight: '450px', overflow: 'auto' }}>
-                                     {analisesEspecificas.perguntasFrequentes?.slice(0, 10).map((item, index) => (
-                                       <Box key={index} sx={{ 
-                                         mb: 1,
-                                         p: 1,
-                                         backgroundColor: 'white',
-                                         borderRadius: '4px',
-                                         border: '1px solid #f0f0f0'
-                                       }}>
-                                         <Typography variant="caption" sx={{ 
-                                           fontFamily: 'Poppins',
-                                           color: 'var(--blue-medium)',
-                                           fontWeight: 600,
-                                           fontSize: '0.7rem'
-                                         }}>
-                                           #{index + 1}
-                                         </Typography>
-                                         <Typography variant="body2" sx={{ 
-                                           fontFamily: 'Poppins',
-                                           color: 'var(--gray)',
-                                           fontSize: '0.75rem',
-                                           mb: 0.5
-                                         }}>
-                                           {item.name}
-                                         </Typography>
-                                         <Typography variant="caption" sx={{ 
-                                           fontFamily: 'Poppins',
-                                           color: 'var(--blue-dark)',
-                                           fontSize: '0.7rem',
-                                           fontWeight: 600
-                                         }}>
-                                           {item.value} perguntas
-                                         </Typography>
-                                       </Box>
-                                     ))}
-                                   </Box>
-                                 </Box>
-                               </Grid>
-
-                               {/* Padrões de Uso */}
-                               <Grid item xs={12} md={4}>
-                                 <Box sx={{ 
-                                   p: 2,
-                                   border: '1px solid var(--cor-borda)',
-                                   borderRadius: '8px',
-                                   height: '100%',
-                                   backgroundColor: 'rgba(21, 162, 55, 0.02)'
-                                 }}>
-                                   <Typography variant="subtitle2" sx={{ 
-                                     fontFamily: 'Poppins',
-                                     fontWeight: 600,
-                                     color: 'var(--blue-dark)',
-                                     mb: 2,
-                                     fontSize: '0.9rem'
-                                   }}>
-                                     📈 Padrões de Uso
-                                   </Typography>
-                                   <Box sx={{ maxHeight: '450px', overflow: 'auto' }}>
-                                     {analisesEspecificas.padroesUso?.map((padrao, index) => (
-                                       <Box key={index} sx={{ 
-                                         mb: 1.5,
-                                         p: 1.5,
-                                         backgroundColor: 'white',
-                                         borderRadius: '4px',
-                                         border: '1px solid #f0f0f0'
-                                       }}>
-                                         <Typography variant="body2" sx={{ 
-                                           fontFamily: 'Poppins',
-                                           fontWeight: 600,
-                                           color: 'var(--blue-dark)',
-                                           fontSize: '0.8rem',
-                                           mb: 0.5
-                                         }}>
-                                           {padrao.metrica}
-                                         </Typography>
-                                         <Typography variant="body2" sx={{ 
-                                           fontFamily: 'Poppins',
-                                           color: 'var(--gray)',
-                                           fontSize: '0.75rem'
-                                         }}>
-                                           {padrao.valor}
-                                         </Typography>
-                                       </Box>
-                                     ))}
-                                   </Box>
-                                 </Box>
-                               </Grid>
-
-                               {/* Análise de Sessões */}
-                               <Grid item xs={12} md={4}>
-                                 <Box sx={{ 
-                                   p: 2,
-                                   border: '1px solid var(--cor-borda)',
-                                   borderRadius: '8px',
-                                   height: '100%',
-                                   backgroundColor: 'rgba(255, 99, 132, 0.02)'
-                                 }}>
-                                   <Typography variant="subtitle2" sx={{ 
-                                     fontFamily: 'Poppins',
-                                     fontWeight: 600,
-                                     color: 'var(--blue-dark)',
-                                     mb: 2,
-                                     fontSize: '0.9rem'
-                                   }}>
-                                     🔄 Análise de Sessões
-                                   </Typography>
-                                   <Box sx={{ maxHeight: '450px', overflow: 'auto' }}>
-                                     {analisesEspecificas.analiseSessoes?.map((sessao, index) => (
-                                       <Box key={index} sx={{ 
-                                         mb: 1.5,
-                                         p: 1.5,
-                                         backgroundColor: 'white',
-                                         borderRadius: '4px',
-                                         border: '1px solid #f0f0f0'
-                                       }}>
-                                         <Typography variant="body2" sx={{ 
-                                           fontFamily: 'Poppins',
-                                           fontWeight: 600,
-                                           color: 'var(--blue-dark)',
-                                           fontSize: '0.8rem',
-                                           mb: 0.5
-                                         }}>
-                                           {sessao.metrica}
-                                         </Typography>
-                                         <Typography variant="body2" sx={{ 
-                                           fontFamily: 'Poppins',
-                                           color: 'var(--gray)',
-                                           fontSize: '0.75rem'
-                                         }}>
-                                           {sessao.valor}
-                                         </Typography>
-                                       </Box>
-                                     ))}
-                                   </Box>
-                                 </Box>
-                               </Grid>
-                             </Grid>
-                           </Box>
-                  </Card>
-                </Grid>
-
-                {/* Lista de Atividades */}
-                <Grid item xs={12}>
+              <Grid container spacing={3}>
+                {/* Lista de Atividades - Coluna Esquerda */}
+                <Grid item xs={12} md={6}>
                   <Card sx={{
                     background: 'transparent',
                     borderRadius: '8px',
@@ -1702,13 +1456,19 @@ const BotAnalisesPage = () => {
                       gap: 2,
                       mb: 3
                     }}>
-                      <Typography variant="h6" sx={{ 
-                        fontFamily: 'Poppins',
-                        fontWeight: 600,
-                        color: 'var(--blue-dark)'
-                      }}>
-                        📋 Lista de Atividades
-                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <ListAlt sx={{ 
+                          fontSize: '1.5rem', 
+                          color: 'var(--blue-medium)'
+                        }} />
+                        <Typography variant="h6" sx={{ 
+                          fontFamily: 'Poppins',
+                          fontWeight: 600,
+                          color: 'var(--blue-dark)'
+                        }}>
+                          Lista de Atividades
+                        </Typography>
+                      </Box>
                     </Box>
                     
                     <Box sx={{ 
@@ -1810,6 +1570,473 @@ const BotAnalisesPage = () => {
                     </Box>
                   </Card>
                 </Grid>
+
+                {/* Ranking de Utilização - Coluna Direita */}
+                <Grid item xs={12} md={6}>
+                  <Card sx={{
+                    background: 'transparent',
+                    borderRadius: '8px',
+                    border: '1.5px solid var(--blue-dark)',
+                    padding: '16px',
+                    margin: '8px',
+                    height: '500px'
+                  }}>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 2,
+                      mb: 3
+                    }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <EmojiEvents sx={{ 
+                          fontSize: '1.5rem', 
+                          color: 'var(--blue-medium)'
+                        }} />
+                        <Typography variant="h6" sx={{ 
+                          fontFamily: 'Poppins',
+                          fontWeight: 600,
+                          color: 'var(--blue-dark)'
+                        }}>
+                          Ranking de Utilização
+                        </Typography>
+                      </Box>
+                    </Box>
+                    
+                    <Box sx={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center',
+                      mb: 2,
+                      p: 1
+                    }}>
+                      <Typography variant="body2" sx={{ 
+                        fontFamily: 'Poppins',
+                        color: 'var(--gray)',
+                        fontSize: '0.875rem'
+                      }}>
+                        {dadosRankingAgentes.length} usuários ativos
+                      </Typography>
+                      <Typography variant="body2" sx={{ 
+                        fontFamily: 'Poppins',
+                        color: 'var(--blue-medium)',
+                        fontSize: '0.875rem'
+                      }}>
+                        Período: {periodoFiltroGrafico}
+                      </Typography>
+                    </Box>
+                    
+                    <Box sx={{ 
+                      height: '350px',
+                      overflow: 'auto',
+                      border: '1px solid var(--cor-borda)',
+                      borderRadius: '4px'
+                    }}>
+                      {dadosRankingAgentes.map((agente, index) => (
+                        <Box key={index} sx={{ 
+                          p: 2, 
+                          borderBottom: index < dadosRankingAgentes.length - 1 ? '1px solid #f0f0f0' : 'none',
+                          '&:hover': {
+                            backgroundColor: 'rgba(22, 52, 255, 0.05)'
+                          }
+                        }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                              <Box sx={{ 
+                                width: 24,
+                                height: 24,
+                                borderRadius: '50%',
+                                backgroundColor: index < 3 ? 'var(--blue-medium)' : 'var(--gray)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'white',
+                                fontSize: '0.75rem',
+                                fontWeight: 600
+                              }}>
+                                {index + 1}
+                              </Box>
+                              <Typography variant="body2" sx={{ 
+                                fontFamily: 'Poppins',
+                                fontWeight: 600,
+                                color: 'var(--blue-dark)'
+                              }}>
+                                {agente.name}
+                              </Typography>
+                            </Box>
+                            <Box sx={{ textAlign: 'right' }}>
+                              <Typography variant="body2" sx={{ 
+                                fontFamily: 'Poppins',
+                                color: 'var(--blue-medium)',
+                                fontSize: '0.8rem',
+                                fontWeight: 600
+                              }}>
+                                {agente.perguntas} perguntas
+                              </Typography>
+                              <Typography variant="caption" sx={{ 
+                                fontFamily: 'Poppins',
+                                color: 'var(--gray)',
+                                fontSize: '0.7rem'
+                              }}>
+                                Score: {agente.score}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </Box>
+                      ))}
+                      
+                      {dadosRankingAgentes.length === 0 && (
+                        <Box sx={{ 
+                          p: 4,
+                          textAlign: 'center',
+                          color: 'var(--gray)'
+                        }}>
+                          <Typography variant="body2" sx={{ fontFamily: 'Poppins' }}>
+                            Nenhum usuário encontrado para o período selecionado
+                          </Typography>
+                        </Box>
+                      )}
+                    </Box>
+                  </Card>
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
+
+          {/* Container Principal - Análise de Utilização */}
+          <Card sx={{
+            background: 'var(--cor-container)',
+            borderRadius: '16px',
+            border: '1px solid var(--cor-borda)',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+            mb: 4,
+            mt: 4
+          }}>
+            <CardContent sx={{ p: 4 }}>
+              {/* Título Análise de Utilização */}
+              <Typography variant="h4" sx={{ 
+                fontFamily: 'Poppins', 
+                fontWeight: 600,
+                color: 'var(--blue-dark)',
+                textAlign: 'center',
+                mb: 4
+              }}>
+                Análise de Utilização
+              </Typography>
+
+              <Grid container spacing={4}>
+                {/* Análises Específicas */}
+                <Grid item xs={12}>
+                  <Card sx={{
+                    background: 'transparent',
+                    borderRadius: '8px',
+                    border: '1.5px solid var(--blue-dark)',
+                    padding: '16px',
+                    margin: '8px',
+                    height: '600px'
+                  }}>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      mb: 3
+                    }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Search sx={{ 
+                          fontSize: '1.5rem', 
+                          color: 'var(--blue-medium)'
+                        }} />
+                        <Typography variant="h6" sx={{ 
+                          fontFamily: 'Poppins',
+                          fontWeight: 600,
+                          color: 'var(--blue-dark)'
+                        }}>
+                          Análises Específicas
+                        </Typography>
+                      </Box>
+                      
+                      {/* Filtros para Análises Específicas */}
+                      <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                        {/* Filtro de Período */}
+                        <FormControl sx={{ minWidth: 200 }}>
+                          <InputLabel sx={{ 
+                            fontFamily: 'Poppins',
+                            color: 'var(--blue-dark)'
+                          }}>
+                            Período
+                          </InputLabel>
+                          <Select
+                            value={periodoFiltroGrafico}
+                            onChange={handlePeriodoGraficoChange}
+                            label="Período"
+                            sx={{
+                              fontFamily: 'Poppins',
+                              '& .MuiOutlinedInput-notchedOutline': {
+                                borderColor: 'var(--blue-dark)',
+                              },
+                              '&:hover .MuiOutlinedInput-notchedOutline': {
+                                borderColor: 'var(--blue-medium)',
+                              },
+                              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                borderColor: 'var(--blue-medium)',
+                              },
+                            }}
+                          >
+                            {opcoesPeriodo.map((opcao) => (
+                              <MenuItem 
+                                key={opcao.value} 
+                                value={opcao.value}
+                                sx={{ fontFamily: 'Poppins' }}
+                              >
+                                {opcao.label}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+
+                        {/* Filtro de Usuário */}
+                        <FormControl sx={{ minWidth: 200 }}>
+                          <InputLabel sx={{ 
+                            fontFamily: 'Poppins',
+                            color: 'var(--blue-dark)'
+                          }}>
+                            Usuário
+                          </InputLabel>
+                          <Select
+                            value={filtroUsuario}
+                            onChange={handleFiltroUsuarioChange}
+                            label="Usuário"
+                            sx={{
+                              fontFamily: 'Poppins',
+                              '& .MuiOutlinedInput-notchedOutline': {
+                                borderColor: 'var(--blue-dark)',
+                              },
+                              '&:hover .MuiOutlinedInput-notchedOutline': {
+                                borderColor: 'var(--blue-medium)',
+                              },
+                              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                borderColor: 'var(--blue-medium)',
+                              },
+                            }}
+                          >
+                            <MenuItem value="todos" sx={{ fontFamily: 'Poppins' }}>
+                              Todos os usuários
+                            </MenuItem>
+                            <MenuItem value="lucas.gravina@velotax.com.br" sx={{ fontFamily: 'Poppins' }}>
+                              Lucas Gravina
+                            </MenuItem>
+                            <MenuItem value="admin@velotax.com.br" sx={{ fontFamily: 'Poppins' }}>
+                              Admin
+                            </MenuItem>
+                            <MenuItem value="suporte@velotax.com.br" sx={{ fontFamily: 'Poppins' }}>
+                              Suporte
+                            </MenuItem>
+                            <MenuItem value="outros" sx={{ fontFamily: 'Poppins' }}>
+                              Outros usuários
+                            </MenuItem>
+                          </Select>
+                        </FormControl>
+                      </Box>
+                    </Box>
+                    
+                           <Box sx={{ height: '550px', width: '100%' }}>
+                             <Grid container spacing={2} sx={{ height: '100%' }}>
+                               {/* Perguntas Mais Frequentes */}
+                               <Grid item xs={12} md={4}>
+                                 <Box sx={{ 
+                                   p: 2,
+                                   border: '1px solid var(--cor-borda)',
+                                   borderRadius: '8px',
+                                   height: '100%',
+                                   backgroundColor: 'rgba(22, 52, 255, 0.02)'
+                                 }}>
+                                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                                     <Analytics sx={{ 
+                                       fontSize: '1.2rem', 
+                                       color: 'var(--blue-medium)'
+                                     }} />
+                                     <Typography variant="subtitle2" sx={{ 
+                                       fontFamily: 'Poppins',
+                                       fontWeight: 600,
+                                       color: 'var(--blue-dark)',
+                                       fontSize: '0.9rem'
+                                     }}>
+                                       Perguntas Mais Frequentes
+                                     </Typography>
+                                   </Box>
+                                   <Box sx={{ maxHeight: '450px', overflow: 'auto' }}>
+                                     {analisesEspecificas.perguntasFrequentes?.slice(0, 10).map((item, index) => (
+                                       <Box key={index} sx={{ 
+                                         mb: 1,
+                                         p: 1,
+                                         backgroundColor: 'white',
+                                         borderRadius: '4px',
+                                         border: '1px solid #f0f0f0'
+                                       }}>
+                                         <Typography variant="caption" sx={{ 
+                                           fontFamily: 'Poppins',
+                                           color: 'var(--blue-medium)',
+                                           fontWeight: 600,
+                                           fontSize: '0.7rem'
+                                         }}>
+                                           #{index + 1}
+                                         </Typography>
+                                         <Typography variant="body2" sx={{ 
+                                           fontFamily: 'Poppins',
+                                           color: 'var(--gray)',
+                                           fontSize: '0.75rem',
+                                           mb: 0.5
+                                         }}>
+                                           {item.name}
+                                         </Typography>
+                                         <Typography variant="caption" sx={{ 
+                                           fontFamily: 'Poppins',
+                                           color: 'var(--blue-dark)',
+                                           fontSize: '0.7rem',
+                                           fontWeight: 600
+                                         }}>
+                                           {item.value} perguntas
+                                         </Typography>
+                                       </Box>
+                                     ))}
+                                   </Box>
+                                 </Box>
+                               </Grid>
+
+                               {/* Padrões de Uso */}
+                               <Grid item xs={12} md={4}>
+                                 <Box sx={{ 
+                                   p: 2,
+                                   border: '1px solid var(--cor-borda)',
+                                   borderRadius: '8px',
+                                   height: '100%',
+                                   backgroundColor: 'rgba(21, 162, 55, 0.02)'
+                                 }}>
+                                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                                     <TrendingUp sx={{ 
+                                       fontSize: '1.2rem', 
+                                       color: 'var(--blue-medium)'
+                                     }} />
+                                     <Typography variant="subtitle2" sx={{ 
+                                       fontFamily: 'Poppins',
+                                       fontWeight: 600,
+                                       color: 'var(--blue-dark)',
+                                       fontSize: '0.9rem'
+                                     }}>
+                                       Padrões de Uso
+                                     </Typography>
+                                   </Box>
+                                   <Box sx={{ maxHeight: '450px', overflow: 'auto' }}>
+                                     {analisesEspecificas.padroesUso?.map((padrao, index) => (
+                                       <Box key={index} sx={{ 
+                                         mb: 1.5,
+                                         p: 1.5,
+                                         backgroundColor: 'white',
+                                         borderRadius: '4px',
+                                         border: '1px solid #f0f0f0'
+                                       }}>
+                                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                           <Typography variant="body2" sx={{ 
+                                             fontFamily: 'Poppins',
+                                             fontWeight: 600,
+                                             color: 'var(--blue-dark)',
+                                             fontSize: '0.8rem'
+                                           }}>
+                                             {padrao.tipo}:
+                                           </Typography>
+                                           <Typography variant="body2" sx={{ 
+                                             fontFamily: 'Poppins',
+                                             color: 'var(--blue-medium)',
+                                             fontSize: '0.8rem',
+                                             fontWeight: 600,
+                                             textAlign: 'right'
+                                           }}>
+                                             {padrao.valor}
+                                           </Typography>
+                                         </Box>
+                                         <Typography variant="body2" sx={{ 
+                                           fontFamily: 'Poppins',
+                                           color: 'var(--gray)',
+                                           fontSize: '0.75rem',
+                                           mt: 0.5,
+                                           textAlign: 'right'
+                                         }}>
+                                           {padrao.detalhes}
+                                         </Typography>
+                                       </Box>
+                                     ))}
+                                   </Box>
+                                 </Box>
+                               </Grid>
+
+                               {/* Análise de Sessões */}
+                               <Grid item xs={12} md={4}>
+                                 <Box sx={{ 
+                                   p: 2,
+                                   border: '1px solid var(--cor-borda)',
+                                   borderRadius: '8px',
+                                   height: '100%',
+                                   backgroundColor: 'rgba(255, 99, 132, 0.02)'
+                                 }}>
+                                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                                     <Psychology sx={{ 
+                                       fontSize: '1.2rem', 
+                                       color: 'var(--blue-medium)'
+                                     }} />
+                                     <Typography variant="subtitle2" sx={{ 
+                                       fontFamily: 'Poppins',
+                                       fontWeight: 600,
+                                       color: 'var(--blue-dark)',
+                                       fontSize: '0.9rem'
+                                     }}>
+                                       Análise de Sessões
+                                     </Typography>
+                                   </Box>
+                                   <Box sx={{ maxHeight: '450px', overflow: 'auto' }}>
+                                     {analisesEspecificas.analiseSessoes?.map((sessao, index) => (
+                                       <Box key={index} sx={{ 
+                                         mb: 1.5,
+                                         p: 1.5,
+                                         backgroundColor: 'white',
+                                         borderRadius: '4px',
+                                         border: '1px solid #f0f0f0'
+                                       }}>
+                                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                           <Typography variant="body2" sx={{ 
+                                             fontFamily: 'Poppins',
+                                             fontWeight: 600,
+                                             color: 'var(--blue-dark)',
+                                             fontSize: '0.8rem'
+                                           }}>
+                                             {sessao.tipo}:
+                                           </Typography>
+                                           <Typography variant="body2" sx={{ 
+                                             fontFamily: 'Poppins',
+                                             color: 'var(--blue-medium)',
+                                             fontSize: '0.8rem',
+                                             fontWeight: 600,
+                                             textAlign: 'right'
+                                           }}>
+                                             {sessao.valor}
+                                           </Typography>
+                                         </Box>
+                                         <Typography variant="body2" sx={{ 
+                                           fontFamily: 'Poppins',
+                                           color: 'var(--gray)',
+                                           fontSize: '0.75rem',
+                                           mt: 0.5,
+                                           textAlign: 'right'
+                                         }}>
+                                           {sessao.detalhes}
+                                         </Typography>
+                                       </Box>
+                                     ))}
+                                   </Box>
+                                 </Box>
+                               </Grid>
+                             </Grid>
+                           </Box>
+                  </Card>
+                </Grid>
               </Grid>
             </CardContent>
           </Card>
@@ -1866,15 +2093,13 @@ const BotAnalisesPage = () => {
                 mx: 'auto',
                 lineHeight: 1.6
               }}>
-                Estamos trabalhando para trazer análises detalhadas de feedback, 
-                métricas de satisfação e insights sobre a experiência dos usuários. 
-                Em breve você terá acesso a relatórios completos!
+               
               </Typography>
             </CardContent>
           </Card>
         </Container>
       )}
-    </>
+    </Container>
   );
 };
 

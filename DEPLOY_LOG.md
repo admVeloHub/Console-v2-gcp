@@ -1,5 +1,111 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.29.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.32.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+
+## Push GitHub - Correção Crash de Modais e Logs de Debug - 2024-12-19 23:30
+
+### Informações do Push
+- **Tipo:** Push GitHub
+- **Data/Hora:** 2024-12-19 23:30 BRT
+- **Versão:** v1.32.0
+- **Status:** Concluído
+- **Commit:** 37305ad
+
+### Arquivos Modificados
+1. `src/pages/FuncionariosPage.jsx` - v1.8.6
+   - Corrigida função fecharModal: atuacao agora é array vazio em vez de string
+   - Adicionadas verificações de segurança no render do Select
+   - Implementados logs detalhados na função salvarFuncao para debug
+   - Resolvido erro MUI #2 e crashes ao cancelar modais
+
+### Descrição
+Correção de bugs críticos nos modais do FuncionariosPage:
+- **Erro 1:** MUI error #2 causado por inconsistência de tipos no campo atuacao
+- **Erro 2:** Crash da página ao cancelar modais
+- **Melhoria:** Logs de debug para monitoramento do payload das funções
+
+### Impacto
+- ✅ Eliminação completa dos crashes de modais
+- ✅ Select de funções funcionando corretamente
+- ✅ Verificações de segurança implementadas
+- ✅ Logs de debug para facilitar troubleshooting
+- ✅ Compatibilidade total com dados existentes
+
+---
+
+## Push GitHub - Correção API_BASE_URL e Formatação de Datas - 2024-12-19 23:15
+
+### Informações do Push
+- **Tipo:** Push GitHub
+- **Data/Hora:** 2024-12-19 23:15 BRT
+- **Versão:** v1.31.0
+- **Status:** Concluído
+- **Commit:** 330b892
+
+### Arquivos Modificados
+1. `src/pages/FuncionariosPage.jsx` - v1.8.4
+   - Adicionada importação da API_BASE_URL para resolver ReferenceError
+   - Implementada função formatDateForInput para converter datas ISO para yyyy-MM-dd
+   - Aplicada formatação correta em todos os campos de data do formulário
+   - Resolvidos erros de console relacionados a datas e API_BASE_URL
+
+### Descrição
+Correção de bugs críticos no FuncionariosPage.jsx:
+- **Erro 1:** ReferenceError: API_BASE_URL is not defined
+- **Erro 2:** The specified value "2024-03-24T00:00:00.000Z" does not conform to the required format, "yyyy-MM-dd"
+
+### Impacto
+- ✅ Eliminação completa dos erros de console
+- ✅ Campos de data funcionando corretamente no formulário
+- ✅ API_BASE_URL definida e funcionando
+- ✅ Compatibilidade total com dados existentes no banco
+
+---
+
+## Push GitHub - Implementação Gestão de Funções com Dropdown Múltiplo - 2024-12-19 22:45
+
+### Informações do Push
+- **Tipo:** Push GitHub
+- **Data/Hora:** 2024-12-19 22:45 BRT
+- **Versão:** v1.30.0
+- **Status:** Concluído
+- **Commit:** e9312f4
+
+### Arquivos Modificados
+1. `listagem de schema de coleções do mongoD.rb` - v1.7.5
+   - Adicionado schema console_analises.qualidade_funcoes
+   - Atualizado campo atuacao de String para [ObjectId] em qualidade_funcionarios
+
+2. `src/pages/FuncionariosPage.jsx` - v1.8.3
+   - Implementado modal de gestão de funções (CRUD completo)
+   - Transformado campo atuacao em dropdown múltiplo
+   - Adicionado validação obrigatória de ao menos 1 função
+   - Implementado tratamento de dados antigos com compatibilidade
+   - Atualizado layout do modal conforme especificações
+   - Corrigido erros de runtime com verificações de tipo
+
+3. `src/services/qualidadeAPI.js` - v1.27.0
+   - Adicionados endpoints CRUD para funções
+   - Implementadas funções: getFuncoes, addFuncao, updateFuncao, deleteFuncao
+
+4. `src/services/api.js` - v3.10.0
+   - Criada instância qualidadeFuncoesAPI
+   - Implementados endpoints: GET, POST, PUT, DELETE para /api/qualidade/funcoes
+
+### Funcionalidades Implementadas
+- ✅ Dropdown múltiplo para seleção de funções
+- ✅ Modal de gestão de funções (CRUD completo)
+- ✅ Validação obrigatória de ao menos 1 função
+- ✅ Exibição correta na tabela e estatísticas
+- ✅ Tratamento de dados antigos com alerta de warning
+- ✅ Interface responsiva e intuitiva
+- ✅ Integração completa com backend (aguardando implementação)
+
+### Próximos Passos
+- Implementar endpoints no backend conforme prompt de compliance
+- Testar integração completa end-to-end
+- Validar migração de dados antigos
+
+---
 
 ## Push GitHub - Remoção de SSO do IGP/VeloInsights - 2024-12-19 21:30
 

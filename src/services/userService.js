@@ -251,7 +251,7 @@ export const removeAuthorizedUser = async (email) => {
   }
 };
 
-// Buscar avaliadores válidos (administradores e gestão com módulo qualidade ativo)
+// Buscar avaliadores válidos (apenas flag avaliador=true)
 export const getAvaliadoresValidos = async () => {
   try {
     console.log('🔍 DEBUG - Iniciando busca de avaliadores válidos...');
@@ -262,18 +262,13 @@ export const getAvaliadoresValidos = async () => {
     // Filtrar usuários que são avaliadores válidos
     const avaliadores = users.filter(user => {
       console.log(`🔍 DEBUG - Analisando usuário: ${user._userMail || user.email}`);
-      console.log(`🔍 DEBUG - Função: ${user._userRole}`);
-      console.log(`🔍 DEBUG - Clearance:`, user._userClearance);
+      console.log(`🔍 DEBUG - Funções administrativas:`, user._funcoesAdministrativas);
       
-      // Verificar se tem função de administrador ou gestão
-      const isAdminOuGestao = user._userRole === 'administrador' || user._userRole === 'gestão';
-      console.log(`🔍 DEBUG - É admin/gestão? ${isAdminOuGestao}`);
+      // CONTEXTO 3: Verificar APENAS se tem flag de avaliador
+      const isAvaliador = user._funcoesAdministrativas && user._funcoesAdministrativas.avaliador === true;
+      console.log(`🔍 DEBUG - É avaliador? ${isAvaliador}`);
       
-      // Verificar se tem módulo qualidade ativo
-      const hasQualidadeAtivo = user._userClearance && user._userClearance.qualidade === true;
-      console.log(`🔍 DEBUG - Tem qualidade ativo? ${hasQualidadeAtivo}`);
-      
-      const isValid = isAdminOuGestao && hasQualidadeAtivo;
+      const isValid = isAvaliador;
       console.log(`🔍 DEBUG - É avaliador válido? ${isValid}`);
       
       return isValid;
@@ -303,19 +298,14 @@ export const getAvaliadoresValidos = async () => {
       // Filtrar usuários que são avaliadores válidos no localStorage
       const avaliadores = localUsers.filter(user => {
         console.log(`🔍 DEBUG - Analisando usuário local: ${user._userMail}`);
-        console.log(`🔍 DEBUG - Função local: ${user._userRole}`);
-        console.log(`🔍 DEBUG - Clearance local:`, user._userClearance);
+        console.log(`🔍 DEBUG - Funções administrativas local:`, user._funcoesAdministrativas);
         
-        // Verificar se tem função de administrador ou gestão
-        const isAdminOuGestao = user._userRole === 'administrador' || user._userRole === 'gestão';
-        console.log(`🔍 DEBUG - É admin/gestão? ${isAdminOuGestao}`);
+        // CONTEXTO 3: Verificar APENAS se tem flag de avaliador
+        const isAvaliador = user._funcoesAdministrativas && user._funcoesAdministrativas.avaliador === true;
+        console.log(`🔍 DEBUG - É avaliador local? ${isAvaliador}`);
         
-        // Verificar se tem módulo qualidade ativo
-        const hasQualidadeAtivo = user._userClearance && user._userClearance.qualidade === true;
-        console.log(`🔍 DEBUG - Tem qualidade ativo? ${hasQualidadeAtivo}`);
-        
-        const isValid = isAdminOuGestao && hasQualidadeAtivo;
-        console.log(`🔍 DEBUG - É avaliador válido? ${isValid}`);
+        const isValid = isAvaliador;
+        console.log(`🔍 DEBUG - É avaliador válido local? ${isValid}`);
         
         return isValid;
       });

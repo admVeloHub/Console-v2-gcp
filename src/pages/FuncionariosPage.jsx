@@ -1,4 +1,4 @@
-// VERSION: v1.8.6 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.8.7 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 
@@ -739,42 +739,36 @@ const FuncionariosPage = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 6, mb: 8, pb: 4, position: 'relative', padding: '40px 20px' }}>
-      {/* Botão Voltar */}
-      <Button
-        startIcon={<ArrowBack />}
-        onClick={() => navigate('/qualidade')}
-        sx={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          color: '#000058',
-          borderColor: '#000058',
-          fontFamily: 'Poppins',
-          fontWeight: 500,
-          '&:hover': {
-            backgroundColor: '#1694FF',
-            color: '#ffffff',
-            borderColor: '#1694FF'
-          }
-        }}
-      >
-        Voltar
-      </Button>
-
-      {/* Título */}
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        mb: 4,
-        pt: 2
-      }}>
-        <Typography variant="h4" sx={{ 
-          fontFamily: 'Poppins', 
-          fontWeight: 700, 
-          color: '#000058',
-          textAlign: 'center'
-        }}>
-          Gestão de Funcionários
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', mb: 4 }}>
+        <Box sx={{ position: 'absolute', left: 0 }}>
+          <Button
+            startIcon={<ArrowBack />}
+            onClick={() => navigate('/qualidade')}
+            sx={{
+              color: '#000058',
+              borderColor: '#000058',
+              fontFamily: 'Poppins',
+              fontWeight: 500,
+              '&:hover': {
+                backgroundColor: '#1694FF',
+                color: '#ffffff',
+                borderColor: '#1694FF'
+              }
+            }}
+          >
+            Voltar
+          </Button>
+        </Box>
+        <Typography 
+          variant="h4" 
+          component="h1"
+          sx={{ 
+            fontFamily: 'Poppins',
+            fontWeight: 700,
+            color: 'var(--blue-dark)'
+          }}
+        >
+          Funcionários
         </Typography>
       </Box>
 
