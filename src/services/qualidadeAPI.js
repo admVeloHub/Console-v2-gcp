@@ -1,4 +1,4 @@
-// VERSION: v1.29.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.29.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 import { qualidadeFuncionariosAPI, qualidadeAvaliacoesAPI, qualidadeFuncoesAPI } from './api';
 import axios from 'axios';
@@ -396,7 +396,7 @@ export const addAvaliacao = async (avaliacaoData) => {
       avaliador: avaliacaoData.avaliador, // String
       mes: avaliacaoData.mes, // String
       ano: Number(avaliacaoData.ano), // Number
-      dataAvaliacao: avaliacaoData.dataAvaliacao ? new Date(avaliacaoData.dataAvaliacao).toISOString() : new Date().toISOString(), // String ISO
+      dataAvaliacao: new Date().toISOString(), // String ISO - sempre usar data atual
       arquivoLigacao: avaliacaoData.arquivoLigacao || '', // String
       nomeArquivo: avaliacaoData.nomeArquivo || '', // String
       saudacaoAdequada: Boolean(avaliacaoData.saudacaoAdequada), // Boolean
@@ -419,12 +419,16 @@ export const addAvaliacao = async (avaliacaoData) => {
     novaAvaliacao.pontuacaoTotal = calcularPontuacaoTotal(novaAvaliacao);
     
     console.log('🔍 DEBUG - Criando avaliação - Pontuação:', novaAvaliacao.pontuacaoTotal);
+    console.log('🔍 DEBUG - Payload completo para API:', JSON.stringify(novaAvaliacao, null, 2));
     
     const response = await qualidadeAvaliacoesAPI.create(novaAvaliacao);
     console.log(`✅ Avaliação adicionada via API: ${response._id}`);
     return response;
   } catch (error) {
     console.error('❌ Erro ao adicionar avaliação via API:', error);
+    console.error('❌ Status do erro:', error.response?.status);
+    console.error('❌ Dados do erro:', error.response?.data);
+    console.error('❌ Mensagem do erro:', error.message);
     // Fallback para localStorage se API falhar
     return addAvaliacaoLocalStorage(avaliacaoData);
   }

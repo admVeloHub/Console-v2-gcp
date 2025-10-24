@@ -1,4 +1,4 @@
-// VERSION: v1.0.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.0.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 import { 
   generateId, 
@@ -209,7 +209,9 @@ export const addAvaliacao = async (avaliacaoData) => {
   try {
     const avaliacoes = getAvaliacoes();
     const funcionarios = getFuncionarios();
-    const funcionario = funcionarios.find(f => f.id === avaliacaoData.colaboradorNome);
+    const funcionario = funcionarios.find(f => 
+      (f.colaboradorNome || f.nomeCompleto) === avaliacaoData.colaboradorNome
+    );
     
     if (!funcionario) {
       throw new Error('Funcionário não encontrado');
@@ -370,7 +372,9 @@ export const getAvaliacaoGPT = (avaliacaoId) => {
 export const gerarRelatorioAgente = (colaboradorNome) => {
   const avaliacoes = getAvaliacoesPorColaborador(colaboradorNome);
   const funcionarios = getFuncionarios();
-  const funcionario = funcionarios.find(f => f.id === colaboradorNome);
+  const funcionario = funcionarios.find(f => 
+    (f.colaboradorNome || f.nomeCompleto) === colaboradorNome
+  );
   
   if (!funcionario || avaliacoes.length === 0) {
     return null;
