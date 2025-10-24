@@ -1,4 +1,4 @@
-// VERSION: v1.4.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.5.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 /**
  * @typedef {Object} Funcionario
@@ -166,8 +166,10 @@ export const ANOS = [2025, 2026, 2027, 2028];
 // Constantes de pontuação
 export const PONTUACAO = {
   SAUDACAO_ADEQUADA: 10,
-  ESCUTA_ATIVA: 25,
-  RESOLUCAO_QUESTAO: 40,
+  ESCUTA_ATIVA: 15,                // Reduzido de 25 para 15
+  CLAREZA_OBJETIVIDADE: 10,        // NOVO critério
+  RESOLUCAO_QUESTAO: 25,           // Reduzido de 40 para 25
+  DOMINIO_ASSUNTO: 15,             // NOVO critério
   EMPATIA_CORDIALIDADE: 15,
   DIRECIONOU_PESQUISA: 10,
   PROCEDIMENTO_INCORRETO: -60,
@@ -183,6 +185,7 @@ export const generateId = () => {
 export const calcularPontuacaoTotal = (avaliacao) => {
   let total = 0;
   
+  // Critérios existentes (compatibilidade retroativa)
   if (avaliacao.saudacaoAdequada) total += PONTUACAO.SAUDACAO_ADEQUADA;
   if (avaliacao.escutaAtiva) total += PONTUACAO.ESCUTA_ATIVA;
   if (avaliacao.resolucaoQuestao) total += PONTUACAO.RESOLUCAO_QUESTAO;
@@ -190,6 +193,10 @@ export const calcularPontuacaoTotal = (avaliacao) => {
   if (avaliacao.direcionouPesquisa) total += PONTUACAO.DIRECIONOU_PESQUISA;
   if (avaliacao.procedimentoIncorreto) total += PONTUACAO.PROCEDIMENTO_INCORRETO;
   if (avaliacao.encerramentoBrusco) total += PONTUACAO.ENCERRAMENTO_BRUSCO;
+  
+  // Novos critérios (compatibilidade com avaliações antigas)
+  if (avaliacao.clarezaObjetividade) total += PONTUACAO.CLAREZA_OBJETIVIDADE;
+  if (avaliacao.dominioAssunto) total += PONTUACAO.DOMINIO_ASSUNTO;
   
   return total;
 };

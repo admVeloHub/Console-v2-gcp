@@ -1,5 +1,102 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.32.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.34.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+
+## Push GitHub - Implementação de Novos Critérios de Avaliação - Módulo Qualidade - 2024-12-19 23:50
+
+### Informações do Push
+- **Tipo:** Push GitHub
+- **Data/Hora:** 2024-12-19 23:50 BRT
+- **Versão:** v1.34.0
+- **Status:** Concluído
+- **Commit:** [A ser definido]
+
+### Arquivos Modificados
+1. `src/types/qualidade.js` - v1.5.0
+   - Atualizadas constantes PONTUACAO com novos critérios
+   - Escuta Ativa: 25 → 15 pontos
+   - Resolução Questão: 40 → 25 pontos
+   - Adicionados: Clareza e Objetividade (+10), Domínio no Assunto (+15)
+   - Atualizada função calcularPontuacaoTotal com compatibilidade retroativa
+
+2. `src/pages/QualidadeModulePage.jsx` - v1.27.0
+   - Adicionados novos campos ao estado formData
+   - Atualizadas funções abrirModalAvaliacao e fecharModalAvaliacao
+   - Reorganizada interface do formulário com 7 critérios positivos
+   - Atualizados labels dos critérios conforme especificação
+
+3. `listagem de schema de coleções do mongoD.rb` - v1.8.0
+   - Adicionados campos clarezaObjetividade e dominioAssunto ao schema qualidade_avaliacoes
+   - Atualizado schema qualidade_avaliacoes_gpt.criteriosGPT
+   - Mantida compatibilidade retroativa
+
+4. `QUALIDADE_NOVOS_CRITERIOS.md` - v1.0.0 (NOVO)
+   - Documentação completa para implementação no backend
+   - Especificação de novos campos MongoDB
+   - Exemplos de payload e endpoints afetados
+   - Checklist de implementação
+
+### Descrição
+Implementação completa de novos critérios de avaliação no módulo de qualidade conforme especificação do arquivo CSV. A atualização inclui:
+
+- **2 novos critérios:** Clareza e Objetividade (+10), Domínio no Assunto (+15)
+- **2 critérios modificados:** Escuta Ativa (25→15), Resolução Questão (40→25)
+- **Compatibilidade retroativa:** Avaliações antigas continuam funcionando
+- **Interface reorganizada:** 7 critérios positivos em layout otimizado
+- **Documentação completa:** Especificação detalhada para backend
+
+### Impacto
+- ✅ Novos critérios implementados no frontend
+- ✅ Schema MongoDB atualizado
+- ✅ Compatibilidade retroativa mantida
+- ✅ Documentação para backend criada
+- ✅ Interface reorganizada e otimizada
+- ⏳ Aguardando implementação no backend
+
+### Próximos Passos
+1. Implementar mudanças no back-console conforme QUALIDADE_NOVOS_CRITERIOS.md
+2. Executar script de migração de dados (se necessário)
+3. Testar integração frontend-backend
+4. Validar relatórios com novos critérios
+
+---
+
+## Push GitHub - Correção do Esquema de Permissões do Módulo de Qualidade - 2024-12-19 23:45
+
+### Informações do Push
+- **Tipo:** Push GitHub
+- **Data/Hora:** 2024-12-19 23:45 BRT
+- **Versão:** v1.33.0
+- **Status:** Concluído
+- **Commit:** d55c1e0
+
+### Arquivos Modificados
+1. `src/services/userService.js` - v1.4.1
+   - Corrigida lógica de getAvaliadoresValidos para usar apenas flag avaliador=true
+   - Removida verificação de clearance de qualidade e função admin/gestão
+   - Implementada lógica correta: _funcoesAdministrativas.avaliador === true
+
+2. `src/services/qualidadeAPI.js` - v1.28.0
+   - Removida implementação duplicada de getAvaliadoresValidos
+   - Mantida apenas implementação em userService.js
+
+3. `src/pages/QualidadeModulePage.jsx` - v1.26.0
+   - Corrigida importação para usar getAvaliadoresValidos de userService.js
+   - Unificada fonte de dados para avaliadores válidos
+
+### Descrição
+Correção completa do esquema de permissões do módulo de qualidade, especificamente para a lógica de avaliadores válidos. A correção unifica os critérios conforme especificação:
+
+- **CONFIG:** monitor/gestão/administração libera seleção de funções administrativas
+- **HOME:** _userClearance.qualidade === true permite acesso ao módulo
+- **AVALIADORES:** _funcoesAdministrativas.avaliador === true aparece na lista
+
+### Impacto
+- ✅ Corrigida lógica de avaliadores válidos
+- ✅ Removida duplicação de código
+- ✅ Unificados critérios de permissões
+- ✅ Melhorada consistência do sistema
+
+---
 
 ## Push GitHub - Correção Crash de Modais e Logs de Debug - 2024-12-19 23:30
 

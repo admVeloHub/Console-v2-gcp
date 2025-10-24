@@ -116,7 +116,9 @@ const QualidadeModulePage = () => {
     ano: new Date().getFullYear(),
     saudacaoAdequada: false,
     escutaAtiva: false,
+    clarezaObjetividade: false,        // NOVO critério
     resolucaoQuestao: false,
+    dominioAssunto: false,             // NOVO critério
     empatiaCordialidade: false,
     direcionouPesquisa: false,
     procedimentoIncorreto: false,
@@ -253,7 +255,9 @@ const QualidadeModulePage = () => {
         ano: avaliacao.ano,
         saudacaoAdequada: avaliacao.saudacaoAdequada,
         escutaAtiva: avaliacao.escutaAtiva,
+        clarezaObjetividade: avaliacao.clarezaObjetividade || false,  // NOVO critério
         resolucaoQuestao: avaliacao.resolucaoQuestao,
+        dominioAssunto: avaliacao.dominioAssunto || false,            // NOVO critério
         empatiaCordialidade: avaliacao.empatiaCordialidade,
         direcionouPesquisa: avaliacao.direcionouPesquisa,
         procedimentoIncorreto: avaliacao.procedimentoIncorreto,
@@ -270,7 +274,9 @@ const QualidadeModulePage = () => {
         ano: new Date().getFullYear(),
         saudacaoAdequada: false,
         escutaAtiva: false,
+        clarezaObjetividade: false,        // NOVO critério
         resolucaoQuestao: false,
+        dominioAssunto: false,             // NOVO critério
         empatiaCordialidade: false,
         direcionouPesquisa: false,
         procedimentoIncorreto: false,
@@ -292,7 +298,9 @@ const QualidadeModulePage = () => {
       ano: new Date().getFullYear(),
       saudacaoAdequada: false,
       escutaAtiva: false,
+      clarezaObjetividade: false,        // NOVO critério
       resolucaoQuestao: false,
+      dominioAssunto: false,             // NOVO critério
       empatiaCordialidade: false,
       direcionouPesquisa: false,
       procedimentoIncorreto: false,
@@ -1631,7 +1639,7 @@ const QualidadeModulePage = () => {
             {/* Linha 1: Saudação e Escuta Ativa */}
             {[
               { key: 'saudacaoAdequada', label: 'Saudação Adequada', pontos: 10, isPositive: true },
-              { key: 'escutaAtiva', label: 'Escuta Ativa', pontos: 25, isPositive: true }
+              { key: 'escutaAtiva', label: 'Escuta Ativa / Sondagem', pontos: 15, isPositive: true }
             ].map((criterio) => (
               <Grid item xs={12} md={6} key={criterio.key}>
                 <Box sx={{ 
@@ -1689,10 +1697,10 @@ const QualidadeModulePage = () => {
               </Grid>
             ))}
             
-            {/* Linha 2: Resolução e Empatia */}
+            {/* Linha 2: Clareza e Resolução */}
             {[
-              { key: 'resolucaoQuestao', label: 'Resolução da Questão', pontos: 40, isPositive: true },
-              { key: 'empatiaCordialidade', label: 'Empatia e Cordialidade', pontos: 15, isPositive: true }
+              { key: 'clarezaObjetividade', label: 'Clareza e Objetividade', pontos: 10, isPositive: true },
+              { key: 'resolucaoQuestao', label: 'Resolução Questão / Seguiu o procedimento', pontos: 25, isPositive: true }
             ].map((criterio) => (
               <Grid item xs={12} md={6} key={criterio.key}>
                 <Box sx={{ 
@@ -1750,7 +1758,68 @@ const QualidadeModulePage = () => {
               </Grid>
             ))}
             
-            {/* Linha 3: Direcionamento (coluna 1) - coluna 2 vazia */}
+            {/* Linha 3: Domínio e Empatia */}
+            {[
+              { key: 'dominioAssunto', label: 'Domínio no assunto abordado', pontos: 15, isPositive: true },
+              { key: 'empatiaCordialidade', label: 'Empatia / Cordialidade', pontos: 15, isPositive: true }
+            ].map((criterio) => (
+              <Grid item xs={12} md={6} key={criterio.key}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between', 
+                  p: 2, 
+                  border: criterio.isPositive 
+                    ? (formData[criterio.key] ? '1px solid rgba(22, 148, 255, 0.75)' : '1px solid rgba(22, 148, 255, 0.5)')
+                    : (formData[criterio.key] ? '1px solid #EF4444' : '1px solid rgba(255, 193, 7, 0.6)'),
+                  borderRadius: '8px',
+                  backgroundColor: '#ffffff'
+                }}>
+                  <Box>
+                    <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
+                      {criterio.label}
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666' }}>
+                      {criterio.pontos > 0 ? `+${criterio.pontos} pontos` : `${criterio.pontos} pontos`}
+                    </Typography>
+                  </Box>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => setFormData({ ...formData, [criterio.key]: !formData[criterio.key] })}
+                    sx={{
+                      minWidth: '28px',
+                      width: '28px',
+                      height: '28px',
+                      border: criterio.isPositive 
+                        ? (formData[criterio.key] ? '2px solid rgba(22, 148, 255, 0.75)' : '1px solid rgba(22, 148, 255, 0.5)')
+                        : (formData[criterio.key] ? '2px solid #EF4444' : '1px solid rgba(255, 193, 7, 0.6)'),
+                      backgroundColor: criterio.isPositive 
+                        ? (formData[criterio.key] ? '#000058' : 'transparent')
+                        : (formData[criterio.key] ? '#EF4444' : 'transparent'),
+                      borderRadius: '4px',
+                      '&:hover': {
+                        backgroundColor: criterio.isPositive 
+                          ? (formData[criterio.key] ? '#000040' : 'rgba(22, 148, 255, 0.1)')
+                          : (formData[criterio.key] ? '#DC2626' : 'rgba(255, 193, 7, 0.1)'),
+                        borderColor: criterio.isPositive 
+                          ? 'rgba(22, 148, 255, 0.75)'
+                          : '#EF4444'
+                      }
+                    }}
+                  >
+                    {formData[criterio.key] && (
+                      <CheckCircle sx={{ 
+                        color: '#ffffff', 
+                        fontSize: '14px' 
+                      }} />
+                    )}
+                  </Button>
+                </Box>
+              </Grid>
+            ))}
+            
+            {/* Linha 4: Direcionamento (coluna 1) - coluna 2 vazia */}
             <Grid item xs={12} md={6}>
               <Box sx={{ 
                 display: 'flex', 
@@ -1765,7 +1834,7 @@ const QualidadeModulePage = () => {
               }}>
                 <Box>
                   <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
-                    Direcionamento de Pesquisa
+                    Direcionou para pesquisa de satisfação
                   </Typography>
                   <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666' }}>
                     +10 pontos
@@ -1802,7 +1871,7 @@ const QualidadeModulePage = () => {
               </Box>
             </Grid>
             
-            {/* Card invisível para ocupar coluna 2 da linha 3 */}
+            {/* Card invisível para ocupar coluna 2 da linha 4 */}
             <Grid item xs={12} md={6}>
               <Box sx={{ 
                 p: 2, 
@@ -1814,7 +1883,7 @@ const QualidadeModulePage = () => {
               </Box>
             </Grid>
             
-            {/* Linha 4: Encerramento Brusco (coluna 1) e Procedimento Incorreto (coluna 2) */}
+            {/* Linha 5: Encerramento Brusco (coluna 1) e Procedimento Incorreto (coluna 2) */}
             <Grid item xs={12} md={6}>
               <Box sx={{ 
                 display: 'flex', 
@@ -1829,7 +1898,7 @@ const QualidadeModulePage = () => {
               }}>
                 <Box>
                   <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
-                    Encerramento Brusco
+                    Colaborador encerrou o contato de forma brusca / Derrubou a ligação
                   </Typography>
                   <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666' }}>
                     -100 pontos
@@ -1879,7 +1948,7 @@ const QualidadeModulePage = () => {
               }}>
                 <Box>
                   <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
-                    Procedimento Incorreto
+                    Colaborador repassou um procedimento incorreto
                   </Typography>
                   <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666' }}>
                     -60 pontos

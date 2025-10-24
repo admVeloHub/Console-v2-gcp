@@ -1,5 +1,5 @@
 listagem de schema de coleções do mongoDB
-<!-- VERSION: v1.7.5 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.8.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
 
   🗄️ Database Principal: console_conteudo
 
@@ -182,7 +182,9 @@ arquivoLigacao: String,         // Base64 ou URL
 nomeArquivo: String,            // Nome do arquivo
 saudacaoAdequada: Boolean,      // Critério de avaliação
 escutaAtiva: Boolean,           // Critério de avaliação
+clarezaObjetividade: Boolean,   // Critério de avaliação (NOVO)
 resolucaoQuestao: Boolean,      // Critério de avaliação
+dominioAssunto: Boolean,        // Critério de avaliação (NOVO)
 empatiaCordialidade: Boolean,   // Critério de avaliação
 direcionouPesquisa: Boolean,    // Critério de avaliação
 procedimentoIncorreto: Boolean, // Critério de avaliação
@@ -227,7 +229,9 @@ pontuacaoGPT: Number,           // Pontuação calculada pelo GPT (0-100)
 criteriosGPT: {                 // Critérios avaliados pelo GPT
   saudacaoAdequada: Boolean,
   escutaAtiva: Boolean,
+  clarezaObjetividade: Boolean,  // NOVO critério
   resolucaoQuestao: Boolean,
+  dominioAssunto: Boolean,       // NOVO critério
   empatiaCordialidade: Boolean,
   direcionouPesquisa: Boolean,
   procedimentoIncorreto: Boolean,
