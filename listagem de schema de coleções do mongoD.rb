@@ -1,5 +1,5 @@
 listagem de schema de coleções do mongoDB
-<!-- VERSION: v1.8.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.8.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
 
   🗄️ Database Principal: console_conteudo
 
@@ -189,9 +189,9 @@ empatiaCordialidade: Boolean,   // Critério de avaliação
 direcionouPesquisa: Boolean,    // Critério de avaliação
 procedimentoIncorreto: Boolean, // Critério de avaliação
 encerramentoBrusco: Boolean,    // Critério de avaliação
-moderado: Boolean,              // Se foi moderado
-observacoesModeracao: String,   // Observações da moderação
 pontuacaoTotal: Number,         // Pontuação total
+observacoes: String,            // Observações da avaliação
+dataLigacao: Date,              // Data da ligação
 createdAt: Date,                // Data de criação
 updatedAt: Date,                // Data de atualização
 }

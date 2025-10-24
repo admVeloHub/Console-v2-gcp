@@ -1,4 +1,4 @@
-// VERSION: v1.29.6 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.29.7 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 import { qualidadeFuncionariosAPI, qualidadeAvaliacoesAPI, qualidadeFuncoesAPI } from './api';
 import axios from 'axios';
@@ -399,6 +399,7 @@ export const addAvaliacao = async (avaliacaoData) => {
       direcionouPesquisa: Boolean(avaliacaoData.direcionouPesquisa), // Boolean
       procedimentoIncorreto: Boolean(avaliacaoData.procedimentoIncorreto), // Boolean
       encerramentoBrusco: Boolean(avaliacaoData.encerramentoBrusco), // Boolean
+      observacoes: avaliacaoData.observacoes || '', // String
       dataLigacao: avaliacaoData.dataLigacao ? new Date(avaliacaoData.dataLigacao) : new Date(), // Date
       pontuacaoTotal: 0, // Será calculado
       createdAt: new Date().toISOString(), // String ISO
@@ -442,6 +443,7 @@ export const updateAvaliacao = async (id, avaliacaoData) => {
       direcionouPesquisa: Boolean(avaliacaoData.direcionouPesquisa), // Boolean
       procedimentoIncorreto: Boolean(avaliacaoData.procedimentoIncorreto), // Boolean
       encerramentoBrusco: Boolean(avaliacaoData.encerramentoBrusco), // Boolean
+      observacoes: avaliacaoData.observacoes || '', // String
       dataLigacao: avaliacaoData.dataLigacao ? new Date(avaliacaoData.dataLigacao) : new Date(), // Date
       // Campos obrigatórios para atualização
       _id: id,
