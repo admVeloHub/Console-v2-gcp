@@ -1,5 +1,5 @@
-// VERSION: v3.2.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
-import React, { useState } from 'react';
+// VERSION: v3.3.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+import React, { useState, useCallback, useEffect } from 'react';
 import { 
   Container, 
   Typography, 
@@ -14,9 +14,11 @@ import {
   Alert,
   Snackbar,
   Tabs,
-  Tab
+  Tab,
+  CircularProgress,
+  Chip
 } from '@mui/material';
-import { Save, Add, Warning } from '@mui/icons-material';
+import { Save, Add, Warning, Search } from '@mui/icons-material';
 import { velonewsAPI } from '../services/api';
 import BackButton from '../components/common/BackButton';
 
@@ -27,6 +29,20 @@ const VelonewsPage = () => {
     content: '',
     isCritical: false
   });
+
+  // Estados para a aba "Localizar Notícias"
+  const [newsList, setNewsList] = useState([]);
+  const [filteredNews, setFilteredNews] = useState([]);
+  const [selectedNews, setSelectedNews] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [editFormData, setEditFormData] = useState({
+    id: '',
+    titulo: '',
+    conteudo: '',
+    isCritical: false,
+    solved: false
+  });
+  const [loadingNews, setLoadingNews] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({
@@ -52,7 +68,8 @@ const VelonewsPage = () => {
       const mappedData = {
         titulo: formData.title,        // title → titulo (português)
         conteudo: formData.content,    // content → conteudo (português)
-        isCritical: formData.isCritical // Campo já correto
+        isCritical: formData.isCritical, // Campo já correto
+        solved: false                  // SEMPRE false ao publicar nova notícia
       };
 
       console.log('🔍 DEBUG - Dados mapeados para envio:', mappedData);
@@ -88,6 +105,124 @@ const VelonewsPage = () => {
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
   };
+
+  // Funções para a aba "Localizar Notícias"
+  
+  // 1. Carregar Lista de Notícias
+  const loadNewsList = useCallback(async () => {
+    try {
+      setLoadingNews(true);
+      const response = await velonewsAPI.getAll();
+      
+      // Ordenar por data (mais recente primeiro)
+      const sorted = response.sort((a, b) => 
+        new Date(b.createdAt) - new Date(a.createdAt)
+      );
+      
+      setNewsList(sorted);
+      setFilteredNews(sorted);
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: 'Erro ao carregar notícias',
+        severity: 'error'
+      });
+    } finally {
+      setLoadingNews(false);
+    }
+  }, []);
+
+  // 2. Pesquisar Notícias
+  const handleSearch = (event) => {
+    const term = event.target.value;
+    setSearchTerm(term);
+    
+    if (!term.trim()) {
+      setFilteredNews(newsList);
+      return;
+    }
+    
+    const filtered = newsList.filter(news =>
+      news.titulo?.toLowerCase().includes(term.toLowerCase()) ||
+      news.conteudo?.toLowerCase().includes(term.toLowerCase())
+    );
+    
+    setFilteredNews(filtered);
+  };
+
+  // 3. Selecionar Notícia para Edição (CRÍTICO - Carregar todos os campos)
+  const handleSelectNews = (news) => {
+    setSelectedNews(news);
+    setEditFormData({
+      id: news._id,
+      titulo: news.titulo || '',
+      conteudo: news.conteudo || '',
+      isCritical: news.isCritical || false,  // Carregar estado do DB
+      solved: news.solved || false           // Carregar estado do DB
+    });
+  };
+
+  // 4. Atualizar Notícia (Payload completo com solved)
+  const handleUpdateNews = async (event) => {
+    event.preventDefault();
+    
+    if (!editFormData.id) {
+      setSnackbar({
+        open: true,
+        message: 'Selecione uma notícia para editar',
+        severity: 'warning'
+      });
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      
+      // Payload COMPLETO conforme schema MongoDB
+      const updateData = {
+        titulo: editFormData.titulo,
+        conteudo: editFormData.conteudo,
+        isCritical: editFormData.isCritical,
+        solved: editFormData.solved  // Incluir solved no payload
+      };
+      
+      await velonewsAPI.update(editFormData.id, updateData);
+      
+      setSnackbar({
+        open: true,
+        message: 'Notícia atualizada com sucesso!',
+        severity: 'success'
+      });
+      
+      // Recarregar lista
+      await loadNewsList();
+      
+      // Limpar seleção
+      setSelectedNews(null);
+      setEditFormData({
+        id: '',
+        titulo: '',
+        conteudo: '',
+        isCritical: false,
+        solved: false
+      });
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: error.message || 'Erro ao atualizar notícia',
+        severity: 'error'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 5. useEffect para Carregar Dados
+  useEffect(() => {
+    if (activeTab === 1) {
+      loadNewsList();
+    }
+  }, [activeTab, loadNewsList]);
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 8, pb: 4 }}>
@@ -267,16 +402,234 @@ const VelonewsPage = () => {
 
       {/* Tab 1: Localizar Notícias */}
       {activeTab === 1 && (
-        <Card sx={{ backgroundColor: 'var(--cor-container)' }}>
-          <CardContent>
-            <Typography variant="h6" sx={{ mb: 3, color: 'var(--blue-dark)', fontFamily: 'Poppins' }}>
-              Localizar Notícias
-            </Typography>
-            <Typography variant="body1" sx={{ color: 'var(--gray)', fontFamily: 'Poppins' }}>
-              Funcionalidade de busca e listagem de notícias será implementada aqui.
-            </Typography>
-          </CardContent>
-        </Card>
+        <Box sx={{ display: 'flex', gap: 0 }}>
+          {/* Área Principal 70% - Esquerda */}
+          <Box sx={{ 
+            width: '70%', 
+            pr: 2.5   // 20px de padding direito
+          }}>
+            <Card sx={{ backgroundColor: 'var(--cor-container)' }}>
+              <CardContent>
+                <Typography variant="h6" sx={{ mb: 3, color: 'var(--blue-dark)', fontFamily: 'Poppins', fontWeight: 600 }}>
+                  {selectedNews ? 'Editar Notícia' : 'Selecione uma notícia'}
+                </Typography>
+                
+                <form onSubmit={handleUpdateNews}>
+                  <Grid container spacing={3}>
+                    {/* Campo Título */}
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        label="Título"
+                        value={editFormData.titulo}
+                        onChange={(e) => setEditFormData({...editFormData, titulo: e.target.value})}
+                        disabled={!selectedNews}
+                        required
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            fontFamily: 'Poppins'
+                          }
+                        }}
+                      />
+                    </Grid>
+                    
+                    {/* Campo Conteúdo */}
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        label="Conteúdo da Notícia"
+                        value={editFormData.conteudo}
+                        onChange={(e) => setEditFormData({...editFormData, conteudo: e.target.value})}
+                        multiline
+                        rows={8}
+                        disabled={!selectedNews}
+                        required
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            fontFamily: 'Poppins'
+                          }
+                        }}
+                      />
+                    </Grid>
+                    
+                    {/* Checkboxes: Urgente e Resolvido */}
+                    <Grid item xs={12}>
+                      <Box sx={{ display: 'flex', gap: 3 }}>
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              checked={editFormData.isCritical}
+                              onChange={(e) => setEditFormData({...editFormData, isCritical: e.target.checked})}
+                              disabled={!selectedNews}
+                              sx={{
+                                color: 'var(--yellow)',
+                                '&.Mui-checked': {
+                                  color: 'var(--yellow)',
+                                },
+                              }}
+                            />
+                          }
+                          label={
+                            <Typography sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
+                              Alerta Crítico
+                            </Typography>
+                          }
+                        />
+                        
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              checked={editFormData.solved}
+                              onChange={(e) => setEditFormData({...editFormData, solved: e.target.checked})}
+                              disabled={!selectedNews}
+                              sx={{
+                                color: 'var(--green)',
+                                '&.Mui-checked': {
+                                  color: 'var(--green)',
+                                },
+                              }}
+                            />
+                          }
+                          label={
+                            <Typography sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
+                              Resolvido
+                            </Typography>
+                          }
+                        />
+                      </Box>
+                    </Grid>
+                    
+                    {/* Botão Salvar */}
+                    <Grid item xs={12}>
+                      <Button
+                        type="submit"
+                        variant="contained"
+                        disabled={!selectedNews || loading}
+                        startIcon={<Save />}
+                        sx={{
+                          backgroundColor: 'var(--blue-medium)',
+                          color: 'white',
+                          fontFamily: 'Poppins',
+                          fontWeight: 600,
+                          '&:hover': {
+                            backgroundColor: 'var(--blue-dark)'
+                          }
+                        }}
+                      >
+                        {loading ? 'Salvando...' : 'Salvar Alterações'}
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </form>
+              </CardContent>
+            </Card>
+          </Box>
+
+          {/* Sidebar 30% - Direita */}
+          <Box sx={{ 
+            width: '30%'
+          }}>
+            <Card sx={{ backgroundColor: 'var(--cor-container)', height: '100%' }}>
+              <CardContent>
+                {/* Barra de Pesquisa */}
+                <TextField
+                  fullWidth
+                  placeholder="Pesquisar notícias..."
+                  value={searchTerm}
+                  onChange={handleSearch}
+                  sx={{ 
+                    mb: 2,
+                    '& .MuiOutlinedInput-root': {
+                      fontFamily: 'Poppins'
+                    }
+                  }}
+                  InputProps={{
+                    startAdornment: <Search sx={{ mr: 1, color: 'var(--blue-medium)' }} />
+                  }}
+                />
+                
+                <Typography variant="subtitle2" sx={{ mb: 2, color: 'var(--gray)', fontFamily: 'Poppins' }}>
+                  {filteredNews.length} notícia(s) encontrada(s)
+                </Typography>
+                
+                {/* Lista de Notícias */}
+                <Box sx={{ 
+                  maxHeight: '600px', 
+                  overflowY: 'auto',
+                  '&::-webkit-scrollbar': {
+                    width: '8px'
+                  },
+                  '&::-webkit-scrollbar-thumb': {
+                    backgroundColor: 'var(--blue-medium)',
+                    borderRadius: '4px'
+                  }
+                }}>
+                  {loadingNews ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                      <CircularProgress sx={{ color: 'var(--blue-medium)' }} />
+                    </Box>
+                  ) : filteredNews.length === 0 ? (
+                    <Typography sx={{ textAlign: 'center', mt: 4, color: 'var(--gray)', fontFamily: 'Poppins' }}>
+                      Nenhuma notícia encontrada
+                    </Typography>
+                  ) : (
+                    filteredNews.map((news) => (
+                      <Card
+                        key={news._id}
+                        onClick={() => handleSelectNews(news)}
+                        sx={{
+                          mb: 2,
+                          cursor: 'pointer',
+                          border: selectedNews?._id === news._id ? '2px solid var(--blue-medium)' : '1px solid var(--gray)',
+                          backgroundColor: selectedNews?._id === news._id ? 'rgba(22, 148, 255, 0.1)' : 'transparent',
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            backgroundColor: 'rgba(22, 148, 255, 0.05)',
+                            borderColor: 'var(--blue-light)'
+                          }
+                        }}
+                      >
+                        <CardContent sx={{ p: 2 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 1 }}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'var(--blue-dark)', fontFamily: 'Poppins', flex: 1, pr: 1 }}>
+                              {news.titulo}
+                            </Typography>
+                            <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
+                              {news.isCritical && (
+                                <Chip 
+                                  label="Alerta Crítico" 
+                                  color="warning" 
+                                  size="small"
+                                  sx={{ fontFamily: 'Poppins', fontSize: '0.7rem' }}
+                                />
+                              )}
+                              {news.solved && (
+                                <Chip 
+                                  label="Resolvido" 
+                                  color="success" 
+                                  size="small"
+                                  sx={{ fontFamily: 'Poppins', fontSize: '0.7rem' }}
+                                />
+                              )}
+                            </Box>
+                          </Box>
+                          
+                          <Typography variant="caption" sx={{ color: 'var(--gray)', fontFamily: 'Poppins' }}>
+                            {new Date(news.createdAt).toLocaleDateString('pt-BR', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric'
+                            })}
+                          </Typography>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </Box>
+              </CardContent>
+            </Card>
+          </Box>
+        </Box>
       )}
     </Container>
   );
