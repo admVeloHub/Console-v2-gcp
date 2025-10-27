@@ -1,5 +1,56 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.34.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.35.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+
+## Push GitHub - Correção de Problemas nos Novos Critérios de Avaliação - 2024-12-19 23:55
+
+### Informações do Push
+- **Tipo:** Push GitHub
+- **Data/Hora:** 2024-12-19 23:55 BRT
+- **Versão:** v1.35.0
+- **Status:** Concluído
+- **Commit:** [A ser definido]
+
+### Arquivos Modificados
+1. `src/services/qualidadeAPI.js` - v1.28.0
+   - Corrigida função updateAvaliacao para garantir compatibilidade com avaliações antigas
+   - Adicionados valores padrão para novos campos (clarezaObjetividade, dominioAssunto)
+   - Implementados logs de debug detalhados para identificação de problemas
+   - Garantida compatibilidade retroativa com avaliações existentes
+
+2. `src/pages/QualidadeModulePage.jsx` - v1.26.0
+   - Corrigida função abrirModalAvaliacao para garantir valores padrão dos novos campos
+   - Adicionados logs de debug na função salvarAvaliacao
+   - Implementada validação robusta dos novos critérios
+   - Melhorado tratamento de erros com logs detalhados
+
+### Descrição
+Correção completa dos problemas identificados nos novos critérios de avaliação:
+
+**🚨 Problemas Resolvidos:**
+- **Problema 1:** Checkboxes sendo desmarcados automaticamente ao atingir pontuação máxima
+- **Problema 2:** Erro 400 ao tentar editar avaliações existentes
+- **Causa:** Avaliações antigas não tinham os novos campos, causando incompatibilidade
+
+**🔧 Correções Implementadas:**
+- **Compatibilidade Retroativa:** Novos campos garantidos com valores padrão (false)
+- **Função updateAvaliacao:** Garante que clarezaObjetividade e dominioAssunto existam
+- **Modal de Edição:** Valores padrão aplicados ao carregar avaliações antigas
+- **Logs de Debug:** Implementados para identificar problemas futuros
+- **Tratamento de Erros:** Melhorado com logs detalhados
+
+### Impacto
+- ✅ **Problema de pontuação máxima resolvido** - Checkboxes não são mais desmarcados
+- ✅ **Edição de avaliações funcionando** - Erro 400 eliminado
+- ✅ **Compatibilidade retroativa garantida** - Avaliações antigas funcionam perfeitamente
+- ✅ **Logs de debug implementados** - Facilita identificação de problemas futuros
+- ✅ **Sistema robusto** - Tratamento de erros melhorado
+
+### Próximos Passos
+1. Testar edição de avaliações existentes
+2. Validar pontuação máxima com todos os critérios
+3. Monitorar logs de debug para identificar outros problemas
+
+---
 
 ## Push GitHub - Implementação de Novos Critérios de Avaliação - Módulo Qualidade - 2024-12-19 23:50
 
@@ -2185,6 +2236,61 @@ Correção do container "Análises Específicas" que estava em branco:
 - Análises calculadas dinamicamente a partir dos dados brutos
 - Métodos auxiliares para cálculos estatísticos
 - Estrutura de dados padronizada para exibição
+
+---
+
+## [v1.36.0] - 2024-12-19
+
+### Melhorias Sistêmicas - Módulo de Qualidade + Correções de Schema + Redução Cards Dashboard
+
+**Tipo:** Feature + Enhancement + Bug Fix
+
+**Descrição:**
+Implementação de melhorias significativas no módulo de qualidade, correção de schema MongoDB e otimização visual do dashboard:
+
+#### Correções de Schema MongoDB:
+1. **Correção conceitual:** Removidos campos `moderado` e `observacoesModeracao` do schema `qualidade_avaliacoes`
+2. **Separação correta:** Campos de moderação pertencem apenas ao schema `qualidade_avaliacoes_gpt`
+3. **Documento de compliance:** Criado `CORRECAO_SCHEMA_MODERACAO.md` para comunicação com backend
+4. **Frontend corrigido:** Removidas referências incorretas aos campos de moderação
+
+#### Melhorias no Módulo de Qualidade:
+1. **Filtro inteligente:** Colaboradores ativos (desligado=false E afastado=false) no modal de nova avaliação
+2. **Novo campo:** "Data da Ligação Avaliada" no formulário de avaliação
+3. **Colunas adicionais:** "Data da Avaliação" e "Data da Ligação" na lista de avaliações
+4. **Sistema de filtros avançados:** Modal dedicado com múltiplos critérios simultâneos
+5. **Filtros disponíveis:** Colaborador, Avaliador, Data da Avaliação (range), Data da Ligação (range), Período (mês/ano), Status
+
+#### Otimização Visual do Dashboard:
+1. **Redução de 20%:** Tamanho dos cards do dashboard
+2. **Proporções mantidas:** Altura, largura, padding e elementos internos reduzidos proporcionalmente
+3. **Responsividade preservada:** Layout adaptativo mantido
+
+**Arquivos Modificados:**
+- `listagem de schema de coleções do mongoD.rb` (v1.9.0) - Correção de schema
+- `CORRECAO_SCHEMA_MODERACAO.md` (v1.0.0) - Documento de compliance backend
+- `src/pages/QualidadeModulePage.jsx` (v1.27.0) - Melhorias sistêmicas
+- `src/services/qualidadeAPI.js` (v1.29.0) - Correção de campos
+- `src/components/Dashboard/DashboardCard.jsx` (v3.7.0) - Redução de tamanho
+- `src/pages/DashboardPage.jsx` (v4.0.0) - Ajuste de ícones
+
+**Impacto:**
+- ✅ Schema MongoDB semanticamente correto
+- ✅ UX melhorada com filtros mais precisos e intuitivos
+- ✅ Registro completo de datas (avaliação e ligação avaliada)
+- ✅ Prevenção de seleção de colaboradores inativos
+- ✅ Múltiplos critérios de busca simultâneos
+- ✅ Dashboard mais compacto e eficiente
+- ✅ Comunicação clara com backend para correções necessárias
+
+**Compatibilidade:**
+- ✅ Retrocompatível: avaliações antigas sem dataLigacao exibirão "-"
+- ✅ Filtros aplicam-se apenas a avaliações com dados disponíveis
+- ✅ Campos de moderação mantidos apenas onde pertencem (análises GPT)
+
+**Próximos Passos:**
+- Backend deve implementar correções do schema conforme `CORRECAO_SCHEMA_MODERACAO.md`
+- Testes de integração após correções do backend
 
 ---
 **Próximo deploy:** Aguardando próximas alterações

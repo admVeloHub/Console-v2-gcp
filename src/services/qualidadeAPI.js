@@ -1,4 +1,4 @@
-// VERSION: v1.29.8 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.30.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 import { qualidadeFuncionariosAPI, qualidadeAvaliacoesAPI, qualidadeFuncoesAPI } from './api';
 import axios from 'axios';
@@ -372,8 +372,8 @@ export const getAvaliacoes = async () => {
     return Array.isArray(avaliacoes) ? avaliacoes : [];
   } catch (error) {
     console.error('❌ Erro ao carregar avaliações da API:', error);
-    // Fallback para localStorage se API falhar
-    return getAvaliacoesLocalStorage();
+    // Não fazer fallback - retornar array vazio em caso de erro
+    return [];
   }
 };
 
@@ -406,9 +406,6 @@ export const addAvaliacao = async (avaliacaoData) => {
       avaliador: avaliacaoData.avaliador, // String
       mes: avaliacaoData.mes, // String
       ano: Number(avaliacaoData.ano) || new Date().getFullYear(), // Number
-      dataAvaliacao: new Date(), // Date - sempre usar data atual
-      arquivoLigacao: avaliacaoData.arquivoLigacao || '', // String
-      nomeArquivo: avaliacaoData.nomeArquivo || '', // String
       saudacaoAdequada: Boolean(avaliacaoData.saudacaoAdequada), // Boolean
       escutaAtiva: Boolean(avaliacaoData.escutaAtiva), // Boolean
       clarezaObjetividade: Boolean(avaliacaoData.clarezaObjetividade), // Boolean - NOVO
@@ -418,9 +415,9 @@ export const addAvaliacao = async (avaliacaoData) => {
       direcionouPesquisa: Boolean(avaliacaoData.direcionouPesquisa), // Boolean
       procedimentoIncorreto: Boolean(avaliacaoData.procedimentoIncorreto), // Boolean
       encerramentoBrusco: Boolean(avaliacaoData.encerramentoBrusco), // Boolean
+      pontuacaoTotal: 0, // Será calculado
       observacoes: avaliacaoData.observacoes || '', // String
       dataLigacao: avaliacaoData.dataLigacao ? new Date(avaliacaoData.dataLigacao) : new Date(), // Date
-      pontuacaoTotal: 0, // Será calculado
       createdAt: new Date(), // Date
       updatedAt: new Date() // Date
     };
@@ -464,8 +461,8 @@ export const addAvaliacao = async (avaliacaoData) => {
       throw error;
     }
     
-    // Fallback para localStorage se API falhar
-    return addAvaliacaoLocalStorage(avaliacaoData);
+    // Não fazer fallback - apenas propagar erro da API
+    throw error;
   }
 };
 
@@ -481,9 +478,6 @@ export const updateAvaliacao = async (id, avaliacaoData) => {
       avaliador: avaliacaoData.avaliador, // String
       mes: avaliacaoData.mes, // String
       ano: Number(avaliacaoData.ano) || new Date().getFullYear(), // Number
-      dataAvaliacao: avaliacaoData.dataAvaliacao ? new Date(avaliacaoData.dataAvaliacao) : new Date(), // Date
-      arquivoLigacao: avaliacaoData.arquivoLigacao || '', // String
-      nomeArquivo: avaliacaoData.nomeArquivo || '', // String
       saudacaoAdequada: Boolean(avaliacaoData.saudacaoAdequada), // Boolean
       escutaAtiva: Boolean(avaliacaoData.escutaAtiva), // Boolean
       clarezaObjetividade: Boolean(avaliacaoData.clarezaObjetividade), // Boolean
@@ -493,6 +487,7 @@ export const updateAvaliacao = async (id, avaliacaoData) => {
       direcionouPesquisa: Boolean(avaliacaoData.direcionouPesquisa), // Boolean
       procedimentoIncorreto: Boolean(avaliacaoData.procedimentoIncorreto), // Boolean
       encerramentoBrusco: Boolean(avaliacaoData.encerramentoBrusco), // Boolean
+      pontuacaoTotal: 0, // Será calculado
       observacoes: avaliacaoData.observacoes || '', // String
       dataLigacao: avaliacaoData.dataLigacao ? new Date(avaliacaoData.dataLigacao) : new Date(), // Date
       // Campos obrigatórios para atualização
@@ -510,8 +505,8 @@ export const updateAvaliacao = async (id, avaliacaoData) => {
     return response;
   } catch (error) {
     console.error('❌ Erro ao atualizar avaliação via API:', error);
-    // Fallback para localStorage se API falhar
-    return updateAvaliacaoLocalStorage(id, avaliacaoData);
+    // Não fazer fallback - apenas propagar erro da API
+    throw error;
   }
 };
 
@@ -523,8 +518,8 @@ export const deleteAvaliacao = async (id) => {
     return response;
   } catch (error) {
     console.error('❌ Erro ao deletar avaliação via API:', error);
-    // Fallback para localStorage se API falhar
-    return deleteAvaliacaoLocalStorage(id);
+    // Não fazer fallback - apenas propagar erro da API
+    throw error;
   }
 };
 

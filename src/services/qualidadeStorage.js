@@ -1,4 +1,4 @@
-// VERSION: v1.0.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.1.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 import { 
   generateId, 
@@ -217,41 +217,26 @@ export const addAvaliacao = async (avaliacaoData) => {
       throw new Error('Funcionário não encontrado');
     }
 
-    // Processar arquivo de áudio se fornecido
-    let arquivoLigacao = null;
-    let nomeArquivo = null;
-    
-    if (avaliacaoData.arquivoLigacao) {
-      if (avaliacaoData.arquivoLigacao instanceof File) {
-        // Converter File para Base64
-        arquivoLigacao = await fileToBase64(avaliacaoData.arquivoLigacao);
-        nomeArquivo = avaliacaoData.arquivoLigacao.name;
-      } else {
-        arquivoLigacao = avaliacaoData.arquivoLigacao;
-        nomeArquivo = avaliacaoData.nomeArquivo || 'audio_ligacao';
-      }
-    }
+    // Arquivo de áudio não pertence a este schema - removido
 
     const novaAvaliacao = {
       _id: generateId(), // Usar _id em vez de id
       colaboradorNome: avaliacaoData.colaboradorNome,
-      colaboradorNome: funcionario.nomeCompleto,
       avaliador: avaliacaoData.avaliador,
       mes: avaliacaoData.mes,
       ano: avaliacaoData.ano,
-      dataAvaliacao: new Date().toISOString(),
-      arquivoLigacao,
-      nomeArquivo,
       saudacaoAdequada: avaliacaoData.saudacaoAdequada || false,
       escutaAtiva: avaliacaoData.escutaAtiva || false,
+      clarezaObjetividade: avaliacaoData.clarezaObjetividade || false,
       resolucaoQuestao: avaliacaoData.resolucaoQuestao || false,
+      dominioAssunto: avaliacaoData.dominioAssunto || false,
       empatiaCordialidade: avaliacaoData.empatiaCordialidade || false,
       direcionouPesquisa: avaliacaoData.direcionouPesquisa || false,
       procedimentoIncorreto: avaliacaoData.procedimentoIncorreto || false,
       encerramentoBrusco: avaliacaoData.encerramentoBrusco || false,
-      moderado: false,
-      observacoesModeracao: avaliacaoData.observacoesModeracao || '',
       pontuacaoTotal: 0, // Será calculado
+      observacoes: avaliacaoData.observacoes || '',
+      dataLigacao: avaliacaoData.dataLigacao ? new Date(avaliacaoData.dataLigacao).toISOString() : new Date().toISOString(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -279,25 +264,11 @@ export const updateAvaliacao = async (id, avaliacaoData) => {
     if (index !== -1) {
       const avaliacaoExistente = avaliacoes[index];
       
-      // Processar arquivo de áudio se fornecido
-      let arquivoLigacao = avaliacaoExistente.arquivoLigacao;
-      let nomeArquivo = avaliacaoExistente.nomeArquivo;
-      
-      if (avaliacaoData.arquivoLigacao) {
-        if (avaliacaoData.arquivoLigacao instanceof File) {
-          arquivoLigacao = await fileToBase64(avaliacaoData.arquivoLigacao);
-          nomeArquivo = avaliacaoData.arquivoLigacao.name;
-        } else {
-          arquivoLigacao = avaliacaoData.arquivoLigacao;
-          nomeArquivo = avaliacaoData.nomeArquivo || nomeArquivo;
-        }
-      }
+      // Arquivo de áudio não pertence a este schema - removido
 
       const avaliacaoAtualizada = {
         ...avaliacaoExistente,
         ...avaliacaoData,
-        arquivoLigacao,
-        nomeArquivo,
         updatedAt: new Date().toISOString()
       };
 
