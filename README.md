@@ -75,7 +75,7 @@ Aplicação React completa para o Console de Conteúdo VeloHub. Sistema unificad
 - npm >= 8.0.0
 - Conta Google para OAuth (opcional)
 
-### **Instalação**
+### **Instalação Rápida**
 ```bash
 # Clonar repositório
 git clone https://github.com/admVeloHub/front-console.git
@@ -84,25 +84,38 @@ cd front-console
 # Instalar dependências
 npm install
 
-# Configurar variáveis de ambiente
-cp .env.example .env
-# Editar .env com suas configurações
+# Configurar ambiente de desenvolvimento (automático)
+# Linux/Mac:
+./setup-env.sh
+# Windows:
+setup-env.bat
 
 # Executar em desenvolvimento
 npm start
 ```
 
+### **Configuração Manual**
+```bash
+# Copiar arquivo de exemplo
+cp env.local.example .env
+
+# Editar .env com suas configurações
+# O arquivo já vem configurado para usar a API de produção
+```
+
 ### **Variáveis de Ambiente**
 ```bash
-# Google OAuth (opcional)
-REACT_APP_GOOGLE_CLIENT_ID=seu_google_client_id_aqui
-
-# API Backend
+# API Backend (configurado automaticamente)
 REACT_APP_API_URL=https://back-console.vercel.app/api
 
-# Modo de desenvolvimento
+# Modo de desenvolvimento (configurado automaticamente)
 REACT_APP_DEV_MODE=true
+
+# Google OAuth (opcional - descomente se necessário)
+# REACT_APP_GOOGLE_CLIENT_ID=seu_google_client_id_aqui
 ```
+
+**Nota:** O arquivo `.env` é criado automaticamente com as configurações corretas para desenvolvimento local usando a API de produção.
 
 **Nota:** Para produção, configure as variáveis de ambiente diretamente no Vercel (Settings → Environment Variables).
 

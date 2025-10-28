@@ -1,4 +1,4 @@
-// VERSION: v3.10.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.12.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import axios from 'axios';
 
 // Configuração base da API
@@ -80,6 +80,11 @@ export const velonewsAPI = {
   // Listar todas as velonews
   getAll: async () => {
     const response = await api.get('/velonews');
+    // Verificar estrutura da resposta {success, data, count}
+    if (response.data && response.data.success && Array.isArray(response.data.data)) {
+      return response.data.data;
+    }
+    // Fallback para formato antigo
     return response.data;
   },
 
@@ -98,6 +103,12 @@ export const velonewsAPI = {
   // Deletar velonews
   delete: async (id) => {
     const response = await api.delete(`/velonews/${id}`);
+    return response.data;
+  },
+
+  // Obter velonews por ID
+  getById: async (id) => {
+    const response = await api.get(`/velonews/${id}`);
     return response.data;
   }
 };
@@ -146,6 +157,72 @@ export const igpAPI = {
   // Exportar dados
   exportData: async (format, data, filename) => {
     const response = await api.post(`/igp/export/${format}`, { data, filename });
+    return response.data;
+  }
+};
+
+// API para Hub Sessions
+export const hubSessionsAPI = {
+  // GET /api/hub-sessions/user/:email - sessões por email
+  getByUserEmail: async (email) => {
+    const response = await api.get(`/hub-sessions/user/${email}`);
+    return response.data;
+  },
+  
+  // GET /api/hub-sessions/active - sessões ativas
+  getActiveSessions: async () => {
+    const response = await api.get('/hub-sessions/active');
+    return response.data;
+  },
+  
+  // GET /api/hub-sessions/history/:email - histórico com duração
+  getSessionHistory: async (email) => {
+    const response = await api.get(`/hub-sessions/history/${email}`);
+    return response.data;
+  },
+  
+  // GET /api/hub-sessions/session/:sessionId - sessão específica
+  getBySessionId: async (sessionId) => {
+    const response = await api.get(`/hub-sessions/session/${sessionId}`);
+    return response.data;
+  },
+  
+  // GET /api/hub-sessions/stats - estatísticas gerais
+  getStats: async () => {
+    const response = await api.get('/hub-sessions/stats');
+    return response.data;
+  }
+};
+
+// API para Velonews Acknowledgments
+export const velonewsAcknowledgmentsAPI = {
+  // GET /api/velonews-acknowledgments/news/:newsId - quem confirmou uma notícia
+  getByNewsId: async (newsId) => {
+    const response = await api.get(`/velonews-acknowledgments/news/${newsId}`);
+    return response.data;
+  },
+  
+  // GET /api/velonews-acknowledgments/user/:email - notícias confirmadas pelo usuário
+  getByUserEmail: async (email) => {
+    const response = await api.get(`/velonews-acknowledgments/user/${email}`);
+    return response.data;
+  },
+  
+  // GET /api/velonews-acknowledgments/check/:newsId/:email - verificar confirmação específica
+  checkAcknowledgment: async (newsId, email) => {
+    const response = await api.get(`/velonews-acknowledgments/check/${newsId}/${email}`);
+    return response.data;
+  },
+  
+  // GET /api/velonews-acknowledgments/stats - estatísticas gerais
+  getStats: async () => {
+    const response = await api.get('/velonews-acknowledgments/stats');
+    return response.data;
+  },
+  
+  // GET /api/velonews-acknowledgments/recent - confirmações recentes
+  getRecent: async () => {
+    const response = await api.get('/velonews-acknowledgments/recent');
     return response.data;
   }
 };

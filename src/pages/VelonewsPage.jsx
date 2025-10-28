@@ -1,4 +1,4 @@
-// VERSION: v3.3.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v4.3.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useCallback, useEffect } from 'react';
 import { 
   Container, 
@@ -114,14 +114,37 @@ const VelonewsPage = () => {
       setLoadingNews(true);
       const response = await velonewsAPI.getAll();
       
-      // Ordenar por data (mais recente primeiro)
-      const sorted = response.sort((a, b) => 
-        new Date(b.createdAt) - new Date(a.createdAt)
-      );
+      // Garantir que temos um array
+      if (!Array.isArray(response)) {
+        console.error('Resposta não é um array:', response);
+        setNewsList([]);
+        setFilteredNews([]);
+        return;
+      }
+      
+      // Ordenar por data (mais recente primeiro) com validação
+      const sorted = response.sort((a, b) => {
+        const dateA = new Date(a.createdAt);
+        const dateB = new Date(b.createdAt);
+        
+        // Validar datas
+        if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
+          console.warn('Data inválida encontrada:', { 
+            a: a.createdAt, 
+            b: b.createdAt,
+            tituloA: a.titulo,
+            tituloB: b.titulo
+          });
+          return 0;
+        }
+        
+        return dateB - dateA; // Mais recente primeiro
+      });
       
       setNewsList(sorted);
       setFilteredNews(sorted);
     } catch (error) {
+      console.error('Erro ao carregar notícias:', error);
       setSnackbar({
         open: true,
         message: 'Erro ao carregar notícias',
