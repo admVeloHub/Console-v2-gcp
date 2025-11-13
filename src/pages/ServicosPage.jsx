@@ -1,4 +1,4 @@
-// VERSION: v1.0.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.1.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -151,7 +151,7 @@ const ServicosPage = () => {
     ];
 
     return (
-      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+      <Box sx={{ display: 'flex', gap: 0.8, flexWrap: 'wrap' }}>
         {statuses.map((status) => (
           <Button
             key={status.key}
@@ -161,9 +161,12 @@ const ServicosPage = () => {
             startIcon={status.icon}
             onClick={() => updateLocalStatus(moduleKey, status.key)}
             sx={{
-              minWidth: '100px',
+              minWidth: '80px',
               textTransform: 'none',
-              fontWeight: currentStatus === status.key ? 600 : 400
+              fontWeight: currentStatus === status.key ? 600 : 400,
+              fontSize: '0.64rem',
+              py: 0.4,
+              px: 1.2
             }}
           >
             {status.label}
@@ -179,9 +182,9 @@ const ServicosPage = () => {
   }, []);
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4, pb: 8 }}>
+    <Container maxWidth="lg" sx={{ py: 3.2, pb: 6.4 }}>
       {/* Header */}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', mb: 4 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', mb: 3.2 }}>
         <Box sx={{ position: 'absolute', left: 0 }}>
           <BackButton />
         </Box>
@@ -191,7 +194,8 @@ const ServicosPage = () => {
           sx={{ 
             fontFamily: 'Poppins',
             fontWeight: 700,
-            color: 'var(--blue-dark)'
+            color: 'var(--blue-dark)',
+            fontSize: '1.92rem'
           }}
         >
           Serviços
@@ -200,15 +204,15 @@ const ServicosPage = () => {
 
       {/* Loading */}
       {loading && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-          <CircularProgress />
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 3.2 }}>
+          <CircularProgress size={24} />
         </Box>
       )}
 
       {/* Grid de Serviços */}
       {!loading && (
         <>
-          <Grid container spacing={3}>
+          <Grid container spacing={2.4}>
             {services.map((service) => {
               const currentStatus = localStatus[service.key] || 'off';
               
@@ -226,9 +230,9 @@ const ServicosPage = () => {
                       }
                     }}
                   >
-                    <CardContent sx={{ flexGrow: 1 }}>
+                    <CardContent sx={{ flexGrow: 1, p: 1.6 }}>
                       {/* Header do Card */}
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.6 }}>
                         <Typography 
                           variant="h6" 
                           component="h3" 
@@ -236,7 +240,8 @@ const ServicosPage = () => {
                             flexGrow: 1,
                             color: 'var(--blue-dark)',
                             fontWeight: 600,
-                            fontFamily: 'Poppins, sans-serif'
+                            fontFamily: 'Poppins, sans-serif',
+                            fontSize: '0.96rem'
                           }}
                         >
                           {service.name}
@@ -247,6 +252,7 @@ const ServicosPage = () => {
                           color={getStatusColor(currentStatus)}
                           size="small"
                           variant="outlined"
+                          sx={{ fontSize: '0.64rem', height: '20px' }}
                         />
                       </Box>
 
@@ -255,9 +261,10 @@ const ServicosPage = () => {
                         variant="body2" 
                         color="text.secondary" 
                         sx={{ 
-                          mb: 3,
+                          mb: 2.4,
                           fontFamily: 'Poppins, sans-serif',
-                          lineHeight: 1.6
+                          lineHeight: 1.6,
+                          fontSize: '0.8rem'
                         }}
                       >
                         {service.description}
@@ -276,20 +283,21 @@ const ServicosPage = () => {
           <Box sx={{ 
             display: 'flex', 
             justifyContent: 'flex-end', 
-            mt: 4,
-            pr: 2
+            mt: 3.2,
+            pr: 1.6
           }}>
             <Button
               variant="contained"
-              size="large"
+              size="medium"
               onClick={saveAllStatus}
               disabled={saving}
               sx={{
                 backgroundColor: 'var(--green)',
                 fontFamily: 'Poppins, sans-serif',
                 fontWeight: 600,
-                px: 4,
-                py: 1.5,
+                px: 3.2,
+                py: 1.2,
+                fontSize: '0.8rem',
                 '&:hover': {
                   backgroundColor: 'var(--green)',
                   opacity: 0.9

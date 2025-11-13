@@ -1,28 +1,11 @@
-// VERSION: v1.2.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.3.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState } from 'react';
 import { Container, Box, Typography, Button, Card, CardContent } from '@mui/material';
-import { ArrowBack, Sync, People, Assessment } from '@mui/icons-material';
+import { ArrowBack, People, Assessment } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
 const QualidadePage = () => {
   const navigate = useNavigate();
-  const [isSyncing, setIsSyncing] = useState(false);
-
-  const handleSync = async () => {
-    if (isSyncing) return;
-    
-    setIsSyncing(true);
-    try {
-      console.log('🔄 Iniciando sincronização manual...');
-      // Simular sincronização
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      console.log('✅ Sincronização concluída');
-    } catch (error) {
-      console.error('❌ Erro durante sincronização:', error);
-    } finally {
-      setIsSyncing(false);
-    }
-  };
 
   const handleModuleClick = (moduleId) => {
     if (moduleId === 'funcionarios') {
@@ -33,67 +16,36 @@ const QualidadePage = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 6, mb: 8, pb: 4, position: 'relative' }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', mb: 4 }}>
-        <Box sx={{ position: 'absolute', left: 0 }}>
-          <Button
-            variant="outlined"
-            startIcon={<ArrowBack />}
-            onClick={() => navigate('/')}
-            sx={{
-              color: '#000058',
-              borderColor: '#000058',
-              fontFamily: 'Poppins',
-              fontWeight: 500,
-              '&:hover': {
-                backgroundColor: '#1694FF',
-                color: '#ffffff',
-                borderColor: '#1694FF'
-              }
-            }}
-          >
-            Voltar
-          </Button>
-        </Box>
-        <Typography 
-          variant="h4" 
-          component="h1"
-          sx={{ 
+    <Container maxWidth="lg" sx={{ mt: 4.8, mb: 6.4, pb: 3.2, position: 'relative' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', position: 'relative', mb: 3.2 }}>
+        <Button
+          variant="outlined"
+          startIcon={<ArrowBack />}
+          onClick={() => navigate('/')}
+          sx={{
+            color: '#000058',
+            borderColor: '#000058',
             fontFamily: 'Poppins',
-            fontWeight: 700,
-            color: 'var(--blue-dark)'
+            fontWeight: 500,
+            fontSize: '0.8rem',
+            py: 0.4,
+            px: 1.2,
+            '&:hover': {
+              backgroundColor: '#1694FF',
+              color: '#ffffff',
+              borderColor: '#1694FF'
+            }
           }}
         >
-          Qualidade
-        </Typography>
-        <Box sx={{ position: 'absolute', right: 0 }}>
-          <Button
-            startIcon={<Sync />}
-            onClick={handleSync}
-            disabled={isSyncing}
-            sx={{
-              backgroundColor: '#000058',
-              color: '#ffffff',
-              fontFamily: 'Poppins',
-              fontWeight: 500,
-              '&:hover': {
-                backgroundColor: '#000040'
-              },
-              '&:disabled': {
-                backgroundColor: '#666666'
-              }
-            }}
-          >
-            {isSyncing ? 'Sincronizando...' : 'Sincronização'}
-          </Button>
-        </Box>
+          Voltar
+        </Button>
       </Box>
 
       {/* Cards dos módulos */}
       <Box sx={{ 
         display: 'grid', 
         gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, 
-        gap: 4,
+        gap: 3.2,
         maxWidth: '800px',
         mx: 'auto'
       }}>
@@ -103,9 +55,9 @@ const QualidadePage = () => {
           sx={{
             cursor: 'pointer',
             backgroundColor: '#ffffff',
-            borderRadius: '16px',
+            borderRadius: '12.8px',
             border: '1px solid #e0e0e0',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+            boxShadow: '0 3.2px 16px rgba(0, 0, 0, 0.1)',
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             position: 'relative',
             overflow: 'hidden',
@@ -115,7 +67,7 @@ const QualidadePage = () => {
               top: 0,
               left: 0,
               right: 0,
-              height: '4px',
+              height: '3.2px',
               background: 'linear-gradient(90deg, #000058, #1694FF)',
               transform: 'scaleX(0)',
               transformOrigin: 'left',
@@ -125,38 +77,40 @@ const QualidadePage = () => {
               transform: 'scaleX(1)'
             },
             '&:hover': {
-              transform: 'translateY(-12px) scale(1.02)',
-              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
+              transform: 'translateY(-9.6px) scale(1.02)',
+              boxShadow: '0 16px 32px rgba(0, 0, 0, 0.15)',
               borderColor: '#1694FF'
             }
           }}
         >
-          <CardContent sx={{ p: 4, height: '200px', display: 'flex', alignItems: 'center' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, width: '100%' }}>
+          <CardContent sx={{ p: 3.2, height: '160px', display: 'flex', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.4, width: '100%' }}>
               <Box sx={{
-                p: 2,
-                borderRadius: '12px',
+                p: 1.6,
+                borderRadius: '9.6px',
                 backgroundColor: '#1694FF',
                 color: '#ffffff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}>
-                <People sx={{ fontSize: 32 }} />
+                <People sx={{ fontSize: 25.6 }} />
               </Box>
               <Box sx={{ flex: 1 }}>
                 <Typography variant="h5" sx={{ 
                   fontFamily: 'Poppins', 
                   fontWeight: 700, 
                   color: '#000058',
-                  mb: 1
+                  mb: 0.8,
+                  fontSize: '1.28rem'
                 }}>
                   Funcionários
                 </Typography>
                 <Typography variant="body1" sx={{ 
                   fontFamily: 'Poppins', 
                   color: '#666666',
-                  lineHeight: 1.5
+                  lineHeight: 1.5,
+                  fontSize: '0.8rem'
                 }}>
                   Gestão de colaboradores e acessos
                 </Typography>
@@ -171,9 +125,9 @@ const QualidadePage = () => {
           sx={{
             cursor: 'pointer',
             backgroundColor: '#ffffff',
-            borderRadius: '16px',
+            borderRadius: '12.8px',
             border: '1px solid #e0e0e0',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+            boxShadow: '0 3.2px 16px rgba(0, 0, 0, 0.1)',
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             position: 'relative',
             overflow: 'hidden',
@@ -183,7 +137,7 @@ const QualidadePage = () => {
               top: 0,
               left: 0,
               right: 0,
-              height: '4px',
+              height: '3.2px',
               background: 'linear-gradient(90deg, #000058, #1694FF)',
               transform: 'scaleX(0)',
               transformOrigin: 'left',
@@ -193,38 +147,40 @@ const QualidadePage = () => {
               transform: 'scaleX(1)'
             },
             '&:hover': {
-              transform: 'translateY(-12px) scale(1.02)',
-              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
+              transform: 'translateY(-9.6px) scale(1.02)',
+              boxShadow: '0 16px 32px rgba(0, 0, 0, 0.15)',
               borderColor: '#1694FF'
             }
           }}
         >
-          <CardContent sx={{ p: 4, height: '200px', display: 'flex', alignItems: 'center' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, width: '100%' }}>
+          <CardContent sx={{ p: 3.2, height: '160px', display: 'flex', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.4, width: '100%' }}>
               <Box sx={{
-                p: 2,
-                borderRadius: '12px',
+                p: 1.6,
+                borderRadius: '9.6px',
                 backgroundColor: '#000058',
                 color: '#ffffff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}>
-                <Assessment sx={{ fontSize: 32 }} />
+                <Assessment sx={{ fontSize: 25.6 }} />
               </Box>
               <Box sx={{ flex: 1 }}>
                 <Typography variant="h5" sx={{ 
                   fontFamily: 'Poppins', 
                   fontWeight: 700, 
                   color: '#000058',
-                  mb: 1
+                  mb: 0.8,
+                  fontSize: '1.28rem'
                 }}>
                   Módulo de Qualidade
                 </Typography>
                 <Typography variant="body1" sx={{ 
                   fontFamily: 'Poppins', 
                   color: '#666666',
-                  lineHeight: 1.5
+                  lineHeight: 1.5,
+                  fontSize: '0.8rem'
                 }}>
                   Monitoramento e avaliação de atendimentos
                 </Typography>

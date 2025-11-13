@@ -1,4 +1,4 @@
-// VERSION: v3.8.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.9.1 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -116,12 +116,14 @@ const ConfigPage = () => {
       velonews: false,
       botPerguntas: false,
       botAnalises: false,
-      chamadosInternos: false,
+      hubAnalises: false,
+      chamadosInternos: true,
       igp: false,
       qualidade: false,
       capacity: false,
       config: false,
-      servicos: false
+      servicos: false,
+      academy: false
     },
     tiposTickets: {
       artigos: false,
@@ -147,12 +149,14 @@ const ConfigPage = () => {
     { key: 'velonews', label: 'Velonews' },
     { key: 'botPerguntas', label: 'Bot Perguntas' },
     { key: 'botAnalises', label: 'Bot Análises' },
+    { key: 'hubAnalises', label: 'Hub Análises' },
     { key: 'chamadosInternos', label: 'Chamados Internos' },
     { key: 'igp', label: 'IGP' },
     { key: 'qualidade', label: 'Qualidade' },
     { key: 'capacity', label: 'Capacity' },
     { key: 'config', label: 'Config' },
-    { key: 'servicos', label: 'Serviços' }
+    { key: 'servicos', label: 'Serviços' },
+    { key: 'academy', label: 'Academy' }
   ];
 
   // Mapeamento dos tipos de tickets dos chamados internos
@@ -183,7 +187,8 @@ const ConfigPage = () => {
           velonews: false,
           botPerguntas: false,
           botAnalises: false,
-          chamadosInternos: false,
+          hubAnalises: false,
+          chamadosInternos: true,
           igp: false,
           qualidade: false,
           capacity: false,
@@ -221,12 +226,14 @@ const ConfigPage = () => {
           velonews: false,
           botPerguntas: false,
           botAnalises: false,
-          chamadosInternos: false,
+          hubAnalises: false,
+          chamadosInternos: true,
           igp: false,
           qualidade: false,
           capacity: false,
           config: false,
-          servicos: false
+          servicos: false,
+          academy: false
         },
         tiposTickets: {
           artigos: false,
@@ -265,7 +272,7 @@ const ConfigPage = () => {
           velonews: false,
           botPerguntas: false,
           botAnalises: false,
-          chamadosInternos: false,
+          chamadosInternos: true,
           igp: false,
           qualidade: false,
           capacity: false,
@@ -301,7 +308,8 @@ const ConfigPage = () => {
         velonews: false,
         botPerguntas: false,
         botAnalises: false,
-        chamadosInternos: false,
+        hubAnalises: false,
+        chamadosInternos: true,
         igp: false,
         qualidade: false,
         capacity: false,

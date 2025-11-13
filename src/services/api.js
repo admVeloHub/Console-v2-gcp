@@ -1,4 +1,4 @@
-// VERSION: v3.12.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.14.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import axios from 'axios';
 
 // Configuração base da API
@@ -175,6 +175,12 @@ export const hubSessionsAPI = {
     return response.data;
   },
   
+  // GET /api/hub-sessions - todas as sessões
+  getAll: async () => {
+    const response = await api.get('/hub-sessions');
+    return response.data;
+  },
+  
   // GET /api/hub-sessions/history/:email - histórico com duração
   getSessionHistory: async (email) => {
     const response = await api.get(`/hub-sessions/history/${email}`);
@@ -223,6 +229,69 @@ export const velonewsAcknowledgmentsAPI = {
   // GET /api/velonews-acknowledgments/recent - confirmações recentes
   getRecent: async () => {
     const response = await api.get('/velonews-acknowledgments/recent');
+    return response.data;
+  }
+};
+
+// API para Hub Análises
+export const hubAnalisesAPI = {
+  // GET /api/hub-analises/usuarios-online-offline - funcionários online/offline
+  getUsuariosOnlineOffline: async () => {
+    const response = await api.get('/hub-analises/usuarios-online-offline');
+    return response.data;
+  },
+  
+  // GET /api/hub-analises/hub-sessions - todas as sessões (suporta filtros ?isActive=true/false, ?userEmail=email)
+  getHubSessions: async (filters = {}) => {
+    const params = new URLSearchParams();
+    if (filters.isActive !== undefined) {
+      params.append('isActive', filters.isActive);
+    }
+    if (filters.userEmail) {
+      params.append('userEmail', filters.userEmail);
+    }
+    const queryString = params.toString();
+    const url = `/hub-analises/hub-sessions${queryString ? `?${queryString}` : ''}`;
+    const response = await api.get(url);
+    return response.data;
+  },
+  
+  // GET /api/hub-analises/ciencia-por-noticia - confirmações agrupadas por notícia
+  getCienciaPorNoticia: async () => {
+    const response = await api.get('/hub-analises/ciencia-por-noticia');
+    return response.data;
+  }
+};
+
+// API para Bot Feedback
+export const botFeedbackAPI = {
+  // GET /api/bot-feedback - lista todos os feedbacks
+  getAll: async () => {
+    const response = await api.get('/bot-feedback');
+    return response.data;
+  },
+  
+  // GET /api/bot-feedback/:id - obtém feedback por ID
+  getById: async (id) => {
+    const response = await api.get(`/bot-feedback/${id}`);
+    return response.data;
+  },
+  
+  // POST /api/bot-feedback - cria novo feedback
+  create: async (data) => {
+    const response = await api.post('/bot-feedback', data);
+    return response.data;
+  },
+  
+  // PUT /api/bot-feedback/:id - atualiza feedback existente
+  update: async (id, data) => {
+    const response = await api.put(`/bot-feedback/${id}`, data);
+    return response.data;
+  },
+  
+  // DELETE /api/bot-feedback/:id - deleta feedback
+  delete: async (id) => {
+    const response = await api.delete(`/bot-feedback/${id}`);
     return response.data;
   }
 };

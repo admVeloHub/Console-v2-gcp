@@ -1,4 +1,4 @@
-// VERSION: v4.1.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v4.1.2 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
 import React from 'react';
 import { Container, Grid, Typography, Box, Card, CardContent } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
@@ -12,7 +12,8 @@ import {
   BoltOutlined,
   SettingsOutlined,
   EngineeringOutlined,
-  AnalyticsOutlined
+  AnalyticsOutlined,
+  SchoolOutlined
 } from '@mui/icons-material';
 import DashboardCard from '../components/Dashboard/DashboardCard';
 import { useAuth } from '../contexts/AuthContext';
@@ -27,12 +28,12 @@ const DashboardPage = () => {
   console.log('🔍 DEBUG - É Gravina@DEV?', (user?.email === 'lucas.gravina@velotax.com.br' || user?._userMail === 'lucas.gravina@velotax.com.br'));
   console.log('🔍 DEBUG - Tem permissão servicos?', hasPermission('servicos'));
 
-  // Primeira fileira: Artigos, Velonews, Bot Perguntas, Serviços (ESSENCIAL)
+  // Primeira fileira: Artigos, Velonews, Bot Perguntas, Serviços, Academy (ESSENCIAL)
   const firstRowCards = [
     {
       title: 'Artigos',
       description: 'Criar e gerenciar artigos do sistema',
-      icon: <ArticleOutlined sx={{ fontSize: '2.8rem' }} />,
+      icon: <ArticleOutlined sx={{ fontSize: '2.24rem' }} />,
       path: '/artigos',
       color: 'primary',
       permission: 'artigos'
@@ -40,7 +41,7 @@ const DashboardPage = () => {
     {
       title: 'Velonews',
       description: 'Publicar notícias e alertas',
-      icon: <WarningAmberOutlined sx={{ fontSize: '2.8rem' }} />,
+      icon: <WarningAmberOutlined sx={{ fontSize: '2.24rem' }} />,
       path: '/velonews',
       color: 'primary',
       permission: 'velonews'
@@ -48,7 +49,7 @@ const DashboardPage = () => {
     {
       title: 'Bot Perguntas',
       description: 'Processos e Orientações',
-      icon: <SmartToyOutlined sx={{ fontSize: '2.8rem' }} />,
+      icon: <SmartToyOutlined sx={{ fontSize: '2.24rem' }} />,
       path: '/bot-perguntas',
       color: 'primary',
       permission: 'botPerguntas'
@@ -56,10 +57,17 @@ const DashboardPage = () => {
     {
       title: 'Serviços',
       description: 'Serviços ativos no APP',
-      icon: <EngineeringOutlined sx={{ fontSize: '2.8rem' }} />,
+      icon: <EngineeringOutlined sx={{ fontSize: '2.24rem' }} />,
       path: '/servicos',
       color: 'primary',
       permission: 'servicos'
+    },
+    {
+      title: 'Academy',
+      icon: <SchoolOutlined sx={{ fontSize: '2.24rem' }} />,
+      path: '/academy',
+      color: 'primary',
+      permission: 'academy'
     }
   ];
 
@@ -68,7 +76,7 @@ const DashboardPage = () => {
     {
       title: 'Hub Análises',
       description: 'Análises centralizadas do hub',
-      icon: <AnalyticsOutlined sx={{ fontSize: '2.8rem' }} />,
+      icon: <AnalyticsOutlined sx={{ fontSize: '2.24rem' }} />,
       path: '/hub-analises',
       color: 'success',
       permission: 'hubAnalises'
@@ -76,7 +84,7 @@ const DashboardPage = () => {
     {
       title: 'Bot Análises',
       description: 'Análises e relatórios do bot',
-      icon: <AnalyticsOutlined sx={{ fontSize: '2.8rem' }} />,
+      icon: <AnalyticsOutlined sx={{ fontSize: '2.24rem' }} />,
       path: '/bot-analises',
       color: 'success',
       permission: 'botAnalises'
@@ -84,7 +92,7 @@ const DashboardPage = () => {
     {
       title: 'IGP',
       description: 'Dashboard de métricas e relatórios',
-      icon: <ShowChartOutlined sx={{ fontSize: '2.8rem' }} />,
+      icon: <ShowChartOutlined sx={{ fontSize: '2.24rem' }} />,
       path: '/igp',
       color: 'success',
       permission: 'igp'
@@ -92,7 +100,7 @@ const DashboardPage = () => {
     {
       title: 'Capacity',
       description: 'Monitoramento de capacidade e recursos',
-      icon: <BoltOutlined sx={{ fontSize: '2.8rem' }} />,
+      icon: <BoltOutlined sx={{ fontSize: '2.24rem' }} />,
       path: '/capacity',
       color: 'success',
       permission: 'capacity'
@@ -100,7 +108,7 @@ const DashboardPage = () => {
     {
       title: 'Qualidade',
       description: 'Controle de qualidade e auditoria',
-      icon: <CheckCircleOutlined sx={{ fontSize: '2.8rem' }} />,
+      icon: <CheckCircleOutlined sx={{ fontSize: '2.24rem' }} />,
       path: '/qualidade',
       color: 'success',
       permission: 'qualidade'
@@ -112,7 +120,7 @@ const DashboardPage = () => {
     {
       title: 'Chamados Internos',
       description: 'Sistema de tickets e suporte interno',
-      icon: <ConfirmationNumberOutlined sx={{ fontSize: '2.8rem' }} />,
+      icon: <ConfirmationNumberOutlined sx={{ fontSize: '2.24rem' }} />,
       path: '/chamados-internos',
       color: 'secondary',
       permission: 'chamadosInternos'
@@ -123,7 +131,7 @@ const DashboardPage = () => {
   const configCard = {
     title: 'Config',
     description: 'Configurações do sistema e permissões',
-    icon: <SettingsOutlined sx={{ fontSize: '1.6rem' }} />,
+    icon: <SettingsOutlined sx={{ fontSize: '1.28rem' }} />,
     path: '/config',
     color: 'secondary',
     permission: 'config'
@@ -147,15 +155,15 @@ const DashboardPage = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 6, mb: 8, pb: 4 }}>
+    <Container maxWidth="lg" sx={{ mt: 4.8, mb: 6.4, pb: 3.2 }}>
       {/* Primeira fileira: Artigos, Velonews, Bot Perguntas, Serviços */}
       {filteredFirstRowCards.length > 0 && (
-        <Box sx={{ 
-          display: 'flex', 
-          flexWrap: 'wrap', 
-          gap: '20px', 
+        <Box sx={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '16px',
           justifyContent: 'center',
-          mb: 2
+          mb: 1.6
         }}>
           {filteredFirstRowCards.map((card) => (
             <DashboardCard 
@@ -172,15 +180,15 @@ const DashboardPage = () => {
         <Box sx={{ 
           width: '100vw', 
           marginLeft: 'calc(-50vw + 50%)', 
-          paddingX: '30px',
+          paddingX: '24px',
           mb: 2,
           display: 'flex',
           justifyContent: 'center'
         }}>
-          <Box sx={{ 
-            display: 'flex', 
-            flexWrap: 'wrap', 
-            gap: '20px', 
+          <Box sx={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '16px',
             justifyContent: 'center',
             alignItems: 'center'
           }}>
@@ -195,30 +203,30 @@ const DashboardPage = () => {
         </Box>
       )}
 
-      {/* Terceira fileira: Chamados Internos (posição 1) + Config (posição 4) */}
-      <Box sx={{ 
-        display: 'flex', 
-        flexWrap: 'wrap', 
-        gap: '20px', 
-        justifyContent: 'center',
-        mb: 2
-      }}>
-        {/* Posição 1: Chamados Internos */}
-        {filteredThirdRowCards[0] && (
-          <DashboardCard 
-            {...filteredThirdRowCards[0]} 
-            onClick={() => handleCardClick(filteredThirdRowCards[0].path)}
-          />
-        )}
-        
-        {/* Posição 4: Config */}
-        {hasConfigPermission && (
-          <DashboardCard 
-            {...configCard} 
-            onClick={() => handleCardClick(configCard.path)}
-          />
-        )}
-      </Box>
+      {/* Quarta fileira: Chamados Internos e Config na mesma linha */}
+      {(filteredThirdRowCards.length > 0 || hasConfigPermission) && (
+        <Box sx={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '16px',
+          justifyContent: 'center',
+          mb: 1.6
+        }}>
+          {filteredThirdRowCards.map((card) => (
+            <DashboardCard
+              key={card.title}
+              {...card}
+              onClick={() => handleCardClick(card.path)}
+            />
+          ))}
+          {hasConfigPermission && (
+            <DashboardCard
+              {...configCard}
+              onClick={() => handleCardClick(configCard.path)}
+            />
+          )}
+        </Box>
+      )}
 
       {/* Mensagem quando usuário não tem permissões */}
       {filteredFirstRowCards.length === 0 && filteredSecondRowCards.length === 0 && filteredThirdRowCards.length === 0 && (

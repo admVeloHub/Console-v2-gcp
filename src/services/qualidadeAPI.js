@@ -1,4 +1,4 @@
-// VERSION: v1.30.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.32.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 import { qualidadeFuncionariosAPI, qualidadeAvaliacoesAPI, qualidadeFuncoesAPI } from './api';
 import axios from 'axios';
@@ -526,7 +526,7 @@ export const deleteAvaliacao = async (id) => {
 // ===== RELATÓRIOS =====
 
 // Gerar relatório do agente
-export const gerarRelatorioAgente = async (colaboradorNome) => {
+export const gerarRelatorioAgente = async (colaboradorNome, dataInicio = null, dataFim = null) => {
   try {
     // Buscar todas as avaliações da API e filtrar no frontend
     const response = await qualidadeAvaliacoesAPI.getAll();
@@ -537,31 +537,107 @@ export const gerarRelatorioAgente = async (colaboradorNome) => {
     const todasAvaliacoes = response?.data || response;
     console.log(`📊 Total de avaliações encontradas: ${Array.isArray(todasAvaliacoes) ? todasAvaliacoes.length : 0}`);
     
-    const avaliacoes = Array.isArray(todasAvaliacoes) 
-      ? todasAvaliacoes.filter(a => a.colaboradorNome === colaboradorNome)
+    // Filtrar por colaborador
+    let avaliacoes = Array.isArray(todasAvaliacoes) 
+      ? todasAvaliacoes.filter(a => {
+          const nomeAvaliacao = (a.colaboradorNome || '').trim().toLowerCase();
+          const nomeColaborador = (colaboradorNome || '').trim().toLowerCase();
+          return nomeAvaliacao === nomeColaborador;
+        })
       : [];
     
     console.log(`📊 Avaliações filtradas para ${colaboradorNome}: ${avaliacoes.length}`);
+    
+    // Log de debug com nomes únicos encontrados
+    if (Array.isArray(todasAvaliacoes) && todasAvaliacoes.length > 0 && avaliacoes.length === 0) {
+      const nomesUnicos = [...new Set(todasAvaliacoes.map(a => a.colaboradorNome).filter(Boolean))];
+      console.log('🔍 DEBUG - Nomes únicos encontrados nas avaliações:', nomesUnicos.slice(0, 10));
+      console.log('🔍 DEBUG - Nome buscado:', colaboradorNome);
+    }
     
     if (avaliacoes.length === 0) {
       console.log('⚠️ Nenhuma avaliação encontrada para o colaborador:', colaboradorNome);
       return null;
     }
 
-    // Buscar avaliações GPT para cada avaliação
-    const avaliacoesComGPT = await Promise.all(
-      avaliacoes.map(async (avaliacao) => {
-        const avaliacaoGPT = await getAvaliacaoGPTByAvaliacaoId(avaliacao._id);
-        return {
-          ...avaliacao,
-          avaliacaoGPT
-        };
+    // Separar avaliações: todas para gráfico, filtradas para cards
+    const avaliacoesParaGrafico = [...avaliacoes]; // Todas as avaliações para o gráfico
+    
+    // Filtrar por período (createdAt) se filtro estiver ativo (apenas para cards)
+    let avaliacoesFiltradas = avaliacoes;
+    if (dataInicio || dataFim) {
+      avaliacoesFiltradas = avaliacoes.filter(a => {
+        if (!a.createdAt) return false;
+        
+        const dataCriacao = new Date(a.createdAt);
+        if (isNaN(dataCriacao.getTime())) return false;
+        
+        // Normalizar para início do dia
+        const inicio = dataInicio ? new Date(dataInicio) : null;
+        if (inicio) inicio.setHours(0, 0, 0, 0);
+        
+        const fim = dataFim ? new Date(dataFim) : null;
+        if (fim) fim.setHours(23, 59, 59, 999);
+        
+        const dataNormalizada = new Date(dataCriacao);
+        dataNormalizada.setHours(0, 0, 0, 0);
+        
+        const dentroInicio = !inicio || dataNormalizada >= inicio;
+        const dentroFim = !fim || dataNormalizada <= fim;
+        
+        return dentroInicio && dentroFim;
+      });
+      
+      console.log(`📊 Avaliações filtradas por período (${dataInicio || 'início'} a ${dataFim || 'fim'}): ${avaliacoesFiltradas.length}`);
+    }
+
+    // Buscar avaliações GPT para avaliações filtradas (para cards)
+    const avaliacoesFiltradasComGPT = await Promise.all(
+      avaliacoesFiltradas.map(async (avaliacao) => {
+        try {
+          const avaliacaoGPT = await getAvaliacaoGPTByAvaliacaoId(avaliacao._id);
+          return {
+            ...avaliacao,
+            avaliacaoGPT: avaliacaoGPT || null
+          };
+        } catch (error) {
+          console.warn(`⚠️ Não foi possível buscar avaliação GPT para ${avaliacao._id}:`, error.message);
+          return {
+            ...avaliacao,
+            avaliacaoGPT: null
+          };
+        }
       })
     );
 
+    // Buscar avaliações GPT para todas as avaliações (para gráfico)
+    const avaliacoesParaGraficoComGPT = await Promise.all(
+      avaliacoesParaGrafico.map(async (avaliacao) => {
+        try {
+          const avaliacaoGPT = await getAvaliacaoGPTByAvaliacaoId(avaliacao._id);
+          return {
+            ...avaliacao,
+            avaliacaoGPT: avaliacaoGPT || null
+          };
+        } catch (error) {
+          console.warn(`⚠️ Não foi possível buscar avaliação GPT para ${avaliacao._id}:`, error.message);
+          return {
+            ...avaliacao,
+            avaliacaoGPT: null
+          };
+        }
+      })
+    );
+
+    console.log(`📊 DEBUG - Total de avaliações com GPT (filtradas): ${avaliacoesFiltradasComGPT.length}`);
+    console.log(`📊 DEBUG - Total de avaliações com GPT (gráfico): ${avaliacoesParaGraficoComGPT.length}`);
+
     // Usar função utilitária para gerar relatório
+    // Passar avaliações filtradas para cards e todas para gráfico
     const { gerarRelatorioAgente: gerarRelatorioAgenteUtil } = await import('../types/qualidade');
-    return gerarRelatorioAgenteUtil(colaboradorNome, colaboradorNome, avaliacoesComGPT);
+    const relatorio = gerarRelatorioAgenteUtil(colaboradorNome, avaliacoesFiltradasComGPT, avaliacoesParaGraficoComGPT);
+    console.log(`📊 DEBUG - Relatório gerado:`, relatorio ? 'Sucesso' : 'Null');
+    return relatorio;
   } catch (error) {
     console.error('❌ Erro ao gerar relatório do agente via API:', error);
     // Fallback para localStorage

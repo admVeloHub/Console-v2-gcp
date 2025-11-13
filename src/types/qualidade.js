@@ -1,4 +1,4 @@
-// VERSION: v1.5.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.6.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 /**
  * @typedef {Object} Funcionario
@@ -240,25 +240,36 @@ export const getAvaliacoesPorMesAno = (mes, ano, avaliacoes) => {
 /**
  * Gera relatório individual do agente
  * @param {string} colaboradorNome - Nome do colaborador
- * @param {Array} avaliacoes - Array de avaliações do colaborador
+ * @param {Array} avaliacoesFiltradas - Array de avaliações filtradas para os cards
+ * @param {Array} [avaliacoesParaGrafico] - Array de todas as avaliações para o gráfico (opcional, usa avaliacoesFiltradas se não fornecido)
  * @returns {Object|null} Relatório do agente ou null se não houver dados
  */
-export const gerarRelatorioAgente = (colaboradorNome, avaliacoes) => {
-  if (!colaboradorNome || !Array.isArray(avaliacoes) || avaliacoes.length === 0) {
+export const gerarRelatorioAgente = (colaboradorNome, avaliacoesFiltradas, avaliacoesParaGrafico = null) => {
+  // Usar avaliacoesFiltradas como padrão se avaliacoesParaGrafico não for fornecido
+  const avaliacoesGrafico = avaliacoesParaGrafico || avaliacoesFiltradas;
+  
+  if (!colaboradorNome || !Array.isArray(avaliacoesFiltradas) || avaliacoesFiltradas.length === 0) {
     return null;
   }
 
-  const notasAvaliador = avaliacoes.map(a => a.pontuacaoTotal || 0);
-  const notasGPT = avaliacoes
+  // Calcular métricas dos cards usando avaliações filtradas
+  const notasAvaliador = avaliacoesFiltradas.map(a => a.pontuacaoTotal || 0);
+  const notasGPT = avaliacoesFiltradas
     .filter(a => a.avaliacaoGPT && a.avaliacaoGPT.pontuacaoGPT)
     .map(a => a.avaliacaoGPT.pontuacaoGPT);
 
   const mediaAvaliador = notasAvaliador.reduce((a, b) => a + b, 0) / notasAvaliador.length;
-  const mediaGPT = notasGPT.length > 0 ? notasGPT.reduce((a, b) => a + b, 0) / notasGPT.length : 0;
+  const mediaGPT = notasGPT.length > 0 
+    ? Math.round((notasGPT.reduce((a, b) => a + b, 0) / notasGPT.length) * 100) / 100
+    : null; // Retorna null em vez de 0 quando não há avaliações GPT
 
-  // Calcular tendência (últimas 3 avaliações)
-  const ultimasAvaliacoes = avaliacoes
-    .sort((a, b) => new Date(b.dataAvaliacao).getTime() - new Date(a.dataAvaliacao).getTime())
+  // Calcular tendência (últimas 3 avaliações filtradas)
+  const ultimasAvaliacoes = avaliacoesFiltradas
+    .sort((a, b) => {
+      const dataA = a.createdAt ? new Date(a.createdAt).getTime() : (a.dataAvaliacao ? new Date(a.dataAvaliacao).getTime() : 0);
+      const dataB = b.createdAt ? new Date(b.createdAt).getTime() : (b.dataAvaliacao ? new Date(b.dataAvaliacao).getTime() : 0);
+      return dataB - dataA;
+    })
     .slice(0, 3);
 
   let tendencia = 'estavel';
@@ -269,40 +280,71 @@ export const gerarRelatorioAgente = (colaboradorNome, avaliacoes) => {
     else if (ultima < primeira) tendencia = 'piorando';
   }
 
-  // Gerar histórico com notas reais, mediana e tendência
+  // Gerar histórico com notas reais, mediana e tendência usando todas as avaliações do gráfico
   const historico = [];
   
-  // Ordenar avaliações por mês/ano da avaliação (cronológica: antigo → recente)
-  const avaliacoesOrdenadas = [...avaliacoes].sort((a, b) => {
-    // Converter mês/ano para timestamp para ordenação cronológica
-    const dataA = new Date(a.ano, MESES.indexOf(a.mes));
-    const dataB = new Date(b.ano, MESES.indexOf(b.mes));
-    return dataA.getTime() - dataB.getTime();
+  // Ordenar avaliações por createdAt (cronológica: antigo → recente)
+  const avaliacoesOrdenadas = [...avaliacoesGrafico].sort((a, b) => {
+    const dataA = a.createdAt ? new Date(a.createdAt).getTime() : (a.dataAvaliacao ? new Date(a.dataAvaliacao).getTime() : 0);
+    const dataB = b.createdAt ? new Date(b.createdAt).getTime() : (b.dataAvaliacao ? new Date(b.dataAvaliacao).getTime() : 0);
+    return dataA - dataB;
   });
   
-  // Calcular mediana geral
-  const notasOrdenadas = notasAvaliador.sort((a, b) => a - b);
+  // Calcular mediana geral (usando todas as avaliações do gráfico)
+  const notasGrafico = avaliacoesOrdenadas.map(a => a.pontuacaoTotal || 0);
+  const notasOrdenadas = [...notasGrafico].sort((a, b) => a - b);
   const mediana = notasOrdenadas.length % 2 === 0 
     ? (notasOrdenadas[notasOrdenadas.length / 2 - 1] + notasOrdenadas[notasOrdenadas.length / 2]) / 2
     : notasOrdenadas[Math.floor(notasOrdenadas.length / 2)];
   
-  // Gerar pontos para o gráfico (últimas 10 avaliações ou todas se menos)
-  const pontosGrafico = Math.min(10, avaliacoesOrdenadas.length);
-  const avaliacoesParaGrafico = avaliacoesOrdenadas.slice(-pontosGrafico);
-  
-  avaliacoesParaGrafico.forEach((avaliacao, index) => {
-    // Usar mês/ano da avaliação para o período (ex: "Jan/2024", "Fev/2024")
-    const mesAbreviado = avaliacao.mes.substring(0, 3); // Janeiro → Jan
-    const periodo = `${mesAbreviado}/${avaliacao.ano}`;
+  // Agrupar avaliações por data (createdAt) e calcular média quando houver múltiplas na mesma data
+  const avaliacoesPorData = {};
+  avaliacoesOrdenadas.forEach(avaliacao => {
+    if (!avaliacao.createdAt) return;
     
-    // Calcular tendência (média móvel das últimas 3 avaliações)
+    const dataCriacao = new Date(avaliacao.createdAt);
+    if (isNaN(dataCriacao.getTime())) return;
+    
+    // Normalizar para início do dia (chave única por data)
+    const dataNormalizada = new Date(dataCriacao);
+    dataNormalizada.setHours(0, 0, 0, 0);
+    const chaveData = dataNormalizada.toISOString().split('T')[0];
+    
+    if (!avaliacoesPorData[chaveData]) {
+      avaliacoesPorData[chaveData] = [];
+    }
+    avaliacoesPorData[chaveData].push(avaliacao);
+  });
+  
+  // Converter para array e ordenar por data
+  const datasOrdenadas = Object.keys(avaliacoesPorData).sort();
+  
+  // Gerar pontos para o gráfico (últimas 30 datas ou todas se menos)
+  const pontosGrafico = Math.min(30, datasOrdenadas.length);
+  const datasParaGrafico = datasOrdenadas.slice(-pontosGrafico);
+  
+  datasParaGrafico.forEach((chaveData, index) => {
+    const avaliacoesNaData = avaliacoesPorData[chaveData];
+    
+    // Calcular média quando houver múltiplas avaliações na mesma data
+    const mediaNotaNaData = avaliacoesNaData.reduce((sum, a) => sum + (a.pontuacaoTotal || 0), 0) / avaliacoesNaData.length;
+    
+    // Formatar data como DD/MM/YYYY
+    const data = new Date(chaveData);
+    const dia = String(data.getDate()).padStart(2, '0');
+    const mes = String(data.getMonth() + 1).padStart(2, '0');
+    const ano = data.getFullYear();
+    const periodo = `${dia}/${mes}/${ano}`;
+    
+    // Calcular tendência (média móvel das últimas 3 datas)
     const inicioTendencia = Math.max(0, index - 2);
-    const avaliacoesTendencia = avaliacoesParaGrafico.slice(inicioTendencia, index + 1);
+    const datasTendencia = datasParaGrafico.slice(inicioTendencia, index + 1);
+    const avaliacoesTendencia = datasTendencia.flatMap(chave => avaliacoesPorData[chave]);
     const tendenciaValor = avaliacoesTendencia.reduce((sum, a) => sum + (a.pontuacaoTotal || 0), 0) / avaliacoesTendencia.length;
     
     historico.push({
       periodo,
-      notaReal: Math.round((avaliacao.pontuacaoTotal || 0) * 100) / 100,
+      notaReal: Math.round(mediaNotaNaData * 100) / 100,
       mediana: Math.round(mediana * 100) / 100,
       tendencia: Math.round(tendenciaValor * 100) / 100
     });
@@ -311,10 +353,10 @@ export const gerarRelatorioAgente = (colaboradorNome, avaliacoes) => {
   return {
     colaboradorNome,
     colaboradorNome,
-    avaliacoes,
+    avaliacoes: avaliacoesFiltradas, // Usar avaliações filtradas para referência
     mediaAvaliador: Math.round(mediaAvaliador * 100) / 100,
-    mediaGPT: Math.round(mediaGPT * 100) / 100,
-    totalAvaliacoes: avaliacoes.length,
+    mediaGPT: mediaGPT !== null ? Math.round(mediaGPT * 100) / 100 : null,
+    totalAvaliacoes: avaliacoesFiltradas.length,
     melhorNota: Math.max(...notasAvaliador),
     piorNota: Math.min(...notasAvaliador),
     tendencia,

@@ -1,5 +1,5 @@
-// VERSION: v3.8.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
-import React, { useState } from 'react';
+// VERSION: v4.2.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+import React, { useState, useCallback, useEffect } from 'react';
 import { 
   Container, 
   Typography, 
@@ -12,9 +12,15 @@ import {
   Alert,
   Snackbar,
   Tabs,
-  Tab
+  Tab,
+  CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions
 } from '@mui/material';
-import { Save, Add, SmartToy } from '@mui/icons-material';
+import { Save, Search, Delete } from '@mui/icons-material';
 import { botPerguntasAPI } from '../services/api';
 import BackButton from '../components/common/BackButton';
 
@@ -28,12 +34,28 @@ const BotPerguntasPage = () => {
     tabulacao: ''        // Tabulação (substitui URLs de imagens)
   });
 
+  // Estados para a aba "Gerenciar Perguntas"
+  const [perguntasList, setPerguntasList] = useState([]);
+  const [filteredPerguntas, setFilteredPerguntas] = useState([]);
+  const [selectedPergunta, setSelectedPergunta] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [editFormData, setEditFormData] = useState({
+    id: '',
+    pergunta: '',
+    resposta: '',
+    palavrasChave: '',
+    sinonimos: '',
+    tabulacao: ''
+  });
+  const [loadingPerguntas, setLoadingPerguntas] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
     severity: 'success'
   });
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const handleInputChange = (field) => (event) => {
     setFormData({
@@ -107,72 +129,261 @@ const BotPerguntasPage = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
+  // Funções para a aba "Gerenciar Perguntas"
+  
+  // 1. Carregar Lista de Perguntas
+  const loadPerguntasList = useCallback(async () => {
+    try {
+      setLoadingPerguntas(true);
+      const response = await botPerguntasAPI.getAll();
+      
+      // Extrair array de dados - backend retorna { success: true, data: [...] }
+      let perguntasArray = [];
+      if (Array.isArray(response)) {
+        perguntasArray = response;
+      } else if (response && response.success && Array.isArray(response.data)) {
+        perguntasArray = response.data;
+      } else if (response && Array.isArray(response.data)) {
+        perguntasArray = response.data;
+      } else {
+        console.error('Resposta não é um array:', response);
+        setPerguntasList([]);
+        setFilteredPerguntas([]);
+        return;
+      }
+      
+      // Ordenar por data (mais recente primeiro) com validação
+      const sorted = perguntasArray.sort((a, b) => {
+        const dateA = new Date(a.createdAt);
+        const dateB = new Date(b.createdAt);
+        
+        // Validar datas
+        if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
+          console.warn('Data inválida encontrada:', { 
+            a: a.createdAt, 
+            b: b.createdAt,
+            perguntaA: a.pergunta,
+            perguntaB: b.pergunta
+          });
+          return 0;
+        }
+        
+        return dateB - dateA; // Mais recente primeiro
+      });
+      
+      setPerguntasList(sorted);
+      setFilteredPerguntas(sorted);
+    } catch (error) {
+      console.error('Erro ao carregar perguntas:', error);
+      setSnackbar({
+        open: true,
+        message: 'Erro ao carregar perguntas',
+        severity: 'error'
+      });
+    } finally {
+      setLoadingPerguntas(false);
+    }
+  }, []);
+
+  // 2. Pesquisar Perguntas
+  const handleSearch = (event) => {
+    const term = event.target.value;
+    setSearchTerm(term);
+    
+    if (!term.trim()) {
+      setFilteredPerguntas(perguntasList);
+      return;
+    }
+    
+    const filtered = perguntasList.filter(pergunta =>
+      pergunta.pergunta?.toLowerCase().includes(term.toLowerCase()) ||
+      pergunta.resposta?.toLowerCase().includes(term.toLowerCase())
+    );
+    
+    setFilteredPerguntas(filtered);
+  };
+
+  // 3. Selecionar Pergunta para Edição
+  const handleSelectPergunta = (pergunta) => {
+    setSelectedPergunta(pergunta);
+    setEditFormData({
+      id: pergunta._id,
+      pergunta: pergunta.pergunta || '',
+      resposta: pergunta.resposta || '',
+      palavrasChave: pergunta.palavrasChave || '',
+      sinonimos: pergunta.sinonimos || '',
+      tabulacao: pergunta.tabulacao || ''
+    });
+  };
+
+  // 4. Atualizar Pergunta
+  const handleUpdatePergunta = async (event) => {
+    event.preventDefault();
+    
+    if (!editFormData.id) {
+      setSnackbar({
+        open: true,
+        message: 'Selecione uma pergunta para editar',
+        severity: 'warning'
+      });
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      
+      // Payload conforme schema MongoDB
+      const updateData = {
+        pergunta: editFormData.pergunta,
+        resposta: editFormData.resposta,
+        palavrasChave: editFormData.palavrasChave,
+        sinonimos: editFormData.sinonimos,
+        tabulacao: editFormData.tabulacao
+      };
+      
+      await botPerguntasAPI.update(editFormData.id, updateData);
+      
+      setSnackbar({
+        open: true,
+        message: 'Pergunta atualizada com sucesso!',
+        severity: 'success'
+      });
+      
+      // Recarregar lista
+      await loadPerguntasList();
+      
+      // Limpar seleção
+      setSelectedPergunta(null);
+      setEditFormData({
+        id: '',
+        pergunta: '',
+        resposta: '',
+        palavrasChave: '',
+        sinonimos: '',
+        tabulacao: ''
+      });
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: error.message || 'Erro ao atualizar pergunta',
+        severity: 'error'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 5. Deletar Pergunta
+  const handleDeletePergunta = async () => {
+    if (!editFormData.id) {
+      setSnackbar({
+        open: true,
+        message: 'Selecione uma pergunta para deletar',
+        severity: 'warning'
+      });
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      await botPerguntasAPI.delete(editFormData.id);
+      
+      setSnackbar({
+        open: true,
+        message: 'Pergunta deletada com sucesso!',
+        severity: 'success'
+      });
+      
+      // Recarregar lista
+      await loadPerguntasList();
+      
+      // Limpar seleção
+      setSelectedPergunta(null);
+      setEditFormData({
+        id: '',
+        pergunta: '',
+        resposta: '',
+        palavrasChave: '',
+        sinonimos: '',
+        tabulacao: ''
+      });
+      
+      // Fechar diálogo
+      setDeleteDialogOpen(false);
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: error.message || 'Erro ao deletar pergunta',
+        severity: 'error'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 6. useEffect para Carregar Dados
+  useEffect(() => {
+    if (activeTab === 1) {
+      loadPerguntasList();
+    }
+  }, [activeTab, loadPerguntasList]);
+
   return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 8, pb: 4 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', mb: 4 }}>
-        <Box sx={{ position: 'absolute', left: 0 }}>
+    <Container maxWidth="xl" sx={{ py: 3.2, mb: 6.4, pb: 3.2 }}>
+      {/* Header único - alinhamento central absoluto das abas */}
+      <Box sx={{ position: 'relative', mb: 3.2, minHeight: 40 }}>
+        <Box sx={{ position: 'absolute', left: 0, top: 0, bottom: 0, display: 'flex', alignItems: 'center' }}>
           <BackButton />
         </Box>
-        <Typography 
-          variant="h4" 
-          component="h1"
-          sx={{ 
-            fontFamily: 'Poppins',
-            fontWeight: 700,
-            color: 'var(--blue-dark)'
-          }}
-        >
-          Bot Perguntas
-        </Typography>
-      </Box>
-
-      {/* Tabs do Material-UI */}
-      <Box sx={{ 
-        borderBottom: 1, 
-        borderColor: 'divider',
-        mb: 3
-      }}>
-        <Tabs 
-          value={activeTab} 
-          onChange={(e, v) => setActiveTab(v)}
-          aria-label="bot perguntas tabs"
-          sx={{
-            '& .MuiTab-root': {
-              fontSize: '1.25rem',
-              fontWeight: 600,
-              textTransform: 'none',
-              minHeight: 48,
-              '&.Mui-selected': {
-                color: 'var(--blue-medium)',
+        <Box sx={{
+          position: 'absolute',
+          left: '50%',
+          top: 0,
+          bottom: 0,
+          transform: 'translateX(-50%)',
+          display: 'flex',
+          alignItems: 'center',
+          width: 'max-content'
+        }}>
+          <Tabs
+            value={activeTab}
+            onChange={(e, v) => setActiveTab(v)}
+            aria-label="bot perguntas tabs"
+            sx={{
+              borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+              '& .MuiTab-root': {
+                fontSize: '1rem',
+                fontFamily: 'Poppins',
+                fontWeight: 500,
+                textTransform: 'none',
+                minHeight: 48,
+                '&.Mui-selected': {
+                  color: 'var(--blue-light)',
+                },
+                '&:not(.Mui-selected)': {
+                  color: 'var(--gray)',
+                  opacity: 0.7,
+                }
+              },
+              '& .MuiTabs-indicator': {
+                backgroundColor: 'var(--blue-light)',
+                height: 2,
               }
-            }
-          }}
-        >
-          <Tab label="Adicionar Pergunta" />
-          <Tab label="Gerenciar Perguntas" />
-        </Tabs>
+            }}
+          >
+            <Tab label="Adicionar Pergunta" />
+            <Tab label="Gerenciar Perguntas" />
+          </Tabs>
+        </Box>
       </Box>
 
       {/* Tab 0: Adicionar Pergunta */}
       {activeTab === 0 && (
         <Card sx={{ backgroundColor: 'var(--cor-container)' }}>
         <CardContent>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-            <SmartToy sx={{ mr: 1, color: 'var(--blue-medium)' }} />
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                fontFamily: 'Poppins',
-                fontWeight: 600,
-                color: 'var(--blue-dark)'
-              }}
-            >
-              Nova Configuração de Bot
-            </Typography>
-          </Box>
 
           <form onSubmit={handleSubmit}>
-            <Grid container spacing={3}>
+            <Grid container spacing={2.4}>
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -182,8 +393,14 @@ const BotPerguntasPage = () => {
                   required
                   placeholder="ex: ajuda, suporte, problema"
                   sx={{
+                    '& .MuiInputLabel-root': {
+                      fontSize: '0.8rem',
+                    },
                     '& .MuiOutlinedInput-root': {
                       fontFamily: 'Poppins'
+                    },
+                    '& .MuiOutlinedInput-input': {
+                      fontSize: '0.8rem',
                     }
                   }}
                 />
@@ -197,8 +414,14 @@ const BotPerguntasPage = () => {
                   onChange={handleInputChange('sinonimos')}
                   placeholder="ex: auxílio, ajuda, suporte"
                   sx={{
+                    '& .MuiInputLabel-root': {
+                      fontSize: '0.8rem',
+                    },
                     '& .MuiOutlinedInput-root': {
                       fontFamily: 'Poppins'
+                    },
+                    '& .MuiOutlinedInput-input': {
+                      fontSize: '0.8rem',
                     }
                   }}
                 />
@@ -211,12 +434,18 @@ const BotPerguntasPage = () => {
                   value={formData.context}
                   onChange={handleInputChange('context')}
                   multiline
-                  rows={3}
+                  rows={2.4}
                   required
                   placeholder="Digite a resposta que o bot deve fornecer..."
                   sx={{
+                    '& .MuiInputLabel-root': {
+                      fontSize: '0.8rem',
+                    },
                     '& .MuiOutlinedInput-root': {
                       fontFamily: 'Poppins'
+                    },
+                    '& .MuiOutlinedInput-input': {
+                      fontSize: '0.8rem',
                     }
                   }}
                 />
@@ -229,12 +458,18 @@ const BotPerguntasPage = () => {
                   value={formData.question}
                   onChange={handleInputChange('question')}
                   multiline
-                  rows={2}
+                  rows={1.6}
                   required
                   placeholder="Digite a pergunta que o bot deve responder..."
                   sx={{
+                    '& .MuiInputLabel-root': {
+                      fontSize: '0.8rem',
+                    },
                     '& .MuiOutlinedInput-root': {
                       fontFamily: 'Poppins'
+                    },
+                    '& .MuiOutlinedInput-input': {
+                      fontSize: '0.8rem',
                     }
                   }}
                 />
@@ -248,31 +483,41 @@ const BotPerguntasPage = () => {
                   onChange={handleInputChange('tabulacao')}
                   placeholder="Digite a tabulação para esta pergunta..."
                   sx={{
+                    '& .MuiInputLabel-root': {
+                      fontSize: '0.8rem',
+                    },
                     '& .MuiOutlinedInput-root': {
                       fontFamily: 'Poppins'
+                    },
+                    '& .MuiOutlinedInput-input': {
+                      fontSize: '0.8rem',
                     }
                   }}
                 />
               </Grid>
 
               <Grid item xs={12}>
-                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                   <Button
                     type="submit"
                     variant="contained"
+                    size="small"
                     startIcon={<Save />}
                     disabled={loading}
                     sx={{
                       backgroundColor: 'var(--green)',
                       fontFamily: 'Poppins',
                       fontWeight: 600,
+                      fontSize: '0.8rem',
+                      px: 2.4,
+                      py: 0.8,
                       '&:hover': {
                         backgroundColor: 'var(--green)',
                         opacity: 0.9
                       }
                     }}
                   >
-                    {loading ? 'Salvando...' : 'Salvar Configuração'}
+                    {loading ? 'Salvando...' : 'Salvar Resposta'}
                   </Button>
                 </Box>
               </Grid>
@@ -284,17 +529,320 @@ const BotPerguntasPage = () => {
 
       {/* Tab 1: Gerenciar Perguntas */}
       {activeTab === 1 && (
+        <Box sx={{ display: 'flex', gap: 0 }}>
+          {/* Área Principal 70% - Esquerda */}
+          <Box sx={{ 
+            width: '70%', 
+            pr: 2.5   // 20px de padding direito
+          }}>
         <Card sx={{ backgroundColor: 'var(--cor-container)' }}>
           <CardContent>
-            <Typography variant="h6" sx={{ mb: 3, color: 'var(--blue-dark)', fontFamily: 'Poppins' }}>
-              Gerenciar Perguntas
-            </Typography>
-            <Typography variant="body1" sx={{ color: 'var(--gray)', fontFamily: 'Poppins' }}>
-              Funcionalidade de listagem e edição de perguntas será implementada aqui.
-            </Typography>
-          </CardContent>
-        </Card>
+                <Typography variant="h6" sx={{ mb: 2.4, fontSize: '0.96rem', color: 'var(--blue-dark)', fontFamily: 'Poppins', fontWeight: 600 }}>
+                  {selectedPergunta ? 'Editar Pergunta' : 'Selecione uma pergunta'}
+                </Typography>
+                
+                <form onSubmit={handleUpdatePergunta}>
+                  <Grid container spacing={2.4}>
+                    {/* Campo Pergunta */}
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        label="Pergunta"
+                        value={editFormData.pergunta}
+                        onChange={(e) => setEditFormData({...editFormData, pergunta: e.target.value})}
+                        multiline
+                        rows={1.3}
+                        disabled={!selectedPergunta}
+                        required
+                        size="small"
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            fontFamily: 'Poppins',
+                            fontSize: '0.8rem'
+                          },
+                          '& .MuiInputLabel-root': {
+                            fontSize: '0.8rem'
+                          }
+                        }}
+                      />
+                    </Grid>
+                    
+                    {/* Campo Resposta */}
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        label="Resposta"
+                        value={editFormData.resposta}
+                        onChange={(e) => setEditFormData({...editFormData, resposta: e.target.value})}
+                        multiline
+                        rows={2}
+                        disabled={!selectedPergunta}
+                        required
+                        size="small"
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            fontFamily: 'Poppins',
+                            fontSize: '0.8rem'
+                          },
+                          '& .MuiInputLabel-root': {
+                            fontSize: '0.8rem'
+                          }
+                        }}
+                      />
+                    </Grid>
+                    
+                    {/* Campo Palavras-chave */}
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        label="Palavras-chave"
+                        value={editFormData.palavrasChave}
+                        onChange={(e) => setEditFormData({...editFormData, palavrasChave: e.target.value})}
+                        disabled={!selectedPergunta}
+                        required
+                        size="small"
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            fontFamily: 'Poppins',
+                            fontSize: '0.8rem'
+                          },
+                          '& .MuiInputLabel-root': {
+                            fontSize: '0.8rem'
+                          }
+                        }}
+                      />
+                    </Grid>
+                    
+                    {/* Campo Sinônimos */}
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        label="Sinônimos"
+                        value={editFormData.sinonimos}
+                        onChange={(e) => setEditFormData({...editFormData, sinonimos: e.target.value})}
+                        disabled={!selectedPergunta}
+                        size="small"
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            fontFamily: 'Poppins',
+                            fontSize: '0.8rem'
+                          },
+                          '& .MuiInputLabel-root': {
+                            fontSize: '0.8rem'
+                          }
+                        }}
+                      />
+                    </Grid>
+                    
+                    {/* Campo Tabulação */}
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        label="Tabulação"
+                        value={editFormData.tabulacao}
+                        onChange={(e) => setEditFormData({...editFormData, tabulacao: e.target.value})}
+                        disabled={!selectedPergunta}
+                        size="small"
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            fontFamily: 'Poppins',
+                            fontSize: '0.8rem'
+                          },
+                          '& .MuiInputLabel-root': {
+                            fontSize: '0.8rem'
+                          }
+                        }}
+                      />
+                    </Grid>
+                    
+                    {/* Botões Salvar e Delete */}
+                    <Grid item xs={12}>
+                      <Box sx={{ display: 'flex', gap: 1.6 }}>
+                        <Button
+                          type="submit"
+                          variant="contained"
+                          disabled={!selectedPergunta || loading}
+                          startIcon={<Save sx={{ fontSize: '0.8rem' }} />}
+                          size="small"
+                          sx={{
+                            backgroundColor: 'var(--green)',
+                            color: 'white',
+                            fontFamily: 'Poppins',
+                            fontWeight: 600,
+                            fontSize: '0.8rem',
+                            py: 0.8,
+                            px: 1.6,
+                            '&:hover': {
+                              backgroundColor: 'var(--green)',
+                              opacity: 0.9
+                            }
+                          }}
+                        >
+                          {loading ? 'Salvando...' : 'Salvar Alterações'}
+                        </Button>
+                        <Button
+                          variant="contained"
+                          disabled={!selectedPergunta || loading}
+                          startIcon={<Delete sx={{ fontSize: '0.8rem' }} />}
+                          size="small"
+                          onClick={() => setDeleteDialogOpen(true)}
+                          sx={{
+                            fontFamily: 'Poppins',
+                            fontWeight: 600,
+                            fontSize: '0.8rem',
+                            py: 0.8,
+                            px: 1.6,
+                            backgroundColor: '#d32f2f',
+                            color: 'white',
+                            '&:hover': {
+                              backgroundColor: '#b71c1c'
+                            }
+                          }}
+                        >
+                          Delete
+                        </Button>
+                      </Box>
+                    </Grid>
+                  </Grid>
+                </form>
+              </CardContent>
+            </Card>
+          </Box>
+
+          {/* Sidebar 30% - Direita */}
+          <Box sx={{ 
+            width: '30%'
+          }}>
+            <Card sx={{ backgroundColor: 'var(--cor-container)', height: '100%' }}>
+              <CardContent>
+                {/* Barra de Pesquisa */}
+                <TextField
+                  fullWidth
+                  placeholder="Pesquisar perguntas..."
+                  value={searchTerm}
+                  onChange={handleSearch}
+                  size="small"
+                  InputProps={{
+                    startAdornment: <Search sx={{ mr: 0.8, color: 'var(--blue-medium)', fontSize: '0.8rem' }} />
+                  }}
+                  sx={{ 
+                    mb: 1.6,
+                    '& .MuiOutlinedInput-root': {
+                      fontFamily: 'Poppins',
+                      fontSize: '0.8rem',
+                      '&:hover fieldset': {
+                        borderColor: 'var(--blue-medium)'
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: 'var(--blue-medium)'
+                      }
+                    },
+                    '& .MuiInputLabel-root': {
+                      fontSize: '0.8rem'
+                    }
+                  }}
+                />
+                
+                <Typography variant="subtitle2" sx={{ mb: 1.6, fontSize: '0.64rem', color: 'var(--gray)', fontFamily: 'Poppins' }}>
+                  {filteredPerguntas.length} pergunta(s) encontrada(s)
+                </Typography>
+                
+                {/* Lista de Perguntas */}
+                <Box sx={{ 
+                  maxHeight: '600px', 
+                  overflowY: 'auto',
+                  '&::-webkit-scrollbar': {
+                    width: '8px'
+                  },
+                  '&::-webkit-scrollbar-thumb': {
+                    backgroundColor: 'var(--green)',
+                    borderRadius: '4px'
+                  }
+                }}>
+                  {loadingPerguntas ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                      <CircularProgress sx={{ color: 'var(--green)' }} />
+                    </Box>
+                  ) : filteredPerguntas.length === 0 ? (
+                    <Typography sx={{ textAlign: 'center', mt: 4, color: 'var(--gray)', fontFamily: 'Poppins' }}>
+                      Nenhuma pergunta encontrada
+                    </Typography>
+                  ) : (
+                    filteredPerguntas.map((pergunta) => (
+                      <Card
+                        key={pergunta._id}
+                        onClick={() => handleSelectPergunta(pergunta)}
+                        sx={{
+                          mb: 1.6,
+                          cursor: 'pointer',
+                          border: selectedPergunta?._id === pergunta._id ? '2px solid var(--green)' : '1px solid var(--gray)',
+                          backgroundColor: selectedPergunta?._id === pergunta._id ? 'rgba(21, 162, 55, 0.1)' : 'transparent',
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            backgroundColor: 'rgba(21, 162, 55, 0.05)',
+                            borderColor: 'var(--green)'
+                          }
+                        }}
+                      >
+                        <CardContent sx={{ p: 1.6 }}>
+                          <Typography variant="subtitle1" sx={{ fontWeight: 600, fontSize: '0.8rem', color: 'var(--blue-dark)', fontFamily: 'Poppins', mb: 0.8 }}>
+                            {pergunta.pergunta}
+                          </Typography>
+                          
+                          <Typography variant="body2" sx={{ fontSize: '0.72rem', color: 'var(--gray)', fontFamily: 'Poppins', mb: 0.8 }}>
+                            {pergunta.resposta?.substring(0, 100)}...
+                          </Typography>
+                          
+                          <Typography variant="caption" sx={{ fontSize: '0.64rem', color: 'var(--gray)', fontFamily: 'Poppins', display: 'block' }}>
+                            {new Date(pergunta.createdAt).toLocaleDateString('pt-BR', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric'
+                            })}
+                          </Typography>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </Box>
+              </CardContent>
+            </Card>
+          </Box>
+        </Box>
       )}
+
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title" sx={{ fontFamily: 'Poppins', fontSize: '0.96rem' }}>
+          Confirmar Exclusão
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-dialog-description" sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
+            Tem certeza que deseja deletar a pergunta "{editFormData.pergunta}"? Esta ação não pode ser desfeita.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => setDeleteDialogOpen(false)} 
+            sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}
+          >
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleDeletePergunta} 
+            color="error" 
+            variant="contained"
+            disabled={loading}
+            sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}
+          >
+            {loading ? 'Deletando...' : 'Deletar'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Snackbar para feedback */}
       <Snackbar

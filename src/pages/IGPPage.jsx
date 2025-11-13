@@ -130,50 +130,59 @@ const IGPPage = () => {
       
       {/* Tabs e Botões de Fonte de Dados */}
       <Box sx={{
-        borderBottom: 1,
-        borderColor: 'divider',
-        mb: 3,
+        position: 'relative',
+        mb: 3.2,
         mt: 1,
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        position: 'relative'
+        minHeight: 40
       }}>
-        {/* Abas do lado esquerdo */}
-        <Tabs 
-          value={availableTabs.findIndex(tab => tab.id === activeTab)} 
-          onChange={(e, v) => setActiveTab(availableTabs[v]?.id || 0)}
-          aria-label="veloinsights tabs"
-          sx={{
-            '& .MuiTab-root': {
-              fontSize: '1.25rem',
-              fontWeight: 600,
-              textTransform: 'none',
-              minHeight: 48,
-              '&.Mui-selected': {
-                color: 'var(--blue-medium)',
+        {/* Abas centralizadas */}
+        <Box sx={{
+          position: 'absolute',
+          left: '50%',
+          top: 0,
+          bottom: 0,
+          transform: 'translateX(-50%)',
+          display: 'flex',
+          alignItems: 'center',
+          width: 'max-content'
+        }}>
+          <Tabs 
+            value={availableTabs.findIndex(tab => tab.id === activeTab)} 
+            onChange={(e, v) => setActiveTab(availableTabs[v]?.id || 0)}
+            aria-label="veloinsights tabs"
+            sx={{
+              borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+              '& .MuiTab-root': {
+                fontSize: '1rem',
+                fontFamily: 'Poppins',
+                fontWeight: 500,
+                textTransform: 'none',
+                minHeight: 48,
+                '&.Mui-selected': {
+                  color: 'var(--blue-light)',
+                },
+                '&:not(.Mui-selected)': {
+                  color: 'var(--gray)',
+                  opacity: 0.7,
+                }
               },
-              '&:not(.Mui-selected)': {
-                color: 'var(--gray)',
-                opacity: 0.6,
+              '& .MuiTabs-indicator': {
+                backgroundColor: 'var(--blue-light)',
+                height: 2,
               }
-            },
-            '& .MuiTabs-indicator': {
-              backgroundColor: 'var(--blue-medium)',
-              height: 3,
-            }
-          }}
-        >
-          {availableTabs.map((tab) => (
-            <Tab 
-              key={tab.id}
-              label={tab.label} 
-              value={tab.id}
-              id={`veloinsights-tab-${tab.id}`}
-              aria-controls={`veloinsights-tabpanel-${tab.id}`}
-            />
-          ))}
-        </Tabs>
+            }}
+          >
+            {availableTabs.map((tab) => (
+              <Tab 
+                key={tab.id}
+                label={tab.label} 
+                value={tab.id}
+                id={`veloinsights-tab-${tab.id}`}
+                aria-controls={`veloinsights-tabpanel-${tab.id}`}
+              />
+            ))}
+          </Tabs>
+        </Box>
 
         {/* Botões de Fonte de Dados - Lado Direito */}
         <ButtonGroup 

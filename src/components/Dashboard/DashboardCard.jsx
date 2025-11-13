@@ -24,15 +24,15 @@ const DashboardCard = ({ title, description, icon, color, onClick }) => {
     <Card
       className="velohub-card"
       sx={{
-        height: '200px', // Tamanho fixo quadrado
-        width: '200px', // Tamanho fixo quadrado
+        height: '144px', // Reduzido mais 10% (era 160px, agora 144px)
+        width: '144px', // Reduzido mais 10% (era 160px, agora 144px)
         display: 'flex',
         flexDirection: 'column',
         cursor: 'pointer',
         transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
         border: '1px solid rgba(22, 52, 255, 0.1)',
-        borderRadius: '12px',
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+        borderRadius: '9.6px',
+        boxShadow: '0 3.2px 16px rgba(0, 0, 0, 0.1)',
         position: 'relative',
         overflow: 'hidden',
         p: 0, // Removido padding
@@ -43,14 +43,14 @@ const DashboardCard = ({ title, description, icon, color, onClick }) => {
           top: 0,
           left: 0,
           right: 0,
-          height: '4px',
+          height: '3.2px',
           background: getArrowGradient(color),
           transform: 'scaleX(0)',
           transition: 'transform 0.3s ease',
         },
         '&:hover': {
-          transform: 'translateY(-12px) scale(1.02)',
-          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
+          transform: 'translateY(-9.6px) scale(1.02)',
+          boxShadow: '0 16px 32px rgba(0, 0, 0, 0.15)',
           borderColor: 'var(--blue-medium)',
           '&::before': {
             transform: 'scaleX(1)',
@@ -72,11 +72,11 @@ const DashboardCard = ({ title, description, icon, color, onClick }) => {
       }}>
         <Box
           sx={{
-            mb: 2,
+            mb: 1.44,
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            height: '70px', // Ajustado para card quadrado
+            height: '50.4px', // Reduzido mais 10% (era 56px, agora 50.4px)
             color: 'var(--blue-opaque)',
           }}
         >
@@ -90,8 +90,8 @@ const DashboardCard = ({ title, description, icon, color, onClick }) => {
             fontFamily: 'Poppins',
             fontWeight: 600,
             color: 'var(--blue-dark)',
-            fontSize: '1.1rem', // Ajustado para card quadrado
-            mb: 2,
+            fontSize: '0.792rem', // Reduzido mais 10% (era 0.88rem, agora 0.792rem)
+            mb: 1.44,
           }}
         >
           {title}
@@ -102,13 +102,13 @@ const DashboardCard = ({ title, description, icon, color, onClick }) => {
             sx={{
               background: getArrowGradient(color),
               color: 'white',
-              width: 36, // Ajustado para card quadrado
-              height: 36, // Ajustado para card quadrado
-              borderRadius: '18px', // Ajustado para card quadrado
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+              width: 28.8, // Reduzido para 80%
+              height: 28.8, // Reduzido para 80%
+              borderRadius: '14.4px', // Reduzido para 80%
+              boxShadow: '0 3.2px 9.6px rgba(0, 0, 0, 0.15)',
               '&:hover': {
                 transform: 'scale(1.05)',
-                boxShadow: '0 6px 16px rgba(0, 0, 0, 0.2)',
+                boxShadow: '0 4.8px 12.8px rgba(0, 0, 0, 0.2)',
               },
               transition: 'all 0.3s ease',
             }}

@@ -1,13 +1,14 @@
-// VERSION: v2.10.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v2.11.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useCallback, useEffect } from 'react';
-import { Typography, Box, Tabs, Tab, Container, Grid, Card, CardContent, FormControl, InputLabel, Select, MenuItem, Button } from '@mui/material';
-import { QuestionAnswer, People, Schedule, TrendingUp, TrendingDown, DateRange, Timeline, PieChart as PieChartIcon, ShowChart, Person, FileDownload, PictureAsPdf, ListAlt, EmojiEvents, Analytics, Psychology, Refresh, Search } from '@mui/icons-material';
+import { Typography, Box, Tabs, Tab, Container, Grid, Card, CardContent, FormControl, InputLabel, Select, MenuItem, Button, Accordion, AccordionSummary, AccordionDetails, Chip, Alert, CircularProgress } from '@mui/material';
+import { QuestionAnswer, People, Schedule, TrendingUp, TrendingDown, DateRange, Timeline, PieChart as PieChartIcon, ShowChart, Person, FileDownload, PictureAsPdf, ListAlt, EmojiEvents, Analytics, Psychology, Refresh, Search, ExpandMore } from '@mui/icons-material';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import BackButton from '../components/common/BackButton';
 import botAnalisesService from '../services/botAnalisesService';
+import { botFeedbackAPI } from '../services/api';
 
 const BotAnalisesPage = () => {
   const [activeTab, setActiveTab] = useState(0);
@@ -33,6 +34,11 @@ const BotAnalisesPage = () => {
   const [listaAtividades, setListaAtividades] = useState([]);
   const [analisesEspecificas, setAnalisesEspecificas] = useState({});
   const [filtroUsuario, setFiltroUsuario] = useState('todos');
+  
+  // Estados para aba Bot Feedback
+  const [feedbacks, setFeedbacks] = useState([]);
+  const [loadingFeedbacks, setLoadingFeedbacks] = useState(false);
+  const [expandedFeedback, setExpandedFeedback] = useState(null);
 
   // Função para processar dados do gráfico de perguntas (top 5 + outras)
   const processarDadosGraficoPerguntas = useCallback((dados) => {
@@ -613,6 +619,40 @@ const BotAnalisesPage = () => {
     carregarDadosGrafico();
   }, [periodoFiltroGrafico, exibicaoFiltroGrafico]);
 
+  // Carregar feedbacks
+  const loadFeedbacks = useCallback(async () => {
+    try {
+      setLoadingFeedbacks(true);
+      const response = await botFeedbackAPI.getAll();
+      const data = Array.isArray(response) ? response : (response.data || []);
+      setFeedbacks(data);
+    } catch (error) {
+      console.error('Erro ao carregar feedbacks:', error);
+      setFeedbacks([]);
+    } finally {
+      setLoadingFeedbacks(false);
+    }
+  }, []);
+
+  // Carregar feedbacks quando mudar para aba Feedback
+  useEffect(() => {
+    if (activeTab === 1) {
+      loadFeedbacks();
+    }
+  }, [activeTab, loadFeedbacks]);
+
+  // Formatar data para feedbacks
+  const formatDateFeedback = (date) => {
+    if (!date) return 'N/A';
+    return new Date(date).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   const opcoesPeriodo = [
     { value: '1dia', label: 'Último dia' },
     { value: '7dias', label: 'Últimos 7 dias' },
@@ -637,71 +677,77 @@ const BotAnalisesPage = () => {
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 8, pb: 4 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', mb: 4 }}>
-        <Box sx={{ position: 'absolute', left: 0 }}>
+      {/* Header alinhado: Botão Voltar + Abas + Botões Exportação centralizados no frame */}
+      <Box sx={{ position: 'relative', mb: 3.2, minHeight: 40 }}>
+        {/* Botão Voltar alinhado à esquerda */}
+        <Box sx={{ position: 'absolute', left: 0, top: 0, bottom: 0, display: 'flex', alignItems: 'center' }}>
           <BackButton />
         </Box>
-        <Typography 
-          variant="h4" 
-          component="h1"
-          sx={{ 
-            fontFamily: 'Poppins',
-            fontWeight: 700,
-            color: 'var(--blue-dark)'
-          }}
-        >
-          Bot Análises
-        </Typography>
-      </Box>
-
-      {/* Tabs do Material-UI com Botões de Exportação */}
-      <Box sx={{ 
-        borderBottom: 1, 
-        borderColor: 'divider',
-        mb: 3,
-        mt: 1,
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <Tabs 
-          value={activeTab} 
+        
+        {/* Abas centralizadas */}
+        <Box sx={{
+          position: 'absolute',
+          left: '50%',
+          top: 0,
+          bottom: 0,
+          transform: 'translateX(-50%)',
+          display: 'flex',
+          alignItems: 'center',
+          width: 'max-content'
+        }}>
+          <Tabs
+          value={activeTab}
           onChange={handleTabChange}
           aria-label="bot analises tabs"
           sx={{
+            borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
             '& .MuiTab-root': {
-              fontSize: '1.25rem',
-              fontWeight: 600,
+              fontSize: '1rem',
+              fontFamily: 'Poppins',
+              fontWeight: 500,
               textTransform: 'none',
               minHeight: 48,
               '&.Mui-selected': {
-                color: 'var(--blue-medium)',
+                color: 'var(--blue-light)',
               },
               '&:not(.Mui-selected)': {
                 color: 'var(--gray)',
-                opacity: 0.6,
-              }
+                opacity: 0.7,
+              },
             },
             '& .MuiTabs-indicator': {
-              backgroundColor: 'var(--blue-medium)',
-              height: 3,
-            }
+              backgroundColor: 'var(--blue-light)',
+              height: 2,
+            },
           }}
         >
-          <Tab 
-            label="Atividade" 
+          <Tab
+            label="Atividade"
             id="bot-analises-tab-0"
             aria-controls="bot-analises-tabpanel-0"
           />
-          <Tab 
-            label="Feedback" 
+          <Tab
+            label="Feedback"
             id="bot-analises-tab-1"
             aria-controls="bot-analises-tabpanel-1"
           />
         </Tabs>
-        
-        {/* Botões de Exportação */}
-        <Box sx={{ display: 'flex', gap: 1, pr: 2 }}>
+        </Box>
+
+        {/* Botões de Exportação alinhados à direita, mas centralizados no frame */}
+        <Box
+          sx={{
+            position: 'absolute',
+            right: 0,
+            top: 0,
+            bottom: 0,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            pr: 2,
+            zIndex: 2,
+          }}
+        >
           <Button
             variant="outlined"
             startIcon={<FileDownload />}
@@ -712,7 +758,7 @@ const BotAnalisesPage = () => {
               '&:hover': {
                 borderColor: 'var(--blue-dark)',
                 backgroundColor: 'var(--blue-light)',
-              }
+              },
             }}
           >
             XLS
@@ -727,13 +773,21 @@ const BotAnalisesPage = () => {
               '&:hover': {
                 borderColor: 'var(--red-dark)',
                 backgroundColor: 'var(--red-light)',
-              }
+              },
             }}
           >
             PDF
           </Button>
         </Box>
       </Box>
+      {/* Linha divisória abaixo do seletor */}
+      <Box
+        sx={{
+          borderBottom: 1,
+          borderColor: 'divider',
+          mb: 3,
+        }}
+      />
 
       {/* Conteúdo das Abas - Renderização Condicional Direta */}
       {activeTab === 0 && (
@@ -746,22 +800,14 @@ const BotAnalisesPage = () => {
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
             mb: 4
           }}>
-            <CardContent sx={{ p: 4 }}>
-              {/* Título e Filtro de Período na mesma linha */}
-              <Box sx={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
+            <CardContent sx={{ p: 3.2 }}>
+              {/* Filtro de Período na mesma linha */}
+              <Box sx={{
+                display: 'flex',
+                justifyContent: 'flex-end',
                 alignItems: 'center',
-                mb: 4
+                mb: 3.2
               }}>
-                {/* Título Geral da Operação */}
-                <Typography variant="h4" sx={{ 
-                  fontFamily: 'Poppins', 
-                  fontWeight: 600,
-                  color: 'var(--blue-dark)'
-                }}>
-                  Geral da Operação
-                </Typography>
 
                 {/* Filtro de Período */}
                 <Box sx={{ 
@@ -821,6 +867,12 @@ const BotAnalisesPage = () => {
                 border: '1.5px solid var(--blue-dark)',
                 padding: '16px',
                 margin: '8px',
+                height: 180,
+                minHeight: 180,
+                maxHeight: 180,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
                 '&:hover': {
                   transform: 'translateY(-2px)',
                   boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)',
@@ -861,6 +913,12 @@ const BotAnalisesPage = () => {
                 border: '1.5px solid var(--blue-dark)',
                 padding: '16px',
                 margin: '8px',
+                height: 180,
+                minHeight: 180,
+                maxHeight: 180,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
                 '&:hover': {
                   transform: 'translateY(-2px)',
                   boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)',
@@ -901,6 +959,12 @@ const BotAnalisesPage = () => {
                 border: '1.5px solid var(--blue-dark)',
                 padding: '16px',
                 margin: '8px',
+                height: 180,
+                minHeight: 180,
+                maxHeight: 180,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
                 '&:hover': {
                   transform: 'translateY(-2px)',
                   boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)',
@@ -941,6 +1005,12 @@ const BotAnalisesPage = () => {
                 border: '1.5px solid var(--blue-dark)',
                 padding: '16px',
                 margin: '8px',
+                height: 180,
+                minHeight: 180,
+                maxHeight: 180,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
                 '&:hover': {
                   transform: 'translateY(-2px)',
                   boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)',
@@ -997,6 +1067,12 @@ const BotAnalisesPage = () => {
                 border: '1.5px solid var(--blue-dark)',
                 padding: '16px',
                 margin: '8px',
+                height: 180,
+                minHeight: 180,
+                maxHeight: 180,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
                 '&:hover': {
                   transform: 'translateY(-2px)',
                   boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)',
@@ -1004,11 +1080,16 @@ const BotAnalisesPage = () => {
                 }
               }}>
                 <CardContent sx={{ textAlign: 'center', p: 3 }}>
-                  <BarChart sx={{ 
-                    fontSize: '3rem', 
-                    color: 'var(--blue-medium)',
-                    mb: 2
-                  }} />
+                  {/* Ícone da balança para Média Diária */}
+                  <span style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" viewBox="0 0 48 48">
+                      <g>
+                        <path d="M24 6v4M24 38v4M8 10l4 4M40 10l-4 4M6 24h4M38 24h4M12 24c0 6.627 5.373 12 12 12s12-5.373 12-12" stroke="#1634FF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M16 24c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="#1634FF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M20 24c0-2.209 1.791-4 4-4s4 1.791 4 4" stroke="#1634FF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </g>
+                    </svg>
+                  </span>
                   <Typography variant='h4' sx={{ 
                     fontFamily: 'Poppins',
                     fontWeight: 700,
@@ -1314,55 +1395,93 @@ const BotAnalisesPage = () => {
                     margin: '8px',
                     height: '400px'
                   }}>
-                    <Box sx={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
+                    <Box sx={{
+                      display: 'flex',
+                      alignItems: 'center',
                       gap: 2,
                       mb: 3
                     }}>
-                             <PieChartIcon sx={{ 
-                               fontSize: '2rem', 
+                             <PieChartIcon sx={{
+                               fontSize: '2rem',
                                color: 'var(--blue-medium)'
                              }} />
-                      <Typography variant="h6" sx={{ 
+                      <Typography variant="h6" sx={{
                         fontFamily: 'Poppins',
                         fontWeight: 600,
-                        color: 'var(--blue-dark)'
+                        color: 'var(--blue-dark)',
+                        fontSize: '1rem'
                       }}>
                         Perguntas Mais Frequentes
                       </Typography>
                     </Box>
                     
-                           <Box sx={{ height: '300px', width: '100%' }}>
-                             <ResponsiveContainer width="100%" height="100%">
-                               <PieChart>
-                                 <Pie
-                                   data={processarDadosGraficoPerguntas(dadosPerguntasFrequentes)}
-                                   cx="50%"
-                                   cy="50%"
-                                   labelLine={false}
-                                   label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                                   outerRadius={80}
-                                   fill="#8884d8"
-                                   dataKey="value"
-                                 >
-                                   {processarDadosGraficoPerguntas(dadosPerguntasFrequentes).map((entry, index) => (
-                                     <Cell key={`cell-${index}`} fill={coresPizza[index % coresPizza.length]} />
-                                   ))}
-                                 </Pie>
-                                 <Tooltip 
-                                   contentStyle={{
-                                     backgroundColor: 'white',
-                                     border: '1px solid #ccc',
-                                     borderRadius: '8px',
-                                     fontFamily: 'Poppins',
-                                     fontSize: '12px'
-                                   }}
-                                   formatter={(value, name) => [value, 'Perguntas']}
-                                 />
-                               </PieChart>
-                             </ResponsiveContainer>
-                           </Box>
+                    <Box sx={{ height: '300px', width: '100%' }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={processarDadosGraficoPerguntas(dadosPerguntasFrequentes)}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={({
+                              name,
+                              percent,
+                              cx,
+                              cy,
+                              midAngle,
+                              outerRadius,
+                            }) => {
+                              // Calcula a posição ao redor do gráfico
+                              const RADIAN = Math.PI / 180;
+                              const radius = outerRadius + 18;
+                              const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                              const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                              const labelText = `${name} (${(percent * 100).toFixed(0)}%)`;
+                              const maxLength = 20;
+                              const truncatedText = labelText.length > maxLength ? labelText.substring(0, maxLength) + '...' : labelText;
+                              return (
+                                <text
+                                  x={x}
+                                  y={y}
+                                  textAnchor={x > cx ? 'start' : 'end'}
+                                  dominantBaseline="central"
+                                  style={{
+                                    fontSize: '0.6rem',
+                                    fontFamily: 'Poppins',
+                                    fill: '#333',
+                                    pointerEvents: 'none',
+                                    background: 'white'
+                                  }}
+                                >
+                                  {truncatedText}
+                                </text>
+                              );
+                            }}
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="value"
+                          >
+                            {processarDadosGraficoPerguntas(dadosPerguntasFrequentes).map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={coresPizza[index % coresPizza.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: 'white',
+                              border: '1px solid #ccc',
+                              borderRadius: '8px',
+                              fontFamily: 'Poppins',
+                              fontSize: '0.85rem'
+                            }}
+                            formatter={(value, name) => [value, 'Perguntas']}
+                            labelStyle={{
+                              fontFamily: 'Poppins',
+                              fontSize: '0.85rem'
+                            }}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </Box>
                   </Card>
                 </Grid>
 
@@ -1438,7 +1557,7 @@ const BotAnalisesPage = () => {
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
             mb: 4
           }}>
-            <CardContent sx={{ p: 4 }}>
+            <CardContent sx={{ p: 3.2 }}>
               <Grid container spacing={3}>
                 {/* Lista de Atividades - Coluna Esquerda */}
                 <Grid item xs={12} md={6}>
@@ -1711,7 +1830,7 @@ const BotAnalisesPage = () => {
             mb: 4,
             mt: 4
           }}>
-            <CardContent sx={{ p: 4 }}>
+            <CardContent sx={{ p: 3.2 }}>
               {/* Título Análise de Utilização */}
               <Typography variant="h4" sx={{ 
                 fontFamily: 'Poppins', 
@@ -2045,56 +2164,104 @@ const BotAnalisesPage = () => {
 
       {activeTab === 1 && (
         <Container maxWidth="xl" sx={{ pt: 3 }}>
-          {/* Placa de Em Obras */}
-          <Card sx={{
-            background: 'linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%)',
-            borderRadius: '16px',
-            border: '2px solid #f39c12',
-            boxShadow: '0 8px 32px rgba(243, 156, 18, 0.3)',
-            mb: 4,
-            mt: 2
-          }}>
-            <CardContent sx={{ p: 6, textAlign: 'center' }}>
-              {/* Ícone de Construção */}
-              <Box sx={{ 
-                fontSize: '4rem', 
-                mb: 3,
-                animation: 'pulse 2s infinite'
-              }}>
-                🚧
-              </Box>
-              
-              {/* Título */}
-              <Typography variant="h4" sx={{ 
-                fontFamily: 'Poppins', 
-                fontWeight: 700,
-                color: '#d68910',
-                mb: 2
-              }}>
-                Dashboard de Feedback
+          <Card sx={{ backgroundColor: 'var(--cor-container)' }}>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 3, color: 'var(--blue-dark)', fontFamily: 'Poppins', fontWeight: 600 }}>
+                Feedback do Bot
               </Typography>
-              
-              {/* Subtítulo */}
-              <Typography variant="h6" sx={{ 
-                fontFamily: 'Poppins', 
-                fontWeight: 600,
-                color: '#b7950b',
-                mb: 3
-              }}>
-                🛠️ Em Construção
-              </Typography>
-              
-              {/* Descrição */}
-              <Typography variant="body1" sx={{ 
-                fontFamily: 'Poppins', 
-                color: '#8b6914',
-                fontSize: '1.1rem',
-                maxWidth: '600px',
-                mx: 'auto',
-                lineHeight: 1.6
-              }}>
-               
-              </Typography>
+
+              {loadingFeedbacks ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                  <CircularProgress sx={{ color: 'var(--blue-medium)' }} />
+                </Box>
+              ) : feedbacks.length === 0 ? (
+                <Alert severity="info" sx={{ fontFamily: 'Poppins' }}>
+                  Nenhum feedback encontrado.
+                </Alert>
+              ) : (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {feedbacks.map((feedback) => (
+                    <Accordion
+                      key={feedback._id}
+                      expanded={expandedFeedback === feedback._id}
+                      onChange={() => setExpandedFeedback(expandedFeedback === feedback._id ? null : feedback._id)}
+                      sx={{
+                        '&:before': { display: 'none' },
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                        borderRadius: '8px !important',
+                        '&.Mui-expanded': {
+                          margin: '0 !important'
+                        }
+                      }}
+                    >
+                      <AccordionSummary
+                        expandIcon={<ExpandMore sx={{ color: 'var(--blue-medium)' }} />}
+                        sx={{
+                          backgroundColor: expandedFeedback === feedback._id ? 'rgba(22, 148, 255, 0.05)' : 'transparent',
+                          '&:hover': {
+                            backgroundColor: 'rgba(22, 148, 255, 0.05)'
+                          }
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', pr: 2 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Typography sx={{ fontFamily: 'Poppins', fontWeight: 600, color: 'var(--blue-dark)' }}>
+                              {feedback.colaboradorNome || 'Usuário desconhecido'}
+                            </Typography>
+                            <Chip
+                              label={feedback.details?.feedbackType === 'positive' ? 'Positivo' : 'Negativo'}
+                              size="small"
+                              sx={{
+                                backgroundColor: feedback.details?.feedbackType === 'positive' ? '#15A237' : '#FF0000',
+                                color: 'white',
+                                fontFamily: 'Poppins',
+                                fontWeight: 500
+                              }}
+                            />
+                          </Box>
+                          <Typography variant="caption" sx={{ fontFamily: 'Poppins', color: 'var(--gray)' }}>
+                            {formatDateFeedback(feedback.createdAt)}
+                          </Typography>
+                        </Box>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                          {feedback.details?.question && (
+                            <Box>
+                              <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: 'var(--blue-dark)', mb: 0.5 }}>
+                                Pergunta:
+                              </Typography>
+                              <Typography sx={{ fontFamily: 'Poppins', color: 'var(--gray)' }}>
+                                {feedback.details.question}
+                              </Typography>
+                            </Box>
+                          )}
+                          {feedback.details?.aiProvider && (
+                            <Box>
+                              <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: 'var(--blue-dark)', mb: 0.5 }}>
+                                AI Provider:
+                              </Typography>
+                              <Typography sx={{ fontFamily: 'Poppins', color: 'var(--gray)' }}>
+                                {feedback.details.aiProvider}
+                              </Typography>
+                            </Box>
+                          )}
+                          {feedback.details?.feedbackType === 'negative' && feedback.details?.comment && (
+                            <Box>
+                              <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: 'var(--blue-dark)', mb: 0.5 }}>
+                                Comentário:
+                              </Typography>
+                              <Typography sx={{ fontFamily: 'Poppins', color: 'var(--gray)' }}>
+                                {feedback.details.comment}
+                              </Typography>
+                            </Box>
+                          )}
+                        </Box>
+                      </AccordionDetails>
+                    </Accordion>
+                  ))}
+                </Box>
+              )}
             </CardContent>
           </Card>
         </Container>

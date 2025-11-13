@@ -71,7 +71,8 @@ export const AuthProvider = ({ children }) => {
                 recursos: true,
                 gestao: true,
                 rhFin: true,
-                facilities: true
+                facilities: true,
+                chamadosInternos: true
               },
               _funcoesAdministrativas: {
                 avaliador: true,
@@ -206,7 +207,8 @@ export const AuthProvider = ({ children }) => {
           recursos: true,
           gestao: true,
           rhFin: true,
-          facilities: true
+          facilities: true,
+          chamadosInternos: true
         },
         _funcoesAdministrativas: {
           avaliador: true,

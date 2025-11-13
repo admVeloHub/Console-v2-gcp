@@ -131,10 +131,10 @@ body {
 /* Classes utilitárias */
 .velohub-container {
   background-color: var(--cor-container);
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  padding: 24px;
-  margin: 16px;
+  border-radius: 9.6px;
+  box-shadow: 0 3.2px 16px rgba(0, 0, 0, 0.1);
+  padding: 19.2px;
+  margin: 12.8px;
   transition: all 0.3s ease;
 }
 
@@ -178,10 +178,10 @@ body {
 
 .velohub-card {
   background-color: var(--cor-card);
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  margin: 16px 0;
+  border-radius: 9.6px;
+  box-shadow: 0 3.2px 16px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  margin: 12.8px 0;
   border: 1px solid rgba(22, 52, 255, 0.1);
   transition: all 0.3s ease;
   cursor: pointer;
@@ -190,57 +190,57 @@ body {
 }
 
 .velohub-card:hover {
-  transform: translateY(-12px) scale(1.02);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  transform: translateY(-9.6px) scale(1.02);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.15);
   border-color: var(--blue-light);
 }
 
 /* Responsividade */
 @media (max-width: 768px) {
   .velohub-container {
-    margin: 8px;
-    padding: 16px;
+    margin: 6.4px;
+    padding: 12.8px;
   }
-  
+
   .velohub-card {
-    margin: 8px 0;
-    padding: 16px;
+    margin: 6.4px 0;
+    padding: 12.8px;
   }
 }
 
 @media (max-width: 480px) {
   .velohub-container {
-    margin: 4px;
-    padding: 12px;
+    margin: 3.2px;
+    padding: 9.6px;
   }
-  
+
   .velohub-card {
-    padding: 12px;
+    padding: 9.6px;
   }
 }
 
 /* Containers VeloHub */
 .container-main {
   background-color: var(--cor-container);
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  padding: 24px;
-  margin: 16px 0;
+  border-radius: 9.6px;
+  box-shadow: 0 3.2px 16px rgba(0, 0, 0, 0.1);
+  padding: 19.2px;
+  margin: 12.8px 0;
 }
 
 .container-secondary {
   background: transparent;
   border: 1.5px solid var(--blue-dark);
-  border-radius: 8px;
-  padding: 16px;
-  margin: 8px;
+  border-radius: 6.4px;
+  padding: 12.8px;
+  margin: 6.4px;
   box-shadow: none;
 }
 
 .velohub-card {
   background-color: var(--cor-card);
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  padding: 20px;
-  margin: 12px 0;
+  border-radius: 6.4px;
+  box-shadow: 0 1.6px 8px rgba(0, 0, 0, 0.05);
+  padding: 16px;
+  margin: 9.6px 0;
 }

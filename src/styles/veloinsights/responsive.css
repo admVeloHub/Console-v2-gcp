@@ -4,42 +4,42 @@
    ======================================== */
 
 /* ========================================
-   DESKTOP LARGE (> 1200px)
-   ======================================== */
+    DESKTOP LARGE (> 1200px)
+    ======================================== */
 @media (min-width: 1201px) {
   .container {
-    max-width: 1400px;
+    max-width: 1120px;
     margin: 0 auto;
-    padding: 0 2rem;
+    padding: 0 1.6rem;
   }
 }
 
 /* ========================================
-   TABLET (768px - 1200px)
-   ======================================== */
+    TABLET (768px - 1200px)
+    ======================================== */
 @media (max-width: 1200px) {
   /* Container */
   .container {
     max-width: 100%;
-    padding: 0 1.5rem;
+    padding: 0 1.2rem;
   }
 
   /* Header */
   .header {
-    padding: 0 1.5rem;
+    padding: 0 1.2rem;
   }
 
   .header-nav {
-    gap: 8px;
+    gap: 6.4px;
   }
 
   .nav-tab {
-    padding: 10px 18px;
-    font-size: 13px;
+    padding: 8px 14.4px;
+    font-size: 10.4px;
   }
 
   .period-selector-btn {
-    padding: 8px 12px;
+    padding: 6.4px 9.6px;
   }
 
   .period-info {
@@ -49,26 +49,26 @@
   /* Grids */
   .metrics-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
+    gap: 12.8px;
   }
 
   /* Cards */
   .metric-card,
   .indicator-card {
-    padding: 20px;
+    padding: 16px;
   }
 
   .metric-value {
-    font-size: 28px;
+    font-size: 22.4px;
   }
 
   /* Ranking */
   .ranking-container {
-    padding: 20px;
+    padding: 16px;
   }
 
   .ranking-item {
-    padding: 14px;
+    padding: 11.2px;
   }
 
   /* Modais */
@@ -92,27 +92,27 @@
 
   /* Header */
   .header {
-    height: 70px;
-    padding: 0 1rem;
+    height: 56px;
+    padding: 0 0.8rem;
   }
 
   .header-logo-image {
-    max-height: 40px;
-    max-width: 160px;
+    max-height: 32px;
+    max-width: 128px;
   }
 
   .header-nav {
-    gap: 6px;
+    gap: 4.8px;
   }
 
   .nav-tab {
-    padding: 8px 14px;
-    font-size: 12px;
-    gap: 6px;
+    padding: 6.4px 11.2px;
+    font-size: 9.6px;
+    gap: 4.8px;
   }
 
   .nav-tab i {
-    font-size: 14px;
+    font-size: 11.2px;
   }
 
   /* Ocultar texto das tabs, manter só ícones */
@@ -121,8 +121,8 @@
   }
 
   .period-selector-btn {
-    width: 44px;
-    height: 44px;
+    width: 35.2px;
+    height: 35.2px;
     padding: 0;
     justify-content: center;
   }
@@ -130,66 +130,66 @@
   /* Grids */
   .metrics-grid {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 9.6px;
   }
 
   /* Cards */
   .metric-card,
   .indicator-card {
-    padding: 16px;
-    border-radius: 16px;
+    padding: 12.8px;
+    border-radius: 12.8px;
   }
 
   .metric-value {
-    font-size: 24px;
+    font-size: 19.2px;
   }
 
   .metric-icon {
-    width: 36px;
-    height: 36px;
-    font-size: 18px;
+    width: 28.8px;
+    height: 28.8px;
+    font-size: 14.4px;
   }
 
   /* Ranking */
   .ranking-container {
-    padding: 16px;
+    padding: 12.8px;
   }
 
   .ranking-header {
-    margin-bottom: 16px;
+    margin-bottom: 12.8px;
   }
 
   .ranking-title {
-    font-size: 16px;
+    font-size: 12.8px;
   }
 
   .ranking-list {
-    gap: 10px;
+    gap: 8px;
   }
 
   .ranking-item {
-    padding: 12px;
-    gap: 12px;
+    padding: 9.6px;
+    gap: 9.6px;
   }
 
   .ranking-position,
   .ranking-avatar {
-    width: 36px;
-    height: 36px;
-    font-size: 14px;
+    width: 28.8px;
+    height: 28.8px;
+    font-size: 11.2px;
   }
 
   .ranking-name {
-    font-size: 14px;
+    font-size: 11.2px;
   }
 
   .ranking-stats {
-    font-size: 11px;
-    gap: 8px;
+    font-size: 8.8px;
+    gap: 6.4px;
   }
 
   .ranking-score {
-    font-size: 18px;
+    font-size: 14.4px;
   }
 
   /* Modais */
@@ -200,47 +200,47 @@
 
   .modal-header,
   .modal-footer {
-    padding: 16px 20px;
+    padding: 12.8px 16px;
   }
 
   .modal-body {
-    padding: 20px;
+    padding: 16px;
   }
 
   .modal-title {
-    font-size: 16px;
+    font-size: 12.8px;
   }
 
   .period-grid {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 9.6px;
   }
 
   .period-option {
-    padding: 16px;
+    padding: 12.8px;
   }
 
   .period-option-icon .bx {
-    font-size: 24px;
-    width: 40px;
-    height: 40px;
+    font-size: 19.2px;
+    width: 32px;
+    height: 32px;
   }
 
   .period-option-text .title {
-    font-size: 14px;
+    font-size: 11.2px;
   }
 
   .period-option-text .subtitle {
-    font-size: 12px;
+    font-size: 9.6px;
   }
 
   .period-option-records {
-    font-size: 18px;
+    font-size: 14.4px;
   }
 
   .custom-period-inputs {
     grid-template-columns: 1fr;
-    gap: 15px;
+    gap: 12px;
   }
 
   /* Export Modal */
@@ -249,310 +249,310 @@
   }
 
   .export-modal-header {
-    padding: 18px 20px;
+    padding: 14.4px 16px;
   }
 
   .export-modal-title {
-    font-size: 18px;
+    font-size: 14.4px;
   }
 
   .export-modal-body {
-    padding: 20px;
-  }
-
-  .export-option {
     padding: 16px;
   }
 
+  .export-option {
+    padding: 12.8px;
+  }
+
   .export-option-icon {
-    width: 46px;
-    height: 46px;
-    font-size: 24px;
+    width: 36.8px;
+    height: 36.8px;
+    font-size: 19.2px;
   }
 
   /* FAB */
   .fab-button {
-    width: 56px;
-    height: 56px;
-    bottom: 20px;
-    right: 20px;
+    width: 44.8px;
+    height: 44.8px;
+    bottom: 16px;
+    right: 16px;
   }
 
   .fab-button i {
-    font-size: 24px;
+    font-size: 19.2px;
   }
 
   /* Sidebar */
   .sidebar {
-    width: 280px;
+    width: 224px;
   }
 
   /* Main Content */
   .main-content {
-    padding: 1rem;
+    padding: 0.8rem;
   }
 
   /* Charts */
   .chart-container {
-    height: 250px !important;
+    height: 200px !important;
   }
 }
 
 /* ========================================
-   MOBILE SMALL (< 480px)
-   ======================================== */
+    MOBILE SMALL (< 480px)
+    ======================================== */
 @media (max-width: 480px) {
   /* Container */
   .container {
-    padding: 0 0.75rem;
+    padding: 0 0.6rem;
   }
 
   /* Header */
   .header {
-    height: 60px;
-    padding: 0 0.75rem;
+    height: 48px;
+    padding: 0 0.6rem;
   }
 
   .header-logo-image {
-    max-height: 35px;
-    max-width: 140px;
+    max-height: 28px;
+    max-width: 112px;
   }
 
   .header-left {
-    gap: 0.5rem;
+    gap: 0.4rem;
   }
 
   .sidebar-toggle {
-    padding: 6px;
+    padding: 4.8px;
   }
 
   .hamburger {
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
   }
 
   .nav-tab {
-    padding: 6px 10px;
-    font-size: 11px;
+    padding: 4.8px 8px;
+    font-size: 8.8px;
   }
 
   .nav-tab i {
-    font-size: 16px;
+    font-size: 12.8px;
   }
 
   .period-selector-btn {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
   }
 
   /* Theme Toggle */
   .theme-toggle {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
   }
 
   /* Cards */
   .metric-card,
   .indicator-card {
-    padding: 14px;
-    border-radius: 14px;
+    padding: 11.2px;
+    border-radius: 11.2px;
   }
 
   .metric-header {
-    margin-bottom: 12px;
+    margin-bottom: 9.6px;
   }
 
   .metric-label {
-    font-size: 10px;
+    font-size: 8px;
   }
 
   .metric-icon {
-    width: 32px;
-    height: 32px;
-    font-size: 16px;
+    width: 25.6px;
+    height: 25.6px;
+    font-size: 12.8px;
   }
 
   .metric-value {
-    font-size: 22px;
-    margin-bottom: 6px;
+    font-size: 17.6px;
+    margin-bottom: 4.8px;
   }
 
   .metric-subtitle {
-    font-size: 12px;
+    font-size: 9.6px;
   }
 
   /* Ranking */
   .ranking-container {
-    padding: 14px;
+    padding: 11.2px;
   }
 
   .ranking-header {
-    margin-bottom: 14px;
-    padding-bottom: 12px;
+    margin-bottom: 11.2px;
+    padding-bottom: 9.6px;
   }
 
   .ranking-title {
-    font-size: 15px;
+    font-size: 12px;
   }
 
   .ranking-title i {
-    font-size: 18px;
+    font-size: 14.4px;
   }
 
   .ranking-list {
-    gap: 8px;
+    gap: 6.4px;
   }
 
   .ranking-item {
-    padding: 10px;
-    gap: 10px;
-    border-radius: 12px;
+    padding: 8px;
+    gap: 8px;
+    border-radius: 9.6px;
   }
 
   .ranking-position,
   .ranking-avatar {
-    width: 32px;
-    height: 32px;
-    font-size: 13px;
+    width: 25.6px;
+    height: 25.6px;
+    font-size: 10.4px;
   }
 
   .ranking-name {
-    font-size: 13px;
+    font-size: 10.4px;
   }
 
   .ranking-stats {
-    font-size: 10px;
-    gap: 6px;
+    font-size: 8px;
+    gap: 4.8px;
     flex-wrap: wrap;
   }
 
   .ranking-stat i {
-    font-size: 12px;
+    font-size: 9.6px;
   }
 
   .ranking-score {
-    font-size: 16px;
+    font-size: 12.8px;
   }
 
   /* Modais */
   .modal-header,
   .modal-footer {
-    padding: 14px 16px;
+    padding: 11.2px 12.8px;
   }
 
   .modal-body {
-    padding: 16px;
+    padding: 12.8px;
   }
 
   .modal-title {
-    font-size: 15px;
+    font-size: 12px;
   }
 
   .modal-close-btn {
-    width: 28px;
-    height: 28px;
-    font-size: 24px;
+    width: 22.4px;
+    height: 22.4px;
+    font-size: 19.2px;
   }
 
   .period-option {
-    padding: 14px;
-    gap: 12px;
+    padding: 11.2px;
+    gap: 9.6px;
   }
 
   .period-option-icon .bx {
-    font-size: 22px;
-    width: 36px;
-    height: 36px;
+    font-size: 17.6px;
+    width: 28.8px;
+    height: 28.8px;
   }
 
   .period-option-text .title {
-    font-size: 13px;
+    font-size: 10.4px;
   }
 
   .period-option-text .subtitle {
-    font-size: 11px;
+    font-size: 8.8px;
   }
 
   .period-option-records {
-    font-size: 16px;
+    font-size: 12.8px;
   }
 
   .period-option-records span {
-    font-size: 9px;
+    font-size: 7.2px;
   }
 
   .period-selected-info {
-    padding: 16px;
+    padding: 12.8px;
   }
 
   .period-selected-icon .bx {
-    width: 44px;
-    height: 44px;
-    font-size: 28px;
+    width: 35.2px;
+    height: 35.2px;
+    font-size: 22.4px;
   }
 
   .period-selected-text .value {
-    font-size: 18px;
+    font-size: 14.4px;
   }
 
   .custom-period-section {
-    padding: 18px;
+    padding: 14.4px;
   }
 
   .custom-period-title {
-    font-size: 14px;
-    margin-bottom: 16px;
+    font-size: 11.2px;
+    margin-bottom: 12.8px;
   }
 
   .modal-btn-cancel,
   .modal-btn-apply {
-    padding: 10px 18px;
-    font-size: 13px;
+    padding: 8px 14.4px;
+    font-size: 10.4px;
   }
 
   /* Export Modal */
   .export-modal-title {
-    font-size: 16px;
+    font-size: 12.8px;
   }
 
   .export-option {
-    padding: 14px;
+    padding: 11.2px;
   }
 
   .export-option-icon {
-    width: 42px;
-    height: 42px;
-    font-size: 22px;
+    width: 33.6px;
+    height: 33.6px;
+    font-size: 17.6px;
   }
 
   .export-option-content h3 {
-    font-size: 14px;
+    font-size: 11.2px;
   }
 
   .export-option-content p {
-    font-size: 11px;
+    font-size: 8.8px;
   }
 
   /* FAB */
   .fab-button {
-    width: 50px;
-    height: 50px;
-    bottom: 15px;
-    right: 15px;
+    width: 40px;
+    height: 40px;
+    bottom: 12px;
+    right: 12px;
   }
 
   .fab-button i {
-    font-size: 22px;
+    font-size: 17.6px;
   }
 
   /* Sidebar */
   .sidebar {
-    width: 260px;
+    width: 208px;
   }
 
   /* Main Content */
   .main-content {
-    padding: 0.75rem;
+    padding: 0.6rem;
   }
 
   .main-content.sidebar-open {
@@ -561,21 +561,21 @@
 
   /* Charts */
   .chart-container {
-    height: 220px !important;
+    height: 176px !important;
   }
 
   /* Spacing */
   .section-spacing {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.2rem;
   }
 }
 
 /* ========================================
-   LANDSCAPE MOBILE
-   ======================================== */
+    LANDSCAPE MOBILE
+    ======================================== */
 @media (max-width: 768px) and (orientation: landscape) {
   .header {
-    height: 56px;
+    height: 44.8px;
   }
 
   .modal-container {
@@ -583,13 +583,13 @@
   }
 
   .chart-container {
-    height: 200px !important;
+    height: 160px !important;
   }
 }
 
 /* ========================================
-   UTILITIES RESPONSIVAS
-   ======================================== */
+    UTILITIES RESPONSIVAS
+    ======================================== */
 
 /* Ocultar em mobile */
 .hide-mobile {
@@ -608,10 +608,10 @@
 /* Texto responsivo */
 .text-responsive {
   @media (max-width: 768px) {
-    font-size: 0.9em;
+    font-size: 0.72em;
   }
-  
+
   @media (max-width: 480px) {
-    font-size: 0.85em;
+    font-size: 0.68em;
   }
 }

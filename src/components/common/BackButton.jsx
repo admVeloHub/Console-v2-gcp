@@ -12,10 +12,10 @@ const BackButton = ({ to = '/', label = 'Voltar' }) => {
   };
 
   return (
-    <Box sx={{ 
-      mb: 2, 
-      mt: 2,
-      ml: 2,
+    <Box sx={{
+      mb: 1.6,
+      mt: 1.6,
+      ml: 1.6,
       display: 'flex',
       justifyContent: 'flex-start'
     }}>
@@ -23,9 +23,14 @@ const BackButton = ({ to = '/', label = 'Voltar' }) => {
         variant="outlined"
         startIcon={<ArrowBack />}
         onClick={handleBack}
+        size="small"
         sx={{
           color: 'var(--blue-dark)',
           borderColor: 'var(--blue-dark)',
+          fontSize: '0.64rem',
+          padding: '3.2px 9.6px',
+          minWidth: 'auto',
+          height: '28.8px',
           '&:hover': {
             backgroundColor: 'var(--blue-light)',
             color: 'var(--white)',

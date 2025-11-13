@@ -1,11 +1,11 @@
-// VERSION: v1.8.7 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.8.9 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
-import { 
-  Container, 
-  Box, 
-  Typography, 
-  Button, 
-  Card, 
+import {
+  Container,
+  Box,
+  Typography,
+  Button,
+  Card,
   CardContent,
   TextField,
   Select,
@@ -33,13 +33,13 @@ import {
   Checkbox,
   Divider
 } from '@mui/material';
-import { 
-  ArrowBack, 
-  Add, 
-  Edit, 
-  Delete, 
-  Key, 
-  Search, 
+import {
+  ArrowBack,
+  Add,
+  Edit,
+  Delete,
+  Key,
+  Search,
   Clear,
   ExpandMore,
   ExpandLess,
@@ -54,11 +54,12 @@ import {
   Security
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { 
-  getFuncionarios, 
-  getFuncionariosAtivos, 
-  addFuncionario, 
-  updateFuncionario, 
+import BackButton from '../components/common/BackButton';
+import {
+  getFuncionarios,
+  getFuncionariosAtivos,
+  addFuncionario,
+  updateFuncionario,
   deleteFuncionario,
   migrarDadosParaMongoDB,
   verificarDadosLocais,
@@ -738,55 +739,34 @@ const FuncionariosPage = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 6, mb: 8, pb: 4, position: 'relative', padding: '40px 20px' }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', mb: 4 }}>
-        <Box sx={{ position: 'absolute', left: 0 }}>
-          <Button
-            startIcon={<ArrowBack />}
-            onClick={() => navigate('/qualidade')}
-            sx={{
-              color: '#000058',
-              borderColor: '#000058',
-              fontFamily: 'Poppins',
-              fontWeight: 500,
-              '&:hover': {
-                backgroundColor: '#1694FF',
-                color: '#ffffff',
-                borderColor: '#1694FF'
-              }
-            }}
-          >
-            Voltar
-          </Button>
+    <Container maxWidth="lg" sx={{ mt: 2, mb: 8, pb: 4, position: 'relative', padding: '40px 20px', fontSize: '0.8rem' }}>
+      {/* Header com botão voltar no mesmo estilo da aba Artigos */}
+      <Box sx={{ position: 'relative', mb: 0.96, minHeight: 32 }}>
+        <Box sx={{ position: 'absolute', left: 0, top: -8, bottom: 0, display: 'flex', alignItems: 'flex-start' }}>
+          {/* Botão voltar padrão das abas, usando BackButton */}
+          <BackButton to="/qualidade" />
         </Box>
-        <Typography 
-          variant="h4" 
-          component="h1"
-          sx={{ 
-            fontFamily: 'Poppins',
-            fontWeight: 700,
-            color: 'var(--blue-dark)'
-          }}
-        >
-          Funcionários
-        </Typography>
       </Box>
 
       {/* Toolbar */}
-      <Card sx={{ mb: 3, borderRadius: '16px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}>
+      <Card sx={{ mb: 2.4, borderRadius: '12.8px', boxShadow: '0 3.2px 16px rgba(0, 0, 0, 0.1)' }}>
         <CardContent>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h6" sx={{ fontFamily: 'Poppins', color: '#000058', fontWeight: 600 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.6 }}>
+            <Typography variant="h6" sx={{ fontFamily: 'Poppins', color: '#000058', fontWeight: 600, fontSize: '0.96rem' }}>
               Funcionários ({funcionariosFiltrados.length})
             </Typography>
-            <Box sx={{ display: 'flex', gap: 1 }}>
+            <Box sx={{ display: 'flex', gap: 0.8 }}>
               <Button
                 startIcon={<Add />}
                 onClick={() => setShowModalNovo(true)}
                 variant="contained"
+                size="small"
                 sx={{
                   backgroundColor: '#1694FF',
                   fontFamily: 'Poppins',
+                  fontSize: '0.8rem',
+                  py: 0.4,
+                  px: 1.2,
                   '&:hover': { backgroundColor: '#0D7AE5' }
                 }}
               >
@@ -795,11 +775,15 @@ const FuncionariosPage = () => {
               <Button
                 startIcon={<BarChart />}
                 onClick={() => setShowStats(true)}
+                size="small"
                 sx={{
                   backgroundColor: '#1694FF',
                   color: '#ffffff',
                   fontFamily: 'Poppins',
                   fontWeight: 500,
+                  fontSize: '0.8rem',
+                  py: 0.4,
+                  px: 1.2,
                   '&:hover': {
                     backgroundColor: '#0D7AE5'
                   }
@@ -810,11 +794,15 @@ const FuncionariosPage = () => {
               <Button
                 startIcon={<Person />}
                 onClick={() => exportFuncionariosToExcel()}
+                size="small"
                 sx={{
                   backgroundColor: '#15A237',
                   color: '#ffffff',
                   fontFamily: 'Poppins',
                   fontWeight: 500,
+                  fontSize: '0.8rem',
+                  py: 0.4,
+                  px: 1.2,
                   '&:hover': {
                     backgroundColor: '#128A2F'
                   }
@@ -825,11 +813,15 @@ const FuncionariosPage = () => {
               <Button
                 startIcon={<Business />}
                 onClick={() => exportFuncionariosToPDF()}
+                size="small"
                 sx={{
                   backgroundColor: '#EF4444',
                   color: '#ffffff',
                   fontFamily: 'Poppins',
                   fontWeight: 500,
+                  fontSize: '0.8rem',
+                  py: 0.4,
+                  px: 1.2,
                   '&:hover': {
                     backgroundColor: '#DC2626'
                   }
@@ -841,7 +833,7 @@ const FuncionariosPage = () => {
           </Box>
 
           {/* Filtros */}
-          <Grid container spacing={2}>
+          <Grid container spacing={1.6}>
             <Grid item xs={12} md={3}>
               <TextField
                 fullWidth
@@ -855,6 +847,7 @@ const FuncionariosPage = () => {
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     fontFamily: 'Poppins',
+                    fontSize: '0.8rem',
                     '&:hover fieldset': {
                       borderColor: '#1694FF'
                     },
@@ -863,7 +856,8 @@ const FuncionariosPage = () => {
                     }
                   },
                   '& .MuiInputLabel-root': {
-                    fontFamily: 'Poppins'
+                    fontFamily: 'Poppins',
+                    fontSize: '0.8rem'
                   }
                 }}
               />
@@ -878,6 +872,7 @@ const FuncionariosPage = () => {
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     fontFamily: 'Poppins',
+                    fontSize: '0.8rem',
                     '&:hover fieldset': {
                       borderColor: '#1694FF'
                     },
@@ -886,7 +881,8 @@ const FuncionariosPage = () => {
                     }
                   },
                   '& .MuiInputLabel-root': {
-                    fontFamily: 'Poppins'
+                    fontFamily: 'Poppins',
+                    fontSize: '0.8rem'
                   }
                 }}
               />
@@ -901,6 +897,7 @@ const FuncionariosPage = () => {
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     fontFamily: 'Poppins',
+                    fontSize: '0.8rem',
                     '&:hover fieldset': {
                       borderColor: '#1694FF'
                     },
@@ -909,20 +906,22 @@ const FuncionariosPage = () => {
                     }
                   },
                   '& .MuiInputLabel-root': {
-                    fontFamily: 'Poppins'
+                    fontFamily: 'Poppins',
+                    fontSize: '0.8rem'
                   }
                 }}
               />
             </Grid>
             <Grid item xs={12} md={2}>
               <FormControl fullWidth size="small">
-                <InputLabel sx={{ fontFamily: 'Poppins' }}>Status</InputLabel>
+                <InputLabel sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>Status</InputLabel>
                 <Select
                   value={filtros.status}
                   onChange={(e) => handleFiltroChange('status', e.target.value)}
                   label="Status"
                   sx={{
                     fontFamily: 'Poppins',
+                    fontSize: '0.8rem',
                     '&:hover .MuiOutlinedInput-notchedOutline': {
                       borderColor: '#1694FF'
                     },
@@ -948,6 +947,7 @@ const FuncionariosPage = () => {
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     fontFamily: 'Poppins',
+                    fontSize: '0.8rem',
                     '&:hover fieldset': {
                       borderColor: '#1694FF'
                     },
@@ -956,7 +956,8 @@ const FuncionariosPage = () => {
                     }
                   },
                   '& .MuiInputLabel-root': {
-                    fontFamily: 'Poppins'
+                    fontFamily: 'Poppins',
+                    fontSize: '0.8rem'
                   }
                 }}
               />
@@ -964,12 +965,15 @@ const FuncionariosPage = () => {
             <Grid item xs={12} md={1}>
               <Button
                 fullWidth
+                size="small"
                 startIcon={<Clear />}
                 onClick={limparFiltros}
                 sx={{
                   color: '#666666',
                   fontFamily: 'Poppins',
                   fontWeight: 500,
+                  fontSize: '0.8rem',
+                  py: 0.4,
                   '&:hover': {
                     backgroundColor: '#f5f5f5'
                   }
@@ -983,17 +987,17 @@ const FuncionariosPage = () => {
       </Card>
 
       {/* Lista de Funcionários */}
-      <Card sx={{ borderRadius: '16px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}>
+      <Card sx={{ borderRadius: '12.8px', boxShadow: '0 3.2px 16px rgba(0, 0, 0, 0.1)' }}>
         <TableContainer>
-          <Table>
+          <Table size="small">
             <TableHead>
               <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
-                <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>Nome</TableCell>
-                <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>Empresa</TableCell>
-                <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>Status</TableCell>
-                <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>Acessos</TableCell>
-                <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>Ações</TableCell>
-                <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>Detalhes</TableCell>
+                <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }}>Nome</TableCell>
+                <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }}>Empresa</TableCell>
+                <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }}>Status</TableCell>
+                <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }}>Acessos</TableCell>
+                <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }}>Ações</TableCell>
+                <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }}>Detalhes</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -1004,111 +1008,115 @@ const FuncionariosPage = () => {
                 return (
                   <React.Fragment key={funcionario._id || funcionario.id}>
                     <TableRow sx={{ '&:hover': { backgroundColor: '#f8f9fa' } }}>
-                      <TableCell sx={{ fontFamily: 'Poppins' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Person sx={{ color: '#666666', fontSize: 20 }} />
+                      <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', py: 0.8 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+                          <Person sx={{ color: '#666666', fontSize: 12.8 }} />
                           {funcionario.colaboradorNome}
                         </Box>
                       </TableCell>
-                      <TableCell sx={{ fontFamily: 'Poppins' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Business sx={{ color: '#666666', fontSize: 20 }} />
+                      <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', py: 0.8 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+                          <Business sx={{ color: '#666666', fontSize: 12.8 }} />
                           {funcionario.empresa}
                         </Box>
                       </TableCell>
-                      <TableCell>
+                      <TableCell sx={{ fontSize: '0.8rem', py: 0.8 }}>
                         <Chip
                           label={status.texto || 'Indefinido'}
+                          size="small"
                           sx={{
                             backgroundColor: status.cor || '#666666',
                             color: '#ffffff',
                             fontFamily: 'Poppins',
-                            fontWeight: 500
+                            fontWeight: 500,
+                            fontSize: '0.64rem',
+                            height: '20px'
                           }}
                         />
                       </TableCell>
-                      <TableCell sx={{ fontFamily: 'Poppins' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Key sx={{ color: '#666666', fontSize: 20 }} />
+                      <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', py: 0.8 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+                          <Key sx={{ color: '#666666', fontSize: 12.8 }} />
                           {funcionario.acessos ? funcionario.acessos.length : 0}
                         </Box>
                       </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', gap: 1 }}>
+                      <TableCell sx={{ fontSize: '0.8rem', py: 0.8 }}>
+                        <Box sx={{ display: 'flex', gap: 0.8 }}>
                           <IconButton
                             size="small"
                             onClick={() => abrirModal(funcionario)}
-                            sx={{ color: '#1694FF' }}
+                            sx={{ color: '#1694FF', padding: '0.4rem' }}
                           >
-                            <Edit />
+                            <Edit sx={{ fontSize: '1rem' }} />
                           </IconButton>
                           <IconButton
                             size="small"
                             onClick={() => abrirModalAcesso(funcionario)}
-                            sx={{ color: '#15A237' }}
+                            sx={{ color: '#15A237', padding: '0.4rem' }}
                           >
-                            <Key />
+                            <Key sx={{ fontSize: '1rem' }} />
                           </IconButton>
                           <IconButton
                             size="small"
                             onClick={() => excluirFuncionario(funcionario._id || funcionario.id)}
-                            sx={{ color: '#EF4444' }}
+                            sx={{ color: '#EF4444', padding: '0.4rem' }}
                           >
-                            <Delete />
+                            <Delete sx={{ fontSize: '1rem' }} />
                           </IconButton>
                         </Box>
                       </TableCell>
-                      <TableCell>
+                      <TableCell sx={{ fontSize: '0.8rem', py: 0.8 }}>
                         <IconButton
                           size="small"
                           onClick={() => toggleLinhaExpandida(funcionario._id || funcionario.id)}
+                          sx={{ padding: '0.4rem' }}
                         >
-                          {isExpanded ? <ExpandLess /> : <ExpandMore />}
+                          {isExpanded ? <ExpandLess sx={{ fontSize: '0.8rem' }} /> : <ExpandMore sx={{ fontSize: '0.8rem' }} />}
                         </IconButton>
                       </TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell colSpan={6} sx={{ py: 0 }}>
                         <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                          <Box sx={{ p: 2, backgroundColor: '#f8f9fa' }}>
-                            <Grid container spacing={2}>
+                          <Box sx={{ p: 1.6, backgroundColor: '#f8f9fa' }}>
+                            <Grid container spacing={1.6}>
                               <Grid item xs={12} md={6}>
-                                <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', mb: 1 }}>
+                                <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', mb: 0.8, fontSize: '0.8rem' }}>
                                   Informações Pessoais
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <CalendarToday sx={{ color: '#666666', fontSize: 16 }} />
-                                    <Typography variant="body2" sx={{ fontFamily: 'Poppins' }}>
+                                    <CalendarToday sx={{ color: '#666666', fontSize: 12.8 }} />
+                                    <Typography variant="body2" sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
                                       <strong>Aniversário:</strong> {formatarData(funcionario.dataAniversario)}
                                     </Typography>
                                   </Box>
                                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <CalendarToday sx={{ color: '#666666', fontSize: 16 }} />
-                                    <Typography variant="body2" sx={{ fontFamily: 'Poppins' }}>
+                                    <CalendarToday sx={{ color: '#666666', fontSize: 12.8 }} />
+                                    <Typography variant="body2" sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
                                       <strong>Contratado:</strong> {formatarData(funcionario.dataContratado)}
                                     </Typography>
                                   </Box>
                                   {funcionario.dataDesligamento && (
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                      <CalendarToday sx={{ color: '#EF4444', fontSize: 16 }} />
-                                      <Typography variant="body2" sx={{ fontFamily: 'Poppins' }}>
+                                      <CalendarToday sx={{ color: '#EF4444', fontSize: 12.8 }} />
+                                      <Typography variant="body2" sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
                                         <strong>Desligado em:</strong> {formatarData(funcionario.dataDesligamento)}
                                       </Typography>
                                     </Box>
                                   )}
                                   {funcionario.dataAfastamento && (
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                      <CalendarToday sx={{ color: '#F59E0B', fontSize: 16 }} />
-                                      <Typography variant="body2" sx={{ fontFamily: 'Poppins' }}>
+                                      <CalendarToday sx={{ color: '#F59E0B', fontSize: 12.8 }} />
+                                      <Typography variant="body2" sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
                                         <strong>Afastado em:</strong> {formatarData(funcionario.dataAfastamento)}
                                       </Typography>
                                     </Box>
                                   )}
                                   {funcionario.telefone && (
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                      <Phone sx={{ color: '#666666', fontSize: 16 }} />
-                                      <Typography variant="body2" sx={{ fontFamily: 'Poppins' }}>
+                                      <Phone sx={{ color: '#666666', fontSize: 12.8 }} />
+                                      <Typography variant="body2" sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
                                         <strong>Telefone:</strong> {funcionario.telefone}
                                       </Typography>
                                     </Box>
@@ -1116,13 +1124,13 @@ const FuncionariosPage = () => {
                                 </Box>
                               </Grid>
                               <Grid item xs={12} md={6}>
-                                <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', mb: 1 }}>
+                                <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', mb: 0.8, fontSize: '0.8rem' }}>
                                   Informações Profissionais
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <Work sx={{ color: '#666666', fontSize: 16 }} />
-                                    <Typography variant="body2" sx={{ fontFamily: 'Poppins' }}>
+                                    <Work sx={{ color: '#666666', fontSize: 12.8 }} />
+                                    <Typography variant="body2" sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
                                       <strong>Atuação:</strong> {funcionario.atuacao && Array.isArray(funcionario.atuacao) && funcionario.atuacao.length > 0
                                         ? funcionario.atuacao.map(id => {
                                             const funcao = funcoes.find(f => f._id === id);
@@ -1136,7 +1144,7 @@ const FuncionariosPage = () => {
                                   {funcionario.escala && (
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                       <Schedule sx={{ color: '#666666', fontSize: 16 }} />
-                                      <Typography variant="body2" sx={{ fontFamily: 'Poppins' }}>
+                                      <Typography variant="body2" sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
                                         <strong>Escala:</strong> {funcionario.escala}
                                       </Typography>
                                     </Box>
@@ -1144,7 +1152,7 @@ const FuncionariosPage = () => {
                                 </Box>
                               </Grid>
                               <Grid item xs={12}>
-                                <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', mb: 1 }}>
+                                <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', mb: 0.8, fontSize: '0.8rem' }}>
                                   Acessos ({funcionario.acessos ? funcionario.acessos.length : 0})
                                 </Typography>
                                 {funcionario.acessos && funcionario.acessos.length > 0 ? (
@@ -1201,6 +1209,7 @@ const FuncionariosPage = () => {
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     fontFamily: 'Poppins',
+                    fontSize: '0.8rem',
                     '&:hover fieldset': {
                       borderColor: '#1694FF'
                     },
@@ -1209,7 +1218,8 @@ const FuncionariosPage = () => {
                     }
                   },
                   '& .MuiInputLabel-root': {
-                    fontFamily: 'Poppins'
+                    fontFamily: 'Poppins',
+                    fontSize: '0.8rem'
                   }
                 }}
               />
@@ -1224,6 +1234,7 @@ const FuncionariosPage = () => {
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     fontFamily: 'Poppins',
+                    fontSize: '0.8rem',
                     '&:hover fieldset': {
                       borderColor: '#1694FF'
                     },
@@ -1232,7 +1243,8 @@ const FuncionariosPage = () => {
                     }
                   },
                   '& .MuiInputLabel-root': {
-                    fontFamily: 'Poppins'
+                    fontFamily: 'Poppins',
+                    fontSize: '0.8rem'
                   }
                 }}
               />
@@ -1248,6 +1260,7 @@ const FuncionariosPage = () => {
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     fontFamily: 'Poppins',
+                    fontSize: '0.8rem',
                     '&:hover fieldset': {
                       borderColor: '#1694FF'
                     },
@@ -1256,7 +1269,8 @@ const FuncionariosPage = () => {
                     }
                   },
                   '& .MuiInputLabel-root': {
-                    fontFamily: 'Poppins'
+                    fontFamily: 'Poppins',
+                    fontSize: '0.8rem'
                   }
                 }}
               />
@@ -1273,6 +1287,7 @@ const FuncionariosPage = () => {
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     fontFamily: 'Poppins',
+                    fontSize: '0.8rem',
                     '&:hover fieldset': {
                       borderColor: '#1694FF'
                     },
@@ -1281,7 +1296,8 @@ const FuncionariosPage = () => {
                     }
                   },
                   '& .MuiInputLabel-root': {
-                    fontFamily: 'Poppins'
+                    fontFamily: 'Poppins',
+                    fontSize: '0.8rem'
                   }
                 }}
               />
@@ -1295,6 +1311,7 @@ const FuncionariosPage = () => {
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     fontFamily: 'Poppins',
+                    fontSize: '0.8rem',
                     '&:hover fieldset': {
                       borderColor: '#1694FF'
                     },
@@ -1303,7 +1320,8 @@ const FuncionariosPage = () => {
                     }
                   },
                   '& .MuiInputLabel-root': {
-                    fontFamily: 'Poppins'
+                    fontFamily: 'Poppins',
+                    fontSize: '0.8rem'
                   }
                 }}
               />
@@ -1359,6 +1377,7 @@ const FuncionariosPage = () => {
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     fontFamily: 'Poppins',
+                    fontSize: '0.8rem',
                     '&:hover fieldset': {
                       borderColor: '#1694FF'
                     },
@@ -1367,7 +1386,8 @@ const FuncionariosPage = () => {
                     }
                   },
                   '& .MuiInputLabel-root': {
-                    fontFamily: 'Poppins'
+                    fontFamily: 'Poppins',
+                    fontSize: '0.8rem'
                   }
                 }}
               />
@@ -1538,6 +1558,7 @@ const FuncionariosPage = () => {
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     fontFamily: 'Poppins',
+                    fontSize: '0.8rem',
                     '&:hover fieldset': {
                       borderColor: '#1694FF'
                     },
@@ -1546,7 +1567,8 @@ const FuncionariosPage = () => {
                     }
                   },
                   '& .MuiInputLabel-root': {
-                    fontFamily: 'Poppins'
+                    fontFamily: 'Poppins',
+                    fontSize: '0.8rem'
                   }
                 }}
               />
@@ -1560,6 +1582,7 @@ const FuncionariosPage = () => {
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     fontFamily: 'Poppins',
+                    fontSize: '0.8rem',
                     '&:hover fieldset': {
                       borderColor: '#1694FF'
                     },
@@ -1568,7 +1591,8 @@ const FuncionariosPage = () => {
                     }
                   },
                   '& .MuiInputLabel-root': {
-                    fontFamily: 'Poppins'
+                    fontFamily: 'Poppins',
+                    fontSize: '0.8rem'
                   }
                 }}
               />
@@ -1584,6 +1608,7 @@ const FuncionariosPage = () => {
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     fontFamily: 'Poppins',
+                    fontSize: '0.8rem',
                     '&:hover fieldset': {
                       borderColor: '#1694FF'
                     },
@@ -1592,7 +1617,8 @@ const FuncionariosPage = () => {
                     }
                   },
                   '& .MuiInputLabel-root': {
-                    fontFamily: 'Poppins'
+                    fontFamily: 'Poppins',
+                    fontSize: '0.8rem'
                   }
                 }}
               />

@@ -1,4 +1,4 @@
-// VERSION: v1.28.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.30.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 
@@ -34,7 +34,6 @@ import {
   Divider
 } from '@mui/material';
 import { 
-  ArrowBack, 
   Add, 
   Edit, 
   Delete, 
@@ -82,6 +81,7 @@ import AnaliseGPTAccordion from '../components/qualidade/AnaliseGPTAccordion';
 import DetalhesAnaliseModal from '../components/qualidade/DetalhesAnaliseModal';
 import { uploadAudioParaAnalise, listarAnalisesPorColaborador } from '../services/qualidadeAudioService';
 import { useAuth } from '../contexts/AuthContext';
+import BackButton from '../components/common/BackButton';
 
 const QualidadeModulePage = () => {
   const navigate = useNavigate();
@@ -145,6 +145,8 @@ const QualidadeModulePage = () => {
   const [selectedColaborador, setSelectedColaborador] = useState('');
   const [filtroMes, setFiltroMes] = useState('');
   const [filtroAno, setFiltroAno] = useState(new Date().getFullYear());
+  const [filtroDataInicio, setFiltroDataInicio] = useState(null);
+  const [filtroDataFim, setFiltroDataFim] = useState(null);
   const [relatorioAgente, setRelatorioAgente] = useState(null);
   const [relatorioGestao, setRelatorioGestao] = useState(null);
 
@@ -578,10 +580,11 @@ const QualidadeModulePage = () => {
     }
 
     console.log('🚀 DEBUG - Iniciando geração de relatório para:', selectedColaborador);
+    console.log('🚀 DEBUG - Filtro período:', { inicio: filtroDataInicio, fim: filtroDataFim });
     console.log('🚀 DEBUG - Passando para gerarRelatorioAgente:', selectedColaborador);
     setLoading(true);
     try {
-      const relatorio = await gerarRelatorioAgente(selectedColaborador);
+      const relatorio = await gerarRelatorioAgente(selectedColaborador, filtroDataInicio, filtroDataFim);
       console.log('📊 DEBUG - Relatório recebido:', relatorio);
       setRelatorioAgente(relatorio);
       
@@ -650,108 +653,91 @@ const QualidadeModulePage = () => {
   }
 
   return (
-    <Container maxWidth={false} sx={{ 
-      mt: 2, 
-      mb: 8, 
-      pb: 4, 
+    <Container maxWidth={false} sx={{
+      mt: 2,
+      mb: 8,
+      pb: 4,
       position: 'relative',
       px: 3.125, // 25px padding nas laterais
-      maxWidth: '100%'
+      maxWidth: '100%',
+      fontSize: '0.8rem'
     }}>
-      {/* Botão Voltar - Canto esquerdo superior do dashboard */}
-      <Button
-        variant="outlined"
-        startIcon={<ArrowBack />}
-        onClick={() => navigate('/qualidade')}
-        sx={{
+      {/* Header único - alinhamento central absoluto das abas */}
+      <Box sx={{ position: 'relative', mb: 3.2, minHeight: 40 }}>
+        <Box sx={{ position: 'absolute', left: 0, top: 0, bottom: 0, display: 'flex', alignItems: 'center' }}>
+          <BackButton />
+        </Box>
+        <Box sx={{
           position: 'absolute',
-          top: '10px',
-          left: '10px',
-          color: '#000058',
-          borderColor: '#000058',
-          fontFamily: 'Poppins',
-          fontWeight: 500,
-          '&:hover': {
-            backgroundColor: '#1694FF',
-            color: '#ffffff',
-            borderColor: '#1694FF'
-          }
-        }}
-      >
-        Voltar
-      </Button>
-      
-      {/* Título */}
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        mb: 2,
-        pt: 1
-      }}>
-        <Typography variant="h4" sx={{ 
-          fontFamily: 'Poppins', 
-          fontWeight: 588, 
-          color: '#000058',
-          textAlign: 'center',
-          mt: 1
+          left: '50%',
+          top: 0,
+          bottom: 0,
+          transform: 'translateX(-50%)',
+          display: 'flex',
+          alignItems: 'center',
+          width: 'max-content'
         }}>
-          Módulo de Qualidade
-        </Typography>
+          <Tabs
+            value={currentView}
+            onChange={(e, newValue) => setCurrentView(newValue)}
+            aria-label="qualidade tabs"
+            sx={{
+              borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+              '& .MuiTab-root': {
+                fontSize: '1rem',
+                fontFamily: 'Poppins',
+                fontWeight: 500,
+                textTransform: 'none',
+                minHeight: 48,
+                '&.Mui-selected': {
+                  color: 'var(--blue-light)',
+                },
+                '&:not(.Mui-selected)': {
+                  color: 'var(--gray)',
+                  opacity: 0.7,
+                }
+              },
+              '& .MuiTabs-indicator': {
+                backgroundColor: 'var(--blue-light)',
+                height: 2,
+              }
+            }}
+          >
+            <Tab 
+              value="avaliacoes" 
+              label="Avaliações"
+              id="qualidade-tab-0"
+              aria-controls="qualidade-tabpanel-0"
+            />
+            <Tab 
+              value="relatorio-agente" 
+              label="Relatório do Agente"
+              id="qualidade-tab-1"
+              aria-controls="qualidade-tabpanel-1"
+            />
+            <Tab 
+              value="gpt" 
+              label="Análise GPT"
+              id="qualidade-tab-2"
+              aria-controls="qualidade-tabpanel-2"
+            />
+          </Tabs>
+        </Box>
       </Box>
-
-      {/* Navegação por Abas */}
-      <Card sx={{ mb: 2, mt: 1, borderRadius: '16px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}>
-        <Tabs
-          value={currentView}
-          onChange={(e, newValue) => setCurrentView(newValue)}
-          sx={{
-            '& .MuiTab-root': {
-              fontFamily: 'Poppins',
-              fontWeight: 500,
-              textTransform: 'none',
-              minHeight: 60
-            },
-            '& .Mui-selected': {
-              color: '#000058 !important'
-            },
-            '& .MuiTabs-indicator': {
-              backgroundColor: '#000058'
-            }
-          }}
-        >
-          <Tab 
-            value="avaliacoes" 
-            label="Avaliações" 
-            icon={<Assessment />}
-            iconPosition="start"
-          />
-          <Tab 
-            value="relatorio-agente" 
-            label="Relatório do Agente" 
-            icon={<People />}
-            iconPosition="start"
-          />
-          <Tab 
-            value="gpt" 
-            label="Análise GPT" 
-            icon={<Psychology />}
-            iconPosition="start"
-          />
-        </Tabs>
-      </Card>
 
       {/* Conteúdo das Abas */}
       {currentView === 'avaliacoes' && (
         <Box>
           {/* Toolbar */}
-          <Card sx={{ mb: 2, mt: 1, borderRadius: '16px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h6" sx={{ fontFamily: 'Poppins', color: '#000058', fontWeight: 600 }}>
+          <Card sx={{ mb: 1.6, mt: 0.8, borderRadius: '12.8px', boxShadow: '0 3.2px 16px rgba(0, 0, 0, 0.1)' }}>
+            <CardContent sx={{ py: 0.6, px: 2, '&:last-child': { pb: 0.6 } }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
+                <Typography variant="h6" sx={{ fontFamily: 'Poppins', color: '#000058', fontWeight: 600, fontSize: '0.96rem' }}>
                   Avaliações ({avaliacoesFiltradas.length})
                 </Typography>
-                <Box sx={{ display: 'flex', gap: 1 }}>
+                <Box sx={{ display: 'flex', gap: 0.8 }}>
                   <Button
+                    size="small"
                     startIcon={<FilterList />}
                     onClick={() => setModalFiltrosAberto(true)}
                     sx={{
@@ -759,6 +745,9 @@ const QualidadeModulePage = () => {
                       color: '#ffffff',
                       fontFamily: 'Poppins',
                       fontWeight: 500,
+                      fontSize: '0.8rem',
+                      py: 0.4,
+                      px: 1.2,
                       '&:hover': {
                         backgroundColor: '#0F7AD9'
                       }
@@ -767,6 +756,7 @@ const QualidadeModulePage = () => {
                     Filtrar
                   </Button>
                   <Button
+                    size="small"
                     startIcon={<Add />}
                     onClick={() => abrirModalAvaliacao()}
                     sx={{
@@ -774,6 +764,9 @@ const QualidadeModulePage = () => {
                       color: '#ffffff',
                       fontFamily: 'Poppins',
                       fontWeight: 500,
+                      fontSize: '0.8rem',
+                      py: 0.4,
+                      px: 1.2,
                       '&:hover': {
                         backgroundColor: '#000040'
                       }
@@ -782,6 +775,7 @@ const QualidadeModulePage = () => {
                     Nova Avaliação
                   </Button>
                   <Button
+                    size="small"
                     startIcon={<Assessment />}
                     onClick={exportAvaliacoesToExcel}
                     sx={{
@@ -789,6 +783,9 @@ const QualidadeModulePage = () => {
                       color: '#ffffff',
                       fontFamily: 'Poppins',
                       fontWeight: 500,
+                      fontSize: '0.8rem',
+                      py: 0.4,
+                      px: 1.2,
                       '&:hover': {
                         backgroundColor: '#128A2F'
                       }
@@ -797,6 +794,7 @@ const QualidadeModulePage = () => {
                     Exportar Excel
                   </Button>
                   <Button
+                    size="small"
                     startIcon={<BarChart />}
                     onClick={exportAvaliacoesToPDF}
                     sx={{
@@ -824,18 +822,18 @@ const QualidadeModulePage = () => {
             mt: 2
           }}>
             <TableContainer>
-              <Table>
+              <Table size="small">
                 <TableHead>
                   <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
-                    <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>Colaborador</TableCell>
-                    <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>Avaliador</TableCell>
-                    <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>Data da Avaliação</TableCell>
-                    <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>Data da Ligação</TableCell>
-                    <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>Período</TableCell>
-                    <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>Pontuação</TableCell>
-                    <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>Status</TableCell>
-                    <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>Áudio</TableCell>
-                    <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>Ações</TableCell>
+                    <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }}>Colaborador</TableCell>
+                    <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }}>Avaliador</TableCell>
+                    <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }}>Data da Avaliação</TableCell>
+                    <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }}>Data da Ligação</TableCell>
+                    <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }}>Período</TableCell>
+                    <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }}>Pontuação</TableCell>
+                    <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }}>Status</TableCell>
+                    <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }}>Áudio</TableCell>
+                    <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }}>Ações</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -845,63 +843,66 @@ const QualidadeModulePage = () => {
                       
                       return (
                         <TableRow key={avaliacao._id} sx={{ '&:hover': { backgroundColor: '#f8f9fa' } }}>
-                          <TableCell sx={{ fontFamily: 'Poppins' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Avatar sx={{ width: 32, height: 32, backgroundColor: '#1694FF' }}>
+                          <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', py: 0.8 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+                              <Avatar sx={{ width: 25.6, height: 25.6, backgroundColor: '#1694FF', fontSize: '0.8rem' }}>
                                 {avaliacao.colaboradorNome.charAt(0)}
                               </Avatar>
                               {avaliacao.colaboradorNome}
                             </Box>
                           </TableCell>
-                          <TableCell sx={{ fontFamily: 'Poppins' }}>{avaliacao.avaliador}</TableCell>
-                          <TableCell sx={{ fontFamily: 'Poppins' }}>
+                          <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', py: 0.8 }}>{avaliacao.avaliador}</TableCell>
+                          <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', py: 0.8 }}>
                             {avaliacao.createdAt ? formatDate(avaliacao.createdAt) : '-'}
                           </TableCell>
-                          <TableCell sx={{ fontFamily: 'Poppins' }}>
+                          <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', py: 0.8 }}>
                             {avaliacao.dataLigacao ? formatDate(avaliacao.dataLigacao) : '-'}
                           </TableCell>
-                          <TableCell sx={{ fontFamily: 'Poppins' }}>
+                          <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', py: 0.8 }}>
                             {avaliacao.mes}/{avaliacao.ano}
                           </TableCell>
-                          <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>
+                          <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.8rem', py: 0.8 }}>
                             {avaliacao.pontuacaoTotal} pts
                           </TableCell>
-                          <TableCell>
+                          <TableCell sx={{ fontSize: '0.8rem', py: 0.8 }}>
                             <Chip
                               label={status.texto || 'Indefinido'}
+                              size="small"
                               sx={{
                                 backgroundColor: status.cor || '#666666',
                                 color: '#ffffff',
                                 fontFamily: 'Poppins',
-                                fontWeight: 500
+                                fontWeight: 500,
+                                fontSize: '0.64rem',
+                                height: '20px'
                               }}
                             />
                           </TableCell>
-                          <TableCell>
+                          <TableCell sx={{ fontSize: '0.8rem', py: 0.8 }}>
                             {renderAudioIcon(avaliacao)}
                           </TableCell>
-                          <TableCell>
-                            <Box sx={{ display: 'flex', gap: 1 }}>
+                          <TableCell sx={{ fontSize: '0.8rem', py: 0.8 }}>
+                            <Box sx={{ display: 'flex', gap: 0.8 }}>
                             <IconButton
                               size="small"
                               onClick={() => abrirModalAvaliacao(avaliacao)}
-                              sx={{ color: '#1694FF' }}
+                              sx={{ color: '#1694FF', padding: '0.4rem' }}
                             >
-                              <Edit />
+                              <Edit sx={{ fontSize: '0.8rem' }} />
                             </IconButton>
                             <IconButton
                               size="small"
                               onClick={() => abrirModalGPT(avaliacao)}
-                              sx={{ color: '#9C27B0' }}
+                              sx={{ color: '#9C27B0', padding: '0.4rem' }}
                             >
-                              <Psychology />
+                              <Psychology sx={{ fontSize: '0.8rem' }} />
                             </IconButton>
                             <IconButton
                               size="small"
                               onClick={() => excluirAvaliacao(avaliacao._id)}
-                              sx={{ color: '#EF4444' }}
+                              sx={{ color: '#EF4444', padding: '0.4rem' }}
                             >
-                              <Delete />
+                              <Delete sx={{ fontSize: '0.8rem' }} />
                             </IconButton>
                             </Box>
                           </TableCell>
@@ -910,8 +911,8 @@ const QualidadeModulePage = () => {
                     })
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={7} sx={{ textAlign: 'center', py: 4 }}>
-                        <Typography variant="body1" sx={{ fontFamily: 'Poppins', color: '#666666' }}>
+                      <TableCell colSpan={9} sx={{ textAlign: 'center', py: 3.2 }}>
+                        <Typography variant="body1" sx={{ fontFamily: 'Poppins', color: '#666666', fontSize: '0.8rem' }}>
                           Nenhuma avaliação encontrada
                         </Typography>
                       </TableCell>
@@ -934,82 +935,148 @@ const QualidadeModulePage = () => {
             mt: 1
           }}>
             <CardContent sx={{ p: 0 }}>
-              {/* Header com título, botão e seletor na mesma linha */}
+              {/* Header com título, botão, seletor e filtro de período */}
               <Box sx={{ 
                 display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center',
+                flexDirection: 'column',
+                gap: 2,
                 mb: 3 
               }}>
-                {/* Título */}
-                <Typography variant="h5" sx={{ 
-                  fontFamily: 'Poppins', 
-                  color: '#000058', 
-                  fontWeight: 500,
-                  fontSize: '1.5rem'
-                }}>
-                  Relatório Individual
-                </Typography>
-
-                {/* Linha com botão e seletor */}
+                {/* Primeira linha: Título e controles principais */}
                 <Box sx={{ 
                   display: 'flex', 
-                  alignItems: 'center',
-                  gap: 2
+                  justifyContent: 'space-between', 
+                  alignItems: 'center'
                 }}>
-                  {/* Botão Gerar Relatório */}
-                  <Button
-                    variant="contained"
-                    onClick={gerarRelatorioAgenteHandler}
-                    disabled={!selectedColaborador || loading}
-                    className="velohub-btn-azul-opaco"
+                  {/* Título */}
+                  <Typography variant="h5" sx={{ 
+                    fontFamily: 'Poppins', 
+                    color: '#000058', 
+                    fontWeight: 500,
+                    fontSize: '1.2rem'
+                  }}>
+                    Relatório Individual
+                  </Typography>
+
+                  {/* Linha com botão e seletor */}
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center',
+                    gap: 1.6
+                  }}>
+                    {/* Botão Gerar Relatório */}
+                    <Button
+                      variant="contained"
+                      size="small"
+                      onClick={gerarRelatorioAgenteHandler}
+                      disabled={!selectedColaborador || loading}
+                      className="velohub-btn-azul-opaco"
+                      sx={{
+                        fontFamily: 'Poppins',
+                        fontWeight: 600,
+                        fontSize: '0.8rem',
+                        borderRadius: '6.4px',
+                        px: 2.4,
+                        py: 0.4,
+                        backgroundColor: '#006AB9 !important',
+                        color: '#F3F7FC !important',
+                        '&:hover': {
+                          backgroundColor: '#005A9F !important',
+                        },
+                        '&:disabled': {
+                          backgroundColor: '#B0BEC5 !important',
+                          color: '#F3F7FC !important'
+                        }
+                      }}
+                    >
+                      {loading ? 'Gerando...' : 'Gerar'}
+                    </Button>
+                    
+                    {/* Seleção de Colaborador */}
+                    <FormControl size="small" sx={{ minWidth: 200 }} className="velohub-select-alinhado">
+                    <InputLabel 
+                      sx={{ 
+                        fontFamily: 'Poppins', 
+                        fontSize: '0.8rem',
+                        color: '#000058',
+                        '&.Mui-focused': {
+                          color: '#006AB9'
+                        }
+                      }}
+                    >
+                      Selecione o Colaborador
+                    </InputLabel>
+                    <Select
+                      value={selectedColaborador || ''}
+                      onChange={(e) => {
+                        console.log('🔍 DEBUG - Select onChange:', e.target.value);
+                        setSelectedColaborador(e.target.value);
+                      }}
+                      label="Selecione o Colaborador"
+                      size="small"
+                      sx={{ 
+                        fontFamily: 'Poppins',
+                        fontSize: '0.8rem',
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '6.4px',
+                          '& fieldset': {
+                            borderColor: '#000058'
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#006AB9'
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#006AB9'
+                          }
+                        },
+                        '& .MuiSelect-select': {
+                          display: 'flex',
+                          alignItems: 'center',
+                          paddingTop: '6.4px !important',
+                          paddingBottom: '8px !important',
+                          boxSizing: 'border-box'
+                        },
+                        '& .MuiInputBase-input': {
+                          padding: '8px 14px !important',
+                          height: '24px !important',
+                          display: 'flex',
+                          alignItems: 'center'
+                        }
+                      }}
+                    >
+                      {funcionarios.map((funcionario) => (
+                        <MenuItem 
+                          key={funcionario.id} 
+                          value={funcionario.colaboradorNome || funcionario.nomeCompleto}
+                          sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}
+                        >
+                          {funcionario.colaboradorNome || funcionario.nomeCompleto}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    </FormControl>
+                  </Box>
+                </Box>
+
+                {/* Segunda linha: Filtro de Período (alinhado à direita, abaixo do seletor) */}
+                <Box sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'flex-end',
+                  alignItems: 'center',
+                  gap: 1.6
+                }}>
+                  <TextField
+                    type="date"
+                    label="Início"
+                    size="small"
+                    value={filtroDataInicio || ''}
+                    onChange={(e) => setFiltroDataInicio(e.target.value || null)}
+                    InputLabelProps={{ shrink: true }}
                     sx={{
-                      fontFamily: 'Poppins',
-                      fontWeight: 600,
-                      borderRadius: '8px',
-                      px: 3,
-                      py: 0.5,
-                      height: '40px',
-                      backgroundColor: '#006AB9 !important', // Azul Opaco oficial do LAYOUT_GUIDELINES.md
-                      color: '#F3F7FC !important', // Tom de branco oficial do LAYOUT_GUIDELINES.md
-                      '&:hover': {
-                        backgroundColor: '#005A9F !important', // Tom mais escuro do azul opaco
-                      },
-                      '&:disabled': {
-                        backgroundColor: '#B0BEC5 !important',
-                        color: '#F3F7FC !important'
-                      }
-                    }}
-                  >
-                    {loading ? 'Gerando...' : 'Gerar'}
-                  </Button>
-                  
-                  {/* Seleção de Colaborador */}
-                  <FormControl sx={{ minWidth: 250 }} className="velohub-select-alinhado">
-                  <InputLabel 
-                    sx={{ 
-                      fontFamily: 'Poppins', 
-                      color: '#000058',
-                      '&.Mui-focused': {
-                        color: '#006AB9'
-                      }
-                    }}
-                  >
-                    Selecione o Colaborador
-                  </InputLabel>
-                  <Select
-                    value={selectedColaborador || ''}
-                    onChange={(e) => {
-                      console.log('🔍 DEBUG - Select onChange:', e.target.value);
-                      setSelectedColaborador(e.target.value);
-                    }}
-                    label="Selecione o Colaborador"
-                    sx={{ 
-                      fontFamily: 'Poppins',
-                      height: '40px',
+                      width: '140px',
                       '& .MuiOutlinedInput-root': {
-                        borderRadius: '8px',
-                        height: '40px',
+                        fontFamily: 'Poppins',
+                        fontSize: '0.64rem',
                         '& fieldset': {
                           borderColor: '#000058'
                         },
@@ -1020,33 +1087,89 @@ const QualidadeModulePage = () => {
                           borderColor: '#006AB9'
                         }
                       },
-                      '& .MuiSelect-select': {
-                        height: '40px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        paddingTop: '8px !important',
-                        paddingBottom: '8px !important',
-                        boxSizing: 'border-box'
+                      '& .MuiInputLabel-root': {
+                        fontFamily: 'Poppins',
+                        fontSize: '0.64rem',
+                        color: '#000058',
+                        '&.Mui-focused': {
+                          color: '#006AB9'
+                        }
                       },
                       '& .MuiInputBase-input': {
-                        padding: '8px 14px !important',
-                        height: '24px !important',
-                        display: 'flex',
-                        alignItems: 'center'
+                        fontSize: '0.64rem',
+                        padding: '6.4px 10px'
+                      }
+                    }}
+                  />
+                  
+                  <TextField
+                    type="date"
+                    label="Fim"
+                    size="small"
+                    value={filtroDataFim || ''}
+                    onChange={(e) => setFiltroDataFim(e.target.value || null)}
+                    InputLabelProps={{ shrink: true }}
+                    sx={{
+                      width: '140px',
+                      '& .MuiOutlinedInput-root': {
+                        fontFamily: 'Poppins',
+                        fontSize: '0.64rem',
+                        '& fieldset': {
+                          borderColor: '#000058'
+                        },
+                        '&:hover fieldset': {
+                          borderColor: '#006AB9'
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#006AB9'
+                        }
+                      },
+                      '& .MuiInputLabel-root': {
+                        fontFamily: 'Poppins',
+                        fontSize: '0.64rem',
+                        color: '#000058',
+                        '&.Mui-focused': {
+                          color: '#006AB9'
+                        }
+                      },
+                      '& .MuiInputBase-input': {
+                        fontSize: '0.64rem',
+                        padding: '6.4px 10px'
+                      }
+                    }}
+                  />
+
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => {
+                      setFiltroDataInicio(null);
+                      setFiltroDataFim(null);
+                    }}
+                    disabled={!filtroDataInicio && !filtroDataFim}
+                    sx={{
+                      fontFamily: 'Poppins',
+                      fontWeight: 500,
+                      fontSize: '0.64rem',
+                      borderRadius: '6.4px',
+                      px: 1.2,
+                      py: 0.4,
+                      minWidth: 'auto',
+                      borderColor: '#000058',
+                      color: '#000058',
+                      '&:hover': {
+                        borderColor: '#006AB9',
+                        color: '#006AB9',
+                        backgroundColor: 'rgba(0, 106, 185, 0.04)'
+                      },
+                      '&:disabled': {
+                        borderColor: '#B0BEC5',
+                        color: '#B0BEC5'
                       }
                     }}
                   >
-                    {funcionarios.map((funcionario) => (
-                      <MenuItem 
-                        key={funcionario.id} 
-                        value={funcionario.colaboradorNome || funcionario.nomeCompleto}
-                        sx={{ fontFamily: 'Poppins' }}
-                      >
-                        {funcionario.colaboradorNome || funcionario.nomeCompleto}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  </FormControl>
+                    Limpar
+                  </Button>
                 </Box>
               </Box>
 
@@ -1073,7 +1196,7 @@ const QualidadeModulePage = () => {
                         border: '1.5px solid #000058',
                         borderRadius: '8px'
                       }}>
-                        <Typography variant="h4" sx={{ 
+                        <Typography variant="h4" sx={{ fontSize: '1.28rem', 
                           fontFamily: 'Poppins', 
                           color: '#1634FF', 
                           fontWeight: 700 
@@ -1099,7 +1222,7 @@ const QualidadeModulePage = () => {
                         border: '1.5px solid #000058',
                         borderRadius: '8px'
                       }}>
-                        <Typography variant="h4" sx={{ 
+                        <Typography variant="h4" sx={{ fontSize: '1.28rem', 
                           fontFamily: 'Poppins', 
                           color: relatorioAgente.mediaAvaliador > 60 ? '#1694FF' : '#dc3545', 
                           fontWeight: 700 
@@ -1123,12 +1246,14 @@ const QualidadeModulePage = () => {
                         border: '1.5px solid #000058',
                         borderRadius: '8px'
                       }}>
-                        <Typography variant="h4" sx={{ 
+                        <Typography variant="h4" sx={{ fontSize: '1.28rem', 
                           fontFamily: 'Poppins', 
                           color: '#FCC200', 
                           fontWeight: 700 
                         }}>
-                          {relatorioAgente.mediaGPT}
+                          {relatorioAgente.mediaGPT !== null && relatorioAgente.mediaGPT !== undefined 
+                            ? relatorioAgente.mediaGPT 
+                            : '-'}
                         </Typography>
                         <Typography variant="body2" sx={{ 
                           fontFamily: 'Poppins', 
@@ -1151,7 +1276,7 @@ const QualidadeModulePage = () => {
                         border: '1.5px solid #000058',
                         borderRadius: '8px'
                       }}>
-                        <Typography variant="h4" sx={{ 
+                        <Typography variant="h4" sx={{ fontSize: '1.28rem', 
                           fontFamily: 'Poppins', 
                           color: relatorioAgente.tendencia === 'melhorando' 
                             ? '#1694FF'
@@ -1188,7 +1313,7 @@ const QualidadeModulePage = () => {
                         border: '1.5px solid #000058',
                         borderRadius: '8px'
                       }}>
-                        <Typography variant="h5" sx={{ 
+                        <Typography variant="h5" sx={{ fontSize: '1.2rem', 
                           fontFamily: 'Poppins', 
                           color: '#1694FF', 
                           fontWeight: 700 
@@ -1212,7 +1337,7 @@ const QualidadeModulePage = () => {
                         border: '1.5px solid #000058',
                         borderRadius: '8px'
                       }}>
-                        <Typography variant="h5" sx={{ 
+                        <Typography variant="h5" sx={{ fontSize: '1.2rem', 
                           fontFamily: 'Poppins', 
                           color: '#dc3545', 
                           fontWeight: 700 
@@ -1347,14 +1472,16 @@ const QualidadeModulePage = () => {
                 flexWrap: 'wrap',
                 alignItems: 'center'
               }}>
-                <FormControl sx={{ minWidth: 200 }}>
-                  <InputLabel sx={{ fontFamily: 'Poppins' }}>Colaborador *</InputLabel>
+                <FormControl size="small" sx={{ minWidth: 160 }}>
+                  <InputLabel sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>Colaborador *</InputLabel>
                   <Select
                     value={filtrosGPT.colaborador}
                     onChange={(e) => setFiltrosGPT({ ...filtrosGPT, colaborador: e.target.value })}
                     label="Colaborador *"
+                    size="small"
                     sx={{
                       fontFamily: 'Poppins',
+                      fontSize: '0.8rem',
                       '&:hover .MuiOutlinedInput-notchedOutline': {
                         borderColor: '#1694FF'
                       },
@@ -1366,7 +1493,7 @@ const QualidadeModulePage = () => {
                     {funcionarios.map((funcionario) => {
                       const nomeColaborador = funcionario.colaboradorNome || funcionario.nomeCompleto;
                       return (
-                        <MenuItem key={funcionario._id} value={nomeColaborador} sx={{ fontFamily: 'Poppins' }}>
+                        <MenuItem key={funcionario._id} value={nomeColaborador} sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
                           {nomeColaborador}
                         </MenuItem>
                       );
@@ -1374,14 +1501,16 @@ const QualidadeModulePage = () => {
                   </Select>
                 </FormControl>
 
-                <FormControl sx={{ minWidth: 150 }}>
-                  <InputLabel sx={{ fontFamily: 'Poppins' }}>Mês</InputLabel>
+                <FormControl size="small" sx={{ minWidth: 120 }}>
+                  <InputLabel sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>Mês</InputLabel>
                   <Select
                     value={filtrosGPT.mes}
                     onChange={(e) => setFiltrosGPT({ ...filtrosGPT, mes: e.target.value })}
                     label="Mês"
+                    size="small"
                     sx={{
                       fontFamily: 'Poppins',
+                      fontSize: '0.8rem',
                       '&:hover .MuiOutlinedInput-notchedOutline': {
                         borderColor: '#1694FF'
                       },
@@ -1391,21 +1520,23 @@ const QualidadeModulePage = () => {
                     }}
                   >
                     {MESES.map((mes) => (
-                      <MenuItem key={mes} value={mes} sx={{ fontFamily: 'Poppins' }}>
+                      <MenuItem key={mes} value={mes} sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
                         {mes}
                       </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
 
-                <FormControl sx={{ minWidth: 120 }}>
-                  <InputLabel sx={{ fontFamily: 'Poppins' }}>Ano</InputLabel>
+                <FormControl size="small" sx={{ minWidth: 96 }}>
+                  <InputLabel sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>Ano</InputLabel>
                   <Select
                     value={filtrosGPT.ano}
                     onChange={(e) => setFiltrosGPT({ ...filtrosGPT, ano: e.target.value })}
                     label="Ano"
+                    size="small"
                     sx={{
                       fontFamily: 'Poppins',
+                      fontSize: '0.8rem',
                       '&:hover .MuiOutlinedInput-notchedOutline': {
                         borderColor: '#1694FF'
                       },
@@ -1415,7 +1546,7 @@ const QualidadeModulePage = () => {
                     }}
                   >
                     {ANOS.map((ano) => (
-                      <MenuItem key={ano} value={ano} sx={{ fontFamily: 'Poppins' }}>
+                      <MenuItem key={ano} value={ano} sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
                         {ano}
                       </MenuItem>
                     ))}
@@ -1424,11 +1555,15 @@ const QualidadeModulePage = () => {
 
                 <Button
                   variant="contained"
+                  size="small"
                   onClick={carregarAnalisesGPT}
                   disabled={!filtrosGPT.colaborador}
                   sx={{
                     fontFamily: 'Poppins',
                     fontWeight: 600,
+                    fontSize: '0.8rem',
+                    py: 0.4,
+                    px: 1.2,
                     bgcolor: 'var(--blue-medium)',
                     '&:hover': {
                       bgcolor: 'var(--blue-dark)'
@@ -1456,7 +1591,7 @@ const QualidadeModulePage = () => {
                   {loadingAnalisesGPT && (
                     <Box sx={{ textAlign: 'center', py: 4 }}>
                       <LinearProgress sx={{ mb: 2 }} />
-                      <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666' }}>
+                        <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666', fontSize: '0.8rem' }}>
                         Carregando análises GPT...
                       </Typography>
                     </Box>
@@ -1476,20 +1611,22 @@ const QualidadeModulePage = () => {
 
       {/* Modal Avaliação */}
       <Dialog open={modalAvaliacaoAberto} onClose={fecharModalAvaliacao} maxWidth="md" fullWidth>
-        <DialogTitle sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>
+        <DialogTitle sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.96rem', py: 1.6 }}>
           {avaliacaoEditando ? 'Editar Avaliação' : 'Nova Avaliação'}
         </DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
+        <DialogContent sx={{ fontSize: '0.8rem' }}>
+          <Grid container spacing={1.6} sx={{ mt: 0.8 }}>
             <Grid item xs={12} md={6}>
               <FormControl fullWidth required>
-                <InputLabel sx={{ fontFamily: 'Poppins' }}>Colaborador</InputLabel>
+                <InputLabel sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>Colaborador</InputLabel>
                 <Select
                   value={formData.colaboradorNome}
                   onChange={(e) => setFormData({ ...formData, colaboradorNome: e.target.value })}
                   label="Colaborador"
+                  size="small"
                   sx={{
                     fontFamily: 'Poppins',
+                    fontSize: '0.8rem',
                     '&:hover .MuiOutlinedInput-notchedOutline': {
                       borderColor: '#1694FF'
                     },
@@ -1501,7 +1638,7 @@ const QualidadeModulePage = () => {
                   {funcionarios.map((funcionario) => {
                     const nomeColaborador = funcionario.colaboradorNome || funcionario.nomeCompleto;
                     return (
-                      <MenuItem key={funcionario._id || funcionario.id} value={nomeColaborador} sx={{ fontFamily: 'Poppins' }}>
+                      <MenuItem key={funcionario._id || funcionario.id} value={nomeColaborador} sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
                         {nomeColaborador}
                       </MenuItem>
                     );
@@ -1517,8 +1654,10 @@ const QualidadeModulePage = () => {
                   disabled
                   fullWidth
                   required
+                  size="small"
                   sx={{
                     fontFamily: 'Poppins',
+                    fontSize: '0.8rem',
                     '& .MuiInputBase-input.Mui-disabled': {
                       color: '#000058',
                       fontWeight: 500
@@ -1530,13 +1669,15 @@ const QualidadeModulePage = () => {
                 />
               ) : (
                 <FormControl fullWidth required>
-                  <InputLabel sx={{ fontFamily: 'Poppins' }}>Avaliador</InputLabel>
-                  <Select
-                    value={formData.avaliador}
-                    onChange={(e) => setFormData({ ...formData, avaliador: e.target.value })}
-                    label="Avaliador"
-                    sx={{
-                      fontFamily: 'Poppins',
+                <InputLabel sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>Avaliador</InputLabel>
+                <Select
+                  value={formData.avaliador}
+                  onChange={(e) => setFormData({ ...formData, avaliador: e.target.value })}
+                  label="Avaliador"
+                  size="small"
+                  sx={{
+                    fontFamily: 'Poppins',
+                    fontSize: '0.8rem',
                       '&:hover .MuiOutlinedInput-notchedOutline': {
                         borderColor: '#1694FF'
                       },
@@ -1546,7 +1687,7 @@ const QualidadeModulePage = () => {
                     }}
                   >
                     {avaliadores.map((avaliador) => (
-                      <MenuItem key={avaliador} value={avaliador} sx={{ fontFamily: 'Poppins' }}>
+                      <MenuItem key={avaliador} value={avaliador} sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
                         {avaliador}
                       </MenuItem>
                     ))}
@@ -1556,13 +1697,15 @@ const QualidadeModulePage = () => {
             </Grid>
             <Grid item xs={12} md={6}>
               <FormControl fullWidth required>
-                <InputLabel sx={{ fontFamily: 'Poppins' }}>Mês</InputLabel>
+                <InputLabel sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>Mês</InputLabel>
                 <Select
                   value={formData.mes}
                   onChange={(e) => setFormData({ ...formData, mes: e.target.value })}
                   label="Mês"
+                  size="small"
                   sx={{
                     fontFamily: 'Poppins',
+                    fontSize: '0.8rem',
                     '&:hover .MuiOutlinedInput-notchedOutline': {
                       borderColor: '#1694FF'
                     },
@@ -1572,7 +1715,7 @@ const QualidadeModulePage = () => {
                   }}
                 >
                   {MESES.map((mes) => (
-                    <MenuItem key={mes} value={mes} sx={{ fontFamily: 'Poppins' }}>
+                    <MenuItem key={mes} value={mes} sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
                       {mes}
                     </MenuItem>
                   ))}
@@ -1581,13 +1724,15 @@ const QualidadeModulePage = () => {
             </Grid>
             <Grid item xs={12} md={6}>
               <FormControl fullWidth required>
-                <InputLabel sx={{ fontFamily: 'Poppins' }}>Ano</InputLabel>
+                <InputLabel sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>Ano</InputLabel>
                 <Select
                   value={formData.ano}
                   onChange={(e) => setFormData({ ...formData, ano: e.target.value })}
                   label="Ano"
+                  size="small"
                   sx={{
                     fontFamily: 'Poppins',
+                    fontSize: '0.8rem',
                     '&:hover .MuiOutlinedInput-notchedOutline': {
                       borderColor: '#1694FF'
                     },
@@ -1597,7 +1742,7 @@ const QualidadeModulePage = () => {
                   }}
                 >
                   {ANOS.map((ano) => (
-                    <MenuItem key={ano} value={ano} sx={{ fontFamily: 'Poppins' }}>
+                    <MenuItem key={ano} value={ano} sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
                       {ano}
                     </MenuItem>
                   ))}
@@ -1608,17 +1753,19 @@ const QualidadeModulePage = () => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
+                size="small"
                 label="Data da Ligação Avaliada"
                 type="date"
                 value={formData.dataLigacao}
                 onChange={(e) => setFormData({ ...formData, dataLigacao: e.target.value })}
                 InputLabelProps={{
                   shrink: true,
-                  style: { fontFamily: 'Poppins' }
+                  style: { fontFamily: 'Poppins', fontSize: '0.8rem' }
                 }}
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     fontFamily: 'Poppins',
+                    fontSize: '0.8rem',
                     '&:hover fieldset': {
                       borderColor: '#1694FF'
                     },
@@ -1633,12 +1780,12 @@ const QualidadeModulePage = () => {
             {/* Campo vazio para manter consistência de layout */}
             <Grid item xs={12} md={6}>
               <Box sx={{ 
-                height: '56px', // Altura padrão do TextField
+                height: '44.8px', // Altura padrão do TextField reduzida 20%
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: 'transparent',
-                fontSize: '14px',
+                fontSize: '0.8rem',
                 fontFamily: 'Poppins'
               }}>
                 Espaço reservado
@@ -1647,7 +1794,7 @@ const QualidadeModulePage = () => {
             
             {/* Critérios de Avaliação */}
             <Grid item xs={12}>
-              <Typography variant="subtitle1" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', mb: 2 }}>
+              <Typography variant="subtitle1" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', mb: 1.6, fontSize: '0.96rem' }}>
                 Critérios de Avaliação
               </Typography>
             </Grid>
@@ -1662,18 +1809,18 @@ const QualidadeModulePage = () => {
                   display: 'flex', 
                   alignItems: 'center', 
                   justifyContent: 'space-between', 
-                  p: 2, 
+                  p: 1.6, 
                   border: criterio.isPositive 
                     ? (formData[criterio.key] ? '1px solid rgba(22, 148, 255, 0.75)' : '1px solid rgba(22, 148, 255, 0.5)')
                     : (formData[criterio.key] ? '1px solid #EF4444' : '1px solid rgba(255, 193, 7, 0.6)'),
-                  borderRadius: '8px',
+                  borderRadius: '6.4px',
                   backgroundColor: '#ffffff'
                 }}>
                   <Box>
-                    <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
+                    <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500, fontSize: '0.8rem' }}>
                       {criterio.label}
                     </Typography>
-                    <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666' }}>
+                        <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666', fontSize: '0.8rem' }}>
                       {criterio.pontos > 0 ? `+${criterio.pontos} pontos` : `${criterio.pontos} pontos`}
                     </Typography>
                   </Box>
@@ -1682,9 +1829,9 @@ const QualidadeModulePage = () => {
                     size="small"
                     onClick={() => setFormData({ ...formData, [criterio.key]: !formData[criterio.key] })}
                     sx={{
-                      minWidth: '28px',
-                      width: '28px',
-                      height: '28px',
+                      minWidth: '22.4px',
+                      width: '22.4px',
+                      height: '22.4px',
                       border: criterio.isPositive 
                         ? (formData[criterio.key] ? '2px solid rgba(22, 148, 255, 0.75)' : '1px solid rgba(22, 148, 255, 0.5)')
                         : (formData[criterio.key] ? '2px solid #EF4444' : '1px solid rgba(255, 193, 7, 0.6)'),
@@ -1705,7 +1852,7 @@ const QualidadeModulePage = () => {
                     {formData[criterio.key] && (
                       <CheckCircle sx={{ 
                         color: '#ffffff', 
-                        fontSize: '14px' 
+                        fontSize: '11.2px' 
                       }} />
                     )}
                   </Button>
@@ -1723,18 +1870,18 @@ const QualidadeModulePage = () => {
                   display: 'flex', 
                   alignItems: 'center', 
                   justifyContent: 'space-between', 
-                  p: 2, 
+                  p: 1.6, 
                   border: criterio.isPositive 
                     ? (formData[criterio.key] ? '1px solid rgba(22, 148, 255, 0.75)' : '1px solid rgba(22, 148, 255, 0.5)')
                     : (formData[criterio.key] ? '1px solid #EF4444' : '1px solid rgba(255, 193, 7, 0.6)'),
-                  borderRadius: '8px',
+                  borderRadius: '6.4px',
                   backgroundColor: '#ffffff'
                 }}>
                   <Box>
-                    <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
+                    <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500, fontSize: '0.8rem' }}>
                       {criterio.label}
                     </Typography>
-                    <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666' }}>
+                        <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666', fontSize: '0.8rem' }}>
                       {criterio.pontos > 0 ? `+${criterio.pontos} pontos` : `${criterio.pontos} pontos`}
                     </Typography>
                   </Box>
@@ -1743,9 +1890,9 @@ const QualidadeModulePage = () => {
                     size="small"
                     onClick={() => setFormData({ ...formData, [criterio.key]: !formData[criterio.key] })}
                     sx={{
-                      minWidth: '28px',
-                      width: '28px',
-                      height: '28px',
+                      minWidth: '22.4px',
+                      width: '22.4px',
+                      height: '22.4px',
                       border: criterio.isPositive 
                         ? (formData[criterio.key] ? '2px solid rgba(22, 148, 255, 0.75)' : '1px solid rgba(22, 148, 255, 0.5)')
                         : (formData[criterio.key] ? '2px solid #EF4444' : '1px solid rgba(255, 193, 7, 0.6)'),
@@ -1766,7 +1913,7 @@ const QualidadeModulePage = () => {
                     {formData[criterio.key] && (
                       <CheckCircle sx={{ 
                         color: '#ffffff', 
-                        fontSize: '14px' 
+                        fontSize: '11.2px' 
                       }} />
                     )}
                   </Button>
@@ -1784,18 +1931,18 @@ const QualidadeModulePage = () => {
                   display: 'flex', 
                   alignItems: 'center', 
                   justifyContent: 'space-between', 
-                  p: 2, 
+                  p: 1.6, 
                   border: criterio.isPositive 
                     ? (formData[criterio.key] ? '1px solid rgba(22, 148, 255, 0.75)' : '1px solid rgba(22, 148, 255, 0.5)')
                     : (formData[criterio.key] ? '1px solid #EF4444' : '1px solid rgba(255, 193, 7, 0.6)'),
-                  borderRadius: '8px',
+                  borderRadius: '6.4px',
                   backgroundColor: '#ffffff'
                 }}>
                   <Box>
-                    <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
+                    <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500, fontSize: '0.8rem' }}>
                       {criterio.label}
                     </Typography>
-                    <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666' }}>
+                        <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666', fontSize: '0.8rem' }}>
                       {criterio.pontos > 0 ? `+${criterio.pontos} pontos` : `${criterio.pontos} pontos`}
                     </Typography>
                   </Box>
@@ -1804,9 +1951,9 @@ const QualidadeModulePage = () => {
                     size="small"
                     onClick={() => setFormData({ ...formData, [criterio.key]: !formData[criterio.key] })}
                     sx={{
-                      minWidth: '28px',
-                      width: '28px',
-                      height: '28px',
+                      minWidth: '22.4px',
+                      width: '22.4px',
+                      height: '22.4px',
                       border: criterio.isPositive 
                         ? (formData[criterio.key] ? '2px solid rgba(22, 148, 255, 0.75)' : '1px solid rgba(22, 148, 255, 0.5)')
                         : (formData[criterio.key] ? '2px solid #EF4444' : '1px solid rgba(255, 193, 7, 0.6)'),
@@ -1827,7 +1974,7 @@ const QualidadeModulePage = () => {
                     {formData[criterio.key] && (
                       <CheckCircle sx={{ 
                         color: '#ffffff', 
-                        fontSize: '14px' 
+                        fontSize: '11.2px' 
                       }} />
                     )}
                   </Button>
@@ -1852,7 +1999,7 @@ const QualidadeModulePage = () => {
                   <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
                     Direcionou para pesquisa de satisfação
                   </Typography>
-                  <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666' }}>
+                        <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666', fontSize: '0.8rem' }}>
                     +10 pontos
                   </Typography>
                 </Box>
@@ -1916,7 +2063,7 @@ const QualidadeModulePage = () => {
                   <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
                     Colaborador encerrou o contato de forma brusca / Derrubou a ligação
                   </Typography>
-                  <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666' }}>
+                        <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666', fontSize: '0.8rem' }}>
                     -100 pontos
                   </Typography>
                 </Box>
@@ -1966,7 +2113,7 @@ const QualidadeModulePage = () => {
                   <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
                     Colaborador repassou um procedimento incorreto
                   </Typography>
-                  <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666' }}>
+                        <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666', fontSize: '0.8rem' }}>
                     -60 pontos
                   </Typography>
                 </Box>
@@ -2000,6 +2147,7 @@ const QualidadeModulePage = () => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
+                size="small"
                 label="Observações"
                 multiline
                 rows={3}
@@ -2008,6 +2156,7 @@ const QualidadeModulePage = () => {
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     fontFamily: 'Poppins',
+                    fontSize: '0.8rem',
                     '&:hover fieldset': {
                       borderColor: '#1694FF'
                     },
@@ -2016,6 +2165,7 @@ const QualidadeModulePage = () => {
                     }
                   },
                   '& .MuiInputLabel-root': {
+                    fontSize: '0.8rem',
                     fontFamily: 'Poppins'
                   }
                 }}
@@ -2023,17 +2173,25 @@ const QualidadeModulePage = () => {
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={fecharModalAvaliacao} sx={{ fontFamily: 'Poppins', color: '#666666' }}>
+        <DialogActions sx={{ py: 1.6, px: 1.6 }}>
+          <Button 
+            size="small"
+            onClick={fecharModalAvaliacao} 
+            sx={{ fontFamily: 'Poppins', color: '#666666', fontSize: '0.8rem', py: 0.4, px: 1.2 }}
+          >
             Cancelar
           </Button>
           <Button
+            size="small"
             onClick={salvarAvaliacao}
             sx={{
               backgroundColor: '#000058',
               color: '#ffffff',
               fontFamily: 'Poppins',
               fontWeight: 500,
+              fontSize: '0.8rem',
+              py: 0.4,
+              px: 1.2,
               '&:hover': {
                 backgroundColor: '#000040'
               }
@@ -2079,7 +2237,7 @@ const QualidadeModulePage = () => {
                   {gptLoading ? (
                     <Box sx={{ p: 2 }}>
                       <LinearProgress sx={{ mb: 2 }} />
-                      <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666' }}>
+                        <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666', fontSize: '0.8rem' }}>
                         Analisando ligação com inteligência artificial...
                       </Typography>
                     </Box>
@@ -2291,7 +2449,7 @@ const QualidadeModulePage = () => {
                 >
                   <MenuItem value="" sx={{ fontFamily: 'Poppins' }}>Todos</MenuItem>
                   {MESES.map((mes) => (
-                    <MenuItem key={mes} value={mes} sx={{ fontFamily: 'Poppins' }}>
+                    <MenuItem key={mes} value={mes} sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
                       {mes}
                     </MenuItem>
                   ))}
@@ -2311,7 +2469,7 @@ const QualidadeModulePage = () => {
                 >
                   <MenuItem value="" sx={{ fontFamily: 'Poppins' }}>Todos</MenuItem>
                   {ANOS.map((ano) => (
-                    <MenuItem key={ano} value={ano} sx={{ fontFamily: 'Poppins' }}>
+                    <MenuItem key={ano} value={ano} sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
                       {ano}
                     </MenuItem>
                   ))}

@@ -1,4 +1,4 @@
-// VERSION: v4.3.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v4.4.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useCallback, useEffect } from 'react';
 import { 
   Container, 
@@ -248,82 +248,73 @@ const VelonewsPage = () => {
   }, [activeTab, loadNewsList]);
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 8, pb: 4 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', mb: 4 }}>
-        <Box sx={{ position: 'absolute', left: 0 }}>
+    <Container maxWidth="xl" sx={{ py: 3.2, mb: 6.4, pb: 3.2 }}>
+      {/* Header com botão voltar e abas alinhadas */}
+      {/* Header único - alinhamento central absoluto das abas */}
+      <Box sx={{ position: 'relative', mb: 3.2, minHeight: 40 }}>
+        <Box sx={{ position: 'absolute', left: 0, top: 0, bottom: 0, display: 'flex', alignItems: 'center' }}>
           <BackButton />
         </Box>
-        <Typography 
-          variant="h4" 
-          component="h1"
-          sx={{ 
-            fontFamily: 'Poppins',
-            fontWeight: 700,
-            color: 'var(--blue-dark)'
-          }}
-        >
-          Velonews
-        </Typography>
-      </Box>
-
-      {/* Tabs do Material-UI */}
-      <Box sx={{ 
-        borderBottom: 1, 
-        borderColor: 'divider',
-        mb: 3
-      }}>
-        <Tabs 
-          value={activeTab} 
-          onChange={(e, v) => setActiveTab(v)}
-          aria-label="velonews tabs"
-          sx={{
-            '& .MuiTab-root': {
-              fontSize: '1.25rem',
-              fontWeight: 600,
-              textTransform: 'none',
-              minHeight: 48,
-              '&.Mui-selected': {
-                color: 'var(--blue-medium)',
+        <Box sx={{
+          position: 'absolute',
+          left: '50%',
+          top: 0,
+          bottom: 0,
+          transform: 'translateX(-50%)',
+          display: 'flex',
+          alignItems: 'center',
+          width: 'max-content'
+        }}>
+          <Tabs
+            value={activeTab}
+            onChange={(e, v) => setActiveTab(v)}
+            aria-label="velonews tabs"
+            sx={{
+              borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+              '& .MuiTab-root': {
+                fontSize: '1rem',
+                fontFamily: 'Poppins',
+                fontWeight: 500,
+                textTransform: 'none',
+                minHeight: 48,
+                '&.Mui-selected': {
+                  color: 'var(--blue-light)',
+                },
+                '&:not(.Mui-selected)': {
+                  color: 'var(--gray)',
+                  opacity: 0.7,
+                }
+              },
+              '& .MuiTabs-indicator': {
+                backgroundColor: 'var(--blue-light)',
+                height: 2,
               }
-            }
-          }}
-        >
-          <Tab label="Publicar Notícia" />
-          <Tab label="Localizar Notícias" />
-        </Tabs>
+            }}
+          >
+            <Tab label="Publicar Notícia" />
+            <Tab label="Localizar Notícias" />
+          </Tabs>
+        </Box>
       </Box>
 
       {/* Tab 0: Publicar Notícia */}
       {activeTab === 0 && (
         <>
           {formData.isCritical && (
-        <Alert 
-          severity="warning" 
+        <Alert
+          severity="warning"
           icon={<Warning />}
-          sx={{ mb: 3, fontFamily: 'Poppins' }}
+          sx={{ mb: 2.4, fontFamily: 'Poppins' }}
         >
           <strong>Alerta Crítico:</strong> Esta notícia será marcada como crítica e terá prioridade máxima.
         </Alert>
       )}
 
       <Card sx={{ backgroundColor: 'var(--cor-container)' }}>
-        <CardContent>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-            <Add sx={{ mr: 1, color: 'var(--blue-medium)' }} />
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                fontFamily: 'Poppins',
-                fontWeight: 600,
-                color: 'var(--blue-dark)'
-              }}
-            >
-              Nova Velonews
-            </Typography>
-          </Box>
+        <CardContent sx={{ p: 3.2 }}>
 
           <form onSubmit={handleSubmit}>
-            <Grid container spacing={3}>
+            <Grid container spacing={2.4}>
               <Grid item xs={12}>
                 <TextField
                   fullWidth
@@ -332,8 +323,14 @@ const VelonewsPage = () => {
                   onChange={handleInputChange('title')}
                   required
                   sx={{
+                    '& .MuiInputLabel-root': {
+                      fontSize: '0.8rem',
+                    },
                     '& .MuiOutlinedInput-root': {
                       fontFamily: 'Poppins'
+                    },
+                    '& .MuiOutlinedInput-input': {
+                      fontSize: '0.8rem',
                     }
                   }}
                 />
@@ -346,11 +343,17 @@ const VelonewsPage = () => {
                   value={formData.content}
                   onChange={handleInputChange('content')}
                   multiline
-                  rows={6}
+                  rows={4.8}
                   required
                   sx={{
+                    '& .MuiInputLabel-root': {
+                      fontSize: '0.8rem',
+                    },
                     '& .MuiOutlinedInput-root': {
                       fontFamily: 'Poppins'
+                    },
+                    '& .MuiOutlinedInput-input': {
+                      fontSize: '0.8rem',
                     }
                   }}
                 />
@@ -379,10 +382,11 @@ const VelonewsPage = () => {
               </Grid>
 
               <Grid item xs={12}>
-                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                   <Button
                     type="submit"
                     variant="contained"
+                    size="small"
                     startIcon={<Save />}
                     disabled={loading}
                     sx={{
@@ -390,6 +394,9 @@ const VelonewsPage = () => {
                       color: formData.isCritical ? 'var(--blue-dark)' : 'white',
                       fontFamily: 'Poppins',
                       fontWeight: 600,
+                      fontSize: '0.8rem',
+                      px: 2.4,
+                      py: 0.8,
                       '&:hover': {
                         backgroundColor: formData.isCritical ? 'var(--yellow)' : 'var(--blue-dark)',
                         opacity: 0.9
@@ -433,12 +440,12 @@ const VelonewsPage = () => {
           }}>
             <Card sx={{ backgroundColor: 'var(--cor-container)' }}>
               <CardContent>
-                <Typography variant="h6" sx={{ mb: 3, color: 'var(--blue-dark)', fontFamily: 'Poppins', fontWeight: 600 }}>
+                <Typography variant="h6" sx={{ mb: 2.4, fontSize: '0.96rem', color: 'var(--blue-dark)', fontFamily: 'Poppins', fontWeight: 600 }}>
                   {selectedNews ? 'Editar Notícia' : 'Selecione uma notícia'}
                 </Typography>
                 
                 <form onSubmit={handleUpdateNews}>
-                  <Grid container spacing={3}>
+                  <Grid container spacing={2.4}>
                     {/* Campo Título */}
                     <Grid item xs={12}>
                       <TextField
@@ -448,9 +455,14 @@ const VelonewsPage = () => {
                         onChange={(e) => setEditFormData({...editFormData, titulo: e.target.value})}
                         disabled={!selectedNews}
                         required
+                        size="small"
                         sx={{
                           '& .MuiOutlinedInput-root': {
-                            fontFamily: 'Poppins'
+                            fontFamily: 'Poppins',
+                            fontSize: '0.8rem'
+                          },
+                          '& .MuiInputLabel-root': {
+                            fontSize: '0.8rem'
                           }
                         }}
                       />
@@ -464,12 +476,19 @@ const VelonewsPage = () => {
                         value={editFormData.conteudo}
                         onChange={(e) => setEditFormData({...editFormData, conteudo: e.target.value})}
                         multiline
-                        rows={8}
+                        rows={5}
                         disabled={!selectedNews}
                         required
+                        size="small"
                         sx={{
+                          '& .MuiInputLabel-root': {
+                            fontSize: '0.64rem',
+                          },
                           '& .MuiOutlinedInput-root': {
                             fontFamily: 'Poppins'
+                          },
+                          '& .MuiOutlinedInput-input': {
+                            fontSize: '0.64rem',
                           }
                         }}
                       />
@@ -493,7 +512,7 @@ const VelonewsPage = () => {
                             />
                           }
                           label={
-                            <Typography sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
+                            <Typography sx={{ fontFamily: 'Poppins', fontWeight: 500, fontSize: '0.8rem' }}>
                               Alerta Crítico
                             </Typography>
                           }
@@ -514,7 +533,7 @@ const VelonewsPage = () => {
                             />
                           }
                           label={
-                            <Typography sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
+                            <Typography sx={{ fontFamily: 'Poppins', fontWeight: 500, fontSize: '0.8rem' }}>
                               Resolvido
                             </Typography>
                           }
@@ -528,12 +547,16 @@ const VelonewsPage = () => {
                         type="submit"
                         variant="contained"
                         disabled={!selectedNews || loading}
-                        startIcon={<Save />}
+                        startIcon={<Save sx={{ fontSize: '0.8rem' }} />}
+                        size="small"
                         sx={{
                           backgroundColor: 'var(--blue-medium)',
                           color: 'white',
                           fontFamily: 'Poppins',
                           fontWeight: 600,
+                          fontSize: '0.8rem',
+                          py: 0.8,
+                          px: 1.6,
                           '&:hover': {
                             backgroundColor: 'var(--blue-dark)'
                           }
@@ -560,18 +583,23 @@ const VelonewsPage = () => {
                   placeholder="Pesquisar notícias..."
                   value={searchTerm}
                   onChange={handleSearch}
+                  size="small"
                   sx={{ 
-                    mb: 2,
+                    mb: 1.6,
                     '& .MuiOutlinedInput-root': {
-                      fontFamily: 'Poppins'
+                      fontFamily: 'Poppins',
+                      fontSize: '0.8rem'
+                    },
+                    '& .MuiInputLabel-root': {
+                      fontSize: '0.8rem'
                     }
                   }}
                   InputProps={{
-                    startAdornment: <Search sx={{ mr: 1, color: 'var(--blue-medium)' }} />
+                    startAdornment: <Search sx={{ mr: 0.8, color: 'var(--blue-medium)', fontSize: '0.8rem' }} />
                   }}
                 />
                 
-                <Typography variant="subtitle2" sx={{ mb: 2, color: 'var(--gray)', fontFamily: 'Poppins' }}>
+                <Typography variant="subtitle2" sx={{ mb: 1.6, fontSize: '0.64rem', color: 'var(--gray)', fontFamily: 'Poppins' }}>
                   {filteredNews.length} notícia(s) encontrada(s)
                 </Typography>
                 
@@ -601,7 +629,7 @@ const VelonewsPage = () => {
                         key={news._id}
                         onClick={() => handleSelectNews(news)}
                         sx={{
-                          mb: 2,
+                          mb: 1.6,
                           cursor: 'pointer',
                           border: selectedNews?._id === news._id ? '2px solid var(--blue-medium)' : '1px solid var(--gray)',
                           backgroundColor: selectedNews?._id === news._id ? 'rgba(22, 148, 255, 0.1)' : 'transparent',
@@ -612,18 +640,18 @@ const VelonewsPage = () => {
                           }
                         }}
                       >
-                        <CardContent sx={{ p: 2 }}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 1 }}>
-                            <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'var(--blue-dark)', fontFamily: 'Poppins', flex: 1, pr: 1 }}>
+                        <CardContent sx={{ p: 1.6 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 0.8 }}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 600, fontSize: '0.8rem', color: 'var(--blue-dark)', fontFamily: 'Poppins', flex: 1, pr: 0.8 }}>
                               {news.titulo}
                             </Typography>
-                            <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
+                            <Box sx={{ display: 'flex', gap: 0.4, flexShrink: 0 }}>
                               {news.isCritical && (
                                 <Chip 
                                   label="Alerta Crítico" 
                                   color="warning" 
                                   size="small"
-                                  sx={{ fontFamily: 'Poppins', fontSize: '0.7rem' }}
+                                  sx={{ fontFamily: 'Poppins', fontSize: '0.56rem', height: '20px', '& .MuiChip-label': { px: 0.8 } }}
                                 />
                               )}
                               {news.solved && (
@@ -631,13 +659,13 @@ const VelonewsPage = () => {
                                   label="Resolvido" 
                                   color="success" 
                                   size="small"
-                                  sx={{ fontFamily: 'Poppins', fontSize: '0.7rem' }}
+                                  sx={{ fontFamily: 'Poppins', fontSize: '0.56rem', height: '20px', '& .MuiChip-label': { px: 0.8 } }}
                                 />
                               )}
                             </Box>
                           </Box>
                           
-                          <Typography variant="caption" sx={{ color: 'var(--gray)', fontFamily: 'Poppins' }}>
+                          <Typography variant="caption" sx={{ fontSize: '0.64rem', color: 'var(--gray)', fontFamily: 'Poppins' }}>
                             {new Date(news.createdAt).toLocaleDateString('pt-BR', {
                               day: '2-digit',
                               month: '2-digit',

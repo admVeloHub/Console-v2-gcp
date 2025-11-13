@@ -1,4 +1,4 @@
-// VERSION: v1.6.3 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.7.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useCallback } from 'react';
 import { 
   Container, 
@@ -197,6 +197,19 @@ const CapacityPage = () => {
   }, []);
 
   // Função para processar upload de arquivos
+  // MECANISMO DE UPLOAD:
+  // 1. Usuário seleciona arquivo via input file ou drag & drop
+  // 2. handleFileUpload é chamada com o arquivo e tipo ('weekdays' ou 'saturday')
+  // 3. Verifica extensão do arquivo (.csv ou .xlsx/.xls)
+  // 4. Chama capacityService.readCSVFile() ou capacityService.readExcelFile()
+  // 5. Valida dados usando capacityService.validateData()
+  // 6. Se válido, atualiza estado (weekdaysData ou saturdayData)
+  // 7. Exibe feedback visual com nome do arquivo e quantidade de registros
+  // POSSÍVEIS ERROS:
+  // - Arquivo inválido ou corrompido
+  // - Formato de dados não corresponde ao esperado
+  // - Erro na leitura do arquivo (XLSX library)
+  // - Validação falha (campos obrigatórios ausentes)
   const handleFileUpload = useCallback(async (file, type) => {
     try {
       setLoading(true);
@@ -286,49 +299,37 @@ const CapacityPage = () => {
   }, [results]);
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', mb: 4 }}>
+    <Container maxWidth="xl" sx={{ py: 3.2, fontSize: '0.64em' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', mb: 3.2 }}>
         <Box sx={{ position: 'absolute', left: 0 }}>
           <BackButton />
         </Box>
-        <Box sx={{ textAlign: 'center' }}>
-          <Typography 
-            variant="h4" 
-            component="h1"
-            sx={{ 
-              fontFamily: 'Poppins',
-              fontWeight: 700,
-              color: 'var(--blue-dark)',
-              mb: 1
-            }}
-          >
-            Capacity
-          </Typography>
-        </Box>
+        {/* Removido o título Capacity do topo */}
       </Box>
 
       {/* Alertas */}
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <Alert severity="error" sx={{ mb: 2.4, fontSize: '0.8rem' }}>
           {error}
         </Alert>
       )}
 
       {/* Parâmetros do Sistema */}
-      <Card sx={{ mb: 4 }}>
-        <CardContent>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Info sx={{ color: 'var(--blue-medium)' }} />
-              <Typography variant="h6" sx={{ 
+      <Card sx={{ mb: 3.2 }}>
+        <CardContent sx={{ fontSize: '0.64em', p: 1.6 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.6 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+              <Info sx={{ color: 'var(--blue-medium)', fontSize: '0.96em' }} />
+              <Typography variant="h6" sx={{
                 fontFamily: 'Poppins',
                 fontWeight: 600,
-                color: 'var(--blue-dark)'
+                color: 'var(--blue-dark)',
+                fontSize: '1.1rem'
               }}>
                 Parâmetros do Sistema
               </Typography>
             </Box>
-            <Box sx={{ display: 'flex', gap: 1 }}>
+            <Box sx={{ display: 'flex', gap: 0.8 }}>
               <Button
                 size="small"
                 startIcon={isEditingParams ? <Check /> : <Edit />}
@@ -336,6 +337,9 @@ const CapacityPage = () => {
                 sx={{
                   color: 'var(--blue-medium)',
                   borderColor: 'var(--blue-medium)',
+                  fontSize: '0.88rem',
+                  py: 0.6,
+                  px: 1.6,
                   '&:hover': {
                     borderColor: 'var(--blue-dark)',
                     backgroundColor: 'rgba(22, 52, 255, 0.05)'
@@ -353,6 +357,9 @@ const CapacityPage = () => {
                   sx={{
                     color: 'var(--gray)',
                     borderColor: 'var(--gray)',
+                    fontSize: '0.88rem',
+                    py: 0.6,
+                    px: 1.6,
                     '&:hover': {
                       borderColor: 'var(--blue-dark)',
                       backgroundColor: 'rgba(22, 52, 255, 0.05)'
@@ -366,7 +373,7 @@ const CapacityPage = () => {
             </Box>
           </Box>
           
-          <Grid container spacing={3}>
+          <Grid container spacing={2.4}>
             {/* Dias Úteis */}
             <Grid item xs={12} md={4}>
               <Card sx={{ 
@@ -377,12 +384,12 @@ const CapacityPage = () => {
                 margin: '8px'
               }}>
                 <CardContent>
-                  <Typography variant="subtitle1" sx={{ 
+                  <Typography variant="subtitle1" sx={{
                     fontFamily: 'Poppins',
                     fontWeight: 600,
                     color: 'var(--blue-dark)',
                     mb: 2,
-                    fontSize: '1.1rem'
+                    fontSize: '0.704rem'
                   }}>
                     📅 Dias Úteis (Segunda à Sexta)
                   </Typography>
@@ -405,7 +412,7 @@ const CapacityPage = () => {
                           inputProps={{ min: 0, step: 0.5 }}
                           size="small"
                           fullWidth
-                          sx={{ fontSize: '1rem' }}
+                          sx={{ fontSize: '0.8rem' }}
                         />
                       </Card>
                       
@@ -425,7 +432,7 @@ const CapacityPage = () => {
                           inputProps={{ min: 0, step: 0.25 }}
                           size="small"
                           fullWidth
-                          sx={{ fontSize: '1rem' }}
+                          sx={{ fontSize: '0.8rem' }}
                         />
                       </Card>
                       
@@ -445,7 +452,7 @@ const CapacityPage = () => {
                           inputProps={{ min: 0, step: 0.25 }}
                           size="small"
                           fullWidth
-                          sx={{ fontSize: '1rem' }}
+                          sx={{ fontSize: '0.8rem' }}
                         />
                       </Card>
                       
@@ -457,7 +464,7 @@ const CapacityPage = () => {
                         border: '1px solid var(--blue-medium)',
                         borderRadius: '8px'
                       }}>
-                        <Typography sx={{ fontSize: '1rem', fontFamily: 'Poppins', color: 'var(--blue-dark)', fontWeight: 600 }}>
+                        <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--blue-dark)', fontWeight: 600 }}>
                           Horas Efetivas: {parameters.weekdays.horasEfetivas}h
                         </Typography>
                       </Card>
@@ -478,7 +485,7 @@ const CapacityPage = () => {
                           inputProps={{ min: 0, step: 1 }}
                           size="small"
                           fullWidth
-                          sx={{ fontSize: '1rem' }}
+                          sx={{ fontSize: '0.8rem' }}
                         />
                       </Card>
                       
@@ -498,7 +505,7 @@ const CapacityPage = () => {
                           inputProps={{ min: 0, step: 0.25 }}
                           size="small"
                           fullWidth
-                          sx={{ fontSize: '1rem' }}
+                          sx={{ fontSize: '0.8rem' }}
                         />
                       </Card>
                     </Box>
@@ -512,7 +519,7 @@ const CapacityPage = () => {
                         border: '1px solid rgba(22, 52, 255, 0.1)',
                         borderRadius: '8px'
                       }}>
-                        <Typography sx={{ fontSize: '1rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
+                        <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
                           Horas de trabalho: {parameters.weekdays.horasTrabalho}h
                         </Typography>
                       </Card>
@@ -525,7 +532,7 @@ const CapacityPage = () => {
                         border: '1px solid rgba(22, 52, 255, 0.1)',
                         borderRadius: '8px'
                       }}>
-                        <Typography sx={{ fontSize: '1rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
+                        <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
                           Horário de almoço: {parameters.weekdays.horarioAlmoco}h
                         </Typography>
                       </Card>
@@ -538,7 +545,7 @@ const CapacityPage = () => {
                         border: '1px solid rgba(22, 52, 255, 0.1)',
                         borderRadius: '8px'
                       }}>
-                        <Typography sx={{ fontSize: '1rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
+                        <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
                           Outras pausas: {parameters.weekdays.outrasPausas}h
                         </Typography>
                       </Card>
@@ -551,7 +558,7 @@ const CapacityPage = () => {
                         border: '1px solid var(--blue-medium)',
                         borderRadius: '8px'
                       }}>
-                        <Typography sx={{ fontSize: '1rem', fontFamily: 'Poppins', color: 'var(--blue-dark)', fontWeight: 600 }}>
+                        <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--blue-dark)', fontWeight: 600 }}>
                           Horas efetivas: {parameters.weekdays.horasEfetivas}h
                         </Typography>
                       </Card>
@@ -564,7 +571,7 @@ const CapacityPage = () => {
                         border: '1px solid rgba(22, 52, 255, 0.1)',
                         borderRadius: '8px'
                       }}>
-                        <Typography sx={{ fontSize: '1rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
+                        <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
                           Capacidade: {parameters.weekdays.capacidadePorHora} ligações/hora
                         </Typography>
                       </Card>
@@ -577,7 +584,7 @@ const CapacityPage = () => {
                         border: '1px solid rgba(22, 52, 255, 0.1)',
                         borderRadius: '8px'
                       }}>
-                        <Typography sx={{ fontSize: '1rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
+                        <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
                           Capacidade segura: {parameters.weekdays.capacidadeSegura} ligações/hora
                         </Typography>
                       </Card>
@@ -597,12 +604,12 @@ const CapacityPage = () => {
                 margin: '8px'
               }}>
                 <CardContent>
-                  <Typography variant="subtitle1" sx={{ 
+                  <Typography variant="subtitle1" sx={{
                     fontFamily: 'Poppins',
                     fontWeight: 600,
                     color: 'var(--blue-dark)',
                     mb: 2,
-                    fontSize: '1.1rem'
+                    fontSize: '0.704rem'
                   }}>
                     📅 Sábado
                   </Typography>
@@ -625,7 +632,7 @@ const CapacityPage = () => {
                           inputProps={{ min: 0, step: 0.5 }}
                           size="small"
                           fullWidth
-                          sx={{ fontSize: '1rem' }}
+                          sx={{ fontSize: '0.8rem' }}
                         />
                       </Card>
                       
@@ -645,7 +652,7 @@ const CapacityPage = () => {
                           inputProps={{ min: 0, step: 0.25 }}
                           size="small"
                           fullWidth
-                          sx={{ fontSize: '1rem' }}
+                          sx={{ fontSize: '0.8rem' }}
                         />
                       </Card>
                       
@@ -665,7 +672,7 @@ const CapacityPage = () => {
                           inputProps={{ min: 0, step: 0.25 }}
                           size="small"
                           fullWidth
-                          sx={{ fontSize: '1rem' }}
+                          sx={{ fontSize: '0.8rem' }}
                         />
                       </Card>
                       
@@ -677,7 +684,7 @@ const CapacityPage = () => {
                         border: '1px solid var(--blue-medium)',
                         borderRadius: '8px'
                       }}>
-                        <Typography sx={{ fontSize: '1rem', fontFamily: 'Poppins', color: 'var(--blue-dark)', fontWeight: 600 }}>
+                        <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--blue-dark)', fontWeight: 600 }}>
                           Horas Efetivas: {parameters.saturday.horasEfetivas}h
                         </Typography>
                       </Card>
@@ -698,7 +705,7 @@ const CapacityPage = () => {
                           inputProps={{ min: 0, step: 1 }}
                           size="small"
                           fullWidth
-                          sx={{ fontSize: '1rem' }}
+                          sx={{ fontSize: '0.8rem' }}
                         />
                       </Card>
                       
@@ -718,7 +725,7 @@ const CapacityPage = () => {
                           inputProps={{ min: 0, step: 0.25 }}
                           size="small"
                           fullWidth
-                          sx={{ fontSize: '1rem' }}
+                          sx={{ fontSize: '0.8rem' }}
                         />
                       </Card>
                     </Box>
@@ -732,7 +739,7 @@ const CapacityPage = () => {
                         border: '1px solid rgba(22, 52, 255, 0.1)',
                         borderRadius: '8px'
                       }}>
-                        <Typography sx={{ fontSize: '1rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
+                        <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
                           Horas de trabalho: {parameters.saturday.horasTrabalho}h
                         </Typography>
                       </Card>
@@ -745,7 +752,7 @@ const CapacityPage = () => {
                         border: '1px solid rgba(22, 52, 255, 0.1)',
                         borderRadius: '8px'
                       }}>
-                        <Typography sx={{ fontSize: '1rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
+                        <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
                           Horário de almoço: {parameters.saturday.horarioAlmoco}h
                         </Typography>
                       </Card>
@@ -758,7 +765,7 @@ const CapacityPage = () => {
                         border: '1px solid rgba(22, 52, 255, 0.1)',
                         borderRadius: '8px'
                       }}>
-                        <Typography sx={{ fontSize: '1rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
+                        <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
                           Outras pausas: {parameters.saturday.outrasPausas}h
                         </Typography>
                       </Card>
@@ -771,7 +778,7 @@ const CapacityPage = () => {
                         border: '1px solid var(--blue-medium)',
                         borderRadius: '8px'
                       }}>
-                        <Typography sx={{ fontSize: '1rem', fontFamily: 'Poppins', color: 'var(--blue-dark)', fontWeight: 600 }}>
+                        <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--blue-dark)', fontWeight: 600 }}>
                           Horas efetivas: {parameters.saturday.horasEfetivas}h
                         </Typography>
                       </Card>
@@ -784,7 +791,7 @@ const CapacityPage = () => {
                         border: '1px solid rgba(22, 52, 255, 0.1)',
                         borderRadius: '8px'
                       }}>
-                        <Typography sx={{ fontSize: '1rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
+                        <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
                           Capacidade: {parameters.saturday.capacidadePorHora} ligações/hora
                         </Typography>
                       </Card>
@@ -797,7 +804,7 @@ const CapacityPage = () => {
                         border: '1px solid rgba(22, 52, 255, 0.1)',
                         borderRadius: '8px'
                       }}>
-                        <Typography sx={{ fontSize: '1rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
+                        <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
                           Capacidade segura: {parameters.saturday.capacidadeSegura} ligações/hora
                         </Typography>
                       </Card>
@@ -817,12 +824,12 @@ const CapacityPage = () => {
                 margin: '8px'
               }}>
                 <CardContent>
-                  <Typography variant="subtitle1" sx={{ 
+                  <Typography variant="subtitle1" sx={{
                     fontFamily: 'Poppins',
                     fontWeight: 600,
                     color: 'var(--blue-dark)',
                     mb: 2,
-                    fontSize: '1.1rem'
+                    fontSize: '0.704rem'
                   }}>
                     🌐 Parâmetros Globais
                   </Typography>
@@ -845,7 +852,7 @@ const CapacityPage = () => {
                           inputProps={{ min: 0, step: 0.5 }}
                           size="small"
                           fullWidth
-                          sx={{ fontSize: '1rem' }}
+                          sx={{ fontSize: '0.8rem' }}
                         />
                       </Card>
                       
@@ -865,7 +872,7 @@ const CapacityPage = () => {
                           inputProps={{ min: 0, max: 100, step: 1 }}
                           size="small"
                           fullWidth
-                          sx={{ fontSize: '1rem' }}
+                          sx={{ fontSize: '0.8rem' }}
                         />
                       </Card>
                       
@@ -885,7 +892,7 @@ const CapacityPage = () => {
                           inputProps={{ min: 0, step: 1 }}
                           size="small"
                           fullWidth
-                          sx={{ fontSize: '1rem' }}
+                          sx={{ fontSize: '0.8rem' }}
                         />
                       </Card>
                       
@@ -905,7 +912,7 @@ const CapacityPage = () => {
                           inputProps={{ min: 0, max: 100, step: 0.1 }}
                           size="small"
                           fullWidth
-                          sx={{ fontSize: '1rem' }}
+                          sx={{ fontSize: '0.8rem' }}
                         />
                       </Card>
                     </Box>
@@ -919,7 +926,7 @@ const CapacityPage = () => {
                         border: '1px solid rgba(22, 52, 255, 0.1)',
                         borderRadius: '8px'
                       }}>
-                        <Typography sx={{ fontSize: '1rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
+                        <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
                           TMA: {parameters.global.tma} minutos
                         </Typography>
                       </Card>
@@ -932,7 +939,7 @@ const CapacityPage = () => {
                         border: '1px solid rgba(22, 52, 255, 0.1)',
                         borderRadius: '8px'
                       }}>
-                        <Typography sx={{ fontSize: '1rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
+                        <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
                           Nível de Serviço: {parameters.global.nivelServico}% em {parameters.global.tempoEspera}s
                         </Typography>
                       </Card>
@@ -945,7 +952,7 @@ const CapacityPage = () => {
                         border: '1px solid rgba(22, 52, 255, 0.1)',
                         borderRadius: '8px'
                       }}>
-                        <Typography sx={{ fontSize: '1rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
+                        <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
                           Abandono: {parameters.global.abandono}%
                         </Typography>
                       </Card>
@@ -963,11 +970,12 @@ const CapacityPage = () => {
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
-              <Typography variant="h6" sx={{ 
+              <Typography variant="h6" sx={{
                 fontFamily: 'Poppins',
                 fontWeight: 600,
                 color: 'var(--blue-dark)',
-                mb: 2
+                mb: 2,
+                fontSize: '0.88rem'
               }}>
                 📅 Dias Úteis (Segunda à Sexta)
               </Typography>
@@ -1008,17 +1016,17 @@ const CapacityPage = () => {
                   }
                 }}
               >
-                <CloudUpload sx={{ fontSize: 48, color: 'var(--blue-medium)', mb: 2 }} />
+                <CloudUpload sx={{ fontSize: 38.4, color: 'var(--blue-medium)', mb: 1.6 }} />
                 
-                <Typography variant="h6" sx={{ fontFamily: 'Poppins', mb: 1 }}>
+                <Typography variant="h6" sx={{ fontFamily: 'Poppins', mb: 1, fontSize: '0.8rem' }}>
                   Arraste o arquivo aqui
                 </Typography>
                 
-                <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: 'var(--gray)', mb: 1 }}>
+                <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: 'var(--gray)', mb: 1, fontSize: '0.64rem' }}>
                   ou clique para selecionar
                 </Typography>
                 
-                <Typography variant="caption" sx={{ mt: 2, color: 'var(--gray)' }}>
+                <Typography variant="caption" sx={{ mt: 2, color: 'var(--gray)', fontSize: '0.56rem' }}>
                   Formatos aceitos: XLS, XLSX, CSV
                 </Typography>
                 
@@ -1026,6 +1034,7 @@ const CapacityPage = () => {
                   <Typography variant="body2" sx={{ 
                     fontFamily: 'Poppins',
                     mt: 2,
+                    fontSize: '0.64rem',
                     color: weekdaysFileInfo.includes('✅') ? 'var(--success)' : 'var(--error)'
                   }}>
                     {weekdaysFileInfo}
@@ -1039,11 +1048,12 @@ const CapacityPage = () => {
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
-              <Typography variant="h6" sx={{ 
+              <Typography variant="h6" sx={{
                 fontFamily: 'Poppins',
                 fontWeight: 600,
                 color: 'var(--blue-dark)',
-                mb: 2
+                mb: 2,
+                fontSize: '0.704rem'
               }}>
                 📅 Sábado
               </Typography>
@@ -1084,17 +1094,17 @@ const CapacityPage = () => {
                   }
                 }}
               >
-                <CloudUpload sx={{ fontSize: 48, color: 'var(--green)', mb: 2 }} />
+                <CloudUpload sx={{ fontSize: 38.4, color: 'var(--green)', mb: 1.6 }} />
                 
-                <Typography variant="h6" sx={{ fontFamily: 'Poppins', mb: 1 }}>
+                <Typography variant="h6" sx={{ fontFamily: 'Poppins', mb: 1, fontSize: '0.8rem' }}>
                   Arraste o arquivo aqui
                 </Typography>
                 
-                <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: 'var(--gray)', mb: 1 }}>
+                <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: 'var(--gray)', mb: 1, fontSize: '0.64rem' }}>
                   ou clique para selecionar
                 </Typography>
                 
-                <Typography variant="caption" sx={{ mt: 2, color: 'var(--gray)' }}>
+                <Typography variant="caption" sx={{ mt: 2, color: 'var(--gray)', fontSize: '0.56rem' }}>
                   Formatos aceitos: XLS, XLSX, CSV
                 </Typography>
                 
@@ -1102,6 +1112,7 @@ const CapacityPage = () => {
                   <Typography variant="body2" sx={{ 
                     fontFamily: 'Poppins',
                     mt: 2,
+                    fontSize: '0.64rem',
                     color: saturdayFileInfo.includes('✅') ? 'var(--success)' : 'var(--error)'
                   }}>
                     {saturdayFileInfo}
@@ -1160,11 +1171,12 @@ const CapacityPage = () => {
           <Grid item xs={12}>
             <Card>
               <CardContent>
-                <Typography variant="h6" sx={{ 
+                <Typography variant="h6" sx={{
                   fontFamily: 'Poppins',
                   fontWeight: 600,
                   color: 'var(--blue-dark)',
-                  mb: 3
+                  mb: 3,
+                  fontSize: '0.88rem'
                 }}>
                   📊 Resumo do Dimensionamento
                 </Typography>
@@ -1176,13 +1188,13 @@ const CapacityPage = () => {
                       color: 'white'
                     }}>
                       <CardContent>
-                        <Typography variant="h6" sx={{ fontFamily: 'Poppins', fontWeight: 600, mb: 1 }}>
+                        <Typography variant="h6" sx={{ fontFamily: 'Poppins', fontWeight: 600, mb: 1, fontSize: '0.88rem' }}>
                           📅 Dias Úteis
                         </Typography>
-                        <Typography variant="h4" sx={{ fontFamily: 'Poppins', fontWeight: 700, mb: 1 }}>
+                        <Typography variant="h4" sx={{ fontFamily: 'Poppins', fontWeight: 700, mb: 1, fontSize: '1.6rem' }}>
                           {results.weekdays.summary.totalHCs} HCs
                         </Typography>
-                        <Typography variant="body2" sx={{ fontFamily: 'Poppins', opacity: 0.9 }}>
+                        <Typography variant="body2" sx={{ fontFamily: 'Poppins', opacity: 0.9, fontSize: '0.8rem' }}>
                           {results.weekdays.summary.totalVolume} ligações | {results.weekdays.summary.utilizacaoMedia}% utilização
                         </Typography>
                       </CardContent>
@@ -1195,13 +1207,13 @@ const CapacityPage = () => {
                       color: 'white'
                     }}>
                       <CardContent>
-                        <Typography variant="h6" sx={{ fontFamily: 'Poppins', fontWeight: 600, mb: 1 }}>
+                        <Typography variant="h6" sx={{ fontFamily: 'Poppins', fontWeight: 600, mb: 1, fontSize: '0.88rem' }}>
                           📅 Sábado
                         </Typography>
-                        <Typography variant="h4" sx={{ fontFamily: 'Poppins', fontWeight: 700, mb: 1 }}>
+                        <Typography variant="h4" sx={{ fontFamily: 'Poppins', fontWeight: 700, mb: 1, fontSize: '1.6rem' }}>
                           {results.saturday.summary.totalHCs} HCs
                         </Typography>
-                        <Typography variant="body2" sx={{ fontFamily: 'Poppins', opacity: 0.9 }}>
+                        <Typography variant="body2" sx={{ fontFamily: 'Poppins', opacity: 0.9, fontSize: '0.8rem' }}>
                           {results.saturday.summary.totalVolume} ligações | {results.saturday.summary.utilizacaoMedia}% utilização
                         </Typography>
                       </CardContent>
@@ -1216,11 +1228,12 @@ const CapacityPage = () => {
           <Grid item xs={12} md={6}>
             <Card>
               <CardContent>
-                <Typography variant="h6" sx={{ 
+                <Typography variant="h6" sx={{
                   fontFamily: 'Poppins',
                   fontWeight: 600,
                   color: 'var(--blue-dark)',
-                  mb: 2
+                  mb: 2,
+                  fontSize: '0.88rem'
                 }}>
                   📅 Dias Úteis - Detalhamento
                 </Typography>
@@ -1270,11 +1283,12 @@ const CapacityPage = () => {
           <Grid item xs={12} md={6}>
             <Card>
               <CardContent>
-                <Typography variant="h6" sx={{ 
+                <Typography variant="h6" sx={{
                   fontFamily: 'Poppins',
                   fontWeight: 600,
                   color: 'var(--blue-dark)',
-                  mb: 2
+                  mb: 2,
+                  fontSize: '0.88rem'
                 }}>
                   📅 Sábado - Detalhamento
                 </Typography>

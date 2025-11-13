@@ -1,10 +1,10 @@
-// VERSION: v3.1.11 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.2.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
-import { 
-  Container, 
-  Typography, 
-  Box, 
-  Card, 
+import {
+  Container,
+  Typography,
+  Box,
+  Card,
   CardContent,
   Table,
   TableBody,
@@ -29,16 +29,20 @@ import {
   Select,
   MenuItem
 } from '@mui/material';
-import { 
-  Visibility, 
-  Edit, 
+import {
+  Visibility,
+  Edit,
   Add,
   Refresh,
   FilterList
 } from '@mui/icons-material';
 import BackButton from '../components/common/BackButton';
+import ModalAtribuido from '../components/ModalAtribuido';
+import { ticketsAPI } from '../services/ticketsAPI';
+import { useAuth } from '../contexts/AuthContext';
 
 const ChamadosInternosPage = () => {
+  const { user, canViewTicketType } = useAuth();
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -46,133 +50,21 @@ const ChamadosInternosPage = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all');
 
-  // Dados mockados para demonstração
-  const mockTickets = [
-    // Tickets ativos
-    {
-      id: 'TK-001',
-      solicitante: 'João Silva',
-      data: '2024-12-19',
-      tipo: 'Suporte Técnico',
-      sla: '24h',
-      situacao: 'Novo',
-      prioridade: 'Alta',
-      setor: 'TI',
-      descricao: 'Problema com acesso ao sistema de vendas'
-    },
-    {
-      id: 'TK-002',
-      solicitante: 'Maria Santos',
-      data: '2024-12-18',
-      tipo: 'Manutenção',
-      sla: '48h',
-      situacao: 'Em Andamento',
-      prioridade: 'Média',
-      setor: 'Operações',
-      descricao: 'Solicitação de manutenção preventiva'
-    },
-    {
-      id: 'TK-003',
-      solicitante: 'Pedro Costa',
-      data: '2024-12-17',
-      tipo: 'Incidente',
-      sla: '4h',
-      situacao: 'Aberto',
-      prioridade: 'Crítica',
-      setor: 'Produção',
-      descricao: 'Falha no sistema de produção'
-    },
-    {
-      id: 'TK-004',
-      solicitante: 'Ana Oliveira',
-      data: '2024-12-16',
-      tipo: 'Solicitação',
-      sla: '72h',
-      situacao: 'Novo',
-      prioridade: 'Baixa',
-      setor: 'RH',
-      descricao: 'Solicitação de novo usuário no sistema'
-    },
-    {
-      id: 'TK-005',
-      solicitante: 'Carlos Lima',
-      data: '2024-12-15',
-      tipo: 'Bug',
-      sla: '12h',
-      situacao: 'Em Andamento',
-      prioridade: 'Média',
-      setor: 'Desenvolvimento',
-      descricao: 'Erro na validação de formulários'
-    },
-    {
-      id: 'TK-006',
-      solicitante: 'Lucia Costa',
-      data: '2024-12-14',
-      tipo: 'Melhoria',
-      sla: '96h',
-      situacao: 'Aberto',
-      prioridade: 'Baixa',
-      setor: 'UX',
-      descricao: 'Sugestão para melhorar interface do usuário'
-    },
-    
-    // Tickets encerrados
-    {
-      id: 'TK-007',
-      solicitante: 'Roberto Alves',
-      data: '2024-12-13',
-      tipo: 'Bug',
-      sla: '8h',
-      situacao: 'Encerrado',
-      prioridade: 'Alta',
-      setor: 'Desenvolvimento',
-      descricao: 'Erro de login corrigido com sucesso'
-    },
-    {
-      id: 'TK-008',
-      solicitante: 'Fernanda Lima',
-      data: '2024-12-12',
-      tipo: 'Dúvida',
-      sla: '24h',
-      situacao: 'Encerrado',
-      prioridade: 'Baixa',
-      setor: 'Suporte',
-      descricao: 'Dúvida sobre configuração de permissões resolvida'
-    },
-    {
-      id: 'TK-009',
-      solicitante: 'Marcos Oliveira',
-      data: '2024-12-11',
-      tipo: 'Requisição',
-      sla: '48h',
-      situacao: 'Encerrado',
-      prioridade: 'Média',
-      setor: 'Operações',
-      descricao: 'Nova funcionalidade implementada conforme solicitado'
-    },
-    {
-      id: 'TK-010',
-      solicitante: 'Carla Mendes',
-      data: '2024-12-10',
-      tipo: 'Melhoria',
-      sla: '72h',
-      situacao: 'Encerrado',
-      prioridade: 'Alta',
-      setor: 'Desenvolvimento',
-      descricao: 'Melhoria na performance do sistema aplicada'
-    }
-  ];
 
   useEffect(() => {
-    // Simular carregamento de dados
     const loadTickets = async () => {
       setLoading(true);
       try {
-        // Aqui seria feita a chamada para a API
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setTickets(mockTickets);
+        const response = await ticketsAPI.getAll();
+        // O backend retorna { success: true, data: { gestao: [...], conteudos: [...] } }
+        const allTickets = [
+          ...(response.data?.gestao || []),
+          ...(response.data?.conteudos || [])
+        ];
+        setTickets(allTickets);
         setError(null);
       } catch (err) {
+        console.error('Erro ao carregar tickets:', err);
         setError('Erro ao carregar tickets');
       } finally {
         setLoading(false);
@@ -184,28 +76,34 @@ const ChamadosInternosPage = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Novo':
-        // ESSENCIAL - Azul Médio → Azul Claro
+      case 'novo':
+        // Novo = Azul Opaco (#006AB9)
         return {
-          background: 'linear-gradient(135deg, var(--blue-medium) 0%, var(--blue-medium) 60%, var(--blue-light) 100%)',
+          background: 'var(--blue-opaque)',
           color: 'white'
         };
-      case 'Em Andamento':
-        // ATUALIZAÇÃO - Azul Escuro → Amarelo
+      case 'aberto':
+        // Aberto = Vermelho sólido básico
         return {
-          background: 'linear-gradient(135deg, var(--blue-dark) 0%, var(--blue-dark) 60%, var(--yellow) 100%)',
+          background: '#FF0000',
           color: 'white'
         };
-      case 'Aberto':
-        // RECICLAGEM - Amarelo → Azul Médio
+      case 'em espera':
+        // Em espera = Amarelo (#FCC200)
         return {
-          background: 'linear-gradient(135deg, var(--yellow) 0%, var(--yellow) 60%, var(--blue-medium) 100%)',
+          background: 'var(--yellow)',
           color: 'white'
         };
-      case 'Encerrado':
-        // Cinza sólido com 50% de opacidade
+      case 'pendente':
+        // Pendente = Verde (#15A237)
         return {
-          background: 'rgba(128, 128, 128, 0.5)',
+          background: 'var(--green)',
+          color: 'white'
+        };
+      case 'resolvido':
+        // Resolvido = Cinza claro
+        return {
+          background: 'rgba(128, 128, 128, 0.3)',
           color: 'white'
         };
       default:
@@ -231,22 +129,152 @@ const ChamadosInternosPage = () => {
     }
   };
 
-  // Separar tickets ativos e encerrados
-  const activeTickets = tickets.filter(ticket => ticket.situacao !== 'Encerrado');
-  const closedTickets = tickets.filter(ticket => ticket.situacao === 'Encerrado');
+  // Função para calcular SLA (48h a partir da data de criação)
+  const calculateSLA = (createdAt) => {
+    if (!createdAt) return 'N/A';
+
+    const createdDate = new Date(createdAt);
+    const now = new Date();
+    const diffMs = now - createdDate;
+    const diffHours = diffMs / (1000 * 60 * 60);
+    const remainingHours = 48 - diffHours;
+
+    if (remainingHours <= 0) {
+      return 'VENCIDO';
+    } else if (remainingHours <= 24) {
+      return `${Math.ceil(remainingHours)}h`;
+    } else {
+      return `${Math.ceil(remainingHours / 24)}d`;
+    }
+  };
+
+  // Função para mapear _genero do ticket para a chave de _userTickets
+  const mapGeneroToTicketType = (genero) => {
+    if (!genero) return null;
+    
+    const generoLower = genero.toLowerCase();
+    
+    // Mapeamento para tk_conteudos
+    const conteudosMap = {
+      'artigo': 'artigos',
+      'processo': 'processos',
+      'roteiro': 'roteiros',
+      'treinamento': 'treinamentos',
+      'funcionalidade': 'funcionalidades',
+      'recurso adicional': 'recursos',
+      'recurso': 'recursos'
+    };
+    
+    // Mapeamento para tk_gestao
+    const gestaoMap = {
+      'gestão': 'gestao',
+      'gestao': 'gestao',
+      'rh e financeiro': 'rhFin',
+      'rh & financeiro': 'rhFin',
+      'facilities': 'facilities'
+    };
+    
+    // Verificar primeiro em conteudos, depois em gestao
+    if (conteudosMap[generoLower]) {
+      return conteudosMap[generoLower];
+    }
+    if (gestaoMap[generoLower]) {
+      return gestaoMap[generoLower];
+    }
+    
+    return null;
+  };
+
+  // Função para verificar se o usuário pode visualizar um ticket
+  const canViewTicket = (ticket) => {
+    if (!ticket || !ticket._genero) return true; // Se não tem gênero, permitir visualização
+    
+    const ticketType = mapGeneroToTicketType(ticket._genero);
+    if (!ticketType) return true; // Se não conseguiu mapear, permitir visualização
+    
+    return canViewTicketType(ticketType);
+  };
+
+  // Separar tickets ativos e encerrados (com filtro de permissão)
+  const activeTickets = tickets
+    .filter(ticket => canViewTicket(ticket))
+    .filter(ticket => (ticket._statusHub || ticket._statusConsole) !== 'resolvido');
+  const closedTickets = tickets
+    .filter(ticket => canViewTicket(ticket))
+    .filter(ticket => (ticket._statusHub || ticket._statusConsole) === 'resolvido');
   
-  const filteredActiveTickets = filterStatus === 'all' 
-    ? activeTickets 
-    : activeTickets.filter(ticket => ticket.situacao === filterStatus);
+  const filteredActiveTickets = filterStatus === 'all'
+    ? activeTickets
+    : activeTickets.filter(ticket => (ticket._statusHub || ticket._statusConsole) === filterStatus);
 
   const handleViewTicket = (ticket) => {
     setSelectedTicket(ticket);
     setOpenDialog(true);
   };
 
+  const handleTicketUpdate = async () => {
+    // Recarregar tickets após atualização
+    setLoading(true);
+    try {
+      const response = await ticketsAPI.getAll();
+      const allTickets = [
+        ...(response.data?.gestao || []),
+        ...(response.data?.conteudos || [])
+      ];
+      setTickets(allTickets);
+      setError(null);
+    } catch (err) {
+      console.error('Erro ao recarregar tickets:', err);
+      setError('Erro ao recarregar tickets');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedTicket(null);
+  };
+
+  const handleAssumeTicket = async (ticket) => {
+    try {
+      const endpoint = ticket._id.startsWith('TKC-') ? 'conteudo' : 'gestao';
+      const updateData = {
+        _atribuido: user._userId || user.email || user._userMail,
+        _statusHub: 'aberto',
+        _statusConsole: 'aberto',
+        _lastUpdatedBy: 'admin'
+      };
+
+      if (endpoint === 'conteudo') {
+        await ticketsAPI.updateConteudo(ticket._id, updateData);
+      } else {
+        await ticketsAPI.updateGestao(ticket._id, updateData);
+      }
+
+      // Reload tickets to reflect changes
+      const loadTickets = async () => {
+        setLoading(true);
+        try {
+          const response = await ticketsAPI.getAll();
+          const allTickets = [
+            ...(response.data?.gestao || []),
+            ...(response.data?.conteudos || [])
+          ];
+          setTickets(allTickets);
+          setError(null);
+        } catch (err) {
+          console.error('Erro ao carregar tickets:', err);
+          setError('Erro ao carregar tickets');
+        } finally {
+          setLoading(false);
+        }
+      };
+      await loadTickets();
+    } catch (error) {
+      console.error('Erro ao assumir ticket:', error);
+      setError('Erro ao assumir ticket');
+    }
   };
 
   if (loading) {
@@ -271,30 +299,20 @@ const ChamadosInternosPage = () => {
   }
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 8, pb: 4 }}>
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 8, pb: 4, fontSize: '0.8em' }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', mb: 4 }}>
         <Box sx={{ position: 'absolute', left: 0 }}>
           <BackButton />
         </Box>
-        <Typography 
-          variant="h4" 
-          component="h1"
-          sx={{ 
-            fontFamily: 'Poppins',
-            fontWeight: 700,
-            color: 'var(--blue-dark)'
-          }}
-        >
-          Chamados Internos
-        </Typography>
+        {/* Removido o título Chamados Internos */}
       </Box>
 
       {/* Dashboard de Tickets */}
       <Card sx={{ mb: 4 }}>
-        <CardContent>
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
+        <CardContent sx={{ fontSize: '0.8em' }}>
+          <Box sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
             alignItems: 'center',
             mb: 3
           }}>
@@ -318,34 +336,38 @@ const ChamadosInternosPage = () => {
                   onChange={(e) => setFilterStatus(e.target.value)}
                 >
                   <MenuItem value="all">Todos</MenuItem>
-                  <MenuItem value="Novo">Novo</MenuItem>
-                  <MenuItem value="Em Andamento">Em Andamento</MenuItem>
-                  <MenuItem value="Aberto">Aberto</MenuItem>
+                  <MenuItem value="novo">Novo</MenuItem>
+                  <MenuItem value="aberto">Aberto</MenuItem>
+                  <MenuItem value="em espera">Em Espera</MenuItem>
+                  <MenuItem value="pendente">Pendente</MenuItem>
                 </Select>
               </FormControl>
               
-              <Button
-                variant="outlined"
-                startIcon={<Add />}
-                sx={{ 
-                  fontFamily: 'Poppins',
-                  borderColor: 'var(--blue-medium)',
-                  color: 'var(--blue-medium)',
-                  '&:hover': {
-                    borderColor: 'var(--blue-dark)',
-                    backgroundColor: 'var(--blue-medium)',
-                    color: 'white'
-                  }
-                }}
-              >
-                Novo Ticket
-              </Button>
               
               <Button
                 variant="outlined"
                 startIcon={<Refresh />}
-                onClick={() => window.location.reload()}
-                sx={{ 
+                onClick={() => {
+                  const loadTickets = async () => {
+                    setLoading(true);
+                    try {
+                      const response = await ticketsAPI.getAll();
+                      const allTickets = [
+                        ...(response.data?.gestao || []),
+                        ...(response.data?.conteudos || [])
+                      ];
+                      setTickets(allTickets);
+                      setError(null);
+                    } catch (err) {
+                      console.error('Erro ao carregar tickets:', err);
+                      setError('Erro ao carregar tickets');
+                    } finally {
+                      setLoading(false);
+                    }
+                  };
+                  loadTickets();
+                }}
+                sx={{
                   fontFamily: 'Poppins',
                   borderColor: 'var(--blue-medium)',
                   color: 'var(--blue-medium)',
@@ -365,95 +387,115 @@ const ChamadosInternosPage = () => {
             <Table>
               <TableHead>
                 <TableRow sx={{ backgroundColor: 'var(--cor-container)' }}>
-                  <TableCell sx={{ 
+                  <TableCell sx={{
                     fontFamily: 'Poppins',
                     fontWeight: 600,
-                    color: 'var(--blue-dark)'
+                    color: 'var(--blue-dark)',
+                    textAlign: 'left'
                   }}>
                     ID
                   </TableCell>
-                  <TableCell sx={{ 
+                  <TableCell sx={{
                     fontFamily: 'Poppins',
                     fontWeight: 600,
-                    color: 'var(--blue-dark)'
+                    color: 'var(--blue-dark)',
+                    textAlign: 'left'
                   }}>
                     Solicitante
                   </TableCell>
-                  <TableCell sx={{ 
+                  <TableCell sx={{
                     fontFamily: 'Poppins',
                     fontWeight: 600,
-                    color: 'var(--blue-dark)'
+                    color: 'var(--blue-dark)',
+                    textAlign: 'left'
                   }}>
                     Data
                   </TableCell>
-                  <TableCell sx={{ 
+                  <TableCell sx={{
                     fontFamily: 'Poppins',
                     fontWeight: 600,
-                    color: 'var(--blue-dark)'
+                    color: 'var(--blue-dark)',
+                    textAlign: 'left'
                   }}>
                     Tipo
                   </TableCell>
-                  <TableCell sx={{ 
+                  <TableCell sx={{
                     fontFamily: 'Poppins',
                     fontWeight: 600,
-                    color: 'var(--blue-dark)'
+                    color: 'var(--blue-dark)',
+                    textAlign: 'left'
+                  }}>
+                    Assunto
+                  </TableCell>
+                  <TableCell sx={{
+                    fontFamily: 'Poppins',
+                    fontWeight: 600,
+                    color: 'var(--blue-dark)',
+                    textAlign: 'center'
                   }}>
                     SLA
                   </TableCell>
-                  <TableCell sx={{ 
+                  <TableCell sx={{
                     fontFamily: 'Poppins',
                     fontWeight: 600,
-                    color: 'var(--blue-dark)'
+                    color: 'var(--blue-dark)',
+                    textAlign: 'center'
                   }}>
                     Situação
                   </TableCell>
-                  <TableCell sx={{ 
+                  <TableCell sx={{
                     fontFamily: 'Poppins',
                     fontWeight: 600,
-                    color: 'var(--blue-dark)'
+                    color: 'var(--blue-dark)',
+                    textAlign: 'center'
                   }}>
-                    Ações
+                    Responsável
                   </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {filteredActiveTickets.map((ticket) => (
-                  <TableRow 
-                    key={ticket.id}
+                  <TableRow
+                    key={ticket._id}
                     hover
-                    sx={{ 
+                    onClick={() => handleViewTicket(ticket)}
+                    sx={{
+                      cursor: 'pointer',
                       '&:hover': {
                         backgroundColor: 'var(--cor-container)'
                       }
                     }}
                   >
-                    <TableCell sx={{ fontFamily: 'Poppins' }}>
-                      {ticket.id}
+                    <TableCell sx={{ fontFamily: 'Poppins', textAlign: 'left' }}>
+                      {ticket._id}
                     </TableCell>
-                    <TableCell sx={{ fontFamily: 'Poppins' }}>
-                      {ticket.solicitante}
+                    <TableCell sx={{ fontFamily: 'Poppins', textAlign: 'left' }}>
+                      {ticket._corpo && ticket._corpo.length > 0 ? ticket._corpo[0].userName : 'Não informado'}
                     </TableCell>
-                    <TableCell sx={{ fontFamily: 'Poppins' }}>
-                      {new Date(ticket.data).toLocaleDateString('pt-BR')}
+                    <TableCell sx={{ fontFamily: 'Poppins', textAlign: 'left' }}>
+                      {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString('pt-BR') : 'Não informado'}
                     </TableCell>
-                    <TableCell sx={{ fontFamily: 'Poppins' }}>
-                      {ticket.tipo}
+                    <TableCell sx={{ fontFamily: 'Poppins', textAlign: 'left' }}>
+                      {ticket._tipo || 'Não informado'}
                     </TableCell>
-                    <TableCell sx={{ fontFamily: 'Poppins' }}>
-                      <Chip 
-                        label={ticket.sla || 'Não definido'}
+                    <TableCell sx={{ fontFamily: 'Poppins', textAlign: 'left' }}>
+                      {ticket._assunto || ticket._direcionamento || 'Não informado'}
+                    </TableCell>
+                    <TableCell sx={{ fontFamily: 'Poppins', textAlign: 'center' }}>
+                      <Chip
+                        label={calculateSLA(ticket.createdAt)}
                         size="small"
                         color="info"
                         variant="outlined"
                       />
                     </TableCell>
-                    <TableCell>
-                      <Chip 
-                        label={ticket.situacao || 'Não definida'}
+                    <TableCell sx={{ textAlign: 'center' }}>
+                      <Chip
+                        label={ticket._statusConsole || ticket._statusHub || 'Não definida'}
                         size="small"
                         sx={{
-                          background: getStatusColor(ticket.situacao).background,
-                          color: getStatusColor(ticket.situacao).color,
+                          background: getStatusColor(ticket._statusConsole || ticket._statusHub).background,
+                          color: getStatusColor(ticket._statusConsole || ticket._statusHub).color,
                           fontFamily: 'Poppins',
                           fontWeight: 500,
                           border: 'none'
@@ -461,35 +503,88 @@ const ChamadosInternosPage = () => {
                       />
                     </TableCell>
                     <TableCell>
-                      <Tooltip title="Visualizar">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleViewTicket(ticket)}
-                          sx={{ 
-                            color: 'var(--blue-medium)',
-                            '&:hover': {
-                              backgroundColor: 'var(--blue-medium)',
-                              color: 'white'
-                            }
-                          }}
-                        >
-                          <Visibility />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Editar">
-                        <IconButton
-                          size="small"
-                          sx={{ 
-                            color: 'var(--blue-medium)',
-                            '&:hover': {
-                              backgroundColor: 'var(--blue-medium)',
-                              color: 'white'
-                            }
-                          }}
-                        >
-                          <Edit />
-                        </IconButton>
-                      </Tooltip>
+                      {(() => {
+                        if (ticket._atribuido) {
+                          // Show assigned agent's avatar and name
+                          return (
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px',
+                                padding: '8px 12px',
+                                backgroundColor: 'white',
+                                borderRadius: '16px',
+                                border: '1px solid #e0e0e0',
+                                transition: 'all 0.3s ease',
+                                cursor: 'default'
+                              }}
+                            >
+                              <Box
+                                component="img"
+                                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(ticket._atribuido)}&background=1634FF&color=fff&size=32&bold=true`}
+                                alt="Avatar"
+                                sx={{
+                                  width: '32px',
+                                  height: '32px',
+                                  borderRadius: '50%',
+                                  objectFit: 'cover'
+                                }}
+                              />
+                              <Typography
+                                sx={{
+                                  color: 'var(--cor-texto)',
+                                  fontWeight: 500,
+                                  fontSize: '0.9rem',
+                                  fontFamily: 'Poppins',
+                                  maxWidth: '120px',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap'
+                                }}
+                              >
+                                {ticket._atribuido}
+                              </Typography>
+                            </Box>
+                          );
+                        }
+
+                        // Show "Assumir" button if not assigned
+                        return (
+                          <Box
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent row click
+                              handleAssumeTicket(ticket);
+                            }}
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              padding: '8px 12px',
+                              backgroundColor: 'white',
+                              borderRadius: '16px',
+                              border: '1px solid #e0e0e0',
+                              transition: 'all 0.3s ease',
+                              cursor: 'pointer',
+                              '&:hover': {
+                                backgroundColor: '#f5f5f5',
+                                border: '1px solid #d0d0d0'
+                              }
+                            }}
+                          >
+                            <Typography
+                              sx={{
+                                color: 'var(--cor-texto)',
+                                fontWeight: 500,
+                                fontSize: '0.9rem',
+                                fontFamily: 'Poppins'
+                              }}
+                            >
+                              Assumir
+                            </Typography>
+                          </Box>
+                        );
+                      })()}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -501,12 +596,12 @@ const ChamadosInternosPage = () => {
 
       {/* Container de Tickets Encerrados */}
       <Card sx={{ mb: 4 }}>
-        <CardContent>
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center', 
-            mb: 3 
+        <CardContent sx={{ fontSize: '0.8em' }}>
+          <Box sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mb: 3
           }}>
             <Typography 
               variant="h6" 
@@ -524,95 +619,115 @@ const ChamadosInternosPage = () => {
             <Table>
               <TableHead>
                 <TableRow sx={{ backgroundColor: 'var(--cor-container)' }}>
-                  <TableCell sx={{ 
+                  <TableCell sx={{
                     fontFamily: 'Poppins',
                     fontWeight: 600,
-                    color: 'var(--blue-dark)'
+                    color: 'var(--blue-dark)',
+                    textAlign: 'left'
                   }}>
                     ID
                   </TableCell>
-                  <TableCell sx={{ 
+                  <TableCell sx={{
                     fontFamily: 'Poppins',
                     fontWeight: 600,
-                    color: 'var(--blue-dark)'
+                    color: 'var(--blue-dark)',
+                    textAlign: 'left'
                   }}>
                     Solicitante
                   </TableCell>
-                  <TableCell sx={{ 
+                  <TableCell sx={{
                     fontFamily: 'Poppins',
                     fontWeight: 600,
-                    color: 'var(--blue-dark)'
+                    color: 'var(--blue-dark)',
+                    textAlign: 'left'
                   }}>
                     Data
                   </TableCell>
-                  <TableCell sx={{ 
+                  <TableCell sx={{
                     fontFamily: 'Poppins',
                     fontWeight: 600,
-                    color: 'var(--blue-dark)'
+                    color: 'var(--blue-dark)',
+                    textAlign: 'left'
                   }}>
                     Tipo
                   </TableCell>
-                  <TableCell sx={{ 
+                  <TableCell sx={{
                     fontFamily: 'Poppins',
                     fontWeight: 600,
-                    color: 'var(--blue-dark)'
+                    color: 'var(--blue-dark)',
+                    textAlign: 'left'
+                  }}>
+                    Assunto
+                  </TableCell>
+                  <TableCell sx={{
+                    fontFamily: 'Poppins',
+                    fontWeight: 600,
+                    color: 'var(--blue-dark)',
+                    textAlign: 'center'
                   }}>
                     SLA
                   </TableCell>
-                  <TableCell sx={{ 
+                  <TableCell sx={{
                     fontFamily: 'Poppins',
                     fontWeight: 600,
-                    color: 'var(--blue-dark)'
+                    color: 'var(--blue-dark)',
+                    textAlign: 'center'
                   }}>
                     Situação
                   </TableCell>
-                  <TableCell sx={{ 
+                  <TableCell sx={{
                     fontFamily: 'Poppins',
                     fontWeight: 600,
-                    color: 'var(--blue-dark)'
+                    color: 'var(--blue-dark)',
+                    textAlign: 'center'
                   }}>
-                    Ações
+                    Responsável
                   </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {closedTickets.map((ticket) => (
-                  <TableRow 
-                    key={ticket.id}
+                  <TableRow
+                    key={ticket._id}
                     hover
-                    sx={{ 
+                    onClick={() => handleViewTicket(ticket)}
+                    sx={{
+                      cursor: 'pointer',
                       '&:hover': {
                         backgroundColor: 'var(--cor-container)'
                       }
                     }}
                   >
                     <TableCell sx={{ fontFamily: 'Poppins' }}>
-                      {ticket.id}
+                      {ticket._id}
                     </TableCell>
                     <TableCell sx={{ fontFamily: 'Poppins' }}>
-                      {ticket.solicitante}
+                      {ticket._userEmail || 'Não informado'}
                     </TableCell>
                     <TableCell sx={{ fontFamily: 'Poppins' }}>
-                      {new Date(ticket.data).toLocaleDateString('pt-BR')}
+                      {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString('pt-BR') : 'Não informado'}
                     </TableCell>
                     <TableCell sx={{ fontFamily: 'Poppins' }}>
-                      {ticket.tipo}
+                      {ticket._tipo || 'Não informado'}
                     </TableCell>
                     <TableCell sx={{ fontFamily: 'Poppins' }}>
-                      <Chip 
-                        label={ticket.sla || 'Não definido'}
+                      {ticket._assunto || ticket._direcionamento || 'Não informado'}
+                    </TableCell>
+                    <TableCell sx={{ fontFamily: 'Poppins' }}>
+                      <Chip
+                        label={calculateSLA(ticket.createdAt)}
                         size="small"
                         color="info"
                         variant="outlined"
                       />
                     </TableCell>
                     <TableCell>
-                      <Chip 
-                        label={ticket.situacao || 'Não definida'}
+                      <Chip
+                        label={ticket._statusHub || ticket._statusConsole || 'Não definida'}
                         size="small"
                         sx={{
-                          background: getStatusColor(ticket.situacao).background,
-                          color: getStatusColor(ticket.situacao).color,
+                          background: getStatusColor(ticket._statusHub || ticket._statusConsole).background,
+                          color: getStatusColor(ticket._statusConsole || ticket._statusHub).color,
                           fontFamily: 'Poppins',
                           fontWeight: 500,
                           border: 'none'
@@ -620,21 +735,22 @@ const ChamadosInternosPage = () => {
                       />
                     </TableCell>
                     <TableCell>
-                      <Tooltip title="Visualizar">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleViewTicket(ticket)}
-                          sx={{ 
-                            color: 'var(--blue-medium)',
-                            '&:hover': {
-                              backgroundColor: 'var(--blue-medium)',
-                              color: 'white'
-                            }
-                          }}
-                        >
-                          <Visibility />
-                        </IconButton>
-                      </Tooltip>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        disabled
+                        sx={{
+                          fontFamily: 'Poppins',
+                          fontSize: '0.75rem',
+                          padding: '4px 12px',
+                          borderRadius: '8px',
+                          borderColor: 'var(--gray)',
+                          color: 'var(--gray)',
+                          opacity: 0.6
+                        }}
+                      >
+                        Resolvido
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -644,103 +760,190 @@ const ChamadosInternosPage = () => {
         </CardContent>
       </Card>
 
-      {/* Dialog para visualizar ticket */}
-      <Dialog 
-        open={openDialog} 
-        onClose={handleCloseDialog}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle sx={{ 
-          fontFamily: 'Poppins',
-          fontWeight: 600,
-          color: 'var(--blue-dark)'
-        }}>
-          Detalhes do Ticket - {selectedTicket?.id}
-        </DialogTitle>
-        <DialogContent>
-          {selectedTicket && (
-            <Box sx={{ mt: 2 }}>
-              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 3 }}>
-                <Box>
-                  <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>
-                    Solicitante:
-                  </Typography>
-                  <Typography sx={{ fontFamily: 'Poppins' }}>
-                    {selectedTicket.solicitante}
-                  </Typography>
+      {/* Modal condicional baseado na atribuição */}
+      {selectedTicket && (
+        (() => {
+          const currentUserId = user._userId || user.email || user._userMail;
+          const isAssignedToCurrentUser = selectedTicket._atribuido && selectedTicket._atribuido === currentUserId;
+
+          return isAssignedToCurrentUser ? (
+            <ModalAtribuido
+              ticket={selectedTicket}
+              open={openDialog}
+              onClose={handleCloseDialog}
+              onUpdate={handleTicketUpdate}
+            />
+          ) : (
+            <Dialog
+              open={openDialog}
+              onClose={handleCloseDialog}
+              maxWidth="sm"
+              fullWidth={false}
+              PaperProps={{
+                sx: {
+                  fontSize: '0.8em',
+                  minWidth: 340,
+                  maxWidth: 540
+                }
+              }}
+            >
+              <DialogTitle sx={{
+                fontFamily: 'Poppins',
+                fontWeight: 600,
+                color: 'var(--blue-dark)'
+              }}>
+                {selectedTicket._genero === 'conteudos' ?
+                  `${selectedTicket._id} - ${selectedTicket._tipo} - ${selectedTicket._assunto}` :
+                  `${selectedTicket._id} - ${selectedTicket._tipo} - ${selectedTicket._direcionamento}`
+                }
+              </DialogTitle>
+              <DialogContent>
+                <Box sx={{ mt: 2 }}>
+                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 3 }}>
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>
+                        Solicitante:
+                      </Typography>
+                      <Typography sx={{ fontFamily: 'Poppins' }}>
+                        {selectedTicket._corpo && selectedTicket._corpo.length > 0 ? selectedTicket._corpo[0].userName : 'Não informado'}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>
+                        Email:
+                      </Typography>
+                      <Typography sx={{ fontFamily: 'Poppins' }}>
+                        {selectedTicket._userEmail || 'Não informado'}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>
+                        Data:
+                      </Typography>
+                      <Typography sx={{ fontFamily: 'Poppins' }}>
+                        {selectedTicket.createdAt ? new Date(selectedTicket.createdAt).toLocaleDateString('pt-BR') : 'Não informado'}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>
+                        SLA:
+                      </Typography>
+                      <Typography sx={{ fontFamily: 'Poppins' }}>
+                        {calculateSLA(selectedTicket.createdAt)}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>
+                        {selectedTicket._genero === 'conteudos' ? 'Assunto/Direcionamento:' : 'Direcionamento:'}
+                      </Typography>
+                      <Typography sx={{ fontFamily: 'Poppins' }}>
+                        {selectedTicket._genero === 'conteudos' ? (selectedTicket._assunto || selectedTicket._direcionamento || 'Não informado') : (selectedTicket._direcionamento || 'Não informado')}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>
+                        Atribuído:
+                      </Typography>
+                      <Typography sx={{ fontFamily: 'Poppins' }}>
+                        {selectedTicket._atribuido || 'Não atribuído'}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>
+                        Processo em Andamento:
+                      </Typography>
+                      <Typography sx={{ fontFamily: 'Poppins' }}>
+                        {selectedTicket._processamento || 'Não informado'}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>
+                        Status:
+                      </Typography>
+                      <Chip
+                        label={selectedTicket._statusConsole || selectedTicket._statusHub || 'Não definida'}
+                        size="small"
+                        sx={{
+                          background: getStatusColor(selectedTicket._statusConsole || selectedTicket._statusHub).background,
+                          color: getStatusColor(selectedTicket._statusConsole || selectedTicket._statusHub).color,
+                          fontFamily: 'Poppins',
+                          fontWeight: 500,
+                          border: 'none'
+                        }}
+                        variant="filled"
+                      />
+                    </Box>
+                  </Box>
+
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, mb: 1 }}>
+                      Ocorrência:
+                    </Typography>
+                    <Typography sx={{ fontFamily: 'Poppins', mb: 2 }}>
+                      {selectedTicket._obs || 'Não informado'}
+                    </Typography>
+                  </Box>
+
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, mb: 1 }}>
+                      Corpo da Mensagem:
+                    </Typography>
+                    {selectedTicket._corpo && selectedTicket._corpo.length > 0 ? (
+                      selectedTicket._corpo.map((mensagem, index) => (
+                        <Box key={index} sx={{ mb: 1, p: 1.5, backgroundColor: 'var(--cor-container)', borderRadius: 1, borderBottom: index < selectedTicket._corpo.length - 1 ? '1px solid rgba(0, 0, 0, 0.1)' : 'none' }}>
+                          <Typography
+                            variant="h6"
+                            sx={{
+                              fontFamily: 'Poppins',
+                              fontWeight: 600,
+                              color: mensagem.autor === 'admin' ? 'var(--blue-dark)' : 'var(--blue-medium)',
+                              fontSize: '1rem'
+                            }}
+                          >
+                            {mensagem.userName} <span style={{ fontStyle: 'italic', color: 'black', fontSize: '0.75rem', fontWeight: 300 }}>{new Date(mensagem.timestamp).toLocaleDateString('pt-BR')}, {new Date(mensagem.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                          </Typography>
+                          <Typography sx={{ fontFamily: 'Poppins', mt: 0.5 }}>
+                            {mensagem.mensagem}
+                          </Typography>
+                        </Box>
+                      ))
+                    ) : (
+                      <Typography sx={{ fontFamily: 'Poppins' }}>
+                        Não há mensagens no ticket
+                      </Typography>
+                    )}
+                  </Box>
                 </Box>
-                <Box>
-                  <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>
-                    Data:
-                  </Typography>
-                  <Typography sx={{ fontFamily: 'Poppins' }}>
-                    {new Date(selectedTicket.data).toLocaleDateString('pt-BR')}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>
-                    Tipo:
-                  </Typography>
-                  <Typography sx={{ fontFamily: 'Poppins' }}>
-                    {selectedTicket.tipo}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>
-                    Setor:
-                  </Typography>
-                  <Typography sx={{ fontFamily: 'Poppins' }}>
-                    {selectedTicket.setor}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>
-                    Prioridade:
-                  </Typography>
-                  <Chip 
-                    label={selectedTicket.prioridade || 'Não definida'}
-                    size="small"
-                    color={getPriorityColor(selectedTicket.prioridade)}
-                    variant="filled"
-                  />
-                </Box>
-                <Box>
-                  <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>
-                    Situação:
-                  </Typography>
-                  <Chip 
-                    label={selectedTicket.situacao || 'Não definida'}
-                    size="small"
-                    color={getStatusColor(selectedTicket.situacao)}
-                    variant="filled"
-                  />
-                </Box>
-              </Box>
-              
-              <Box>
-                <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, mb: 1 }}>
-                  Descrição:
-                </Typography>
-                <Typography sx={{ fontFamily: 'Poppins' }}>
-                  {selectedTicket.descricao}
-                </Typography>
-              </Box>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button 
-            onClick={handleCloseDialog}
-            sx={{ 
-              fontFamily: 'Poppins',
-              color: 'var(--blue-medium)'
-            }}
-          >
-            Fechar
-          </Button>
-        </DialogActions>
-      </Dialog>
+              </DialogContent>
+              <DialogActions>
+                <Button
+                  onClick={() => handleAssumeTicket(selectedTicket)}
+                  variant="contained"
+                  sx={{
+                    fontFamily: 'Poppins',
+                    backgroundColor: 'var(--blue-medium)',
+                    '&:hover': {
+                      backgroundColor: 'var(--blue-dark)'
+                    },
+                    mr: 1
+                  }}
+                >
+                  Assumir Ticket
+                </Button>
+                <Button
+                  onClick={handleCloseDialog}
+                  sx={{
+                    fontFamily: 'Poppins',
+                    color: 'var(--blue-medium)'
+                  }}
+                >
+                  Fechar
+                </Button>
+              </DialogActions>
+            </Dialog>
+          );
+        })()
+      )}
     </Container>
   );
 };
