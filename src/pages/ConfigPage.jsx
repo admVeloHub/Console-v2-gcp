@@ -1,4 +1,4 @@
-// VERSION: v3.9.1 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// VERSION: v3.9.2 | DATE: 2025-11-13 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -415,33 +415,51 @@ const ConfigPage = () => {
 
   const handleSaveUser = async () => {
     try {
+      // Validação de campos obrigatórios
+      if (!formData.email || !formData.email.trim()) {
+        showSnackbar('❌ Email é obrigatório', 'error');
+        return;
+      }
+      
+      if (!formData.nome || !formData.nome.trim()) {
+        showSnackbar('❌ Nome é obrigatório', 'error');
+        return;
+      }
+      
+      if (!formData.funcao || !formData.funcao.trim()) {
+        showSnackbar('❌ Função é obrigatória', 'error');
+        return;
+      }
+      
       let updateData = null;
       
       if (editingUser) {
         // Editar usuário existente - incluir permissões se estiver na etapa 2
         updateData = modalStep === 2 ? {
-          _userMail: formData.email,
-          _userId: formData.nome,
-          _userRole: formData.funcao,
-          _userClearance: permissionsData.permissoes,
-          _userTickets: permissionsData.tiposTickets,
-          _funcoesAdministrativas: permissionsData.funcoesAdministrativas
+          _userMail: formData.email.trim(),
+          _userId: formData.nome.trim(),
+          _userRole: formData.funcao.trim(),
+          _userClearance: permissionsData.permissoes || {},
+          _userTickets: permissionsData.tiposTickets || {},
+          _funcoesAdministrativas: permissionsData.funcoesAdministrativas || {}
         } : {
-          _userMail: formData.email,
-          _userId: formData.nome,
-          _userRole: formData.funcao
+          _userMail: formData.email.trim(),
+          _userId: formData.nome.trim(),
+          _userRole: formData.funcao.trim()
         };
         await updateAuthorizedUser(editingUser._userMail, updateData);
       } else {
         // Adicionar novo usuário
         const newUser = {
-          _userMail: formData.email,
-          _userId: formData.nome,
-          _userRole: formData.funcao,
-          _userClearance: permissionsData.permissoes,
-          _userTickets: permissionsData.tiposTickets,
-          _funcoesAdministrativas: permissionsData.funcoesAdministrativas
+          _userMail: formData.email.trim(),
+          _userId: formData.nome.trim(),
+          _userRole: formData.funcao.trim(),
+          _userClearance: permissionsData.permissoes || {},
+          _userTickets: permissionsData.tiposTickets || {},
+          _funcoesAdministrativas: permissionsData.funcoesAdministrativas || {}
         };
+        
+        console.log('📤 Criando novo usuário com dados:', newUser);
         await addAuthorizedUser(newUser);
       }
       

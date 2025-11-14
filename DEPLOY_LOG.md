@@ -1,5 +1,41 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.35.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.36.0 | DATE: 2025-11-13 | AUTHOR: VeloHub Development Team -->
+
+## Push GitHub - Atualizações Gerais do Projeto - 2025-11-13 17:50
+
+### Informações do Push
+- **Tipo:** Push GitHub
+- **Data/Hora:** 2025-11-13 17:50 BRT
+- **Versão:** v1.36.0
+- **Status:** Concluído
+- **Commit:** dda06fa
+
+### Arquivos Modificados
+- **42 arquivos modificados** (9527 inserções, 2345 deleções)
+- Arquivos de configuração: `craco.config.js`, `eslint.config.mjs`, `webpack.config.js`
+- Componentes: `ModalAtribuido.jsx`, `BackButton.jsx`, `Header.jsx`, `DashboardCard.jsx`
+- Páginas: Múltiplas páginas atualizadas (Artigos, Bot Análises, Bot Perguntas, Capacity, Chamados Internos, Config, Dashboard, Funcionários, Hub Análises, IGP, Qualidade, Serviços, Velonews, Academy)
+- Serviços: `api.js`, `qualidadeAPI.js`, `academyAPI.js`, `ticketsAPI.js`
+- Estilos: `globals.css`, `theme.js`, estilos VeloInsights
+- Contextos: `AuthContext.jsx`
+- Documentação: Arquivos de documentação e guidelines
+
+### Descrição
+Push contendo atualizações gerais do projeto incluindo:
+- Novos componentes e funcionalidades
+- Atualizações de páginas existentes
+- Melhorias em serviços e APIs
+- Ajustes de estilos e temas
+- Configurações de build e linting
+- Documentação atualizada
+
+### Impacto
+- ✅ Múltiplas funcionalidades atualizadas
+- ✅ Melhorias de performance e organização
+- ✅ Novos componentes adicionados
+- ✅ Configurações de build otimizadas
+
+---
 
 ## Push GitHub - Correção de Problemas nos Novos Critérios de Avaliação - 2024-12-19 23:55
 

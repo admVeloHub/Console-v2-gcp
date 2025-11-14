@@ -1,4 +1,4 @@
-// VERSION: v1.2.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.2.3 | DATE: 2025-11-13 | AUTHOR: VeloHub Development Team
 import { usersAPI } from './api';
 
 // Cache local para melhor performance
@@ -163,7 +163,28 @@ const mapToMongoSchema = (userData) => {
 // Função para adicionar novo usuário autorizado
 export const addAuthorizedUser = async (userData) => {
   try {
-    const mongoData = mapToMongoSchema(userData);
+    // Se os dados já estão no formato MongoDB (vêm do ConfigPage), usar diretamente
+    // Se não, mapear do formato frontend para MongoDB
+    let mongoData;
+    
+    if (userData._userMail && userData._userId) {
+      // Já está no formato MongoDB - usar diretamente
+      mongoData = userData;
+    } else if (userData.email && userData.nome) {
+      // Está no formato frontend - mapear para MongoDB
+      mongoData = mapToMongoSchema(userData);
+    } else {
+      // Tentar mapear mesmo assim (fallback)
+      mongoData = mapToMongoSchema(userData);
+    }
+    
+    console.log('📤 Dados para criação de usuário:', mongoData);
+    
+    // Validar campos obrigatórios antes de enviar
+    if (!mongoData._userMail || !mongoData._userId || !mongoData._userRole) {
+      throw new Error('Email, UserId e UserRole são obrigatórios');
+    }
+    
     const newUser = await usersAPI.create(mongoData);
     clearCache(); // Limpar cache após adicionar usuário
     return newUser; // Retorna dados diretamente do MongoDB
