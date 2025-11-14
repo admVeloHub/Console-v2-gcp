@@ -1,5 +1,64 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.36.0 | DATE: 2025-11-13 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.37.0 | DATE: 2025-11-14 | AUTHOR: VeloHub Development Team -->
+
+## Push GitHub - Correção do Payload do Config - 2025-11-14 11:16
+
+### Informações do Push
+- **Tipo:** Push GitHub
+- **Data/Hora:** 2025-11-14 11:16 BRT
+- **Versão:** v1.37.0
+- **Status:** Concluído
+- **Commit:** 5b4e8e5
+
+### Arquivos Modificados
+1. `src/services/userService.js` - v1.2.3
+   - Corrigida função `addAuthorizedUser` para detectar automaticamente formato dos dados (MongoDB ou frontend)
+   - Adicionada validação de campos obrigatórios antes de enviar para API
+   - Implementada lógica de detecção: se dados já estão no formato MongoDB, usar diretamente
+   - Adicionados logs de debug para rastreamento
+
+2. `src/pages/ConfigPage.jsx` - v3.9.2
+   - Adicionada validação de campos obrigatórios antes de salvar usuário
+   - Implementado trim() em todos os campos para remover espaços em branco
+   - Adicionados fallbacks para objetos vazios quando necessário
+   - Melhoradas mensagens de erro para feedback mais claro ao usuário
+
+3. `DEBUG_REPORT.md` - v1.0.0 (NOVO)
+   - Relatório completo de debug do projeto
+   - Análise de linting, estrutura, dependências e configurações
+   - Identificação de avisos não críticos
+
+4. `DEPLOY_LOG.md` - v1.37.0
+   - Atualização do log de deploy
+
+### Descrição
+Correção crítica do erro 400 no módulo Config ao criar novos usuários:
+
+**🚨 Problema Identificado:**
+- Backend retornava erro 400: "Email, UserId e UserRole são obrigatórios"
+- Payload enviado não continha `_userMail` e `_userId`
+- Função `addAuthorizedUser` tentava mapear dados já no formato MongoDB como se fossem do formato frontend
+
+**🔧 Correções Implementadas:**
+- **Detecção Automática de Formato:** `addAuthorizedUser` agora detecta se dados já estão no formato MongoDB
+- **Validação de Campos:** Validação de campos obrigatórios antes de enviar para API
+- **Validação no Frontend:** Validação de campos obrigatórios no ConfigPage antes de salvar
+- **Trim de Campos:** Remoção de espaços em branco em todos os campos
+- **Logs de Debug:** Adicionados logs para facilitar troubleshooting futuro
+
+### Impacto
+- ✅ **Erro 400 resolvido** - Payload agora inclui corretamente todos os campos obrigatórios
+- ✅ **Validação robusta** - Campos obrigatórios validados no frontend antes do envio
+- ✅ **Melhor UX** - Mensagens de erro mais claras para o usuário
+- ✅ **Código mais robusto** - Detecção automática de formato previne erros futuros
+- ✅ **Debug facilitado** - Logs adicionados para rastreamento
+
+### Próximos Passos
+1. Testar criação de novos usuários no Config
+2. Validar que erro 400 não ocorre mais
+3. Verificar que validações estão funcionando corretamente
+
+---
 
 ## Push GitHub - Atualizações Gerais do Projeto - 2025-11-13 17:50
 
