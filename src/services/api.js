@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 // Configuração base da API
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://back-console.vercel.app/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

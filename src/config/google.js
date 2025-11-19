@@ -11,7 +11,16 @@
 //    - https://seu-dominio.com (produção)
 
 // Client ID do Google OAuth - VeloHub Console
-export const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '278491073220-eb4ogvn3aifu0ut9mq3rvu5r9r9l3137.apps.googleusercontent.com';
+// VERSION: v3.5.5 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// Removido fallback hardcoded - deve ser configurado via variável de ambiente no Firebase Hosting
+
+const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+
+if (!GOOGLE_CLIENT_ID) {
+  console.warn('⚠️ REACT_APP_GOOGLE_CLIENT_ID não configurada. Google OAuth não funcionará.');
+}
+
+export { GOOGLE_CLIENT_ID };
 
 // Domínios autorizados para login
 export const AUTHORIZED_EMAILS = [

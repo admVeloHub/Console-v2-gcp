@@ -104,20 +104,27 @@ cp env.local.example .env
 ```
 
 ### **Variáveis de Ambiente**
+
+#### **Desenvolvimento Local**
 ```bash
 # API Backend (configurado automaticamente)
-REACT_APP_API_URL=https://back-console.vercel.app/api
+REACT_APP_API_URL=https://backend-gcp-278491073220.us-east1.run.app/api
 
 # Modo de desenvolvimento (configurado automaticamente)
 REACT_APP_DEV_MODE=true
 
-# Google OAuth (opcional - descomente se necessário)
+# Google OAuth (opcional - para desenvolvimento local)
 # REACT_APP_GOOGLE_CLIENT_ID=seu_google_client_id_aqui
 ```
 
 **Nota:** O arquivo `.env` é criado automaticamente com as configurações corretas para desenvolvimento local usando a API de produção.
 
-**Nota:** Para produção, configure as variáveis de ambiente diretamente no Vercel (Settings → Environment Variables).
+#### **Produção (Firebase Hosting)**
+Para produção, configure as variáveis de ambiente no Firebase Hosting:
+- `REACT_APP_API_URL` - URL do backend Cloud Run
+- `REACT_APP_GOOGLE_CLIENT_ID` - Client ID do Google OAuth
+
+**Importante:** Variáveis sensíveis (MongoDB URI, JWT Secret, API Keys) são gerenciadas via Secret Manager do GCP no backend Cloud Run.
 
 ## 📁 **Estrutura do Projeto**
 ```

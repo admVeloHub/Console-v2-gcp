@@ -13,7 +13,7 @@ O arquivo `.env` será criado com as seguintes configurações:
 
 ```bash
 # URL da API Backend (Produção)
-REACT_APP_API_URL=https://back-console.vercel.app/api
+REACT_APP_API_URL=https://backend-gcp-278491073220.us-east1.run.app/api
 
 # Modo de Desenvolvimento
 REACT_APP_DEV_MODE=true
@@ -36,38 +36,44 @@ npm start
 ### **Frontend (React)**
 - **REACT_APP_API_URL**: URL da API backend
 - **REACT_APP_DEV_MODE**: Ativar logs de debug
-- **REACT_APP_GOOGLE_CLIENT_ID**: Para login com Google (opcional)
+- **REACT_APP_GOOGLE_CLIENT_ID**: Para login com Google (opcional - para desenvolvimento local)
 
 ### **Backend (se rodando localmente)**
 - **PORT**: Porta do servidor (padrão: 3001)
 - **NODE_ENV**: Ambiente (development/production)
-- **MONGODB_URI**: String de conexão MongoDB
 - **CORS_ORIGIN**: Origem permitida para CORS
+
+**Nota:** Variáveis sensíveis (MongoDB URI, JWT Secret, API Keys) são gerenciadas via Secret Manager do GCP no backend Cloud Run.
 
 ## 🌐 URLs de Acesso
 
 ### **Desenvolvimento Local**
 - **Frontend**: http://localhost:3000
-- **API**: https://back-console.vercel.app/api (produção)
+- **API**: https://backend-gcp-278491073220.us-east1.run.app/api (produção)
 
 ### **Produção**
-- **Frontend**: https://front-console.vercel.app
-- **API**: https://back-console.vercel.app/api
+- **Frontend**: Firebase Hosting (configurar variáveis de ambiente no Firebase Console)
+- **API**: https://backend-gcp-278491073220.us-east1.run.app/api
+
+**Variáveis de Ambiente em Produção:**
+- Configure `REACT_APP_API_URL` e `REACT_APP_GOOGLE_CLIENT_ID` no Firebase Hosting
+- Secrets do backend são gerenciados via Secret Manager do GCP
 
 ## ⚙️ Configurações Específicas
 
 ### **Para usar API de Produção (Recomendado)**
 ```bash
-REACT_APP_API_URL=https://back-console.vercel.app/api
+REACT_APP_API_URL=https://backend-gcp-278491073220.us-east1.run.app/api
 REACT_APP_DEV_MODE=true
 ```
 
 ### **Para usar Backend Local**
 ```bash
 REACT_APP_API_URL=http://localhost:3001/api
-MONGODB_URI=mongodb+srv://REDACTED_ATLAS_URI
 CORS_ORIGIN=http://localhost:3000
 ```
+
+**Nota:** MongoDB URI e outras variáveis sensíveis devem ser configuradas no backend local separadamente.
 
 ## 🔒 Segurança
 
@@ -75,6 +81,8 @@ CORS_ORIGIN=http://localhost:3000
 - ✅ Variáveis sensíveis não serão commitadas
 - ✅ Template disponível em `env.local.example`
 - ✅ Configurações de produção separadas
+- ✅ Variáveis sensíveis gerenciadas via Secret Manager do GCP (backend)
+- ✅ Variáveis públicas configuradas no Firebase Hosting (frontend)
 
 ## 🐛 Debug e Troubleshooting
 
@@ -100,8 +108,19 @@ console.log('Dev Mode:', process.env.REACT_APP_DEV_MODE);
 4. **Acesse** http://localhost:3000
 5. **Teste** a aba "Localizar Notícias" do VeloNews
 
+## 🌐 Configuração no Firebase Hosting (Produção)
+
+Para produção, configure as variáveis de ambiente no Firebase Hosting:
+
+1. Acesse Firebase Console → Hosting → Settings
+2. Configure as seguintes variáveis:
+   - `REACT_APP_API_URL` = `https://backend-gcp-278491073220.us-east1.run.app/api`
+   - `REACT_APP_GOOGLE_CLIENT_ID` = [Seu Client ID do Google OAuth]
+
+**Nota:** Se o Firebase Hosting não suportar variáveis de ambiente diretamente, use o arquivo `.env.production` durante o build.
+
 ---
 
-**Versão:** 1.0.0  
+**Versão:** 2.0.0  
 **Data:** 2024-12-19  
 **Autor:** VeloHub Development Team
