@@ -1,5 +1,120 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.37.0 | DATE: 2025-11-14 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.38.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+
+## Push GitHub - Migração para Cloud Run e Remoção de Variáveis Sensíveis - 2024-12-19
+
+### Informações do Push
+- **Tipo:** Push GitHub
+- **Data/Hora:** 2024-12-19
+- **Versão:** v1.38.0
+- **Status:** Concluído
+- **Commit:** b5f2707
+- **Repositório:** https://github.com/admVeloHub/Console-GCP
+
+### Arquivos Modificados
+
+#### Código Frontend
+1. `src/config/google.js` (v3.5.5)
+   - Removido fallback hardcoded do Google Client ID
+   - Adicionada validação e warning se variável não estiver configurada
+   - Agora usa apenas `process.env.REACT_APP_GOOGLE_CLIENT_ID`
+
+2. `src/services/gptService.js` (v2.0.0)
+   - Removida chamada direta à API OpenAI do frontend
+   - Removido uso de localStorage para API Key
+   - Mantido apenas fallback para compatibilidade
+   - Adicionados warnings sobre uso deprecado
+
+3. `src/services/api.js` (atualizado)
+   - URL atualizada para Cloud Run: `https://backend-gcp-278491073220.us-east1.run.app/api`
+
+4. `src/services/academyAPI.js` (atualizado)
+   - URL atualizada para Cloud Run
+
+5. `src/services/botAnalisesService.js` (atualizado)
+   - URL atualizada para Cloud Run
+
+6. `src/services/qualidadeAPI.js` (atualizado)
+   - URL atualizada para Cloud Run
+
+7. `src/services/qualidadeAudioService.js` (atualizado)
+   - URL atualizada para Cloud Run
+
+8. `src/services/userPingService.js` (atualizado)
+   - URL atualizada para Cloud Run
+
+9. `src/pages/FuncionariosPage.jsx` (atualizado)
+   - URL atualizada para Cloud Run
+
+#### Configuração
+10. `env.local.example` (v2.0.0)
+    - Removidas referências a variáveis sensíveis
+    - Adicionadas notas sobre Firebase Hosting e Secret Manager
+
+11. `env.example` (v4.0.0)
+    - Removidas variáveis sensíveis (MongoDB URI, JWT Secret, API Key)
+    - Adicionada seção sobre Secret Manager
+
+12. `setup-env.bat` (v2.0.0)
+    - Adicionadas notas sobre Firebase Hosting e Secret Manager
+
+13. `setup-env.sh` (v2.0.0)
+    - Adicionadas notas sobre Firebase Hosting e Secret Manager
+
+#### Documentação
+14. `README.md` (atualizado)
+    - Adicionada seção sobre Firebase Hosting
+    - Removidas referências a variáveis sensíveis
+
+15. `setup-local-env.md` (v2.0.0)
+    - Adicionadas instruções sobre Firebase Hosting
+    - Removidas referências a MongoDB URI
+
+#### Novos Arquivos
+16. `.firebaserc` (NOVO)
+    - Configuração do Firebase Hosting
+
+17. `firebase.json` (NOVO)
+    - Configuração do Firebase Hosting
+
+18. `.github/workflows/firebase-hosting-merge.yml` (NOVO)
+    - Workflow GitHub Actions para deploy no Firebase Hosting (merge)
+
+19. `.github/workflows/firebase-hosting-pull-request.yml` (NOVO)
+    - Workflow GitHub Actions para preview no Firebase Hosting (PR)
+
+20. `public/404.html` (NOVO)
+    - Página 404 personalizada
+
+### Arquivos Removidos
+- Múltiplos arquivos de documentação antiga removidos (CHECKLIST_IMPLEMENTACAO_QUALIDADE.md, COLLECTIONS_DOCS.md, etc.)
+
+### Descrição
+Migração completa do projeto para arquitetura segura com Cloud Run e Firebase Hosting:
+
+**🔒 Segurança:**
+- Removidas todas as variáveis sensíveis hardcoded do código frontend
+- Google Client ID agora configurado apenas via variável de ambiente (Firebase Hosting)
+- Removida chamada direta à API OpenAI do frontend (análise via Worker)
+- Variáveis sensíveis gerenciadas via Secret Manager do GCP
+
+**🌐 Infraestrutura:**
+- Todas as URLs de API atualizadas para Cloud Run backend
+- Configuração Firebase Hosting adicionada
+- Workflows GitHub Actions configurados para CI/CD
+
+**📚 Documentação:**
+- Documentação atualizada com informações sobre Firebase Hosting
+- Instruções sobre Secret Manager adicionadas
+- Arquivos de exemplo limpos de variáveis sensíveis
+
+### Impacto
+- ✅ **Segurança melhorada** - Nenhuma variável sensível exposta no código frontend
+- ✅ **Arquitetura atualizada** - Migração completa para Cloud Run e Firebase Hosting
+- ✅ **CI/CD configurado** - Workflows GitHub Actions prontos para deploy automático
+- ✅ **Documentação atualizada** - Instruções claras sobre nova arquitetura
+
+---
 
 ## Push GitHub - Correção do Payload do Config - 2025-11-14 11:16
 
