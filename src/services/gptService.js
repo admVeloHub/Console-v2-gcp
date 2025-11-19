@@ -1,14 +1,10 @@
-// VERSION: v1.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v2.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// REFATORADO: Removida chamada direta à API OpenAI do frontend
+// A análise GPT agora acontece via Worker (GCS → Pub/Sub → Worker → OpenAI)
+// Este serviço mantém apenas fallback para compatibilidade
 
 // Configurações da API
 const API_CONFIG = {
-  OPENAI: {
-    BASE_URL: 'https://api.openai.com/v1',
-    MODEL: 'gpt-4o-mini',
-    MAX_TOKENS: 4000,
-    TEMPERATURE: 0.3,
-    TIMEOUT: 30000
-  },
   FALLBACK: {
     ENABLED: true,
     SIMULATION_DELAY: 2000
@@ -71,127 +67,41 @@ class GPTService {
   }
 
   initialize() {
-    this.apiKey = this.getApiKey();
-    this.isConfigured = !!this.apiKey;
-    
-    if (!this.isConfigured) {
-      console.warn('GPT Service: API key não configurada. Usando modo fallback.');
-    }
+    // Análise GPT agora acontece via Worker
+    // Este serviço mantém apenas fallback para compatibilidade
+    this.isConfigured = false;
+    console.warn('GPT Service: Análise GPT deve ser feita via Worker. Use uploadAudioParaAnalise() do qualidadeAudioService.js');
   }
 
-  // Obter API key do localStorage
-  getApiKey() {
-    return localStorage.getItem('openai_api_key');
-  }
-
-  // Obter headers para requisições
-  getHeaders() {
-    return {
-      'Authorization': `Bearer ${this.apiKey}`,
-      'Content-Type': 'application/json'
-    };
-  }
-
-  // Configurar API key manualmente
-  configure(apiKey) {
-    this.apiKey = apiKey;
-    this.isConfigured = !!apiKey;
-    
-    if (apiKey) {
-      localStorage.setItem('openai_api_key', apiKey);
-    } else {
-      localStorage.removeItem('openai_api_key');
-    }
-  }
+  // REMOVIDO: getApiKey, getHeaders, configure
+  // API Key não deve mais ser armazenada no frontend
+  // A análise GPT acontece via Worker usando Secret Manager
 
   // Verificar se está configurado
   getConfigurationStatus() {
     return {
-      configured: this.isConfigured,
-      hasApiKey: !!this.apiKey,
-      model: API_CONFIG.OPENAI.MODEL,
-      fallbackEnabled: API_CONFIG.FALLBACK.ENABLED
+      configured: false,
+      hasApiKey: false,
+      model: 'N/A - Análise via Worker',
+      fallbackEnabled: API_CONFIG.FALLBACK.ENABLED,
+      message: 'Análise GPT deve ser feita via Worker usando uploadAudioParaAnalise()'
     };
   }
 
-  // Analisar ligação com GPT real
+  // Analisar ligação - REMOVIDA chamada direta à OpenAI
+  // A análise GPT agora acontece via Worker (GCS → Pub/Sub → Worker → OpenAI)
+  // Este método mantém apenas fallback para compatibilidade
   async analyzeCall(avaliacao) {
-    if (!this.isConfigured) {
-      console.warn('GPT Service: Usando análise simulada (API não configurada)');
-      return this.fallbackAnalysis(avaliacao);
-    }
-
-    try {
-      const response = await this.callOpenAIAPI(avaliacao);
-      return response;
-    } catch (error) {
-      console.error('GPT Service: Erro na API OpenAI, usando fallback:', error);
-      return this.fallbackAnalysis(avaliacao);
-    }
+    console.warn('GPT Service: Chamada direta à OpenAI removida por segurança.');
+    console.warn('GPT Service: Use uploadAudioParaAnalise() do qualidadeAudioService.js para análise via Worker.');
+    console.warn('GPT Service: Usando análise simulada (fallback).');
+    
+    return this.fallbackAnalysis(avaliacao);
   }
 
-  // Chamada real para a API OpenAI
-  async callOpenAIAPI(avaliacao) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.OPENAI.TIMEOUT);
-
-    try {
-      const prompt = this.buildPrompt(avaliacao);
-      
-      const response = await fetch(`${API_CONFIG.OPENAI.BASE_URL}/chat/completions`, {
-        method: 'POST',
-        headers: this.getHeaders(),
-        body: JSON.stringify({
-          model: API_CONFIG.OPENAI.MODEL,
-          messages: [
-            {
-              role: 'system',
-              content: GPT_PROMPTS.ANALISE_LIGACAO
-            },
-            {
-              role: 'user',
-              content: prompt
-            }
-          ],
-          max_tokens: API_CONFIG.OPENAI.MAX_TOKENS,
-          temperature: API_CONFIG.OPENAI.TEMPERATURE,
-          response_format: { type: 'json_object' }
-        }),
-        signal: controller.signal
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      
-      if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-        throw new Error('Resposta inválida da API OpenAI');
-      }
-
-      const content = data.choices[0].message.content;
-      
-      try {
-        const parsedResponse = JSON.parse(content);
-        return this.validateAndTransformResponse(parsedResponse);
-      } catch (parseError) {
-        console.error('GPT Service: Erro ao fazer parse da resposta JSON:', parseError);
-        throw new Error('Resposta da API não está em formato JSON válido');
-      }
-
-    } catch (error) {
-      clearTimeout(timeoutId);
-      
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('Timeout na requisição para API OpenAI');
-      }
-      
-      throw error;
-    }
-  }
+  // REMOVIDO: callOpenAIAPI
+  // Chamadas diretas à API OpenAI não devem acontecer do frontend
+  // Use o fluxo: Frontend → Backend → GCS → Pub/Sub → Worker → OpenAI
 
   // Construir prompt personalizado para a avaliação
   buildPrompt(avaliacao) {
@@ -427,43 +337,12 @@ ${palavrasCriticas.map(palavra => `• **${palavra}** - Requer atenção imediat
 *Relatório gerado em modo fallback - Configure a API OpenAI para análises mais precisas*`;
   }
 
-  // Testar conexão com a API
+  // Testar conexão - REMOVIDA chamada direta à API
   async testConnection() {
-    if (!this.isConfigured) {
-      return {
-        success: false,
-        message: 'API não configurada. Configure uma chave de API válida.'
-      };
-    }
-
-    try {
-      const response = await fetch(`${API_CONFIG.OPENAI.BASE_URL}/models`, {
-        method: 'GET',
-        headers: this.getHeaders()
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        return {
-          success: true,
-          message: 'Conexão com API OpenAI estabelecida com sucesso!',
-          details: {
-            availableModels: data.data?.length || 0,
-            configuredModel: API_CONFIG.OPENAI.MODEL
-          }
-        };
-      } else {
-        return {
-          success: false,
-          message: `Erro na API: ${response.status} ${response.statusText}`
-        };
-      }
-    } catch (error) {
-      return {
-        success: false,
-        message: `Erro de conexão: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
-      };
-    }
+    return {
+      success: false,
+      message: 'Chamadas diretas à API OpenAI foram removidas por segurança. Use uploadAudioParaAnalise() do qualidadeAudioService.js para análise via Worker.'
+    };
   }
 
   // Obter estatísticas de uso (simulado)
@@ -480,8 +359,15 @@ ${palavrasCriticas.map(palavra => `• **${palavra}** - Requer atenção imediat
 export const gptService = new GPTService();
 
 // Funções de conveniência
-export const analyzeCallWithGPT = (avaliacao) => gptService.analyzeCall(avaliacao);
-export const configureGPT = (apiKey) => gptService.configure(apiKey);
+// DEPRECATED: analyzeCallWithGPT - Use uploadAudioParaAnalise() do qualidadeAudioService.js
+export const analyzeCallWithGPT = (avaliacao) => {
+  console.warn('DEPRECATED: analyzeCallWithGPT está deprecado. Use uploadAudioParaAnalise() do qualidadeAudioService.js');
+  return gptService.analyzeCall(avaliacao);
+};
+// REMOVIDO: configureGPT - API Key não deve ser configurada no frontend
+export const configureGPT = () => {
+  console.warn('DEPRECATED: configureGPT foi removido. API Key é gerenciada via Secret Manager no Worker.');
+};
 export const getGPTStatus = () => gptService.getConfigurationStatus();
 export const testGPTConnection = () => gptService.testConnection();
 export const getGPTStats = () => gptService.getUsageStats();

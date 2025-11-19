@@ -704,7 +704,7 @@ export const getAvaliacoesPorColaborador = async (colaboradorNome) => {
 
 // Configuração do axios para API GPT
 const gptAPI = axios.create({
-  baseURL: 'https://back-console.vercel.app/api/qualidade',
+  baseURL: 'https://backend-gcp-278491073220.us-east1.run.app/api/qualidade',
   headers: {
     'Content-Type': 'application/json'
   },

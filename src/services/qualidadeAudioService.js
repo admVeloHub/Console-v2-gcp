@@ -7,7 +7,7 @@
  * AUTHOR: VeloHub Development Team
  */
 
-const API_URL = 'https://back-console.vercel.app';
+const API_URL = 'https://backend-gcp-278491073220.us-east1.run.app';
 
 /**
  * Upload de áudio para análise GPT

@@ -1,5 +1,5 @@
 @echo off
-REM VERSION: v1.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+REM VERSION: v2.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 REM Script de Setup para Desenvolvimento Local - Console de Conteúdo VeloHub
 
 echo 🚀 Configurando ambiente de desenvolvimento local...
@@ -23,9 +23,14 @@ if exist ".env" (
     echo ✅ Arquivo .env criado com sucesso!
     echo.
     echo 📝 Configurações aplicadas:
-    echo    - API URL: https://back-console.vercel.app/api
+    echo    - API URL: https://backend-gcp-278491073220.us-east1.run.app/api
     echo    - Dev Mode: true
     echo    - CORS: http://localhost:3000
+    echo.
+    echo 📌 IMPORTANTE:
+    echo    - Variáveis sensíveis são gerenciadas via Firebase Hosting (produção)
+    echo    - Secrets do backend são gerenciados via Secret Manager do GCP
+    echo    - Para desenvolvimento local, configure REACT_APP_GOOGLE_CLIENT_ID no .env se necessário
     echo.
     echo 🔧 Para personalizar, edite o arquivo .env
     echo.
