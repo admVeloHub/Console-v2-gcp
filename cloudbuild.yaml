@@ -1,6 +1,9 @@
 # cloudbuild.yaml
 # Configuração para Cloud Build com Cloud Run
-# VERSION: v1.2.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+# VERSION: v1.3.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+#
+# IMPORTANTE: REACT_APP_GOOGLE_CLIENT_ID deve ser passada como build arg durante o build do Docker
+# Esta variável é incorporada no código JavaScript durante o build e não pode ser alterada em runtime
 
 substitutions:
   _GOOGLE_CLIENT_ID: '278491073220-eb4ogvn3aifu0ut9mq3rvu5r9r9l3137.apps.googleusercontent.com'
@@ -8,6 +11,7 @@ substitutions:
 
 steps:
   # Build da imagem Docker
+  # REACT_APP_GOOGLE_CLIENT_ID é passada como build arg e incorporada no build do React
   - name: 'gcr.io/cloud-builders/docker'
     args: 
       - 'build'
