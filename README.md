@@ -93,10 +93,11 @@ O projeto está configurado para deploy automático no Cloud Run via GitHub Acti
 
 **Configuradas automaticamente:**
 - `NODE_ENV=production`
-- `REACT_APP_API_URL=https://backend-gcp-278491073220.us-east1.run.app/api`
+- `REACT_APP_API_URL=https://backend-gcp-278491073220.us-east1.run.app/api` (durante o build)
 
-**Configurar manualmente após primeiro deploy:**
-- `REACT_APP_GOOGLE_CLIENT_ID` - Client ID do Google OAuth
+**Variáveis do Container (mapeadas para REACT_APP_* durante o build):**
+- `google-client-id` → `REACT_APP_GOOGLE_CLIENT_ID` (Client ID do Google OAuth)
+- `authorized-domain` → `REACT_APP_AUTHORIZED_DOMAIN` (Domínio autorizado para login)
 
 **Instruções detalhadas:** Veja `CLOUD_RUN_SETUP.md`
 

@@ -60,24 +60,34 @@ Frontend React → Docker Container → Cloud Run → Internet
 
 ## 🔐 Variáveis de Ambiente
 
-### **Variáveis Configuradas Automaticamente**
-- `NODE_ENV=production`
-- `REACT_APP_API_URL=https://backend-gcp-278491073220.us-east1.run.app/api`
+### **Variáveis Configuradas Durante o Build**
 
-### **Variáveis que DEVEM ser Configuradas Manualmente**
+As variáveis `REACT_APP_*` são incorporadas no build do React e **devem** estar disponíveis durante o build:
 
-Após o primeiro deploy, configure no Cloud Run Console:
+**Variáveis do Container Cloud Run (mapeadas para REACT_APP_*):**
+- `google-client-id` → `REACT_APP_GOOGLE_CLIENT_ID` (durante o build)
+- `authorized-domain` → `REACT_APP_AUTHORIZED_DOMAIN` (durante o build)
 
-1. Acesse: Google Cloud Console → Cloud Run → `frontend-console` → Edit & Deploy New Revision
-2. Em "Variables & Secrets", adicione:
-   - **REACT_APP_GOOGLE_CLIENT_ID** = `278491073220-eb4ogvn3aifu0ut9mq3rvu5r9r9l3137.apps.googleusercontent.com`
+**No cloudbuild.yaml:**
+- Usa substituições `${_GOOGLE_CLIENT_ID}` e `${_AUTHORIZED_DOMAIN}`
+- Passadas como `--build-arg google-client-id` e `--build-arg authorized-domain`
+- Variáveis também expostas no container Cloud Run para referência
+
+**No GitHub Actions:**
+- Secrets: `GOOGLE_CLIENT_ID` e `AUTHORIZED_DOMAIN`
+- Passadas como `--build-arg google-client-id` e `--build-arg authorized-domain`
+- Variáveis também expostas no container Cloud Run para referência
+
+**Importante:** 
+- Variáveis `REACT_APP_*` não podem ser alteradas após o build. Elas são compiladas no JavaScript durante `npm run build`.
+- As variáveis `google-client-id` e `authorized-domain` são expostas no container Cloud Run, mas são usadas apenas durante o build.
 
 ### **Configuração via gcloud CLI**
 
 ```bash
 gcloud run services update frontend-console \
   --region us-east1 \
-  --update-env-vars REACT_APP_GOOGLE_CLIENT_ID=278491073220-eb4ogvn3aifu0ut9mq3rvu5r9r9l3137.apps.googleusercontent.com \
+  --update-env-vars google-client-id=278491073220-eb4ogvn3aifu0ut9mq3rvu5r9r9l3137.apps.googleusercontent.com,authorized-domain=velotax.com.br \
   --project console-365e8
 ```
 
@@ -135,7 +145,8 @@ gcloud run services logs read frontend-console \
 ## ✅ Checklist de Deploy
 
 - [ ] Cloud Build Trigger configurado OU GitHub Actions configurado
-- [ ] Secret `REACT_APP_GOOGLE_CLIENT_ID` configurado no GitHub (se usar GitHub Actions)
+- [ ] Secrets `GOOGLE_CLIENT_ID` e `AUTHORIZED_DOMAIN` configurados no GitHub (se usar GitHub Actions)
+- [ ] Variáveis `google-client-id` e `authorized-domain` configuradas no Cloud Run (se usar Cloud Build)
 - [ ] Primeiro deploy realizado
 - [ ] Health check funcionando (`/health`)
 - [ ] Aplicação React carregando corretamente
