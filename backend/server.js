@@ -2,7 +2,7 @@
  * backend/server.js
  * Servidor Express para servir aplicação React no Cloud Run
  * 
- * VERSION: v1.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+ * VERSION: v1.1.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
  */
 
 const express = require('express');
@@ -16,6 +16,7 @@ const PORT = process.env.PORT || 8080;
 app.use(helmet({
   contentSecurityPolicy: false, // Desabilitar CSP para React Router funcionar
   crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }, // Permite popup do Google OAuth funcionar corretamente
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
