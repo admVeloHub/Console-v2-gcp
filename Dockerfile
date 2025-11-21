@@ -17,14 +17,14 @@ COPY . .
 
 # Build args para variáveis do container Cloud Run
 # Estas variáveis serão mapeadas para REACT_APP_* durante o build
-ARG google-client-id
-ARG authorized-domain
+ARG GOOGLE_CLIENT_ID
+ARG AUTHORIZED_DOMAIN
 ARG REACT_APP_API_URL=https://backend-gcp-278491073220.us-east1.run.app/api
 
 # Mapear variáveis do container para variáveis REACT_APP_* do React
 ENV REACT_APP_API_URL=$REACT_APP_API_URL
-ENV REACT_APP_GOOGLE_CLIENT_ID=${google-client-id}
-ENV REACT_APP_AUTHORIZED_DOMAIN=${authorized-domain}
+ENV REACT_APP_GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID
+ENV REACT_APP_AUTHORIZED_DOMAIN=$AUTHORIZED_DOMAIN
 
 # Build da aplicação React
 RUN npm run build

@@ -43,8 +43,8 @@ jobs:
           AUTHORIZED_DOMAIN: ${{ secrets.AUTHORIZED_DOMAIN }}
         run: |
           docker build \
-            --build-arg google-client-id=$GOOGLE_CLIENT_ID \
-            --build-arg authorized-domain=$AUTHORIZED_DOMAIN \
+            --build-arg GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID \
+            --build-arg AUTHORIZED_DOMAIN=$AUTHORIZED_DOMAIN \
             --build-arg REACT_APP_API_URL=https://backend-gcp-278491073220.us-east1.run.app/api \
             -t gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA .
           docker push gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA
@@ -52,9 +52,6 @@ jobs:
           docker push gcr.io/$PROJECT_ID/$SERVICE_NAME:latest
 
       - name: Deploy to Cloud Run
-        env:
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          AUTHORIZED_DOMAIN: ${{ secrets.AUTHORIZED_DOMAIN }}
         run: |
           gcloud run deploy $SERVICE_NAME \
             --image gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA \
@@ -67,7 +64,7 @@ jobs:
             --min-instances 0 \
             --max-instances 10 \
             --timeout 300 \
-            --set-env-vars NODE_ENV=production,google-client-id=$GOOGLE_CLIENT_ID,authorized-domain=$AUTHORIZED_DOMAIN \
+            --set-env-vars NODE_ENV=production \
             --project $PROJECT_ID
 
       - name: Get Cloud Run URL
