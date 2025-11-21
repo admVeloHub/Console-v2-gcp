@@ -11,14 +11,14 @@
 //    - https://seu-dominio.com (produção)
 
 // Client ID do Google OAuth - VeloHub Console
-// VERSION: v3.5.7 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
-// Removido fallback hardcoded - deve ser configurado via variável de ambiente no Cloud Run
+// VERSION: v3.5.8 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// Fallback hardcoded como precaução - prioriza variável de ambiente se disponível
 
-const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '278491073220-eb4ogvn3aifu0ut9mq3rvu5r9r9l3137.apps.googleusercontent.com';
 
-if (!GOOGLE_CLIENT_ID) {
-  console.warn('⚠️ REACT_APP_GOOGLE_CLIENT_ID não configurada. Google OAuth não funcionará.');
-  console.warn('Configure REACT_APP_GOOGLE_CLIENT_ID como build arg durante o build do Docker.');
+if (!process.env.REACT_APP_GOOGLE_CLIENT_ID) {
+  console.warn('⚠️ REACT_APP_GOOGLE_CLIENT_ID não configurada. Usando Client ID hardcoded como fallback.');
+  console.warn('Configure REACT_APP_GOOGLE_CLIENT_ID como build arg durante o build do Docker para produção.');
 }
 
 export { GOOGLE_CLIENT_ID };

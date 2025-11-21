@@ -1,4 +1,4 @@
-// VERSION: v3.5.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.5.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState } from 'react';
 import {
   Box,
@@ -10,7 +10,7 @@ import {
   Alert
 } from '@mui/material';
 import { Google } from '@mui/icons-material';
-import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
+import { GoogleLogin } from '@react-oauth/google';
 import consoleLogo from '../assets/console.png';
 import { AUTHORIZED_EMAILS, GOOGLE_CLIENT_ID } from '../config/google';
 import { useAuth } from '../contexts/AuthContext';
@@ -128,19 +128,17 @@ const LoginPage = () => {
               </Box>
             ) : (
               <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-                  <GoogleLogin
-                    onSuccess={handleGoogleSuccess}
-                    onError={handleGoogleError}
-                    theme="outline"
-                    size="large"
-                    text="signin_with"
-                    shape="rectangular"
-                    logo_alignment="left"
-                    width="280"
-                    useOneTap={false}
-                  />
-                </GoogleOAuthProvider>
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleError}
+                  theme="outline"
+                  size="large"
+                  text="signin_with"
+                  shape="rectangular"
+                  logo_alignment="left"
+                  width="280"
+                  useOneTap={false}
+                />
               </Box>
             )}
           </Box>

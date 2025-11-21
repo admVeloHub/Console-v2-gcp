@@ -64,32 +64,27 @@ Frontend React → Docker Container → Cloud Run → Internet
 
 As variáveis `REACT_APP_*` são incorporadas no build do React e **devem** estar disponíveis durante o build:
 
-**Variáveis do Container Cloud Run (mapeadas para REACT_APP_*):**
-- `google-client-id` → `REACT_APP_GOOGLE_CLIENT_ID` (durante o build)
-- `authorized-domain` → `REACT_APP_AUTHORIZED_DOMAIN` (durante o build)
+**Variáveis REACT_APP_* passadas diretamente como build args:**
+- `REACT_APP_GOOGLE_CLIENT_ID` - Client ID do Google OAuth (obrigatório)
+- `REACT_APP_AUTHORIZED_DOMAIN` - Domínio autorizado para login
 
 **No cloudbuild.yaml:**
 - Usa substituições `${_GOOGLE_CLIENT_ID}` e `${_AUTHORIZED_DOMAIN}`
-- Passadas como `--build-arg google-client-id` e `--build-arg authorized-domain`
-- Variáveis também expostas no container Cloud Run para referência
+- Passadas como `--build-arg REACT_APP_GOOGLE_CLIENT_ID` e `--build-arg REACT_APP_AUTHORIZED_DOMAIN`
+- Variáveis são incorporadas no código JavaScript durante o build
 
 **No GitHub Actions:**
-- Secrets: `GOOGLE_CLIENT_ID` e `AUTHORIZED_DOMAIN`
-- Passadas como `--build-arg google-client-id` e `--build-arg authorized-domain`
-- Variáveis também expostas no container Cloud Run para referência
+- Secrets: `REACT_APP_GOOGLE_CLIENT_ID` e `REACT_APP_AUTHORIZED_DOMAIN`
+- Passadas como `--build-arg REACT_APP_GOOGLE_CLIENT_ID` e `--build-arg REACT_APP_AUTHORIZED_DOMAIN`
+- Variáveis são incorporadas no código JavaScript durante o build
 
 **Importante:** 
 - Variáveis `REACT_APP_*` não podem ser alteradas após o build. Elas são compiladas no JavaScript durante `npm run build`.
-- As variáveis `google-client-id` e `authorized-domain` são expostas no container Cloud Run, mas são usadas apenas durante o build.
+- Se `REACT_APP_GOOGLE_CLIENT_ID` não estiver configurada durante o build, a aplicação mostrará um erro claro e não funcionará.
 
 ### **Configuração via gcloud CLI**
 
-```bash
-gcloud run services update frontend-console \
-  --region us-east1 \
-  --update-env-vars google-client-id=278491073220-eb4ogvn3aifu0ut9mq3rvu5r9r9l3137.apps.googleusercontent.com,authorized-domain=velotax.com.br \
-  --project console-365e8
-```
+**Nota:** As variáveis `REACT_APP_GOOGLE_CLIENT_ID` e `REACT_APP_AUTHORIZED_DOMAIN` devem ser passadas durante o build do Docker, não como variáveis de ambiente do container Cloud Run. Use o `cloudbuild.yaml` ou GitHub Actions para configurá-las.
 
 ## 🚀 Deploy
 
@@ -140,17 +135,21 @@ gcloud run services logs read frontend-console \
 ## 🔗 URLs
 
 - **Backend API:** `https://backend-gcp-278491073220.us-east1.run.app/api`
-- **Frontend:** Será gerada após o primeiro deploy (formato: `https://frontend-console-[HASH]-us-east1.run.app`)
+- **Frontend:** `https://console-v2-278491073220.us-east1.run.app`
+
+**Importante:** Esta URL deve estar configurada nas "Origens JavaScript autorizadas" e "URIs de redirecionamento autorizados" do Google OAuth Console para que a autenticação funcione corretamente.
 
 ## ✅ Checklist de Deploy
 
 - [ ] Cloud Build Trigger configurado OU GitHub Actions configurado
-- [ ] Secrets `GOOGLE_CLIENT_ID` e `AUTHORIZED_DOMAIN` configurados no GitHub (se usar GitHub Actions)
-- [ ] Variáveis `google-client-id` e `authorized-domain` configuradas no Cloud Run (se usar Cloud Build)
+- [ ] Secrets `REACT_APP_GOOGLE_CLIENT_ID` e `REACT_APP_AUTHORIZED_DOMAIN` configurados no GitHub (se usar GitHub Actions)
+- [ ] Variáveis `REACT_APP_GOOGLE_CLIENT_ID` e `REACT_APP_AUTHORIZED_DOMAIN` passadas como build args durante o build
 - [ ] Primeiro deploy realizado
 - [ ] Health check funcionando (`/health`)
 - [ ] Aplicação React carregando corretamente
-- [ ] Login Google OAuth funcionando
+- [ ] URL do Cloud Run (`https://console-v2-278491073220.us-east1.run.app`) adicionada nas "Origens JavaScript autorizadas" do Google OAuth Console
+- [ ] URL do Cloud Run adicionada nas "URIs de redirecionamento autorizados" do Google OAuth Console
+- [ ] Login Google OAuth funcionando corretamente
 
 ## 🐛 Troubleshooting
 
