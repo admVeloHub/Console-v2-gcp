@@ -9,7 +9,7 @@
 - **Versão:** v1.38.0
 - **Status:** Concluído
 - **Commit:** b5f2707
-- **Repositório:** https://github.com/admVeloHub/Console-GCP
+- **Repositório:** https://github.com/admVeloHub/Console-v2-gcp
 
 ### Arquivos Modificados
 
