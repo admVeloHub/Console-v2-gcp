@@ -6,8 +6,8 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Copiar arquivos de dependências
-COPY package*.json ./
+# Copiar arquivos de dependências (package.json e package-lock.json)
+COPY package.json package-lock.json ./
 
 # Instalar dependências (incluindo devDependencies para build)
 RUN npm ci
@@ -23,8 +23,8 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Copiar package.json para instalar apenas dependências de produção
-COPY package*.json ./
+# Copiar package.json e package-lock.json para instalar apenas dependências de produção
+COPY package.json package-lock.json ./
 
 # Criar diretório backend
 RUN mkdir -p backend
