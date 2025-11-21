@@ -1,8 +1,8 @@
-// VERSION: v3.8.1 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// VERSION: v3.8.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
-import { CssBaseline, Box, CircularProgress } from '@mui/material';
+import { CssBaseline, Box, CircularProgress, Alert, AlertTitle } from '@mui/material';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
 // Tema VeloHub
@@ -171,7 +171,7 @@ const AppContent = () => {
 
 function App() {
   return (
-    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID || ''}>
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <ThemeProvider theme={velohubTheme}>
         <CssBaseline />
         <BrowserRouter>
