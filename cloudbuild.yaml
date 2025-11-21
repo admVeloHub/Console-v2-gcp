@@ -12,9 +12,9 @@ steps:
     args: 
       - 'build'
       - '--build-arg'
-      - 'google-client-id=${_GOOGLE_CLIENT_ID}'
+      - 'GOOGLE_CLIENT_ID=${_GOOGLE_CLIENT_ID}'
       - '--build-arg'
-      - 'authorized-domain=${_AUTHORIZED_DOMAIN}'
+      - 'AUTHORIZED_DOMAIN=${_AUTHORIZED_DOMAIN}'
       - '--build-arg'
       - 'REACT_APP_API_URL=https://backend-gcp-278491073220.us-east1.run.app/api'
       - '-t'
@@ -60,7 +60,7 @@ steps:
       - '--timeout'
       - '300'
       - '--set-env-vars'
-      - 'NODE_ENV=production,google-client-id=${_GOOGLE_CLIENT_ID},authorized-domain=${_AUTHORIZED_DOMAIN}'
+      - 'NODE_ENV=production'
     id: 'deploy-cloud-run'
 
 images:
