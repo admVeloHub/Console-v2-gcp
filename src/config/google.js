@@ -11,8 +11,8 @@
 //    - https://seu-dominio.com (produção)
 
 // Client ID do Google OAuth - VeloHub Console
-// VERSION: v3.5.5 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
-// Removido fallback hardcoded - deve ser configurado via variável de ambiente no Firebase Hosting
+// VERSION: v3.5.6 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// Removido fallback hardcoded - deve ser configurado via variável de ambiente no Cloud Run
 
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 

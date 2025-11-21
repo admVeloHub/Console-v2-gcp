@@ -38,8 +38,14 @@ jobs:
         run: gcloud auth configure-docker
 
       - name: Build and push Docker image
+        env:
+          REACT_APP_API_URL: https://backend-gcp-278491073220.us-east1.run.app/api
+          REACT_APP_GOOGLE_CLIENT_ID: ${{ secrets.REACT_APP_GOOGLE_CLIENT_ID }}
         run: |
-          docker build -t gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA .
+          docker build \
+            --build-arg REACT_APP_API_URL=$REACT_APP_API_URL \
+            --build-arg REACT_APP_GOOGLE_CLIENT_ID=$REACT_APP_GOOGLE_CLIENT_ID \
+            -t gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA .
           docker push gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA
           docker tag gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA gcr.io/$PROJECT_ID/$SERVICE_NAME:latest
           docker push gcr.io/$PROJECT_ID/$SERVICE_NAME:latest
@@ -57,7 +63,7 @@ jobs:
             --min-instances 0 \
             --max-instances 10 \
             --timeout 300 \
-            --set-env-vars NODE_ENV=production \
+            --set-env-vars NODE_ENV=production,REACT_APP_API_URL=https://backend-gcp-278491073220.us-east1.run.app/api \
             --project $PROJECT_ID
 
       - name: Get Cloud Run URL

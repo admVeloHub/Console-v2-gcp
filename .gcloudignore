@@ -45,11 +45,6 @@ Capacity_final/
 quality original/
 VeloInsights/
 
-# Firebase
-.firebaserc
-firebase.json
-.firebase/
-
 # Vercel
 .vercel/
 vercel.json

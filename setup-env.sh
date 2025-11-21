@@ -30,7 +30,7 @@ if [ -f ".env" ]; then
     echo "   - CORS: http://localhost:3000"
     echo ""
     echo "📌 IMPORTANTE:"
-    echo "   - Variáveis sensíveis são gerenciadas via Firebase Hosting (produção)"
+    echo "   - Variáveis sensíveis são gerenciadas via Cloud Run (produção)"
     echo "   - Secrets do backend são gerenciados via Secret Manager do GCP"
     echo "   - Para desenvolvimento local, configure REACT_APP_GOOGLE_CLIENT_ID no .env se necessário"
     echo ""
