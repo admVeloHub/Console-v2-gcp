@@ -47,41 +47,28 @@
    - URL atualizada para Cloud Run
 
 #### Configuração
-10. `env.local.example` (v2.0.0)
+10. `env.local.example` (v2.1.0)
     - Removidas referências a variáveis sensíveis
-    - Adicionadas notas sobre Firebase Hosting e Secret Manager
+    - Atualizadas notas sobre Cloud Run e Secret Manager
 
 11. `env.example` (v4.0.0)
     - Removidas variáveis sensíveis (MongoDB URI, JWT Secret, API Key)
     - Adicionada seção sobre Secret Manager
 
-12. `setup-env.bat` (v2.0.0)
-    - Adicionadas notas sobre Firebase Hosting e Secret Manager
+12. `setup-env.bat` (v2.1.0)
+    - Atualizadas notas sobre Cloud Run e Secret Manager
 
-13. `setup-env.sh` (v2.0.0)
-    - Adicionadas notas sobre Firebase Hosting e Secret Manager
+13. `setup-env.sh` (v2.1.0)
+    - Atualizadas notas sobre Cloud Run e Secret Manager
 
 #### Documentação
 14. `README.md` (atualizado)
-    - Adicionada seção sobre Firebase Hosting
+    - Atualizada seção sobre Cloud Run
     - Removidas referências a variáveis sensíveis
 
-15. `setup-local-env.md` (v2.0.0)
-    - Adicionadas instruções sobre Firebase Hosting
+15. `setup-local-env.md` (v2.1.0)
+    - Atualizadas instruções sobre Cloud Run
     - Removidas referências a MongoDB URI
-
-#### Novos Arquivos
-16. `.firebaserc` (NOVO)
-    - Configuração do Firebase Hosting
-
-17. `firebase.json` (NOVO)
-    - Configuração do Firebase Hosting
-
-18. `.github/workflows/firebase-hosting-merge.yml` (NOVO)
-    - Workflow GitHub Actions para deploy no Firebase Hosting (merge)
-
-19. `.github/workflows/firebase-hosting-pull-request.yml` (NOVO)
-    - Workflow GitHub Actions para preview no Firebase Hosting (PR)
 
 20. `public/404.html` (NOVO)
     - Página 404 personalizada
@@ -90,27 +77,27 @@
 - Múltiplos arquivos de documentação antiga removidos (CHECKLIST_IMPLEMENTACAO_QUALIDADE.md, COLLECTIONS_DOCS.md, etc.)
 
 ### Descrição
-Migração completa do projeto para arquitetura segura com Cloud Run e Firebase Hosting:
+Migração completa do projeto para arquitetura segura com Cloud Run:
 
 **🔒 Segurança:**
 - Removidas todas as variáveis sensíveis hardcoded do código frontend
-- Google Client ID agora configurado apenas via variável de ambiente (Firebase Hosting)
+- Google Client ID agora configurado apenas via variável de ambiente (Cloud Run)
 - Removida chamada direta à API OpenAI do frontend (análise via Worker)
 - Variáveis sensíveis gerenciadas via Secret Manager do GCP
 
 **🌐 Infraestrutura:**
 - Todas as URLs de API atualizadas para Cloud Run backend
-- Configuração Firebase Hosting adicionada
+- Configuração Cloud Run adicionada
 - Workflows GitHub Actions configurados para CI/CD
 
 **📚 Documentação:**
-- Documentação atualizada com informações sobre Firebase Hosting
+- Documentação atualizada com informações sobre Cloud Run
 - Instruções sobre Secret Manager adicionadas
 - Arquivos de exemplo limpos de variáveis sensíveis
 
 ### Impacto
 - ✅ **Segurança melhorada** - Nenhuma variável sensível exposta no código frontend
-- ✅ **Arquitetura atualizada** - Migração completa para Cloud Run e Firebase Hosting
+- ✅ **Arquitetura atualizada** - Migração completa para Cloud Run
 - ✅ **CI/CD configurado** - Workflows GitHub Actions prontos para deploy automático
 - ✅ **Documentação atualizada** - Instruções claras sobre nova arquitetura
 

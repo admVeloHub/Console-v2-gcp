@@ -7,6 +7,10 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: 
       - 'build'
+      - '--build-arg'
+      - 'REACT_APP_API_URL=https://backend-gcp-278491073220.us-east1.run.app/api'
+      - '--build-arg'
+      - 'REACT_APP_GOOGLE_CLIENT_ID=278491073220-eb4ogvn3aifu0ut9mq3rvu5r9r9l3137.apps.googleusercontent.com'
       - '-t'
       - 'gcr.io/$PROJECT_ID/frontend-console:$COMMIT_SHA'
       - '-t'

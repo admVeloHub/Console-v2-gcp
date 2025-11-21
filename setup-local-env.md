@@ -52,11 +52,11 @@ npm start
 - **API**: https://backend-gcp-278491073220.us-east1.run.app/api (produção)
 
 ### **Produção**
-- **Frontend**: Firebase Hosting (configurar variáveis de ambiente no Firebase Console)
+- **Frontend**: Cloud Run (configurar variáveis de ambiente no Cloud Run Console)
 - **API**: https://backend-gcp-278491073220.us-east1.run.app/api
 
 **Variáveis de Ambiente em Produção:**
-- Configure `REACT_APP_API_URL` e `REACT_APP_GOOGLE_CLIENT_ID` no Firebase Hosting
+- Configure `REACT_APP_API_URL` e `REACT_APP_GOOGLE_CLIENT_ID` no Cloud Run
 - Secrets do backend são gerenciados via Secret Manager do GCP
 
 ## ⚙️ Configurações Específicas
@@ -82,7 +82,7 @@ CORS_ORIGIN=http://localhost:3000
 - ✅ Template disponível em `env.local.example`
 - ✅ Configurações de produção separadas
 - ✅ Variáveis sensíveis gerenciadas via Secret Manager do GCP (backend)
-- ✅ Variáveis públicas configuradas no Firebase Hosting (frontend)
+- ✅ Variáveis públicas configuradas no Cloud Run (frontend)
 
 ## 🐛 Debug e Troubleshooting
 
@@ -108,16 +108,15 @@ console.log('Dev Mode:', process.env.REACT_APP_DEV_MODE);
 4. **Acesse** http://localhost:3000
 5. **Teste** a aba "Localizar Notícias" do VeloNews
 
-## 🌐 Configuração no Firebase Hosting (Produção)
+## 🌐 Configuração no Cloud Run (Produção)
 
-Para produção, configure as variáveis de ambiente no Firebase Hosting:
+Para produção, configure as variáveis de ambiente no Cloud Run:
 
-1. Acesse Firebase Console → Hosting → Settings
-2. Configure as seguintes variáveis:
+1. Acesse Google Cloud Console → Cloud Run → [Seu serviço] → Edit & Deploy New Revision
+2. Configure as seguintes variáveis de ambiente:
    - `REACT_APP_API_URL` = `https://backend-gcp-278491073220.us-east1.run.app/api`
    - `REACT_APP_GOOGLE_CLIENT_ID` = [Seu Client ID do Google OAuth]
-
-**Nota:** Se o Firebase Hosting não suportar variáveis de ambiente diretamente, use o arquivo `.env.production` durante o build.
+   - `NODE_ENV` = `production`
 
 ---
 

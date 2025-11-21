@@ -83,17 +83,22 @@ O projeto está configurado para deploy automático no Cloud Run via GitHub Acti
    - `WIF_PROVIDER` - Workload Identity Provider
    - `WIF_SERVICE_ACCOUNT` - Service Account para Workload Identity
 
-2. Push para branch `master` dispara deploy automático
+2. Push para branch `main` dispara deploy automático
 
 ### **Deploy via Cloud Build Trigger**
 1. Configure Cloud Build Trigger no GCP apontando para o repositório
 2. O arquivo `cloudbuild.yaml` será usado automaticamente
 
 ### **Variáveis de Ambiente no Cloud Run**
-Configure via Console do GCP ou via gcloud:
-- `REACT_APP_API_URL` - URL do backend Cloud Run
+
+**Configuradas automaticamente:**
+- `NODE_ENV=production`
+- `REACT_APP_API_URL=https://backend-gcp-278491073220.us-east1.run.app/api`
+
+**Configurar manualmente após primeiro deploy:**
 - `REACT_APP_GOOGLE_CLIENT_ID` - Client ID do Google OAuth
-- `NODE_ENV` - production (configurado automaticamente)
+
+**Instruções detalhadas:** Veja `CLOUD_RUN_SETUP.md`
 
 ## 🚀 **Instalação e Execução**
 
@@ -105,8 +110,8 @@ Configure via Console do GCP ou via gcloud:
 ### **Instalação Rápida**
 ```bash
 # Clonar repositório
-git clone https://github.com/admVeloHub/front-console.git
-cd front-console
+git clone https://github.com/admVeloHub/Console-v2-gcp.git
+cd Console-v2-gcp
 
 # Instalar dependências
 npm install
@@ -146,8 +151,8 @@ REACT_APP_DEV_MODE=true
 
 **Nota:** O arquivo `.env` é criado automaticamente com as configurações corretas para desenvolvimento local usando a API de produção.
 
-#### **Produção (Firebase Hosting)**
-Para produção, configure as variáveis de ambiente no Firebase Hosting:
+#### **Produção (Cloud Run)**
+Para produção, configure as variáveis de ambiente no Cloud Run:
 - `REACT_APP_API_URL` - URL do backend Cloud Run
 - `REACT_APP_GOOGLE_CLIENT_ID` - Client ID do Google OAuth
 
@@ -281,31 +286,31 @@ POST   /api/user-ping          # Ping de usuário logado
 - **Tratamento de erros** sem interromper login
 - **Debug** em modo desenvolvimento
 
-## 🚀 **Deploy**
+## 🚀 **Deploy no Cloud Run**
 
-### **Vercel (Recomendado)**
-1. Conecte sua conta GitHub ao Vercel
-2. Selecione este repositório
-3. Configure as variáveis de ambiente
-4. Deploy automático a cada push
+O projeto está configurado para deploy automático no Cloud Run via GitHub Actions ou Cloud Build.
 
-### **Netlify**
-1. Conecte sua conta GitHub ao Netlify
-2. Configure build command: `npm run build`
-3. Configure publish directory: `build`
-4. Configure variáveis de ambiente
+### **Arquivos de Configuração**
+- `Dockerfile` - Containerização da aplicação React
+- `backend/server.js` - Servidor Express para servir arquivos estáticos
+- `cloudbuild.yaml` - Configuração do Cloud Build
+- `.github/workflows/cloud-run-deploy.yml` - Workflow GitHub Actions
 
-### **GitHub Pages**
-   ```bash
-# Instalar gh-pages
-npm install --save-dev gh-pages
+### **Deploy via GitHub Actions**
+1. Configure os secrets no GitHub:
+   - `WIF_PROVIDER` - Workload Identity Provider
+   - `WIF_SERVICE_ACCOUNT` - Service Account para Workload Identity
+2. Push para branch `main` dispara deploy automático
 
-# Adicionar script no package.json
-"homepage": "https://admVeloHub.github.io/front-console",
-"scripts": {
-  "predeploy": "npm run build",
-  "deploy": "gh-pages -d build"
-}
+### **Deploy via Cloud Build Trigger**
+1. Configure Cloud Build Trigger no GCP apontando para o repositório
+2. O arquivo `cloudbuild.yaml` será usado automaticamente
+
+### **Variáveis de Ambiente no Cloud Run**
+Configure via Console do GCP ou via gcloud:
+- `REACT_APP_API_URL` - URL do backend Cloud Run
+- `REACT_APP_GOOGLE_CLIENT_ID` - Client ID do Google OAuth
+- `NODE_ENV` - production (configurado automaticamente)
 
 # Deploy
 npm run deploy
