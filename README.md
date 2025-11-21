@@ -68,6 +68,33 @@ Aplicação React completa para o Console de Conteúdo VeloHub. Sistema unificad
 - **Poppins** - Fonte principal
 - **Anton** - Fonte secundária
 
+## 🐳 **Deploy no Cloud Run**
+
+O projeto está configurado para deploy automático no Cloud Run via GitHub Actions ou Cloud Build.
+
+### **Arquivos de Configuração**
+- `Dockerfile` - Containerização da aplicação
+- `backend/server.js` - Servidor Express para servir arquivos estáticos
+- `cloudbuild.yaml` - Configuração do Cloud Build
+- `.github/workflows/cloud-run-deploy.yml` - Workflow GitHub Actions
+
+### **Deploy via GitHub Actions**
+1. Configure os secrets no GitHub:
+   - `WIF_PROVIDER` - Workload Identity Provider
+   - `WIF_SERVICE_ACCOUNT` - Service Account para Workload Identity
+
+2. Push para branch `master` dispara deploy automático
+
+### **Deploy via Cloud Build Trigger**
+1. Configure Cloud Build Trigger no GCP apontando para o repositório
+2. O arquivo `cloudbuild.yaml` será usado automaticamente
+
+### **Variáveis de Ambiente no Cloud Run**
+Configure via Console do GCP ou via gcloud:
+- `REACT_APP_API_URL` - URL do backend Cloud Run
+- `REACT_APP_GOOGLE_CLIENT_ID` - Client ID do Google OAuth
+- `NODE_ENV` - production (configurado automaticamente)
+
 ## 🚀 **Instalação e Execução**
 
 ### **Pré-requisitos**

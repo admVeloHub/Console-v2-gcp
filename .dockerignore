@@ -1,0 +1,80 @@
+# .dockerignore
+# Arquivos e diretórios a serem ignorados no build Docker
+# VERSION: v1.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+
+# Dependências
+node_modules
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Build
+build
+dist
+.next
+out
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Ambiente
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+
+# IDEs
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs
+*.log.*
+
+# Testes
+coverage
+.nyc_output
+.jest
+
+# Documentação
+*.md
+!README.md
+docs
+
+# Outros projetos
+Capacity_final
+quality original
+VeloInsights
+
+# Firebase
+.firebaserc
+firebase.json
+.firebase
+
+# Vercel
+.vercel
+vercel.json
+
+# Cloud Build
+cloudbuild.yaml
+.gcloudignore
+
+# Arquivos temporários
+*.tmp
+*.temp
+.cache
+
