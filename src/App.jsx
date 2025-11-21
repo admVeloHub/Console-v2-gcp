@@ -1,5 +1,5 @@
-// VERSION: v3.8.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
-import React from 'react';
+// VERSION: v3.8.3 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline, Box, CircularProgress, Alert, AlertTitle } from '@mui/material';
@@ -66,6 +66,15 @@ const ProtectedRoute = ({ children, requiredPermission }) => {
 const AppContent = () => {
   const { isAuthenticated, loading } = useAuth();
 
+  // Log para debug do estado de autenticação
+  useEffect(() => {
+    console.log('🔄 AppContent - Estado de autenticação:', {
+      isAuthenticated,
+      loading,
+      timestamp: new Date().toISOString()
+    });
+  }, [isAuthenticated, loading]);
+
   if (loading) {
     return (
       <Box sx={{ 
@@ -80,8 +89,11 @@ const AppContent = () => {
   }
 
   if (!isAuthenticated) {
+    console.log('🔒 Usuário não autenticado - mostrando LoginPage');
     return <LoginPage />;
   }
+
+  console.log('✅ Usuário autenticado - mostrando Dashboard');
 
   return (
     <div className="App">
