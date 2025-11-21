@@ -1,5 +1,43 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.39.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.40.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+
+## Push GitHub - Remoção HEALTHCHECK e Melhorias OAuth - 2024-12-19
+
+### **Tipo:** Push GitHub
+### **Data/Hora:** 2024-12-19
+### **Branch:** main
+### **Commit:** f13e8df
+### **Repositório:** https://github.com/admVeloHub/Console-v2-gcp.git
+
+### **Arquivos Modificados:**
+- `Dockerfile` (v1.2.0 → v1.3.0) - Removido HEALTHCHECK (Cloud Run não utiliza)
+- `src/pages/LoginPage.jsx` (v3.5.1 → v3.6.0) - Validações robustas e tratamento de erros melhorado
+- `src/App.jsx` (v3.8.2 → v3.8.3) - Logs de debug adicionados
+- `src/contexts/AuthContext.jsx` (v3.8.0) - Logs de debug adicionados
+- `VERIFICATION_REPORT.md` (novo) - Relatório completo de verificação pré-push
+
+### **Descrição:**
+Correções e melhorias no OAuth e otimizações do Dockerfile:
+
+**Mudanças Principais:**
+- Removido HEALTHCHECK do Dockerfile (Cloud Run faz healthcheck automaticamente via HTTP)
+- Adicionadas validações robustas em LoginPage.jsx:
+  - Validação de credentialResponse e credentialResponse.credential antes de processar
+  - Validação de estrutura JWT (deve ter 3 partes separadas por ponto)
+  - Logs detalhados em cada etapa do processo de login
+  - Tratamento de erros melhorado com mensagens específicas por tipo de erro
+  - Proteção contra erro postMessage null usando isMountedRef
+- Adicionados logs de debug em App.jsx e AuthContext.jsx para rastrear estado de autenticação
+- Criado relatório completo de verificação (VERIFICATION_REPORT.md)
+
+**Impacto:**
+- ✅ Dockerfile otimizado (sem HEALTHCHECK desnecessário)
+- ✅ OAuth mais robusto com validações completas
+- ✅ Melhor debugging com logs detalhados
+- ✅ Proteção contra erros de postMessage
+- ✅ Tratamento de erros mais específico e informativo
+
+---
 
 ## Push GitHub - Adaptação Variáveis Container google-client-id e authorized-domain - 2024-12-19
 
