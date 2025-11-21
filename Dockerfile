@@ -1,5 +1,5 @@
 # Dockerfile para Cloud Run - Frontend React Console VeloHub
-# VERSION: v1.2.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+# VERSION: v1.3.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 # Stage 1: Build da aplicação React
 FROM node:18-alpine AS builder
@@ -55,10 +55,6 @@ ENV NODE_ENV=production
 
 # Expor porta (Cloud Run usa PORT env var)
 EXPOSE 8080
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:8080/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
 # Comando para iniciar servidor
 CMD ["node", "backend/server.js"]
