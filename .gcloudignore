@@ -1,0 +1,56 @@
+# .gcloudignore
+# Arquivos ignorados pelo Cloud Build
+# VERSION: v1.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+
+# Dependências (serão instaladas no build)
+node_modules/
+
+# Build (será gerado no build)
+build/
+dist/
+
+# Git
+.git/
+.gitignore
+
+# Ambiente
+.env
+.env.local
+.env*.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Testes
+coverage/
+.nyc_output/
+
+# Documentação
+*.md
+!README.md
+
+# Outros projetos
+Capacity_final/
+quality original/
+VeloInsights/
+
+# Firebase
+.firebaserc
+firebase.json
+.firebase/
+
+# Vercel
+.vercel/
+vercel.json
+
