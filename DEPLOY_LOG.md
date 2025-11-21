@@ -103,6 +103,64 @@ Migração completa do projeto para arquitetura segura com Cloud Run:
 
 ---
 
+## Push GitHub - Remoção Firebase e Preparação Cloud Run - 2024-12-19
+
+### **Tipo:** Push GitHub
+### **Data/Hora:** 2024-12-19
+### **Branch:** main
+### **Commit:** fb02f5e
+### **Repositório:** https://github.com/admVeloHub/Console-v2-gcp.git
+
+### **Arquivos Modificados:**
+- `.dockerignore` - Removida seção Firebase
+- `.gcloudignore` - Removida seção Firebase
+- `.github/workflows/cloud-run-deploy.yml` - Atualizado com build args
+- `DEPLOY_LOG.md` - Atualizado
+- `Dockerfile` (v1.0.0 → v1.1.0) - Adicionados build args para variáveis REACT_APP_*
+- `README.md` - Seção deploy atualizada para Cloud Run
+- `cloudbuild.yaml` (v1.0.0 → v1.1.0) - Adicionados build args
+- `env.example` - CORS_ORIGIN atualizado
+- `env.local.example` - Notas atualizadas
+- `public/404.html` - Removida referência Firebase CLI
+- `setup-env.bat` - Notas atualizadas
+- `setup-env.sh` - Notas atualizadas
+- `setup-local-env.md` - Instruções atualizadas
+- `src/config/google.js` (v3.5.5 → v3.5.6) - Comentário atualizado
+
+### **Arquivos Deletados:**
+- `.firebaserc` - Configuração Firebase removida
+- `.github/workflows/firebase-hosting-merge.yml` - Workflow Firebase removido
+- `.github/workflows/firebase-hosting-pull-request.yml` - Workflow Firebase removido
+- `firebase.json` - Configuração Firebase removida
+- `vercel.json` - Configuração Vercel removida
+
+### **Arquivos Novos:**
+- `CLOUD_RUN_SETUP.md` (v1.0.0) - Guia completo de configuração Cloud Run
+
+### **Descrição:**
+Remoção completa de todas as referências ao Firebase e Vercel do projeto. Preparação 100% para operação no Google Cloud Run:
+
+**Removido:**
+- Todos os arquivos de configuração Firebase (firebase.json, .firebaserc)
+- Workflows GitHub Actions do Firebase Hosting
+- Configuração Vercel (vercel.json)
+- Todas as referências ao Firebase/Vercel na documentação
+
+**Adicionado/Atualizado:**
+- Dockerfile atualizado com build args para variáveis REACT_APP_* (incorporadas no build)
+- cloudbuild.yaml atualizado com build args
+- GitHub Actions workflow atualizado com build args
+- CLOUD_RUN_SETUP.md criado com guia completo de configuração
+- Documentação atualizada para Cloud Run
+
+**Impacto:**
+- ✅ Projeto 100% preparado para Cloud Run
+- ✅ Variáveis REACT_APP_* configuradas durante o build (não podem ser alteradas em runtime)
+- ✅ Deploy automático via Cloud Build Trigger ou GitHub Actions
+- ✅ Nenhuma dependência de Firebase ou Vercel
+
+---
+
 ## Push GitHub - Correção do Payload do Config - 2025-11-14 11:16
 
 ### Informações do Push
