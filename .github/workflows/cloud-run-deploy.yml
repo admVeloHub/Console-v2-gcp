@@ -39,13 +39,13 @@ jobs:
 
       - name: Build and push Docker image
         env:
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          AUTHORIZED_DOMAIN: ${{ secrets.AUTHORIZED_DOMAIN }}
+          REACT_APP_GOOGLE_CLIENT_ID: ${{ secrets.REACT_APP_GOOGLE_CLIENT_ID }}
+          REACT_APP_AUTHORIZED_DOMAIN: ${{ secrets.REACT_APP_AUTHORIZED_DOMAIN }}
         run: |
           docker build \
-            --build-arg GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID \
-            --build-arg AUTHORIZED_DOMAIN=$AUTHORIZED_DOMAIN \
             --build-arg REACT_APP_API_URL=https://backend-gcp-278491073220.us-east1.run.app/api \
+            --build-arg REACT_APP_GOOGLE_CLIENT_ID=$REACT_APP_GOOGLE_CLIENT_ID \
+            --build-arg REACT_APP_AUTHORIZED_DOMAIN=$REACT_APP_AUTHORIZED_DOMAIN \
             -t gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA .
           docker push gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA
           docker tag gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA gcr.io/$PROJECT_ID/$SERVICE_NAME:latest

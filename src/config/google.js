@@ -18,6 +18,7 @@ const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
 if (!GOOGLE_CLIENT_ID) {
   console.warn('⚠️ REACT_APP_GOOGLE_CLIENT_ID não configurada. Google OAuth não funcionará.');
+  console.warn('Configure REACT_APP_GOOGLE_CLIENT_ID como build arg durante o build do Docker.');
 }
 
 export { GOOGLE_CLIENT_ID };

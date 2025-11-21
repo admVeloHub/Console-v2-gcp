@@ -15,16 +15,16 @@ RUN npm ci
 # Copiar código fonte
 COPY . .
 
-# Build args para variáveis do container Cloud Run
-# Estas variáveis serão mapeadas para REACT_APP_* durante o build
-ARG GOOGLE_CLIENT_ID
-ARG AUTHORIZED_DOMAIN
+# Build args para variáveis de ambiente do React
+# Estas variáveis são incorporadas no build e não podem ser alteradas em runtime
 ARG REACT_APP_API_URL=https://backend-gcp-278491073220.us-east1.run.app/api
+ARG REACT_APP_GOOGLE_CLIENT_ID
+ARG REACT_APP_AUTHORIZED_DOMAIN
 
-# Mapear variáveis do container para variáveis REACT_APP_* do React
+# Definir como variáveis de ambiente para o build
 ENV REACT_APP_API_URL=$REACT_APP_API_URL
-ENV REACT_APP_GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID
-ENV REACT_APP_AUTHORIZED_DOMAIN=$AUTHORIZED_DOMAIN
+ENV REACT_APP_GOOGLE_CLIENT_ID=$REACT_APP_GOOGLE_CLIENT_ID
+ENV REACT_APP_AUTHORIZED_DOMAIN=$REACT_APP_AUTHORIZED_DOMAIN
 
 # Build da aplicação React
 RUN npm run build
