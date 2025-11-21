@@ -478,7 +478,7 @@ const QualidadeModulePage = () => {
       // Atualizar estado da avaliação para mostrar que está processando
       setAvaliacoes(prev => prev.map(avaliacao => 
         avaliacao._id === avaliacaoId 
-          ? { ...avaliacao, uploadingAudio: true, audioUploadId: result.uploadId }
+          ? { ...avaliacao, uploadingAudio: true, audioUploadId: result.audioId }
           : avaliacao
       ));
       

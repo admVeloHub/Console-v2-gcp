@@ -1,5 +1,5 @@
 # Dockerfile para Cloud Run - Frontend React Console VeloHub
-# VERSION: v1.3.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+# VERSION: v1.4.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 # Stage 1: Build da aplicação React
 FROM node:18-alpine AS builder
@@ -16,7 +16,11 @@ RUN npm ci
 COPY . .
 
 # Build args para variáveis de ambiente do React
-# Estas variáveis são incorporadas no build e não podem ser alteradas em runtime
+# IMPORTANTE: Estas variáveis são incorporadas no build do React durante 'npm run build'
+# e não podem ser alteradas em runtime. Devem ser passadas como --build-arg durante o build do Docker.
+#
+# REACT_APP_GOOGLE_CLIENT_ID: OBRIGATÓRIO - Client ID do Google OAuth (deve ser passado como build arg)
+# REACT_APP_AUTHORIZED_DOMAIN: Domínio autorizado para validação de email
 ARG REACT_APP_API_URL=https://backend-gcp-278491073220.us-east1.run.app/api
 ARG REACT_APP_GOOGLE_CLIENT_ID
 ARG REACT_APP_AUTHORIZED_DOMAIN

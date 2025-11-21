@@ -1,5 +1,32 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.40.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.41.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+
+## Push GitHub - Correção Cabeçalho COOP para Google OAuth - 2024-12-19
+
+### **Tipo:** Push GitHub
+### **Data/Hora:** 2024-12-19
+### **Branch:** main
+### **Commit:** effb16c
+### **Repositório:** https://github.com/admVeloHub/Console-v2-gcp.git
+
+### **Arquivos Modificados:**
+- `backend/server.js` (v1.0.0 → v1.1.0) - Adicionado cabeçalho Cross-Origin-Opener-Policy
+
+### **Descrição:**
+Correção do erro `Cannot read properties of null (reading 'postMessage')` no Google OAuth:
+
+**Mudanças Principais:**
+- Adicionado `crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }` na configuração do Helmet
+- Permite que a janela principal mantenha referência à popup do Google OAuth após navegação cross-origin
+- Resolve o problema da janela popup ficando branca após selecionar a conta
+
+**Impacto:**
+- ✅ Erro `postMessage` resolvido
+- ✅ Popup do Google OAuth funcionando corretamente
+- ✅ Comunicação entre janelas OAuth restaurada
+- ✅ Fluxo de autenticação completo funcionando
+
+---
 
 ## Push GitHub - Remoção HEALTHCHECK e Melhorias OAuth - 2024-12-19
 

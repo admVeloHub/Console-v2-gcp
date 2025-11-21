@@ -229,7 +229,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(userData));
     localStorage.setItem('isAuthenticated', 'true');
     localStorage.setItem('lastActivity', Date.now().toString());
-    
+
     console.log('✅ Estado de autenticação atualizado:', {
       isAuthenticated: true,
       userEmail: userData.email,

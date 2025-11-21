@@ -2,12 +2,12 @@
  * UploadAudioModal.jsx
  * Modal para upload de arquivos de áudio para análise GPT
  * 
- * VERSION: v1.0.0
- * DATE: 2024-12-19
+ * VERSION: v2.0.0
+ * DATE: 2025-01-30
  * AUTHOR: VeloHub Development Team
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -19,14 +19,24 @@ import {
   Snackbar,
   Alert,
   LinearProgress,
-  Chip
+  Chip,
+  CircularProgress
 } from '@mui/material';
 import {
   CloudUpload as CloudUploadIcon,
   AudioFile as AudioFileIcon,
   CheckCircle as CheckCircleIcon,
-  Error as ErrorIcon
+  Error as ErrorIcon,
+  HourglassEmpty as HourglassEmptyIcon
 } from '@mui/icons-material';
+import {
+  uploadAudioParaAnalise,
+  monitorarProcessamento,
+  validarArquivoAudio,
+  formatarTamanhoArquivo,
+  getStatusText,
+  getStatusColor
+} from '../../services/qualidadeAudioService';
 
 const UploadAudioModal = ({ 
   open, 
@@ -40,6 +50,12 @@ const UploadAudioModal = ({
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [audioId, setAudioId] = useState(null);
+  const [processingStatus, setProcessingStatus] = useState(null); // 'uploading', 'processing', 'completed', 'error'
+  const [statusMessage, setStatusMessage] = useState('');
+  
+  // Ref para função de desconexão do monitoramento
+  const stopMonitoringRef = useRef(null);
   
   // Estados de feedback
   const [snackbar, setSnackbar] = useState({ 
@@ -47,10 +63,6 @@ const UploadAudioModal = ({
     message: '', 
     severity: 'success' 
   });
-
-  // Validações
-  const ACCEPTED_FORMATS = ['audio/mpeg', 'audio/wav', 'audio/mp3'];
-  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
   const showSnackbar = (message, severity = 'success') => {
     setSnackbar({ open: true, message, severity });
@@ -60,20 +72,34 @@ const UploadAudioModal = ({
     setSnackbar(prev => ({ ...prev, open: false }));
   };
 
-  // Validação de arquivo
+  // Validação de arquivo usando serviço
   const validateFile = (file) => {
-    if (!ACCEPTED_FORMATS.includes(file.type)) {
-      showSnackbar('Formato não suportado. Use MP3 ou WAV.', 'error');
+    const validation = validarArquivoAudio(file);
+    if (!validation.isValid) {
+      showSnackbar(validation.errors.join(', '), 'error');
       return false;
     }
-    
-    if (file.size > MAX_FILE_SIZE) {
-      showSnackbar('Arquivo muito grande. Máximo 50MB.', 'error');
-      return false;
-    }
-    
     return true;
   };
+
+  // Limpar estados ao fechar modal
+  useEffect(() => {
+    if (!open) {
+      // Desconectar monitoramento se estiver ativo
+      if (stopMonitoringRef.current) {
+        stopMonitoringRef.current();
+        stopMonitoringRef.current = null;
+      }
+      
+      // Reset estados
+      setSelectedFile(null);
+      setUploadProgress(0);
+      setAudioId(null);
+      setProcessingStatus(null);
+      setStatusMessage('');
+      setUploading(false);
+    }
+  }, [open]);
 
   // Drag and drop handlers
   const handleDrag = useCallback((e) => {
@@ -109,66 +135,165 @@ const UploadAudioModal = ({
     }
   };
 
-  // Upload handler
+  // Upload handler com novo fluxo
   const handleUpload = async () => {
-    if (!selectedFile || !avaliacaoId) {
-      showSnackbar('Selecione um arquivo e uma avaliação.', 'error');
+    if (!selectedFile) {
+      showSnackbar('Selecione um arquivo.', 'error');
       return;
     }
 
     try {
       setUploading(true);
       setUploadProgress(0);
+      setProcessingStatus('uploading');
+      setStatusMessage('Preparando upload...');
 
-      // Simular progresso (será substituído por progresso real quando backend estiver pronto)
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + 10;
-        });
-      }, 200);
-
-      // Chamar função de upload (será implementada no serviço)
-      const result = await onUpload(avaliacaoId, selectedFile);
+      // 1. Fazer upload para GCS com progresso real
+      const result = await uploadAudioParaAnalise(
+        avaliacaoId, 
+        selectedFile,
+        (progress) => {
+          setUploadProgress(Math.min(progress, 95)); // Máximo 95% durante upload
+          setStatusMessage(`Enviando para GCS... ${Math.round(progress)}%`);
+        }
+      );
       
-      clearInterval(progressInterval);
+      // Upload concluído
       setUploadProgress(100);
+      setAudioId(result.audioId);
+      setStatusMessage('Upload concluído! Iniciando processamento...');
       
-      showSnackbar('Upload concluído! Processamento iniciado.', 'success');
-      
-      // Fechar modal após sucesso
-      setTimeout(() => {
-        handleClose();
-      }, 1500);
+      // Chamar callback do componente pai se fornecido
+      if (onUpload && typeof onUpload === 'function') {
+        onUpload(result);
+      }
+
+      // 2. Iniciar monitoramento do processamento
+      setProcessingStatus('processing');
+      setStatusMessage('Processando áudio com IA...');
+
+      const stopMonitoring = monitorarProcessamento(
+        result.audioId,
+        // onStatusChange
+        (statusData) => {
+          const status = statusData.status || statusData.data?.status;
+          
+          if (status === 'processando') {
+            setStatusMessage('Processando áudio com IA...');
+          } else if (status === 'reconectando') {
+            setStatusMessage(statusData.message || 'Reconectando...');
+          }
+        },
+        // onComplete
+        (statusData) => {
+          setProcessingStatus('completed');
+          setStatusMessage('Análise concluída com sucesso!');
+          setUploadProgress(100);
+          
+          showSnackbar('Análise concluída! O resultado está disponível.', 'success');
+          
+          // Fechar modal após sucesso
+          setTimeout(() => {
+            handleClose();
+          }, 2000);
+        },
+        // onError
+        (error) => {
+          setProcessingStatus('error');
+          setStatusMessage(`Erro: ${error.message}`);
+          
+          showSnackbar(
+            error.message || 'Erro no processamento. Tente novamente.',
+            'error'
+          );
+        }
+      );
+
+      // Guardar função de desconexão
+      stopMonitoringRef.current = stopMonitoring;
 
     } catch (error) {
       console.error('Erro no upload:', error);
-      showSnackbar(error.message || 'Erro no upload do arquivo.', 'error');
+      setProcessingStatus('error');
+      setStatusMessage(`Erro: ${error.message}`);
+      
+      // Mensagens de erro mais amigáveis
+      let errorMessage = error.message || 'Erro no upload do arquivo.';
+      
+      if (error.message.includes('expirada')) {
+        errorMessage = 'URL de upload expirada. Tente novamente.';
+      } else if (error.message.includes('conexão') || error.message.includes('network')) {
+        errorMessage = 'Erro de conexão. Verifique sua internet e tente novamente.';
+      } else if (error.message.includes('timeout')) {
+        errorMessage = 'Upload demorou muito tempo. Tente novamente.';
+      }
+      
+      showSnackbar(errorMessage, 'error');
     } finally {
-      setUploading(false);
-      setUploadProgress(0);
+      // Não resetar uploading aqui se estiver processando
+      if (processingStatus !== 'processing' && processingStatus !== 'completed') {
+        setUploading(false);
+      }
     }
   };
 
   // Fechar modal
   const handleClose = () => {
-    if (!uploading) {
+    if (!uploading || processingStatus === 'completed') {
+      // Desconectar monitoramento
+      if (stopMonitoringRef.current) {
+        stopMonitoringRef.current();
+        stopMonitoringRef.current = null;
+      }
+      
       setSelectedFile(null);
       setUploadProgress(0);
+      setAudioId(null);
+      setProcessingStatus(null);
+      setStatusMessage('');
+      setUploading(false);
       onClose();
     }
   };
 
-  // Formatar tamanho do arquivo
+  // Formatar tamanho do arquivo usando serviço
   const formatFileSize = (bytes) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return formatarTamanhoArquivo(bytes);
+  };
+
+  // Obter cor do status
+  const getStatusChipColor = () => {
+    if (!processingStatus) return 'default';
+    
+    switch (processingStatus) {
+      case 'uploading':
+        return 'info';
+      case 'processing':
+        return 'warning';
+      case 'completed':
+        return 'success';
+      case 'error':
+        return 'error';
+      default:
+        return 'default';
+    }
+  };
+
+  // Obter ícone do status
+  const getStatusIcon = () => {
+    if (!processingStatus) return null;
+    
+    switch (processingStatus) {
+      case 'uploading':
+      case 'processing':
+        return <CircularProgress size={20} sx={{ mr: 1 }} />;
+      case 'completed':
+        return <CheckCircleIcon sx={{ fontSize: 20, mr: 1, color: getStatusColor('concluido') }} />;
+      case 'error':
+        return <ErrorIcon sx={{ fontSize: 20, mr: 1, color: getStatusColor('error') }} />;
+      default:
+        return null;
+    }
   };
 
   return (
@@ -206,59 +331,61 @@ const UploadAudioModal = ({
           )}
 
           {/* Zona de drop */}
-          <Box
-            onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
-            sx={{
-              border: `2px dashed ${dragActive ? 'var(--blue-medium)' : 'var(--blue-opaque)'}`,
-              borderRadius: '8px',
-              padding: '32px',
-              textAlign: 'center',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              bgcolor: dragActive ? 'rgba(22, 52, 255, 0.05)' : 'transparent',
-              '&:hover': {
-                borderColor: 'var(--blue-medium)',
-                bgcolor: 'rgba(22, 52, 255, 0.05)'
-              }
-            }}
-            onClick={() => document.getElementById('file-input').click()}
-          >
-            <CloudUploadIcon 
-              sx={{ 
-                fontSize: 48, 
-                color: dragActive ? 'var(--blue-medium)' : 'var(--blue-opaque)',
+          {!uploading && (
+            <Box
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+              sx={{
+                border: `2px dashed ${dragActive ? 'var(--blue-medium)' : 'var(--blue-opaque)'}`,
+                borderRadius: '8px',
+                padding: '32px',
+                textAlign: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                bgcolor: dragActive ? 'rgba(22, 52, 255, 0.05)' : 'transparent',
+                '&:hover': {
+                  borderColor: 'var(--blue-medium)',
+                  bgcolor: 'rgba(22, 52, 255, 0.05)'
+                }
+              }}
+              onClick={() => document.getElementById('file-input').click()}
+            >
+              <CloudUploadIcon 
+                sx={{ 
+                  fontSize: 48, 
+                  color: dragActive ? 'var(--blue-medium)' : 'var(--blue-opaque)',
+                  mb: 2
+                }} 
+              />
+              
+              <Typography variant="h6" sx={{ 
+                fontFamily: 'Poppins', 
+                fontWeight: 600,
+                color: 'var(--blue-dark)',
+                mb: 1
+              }}>
+                {dragActive ? 'Solte o arquivo aqui' : 'Arraste o arquivo de áudio ou clique para selecionar'}
+              </Typography>
+              
+              <Typography variant="body2" sx={{ 
+                fontFamily: 'Poppins',
+                color: 'var(--gray)',
                 mb: 2
-              }} 
-            />
-            
-            <Typography variant="h6" sx={{ 
-              fontFamily: 'Poppins', 
-              fontWeight: 600,
-              color: 'var(--blue-dark)',
-              mb: 1
-            }}>
-              {dragActive ? 'Solte o arquivo aqui' : 'Arraste o arquivo de áudio ou clique para selecionar'}
-            </Typography>
-            
-            <Typography variant="body2" sx={{ 
-              fontFamily: 'Poppins',
-              color: 'var(--gray)',
-              mb: 2
-            }}>
-              Formatos aceitos: MP3, WAV • Tamanho máximo: 50MB
-            </Typography>
+              }}>
+                Formatos aceitos: MP3, WAV, M4A, OGG • Tamanho máximo: 50MB
+              </Typography>
 
-            <input
-              id="file-input"
-              type="file"
-              accept=".mp3,.wav,audio/mpeg,audio/wav"
-              onChange={handleFileInput}
-              style={{ display: 'none' }}
-            />
-          </Box>
+              <input
+                id="file-input"
+                type="file"
+                accept=".mp3,.wav,.m4a,.mp4,.webm,.ogg,audio/mpeg,audio/wav,audio/mp4,audio/x-m4a,audio/webm,audio/ogg"
+                onChange={handleFileInput}
+                style={{ display: 'none' }}
+              />
+            </Box>
+          )}
 
           {/* Arquivo selecionado */}
           {selectedFile && (
@@ -286,17 +413,43 @@ const UploadAudioModal = ({
                     {formatFileSize(selectedFile.size)}
                   </Typography>
                 </Box>
-                <CheckCircleIcon sx={{ color: 'var(--green)' }} />
+                {!uploading && <CheckCircleIcon sx={{ color: 'var(--green)' }} />}
               </Box>
             </Box>
           )}
 
-          {/* Progress bar */}
+          {/* Progress bar e status */}
           {uploading && (
             <Box sx={{ mt: 3 }}>
+              {/* Status chip */}
+              {processingStatus && (
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  {getStatusIcon()}
+                  <Chip
+                    label={getStatusText(processingStatus) || statusMessage}
+                    color={getStatusChipColor()}
+                    size="small"
+                    sx={{ fontFamily: 'Poppins', fontWeight: 500 }}
+                  />
+                </Box>
+              )}
+
+              {/* Mensagem de status */}
+              {statusMessage && (
+                <Typography variant="body2" sx={{ 
+                  fontFamily: 'Poppins',
+                  color: 'var(--gray)',
+                  mb: 1,
+                  fontStyle: processingStatus === 'error' ? 'italic' : 'normal'
+                }}>
+                  {statusMessage}
+                </Typography>
+              )}
+
+              {/* Barra de progresso */}
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                 <Typography variant="body2" sx={{ fontFamily: 'Poppins' }}>
-                  Enviando arquivo...
+                  {processingStatus === 'processing' ? 'Processando...' : 'Enviando arquivo...'}
                 </Typography>
                 <Typography variant="body2" sx={{ fontFamily: 'Poppins' }}>
                   {uploadProgress}%
@@ -310,7 +463,11 @@ const UploadAudioModal = ({
                   borderRadius: 4,
                   bgcolor: 'rgba(22, 52, 255, 0.1)',
                   '& .MuiLinearProgress-bar': {
-                    bgcolor: 'var(--blue-medium)'
+                    bgcolor: processingStatus === 'error' 
+                      ? getStatusColor('error')
+                      : processingStatus === 'completed'
+                      ? getStatusColor('concluido')
+                      : 'var(--blue-medium)'
                   }
                 }}
               />
@@ -321,35 +478,37 @@ const UploadAudioModal = ({
         <DialogActions sx={{ p: 3, gap: 2 }}>
           <Button
             onClick={handleClose}
-            disabled={uploading}
+            disabled={uploading && processingStatus !== 'completed' && processingStatus !== 'error'}
             sx={{
               fontFamily: 'Poppins',
               fontWeight: 500,
               color: 'var(--gray)'
             }}
           >
-            Cancelar
+            {processingStatus === 'completed' ? 'Fechar' : 'Cancelar'}
           </Button>
           
-          <Button
-            onClick={handleUpload}
-            disabled={!selectedFile || uploading}
-            variant="contained"
-            sx={{
-              fontFamily: 'Poppins',
-              fontWeight: 600,
-              bgcolor: 'var(--blue-medium)',
-              '&:hover': {
-                bgcolor: 'var(--blue-dark)'
-              },
-              '&:disabled': {
-                bgcolor: 'var(--gray)',
-                color: 'white'
-              }
-            }}
-          >
-            {uploading ? 'Enviando...' : 'Enviar para Análise'}
-          </Button>
+          {!uploading && (
+            <Button
+              onClick={handleUpload}
+              disabled={!selectedFile}
+              variant="contained"
+              sx={{
+                fontFamily: 'Poppins',
+                fontWeight: 600,
+                bgcolor: 'var(--blue-medium)',
+                '&:hover': {
+                  bgcolor: 'var(--blue-dark)'
+                },
+                '&:disabled': {
+                  bgcolor: 'var(--gray)',
+                  color: 'white'
+                }
+              }}
+            >
+              Enviar para Análise
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
 
