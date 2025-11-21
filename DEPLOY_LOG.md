@@ -1,5 +1,42 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.38.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.39.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+
+## Push GitHub - Adaptação Variáveis Container google-client-id e authorized-domain - 2024-12-19
+
+### **Tipo:** Push GitHub
+### **Data/Hora:** 2024-12-19
+### **Branch:** main
+### **Commit:** 9b1c755
+### **Repositório:** https://github.com/admVeloHub/Console-v2-gcp.git
+
+### **Arquivos Modificados:**
+- `.github/workflows/cloud-run-deploy.yml` (v1.0.0 → v1.2.0) - Atualizado para usar secrets GOOGLE_CLIENT_ID e AUTHORIZED_DOMAIN
+- `CLOUD_RUN_SETUP.md` - Documentação atualizada sobre variáveis do container
+- `Dockerfile` (v1.1.0 → v1.2.0) - Aceita google-client-id e authorized-domain como ARG, mapeia para REACT_APP_*
+- `README.md` - Seção de variáveis atualizada
+- `cloudbuild.yaml` (v1.0.0 → v1.2.0) - Adicionadas substituições _GOOGLE_CLIENT_ID e _AUTHORIZED_DOMAIN
+- `env.local.example` - Adicionado exemplo REACT_APP_AUTHORIZED_DOMAIN
+- `setup-local-env.md` - Instruções atualizadas para variáveis do container
+- `src/config/google.js` (v3.5.6 → v3.5.7) - Adicionado suporte a REACT_APP_AUTHORIZED_DOMAIN e função isAuthorizedDomain()
+
+### **Descrição:**
+Adaptação completa para usar variáveis do container Cloud Run com nomes `google-client-id` e `authorized-domain` ao invés de variáveis REACT_APP_* diretamente:
+
+**Mudanças Principais:**
+- Dockerfile agora aceita `google-client-id` e `authorized-domain` como build args
+- Mapeamento automático para `REACT_APP_GOOGLE_CLIENT_ID` e `REACT_APP_AUTHORIZED_DOMAIN` durante o build
+- cloudbuild.yaml usa substituições `${_GOOGLE_CLIENT_ID}` e `${_AUTHORIZED_DOMAIN}`
+- GitHub Actions usa secrets `GOOGLE_CLIENT_ID` e `AUTHORIZED_DOMAIN`
+- Variáveis também expostas no container Cloud Run para referência
+- Adicionada função `isAuthorizedDomain()` em `src/config/google.js`
+
+**Impacto:**
+- ✅ Variáveis do container padronizadas (google-client-id, authorized-domain)
+- ✅ Build args configurados corretamente para incorporar no código React
+- ✅ Compatibilidade mantida com código existente
+- ✅ Documentação atualizada
+
+---
 
 ## Push GitHub - Migração para Cloud Run e Remoção de Variáveis Sensíveis - 2024-12-19
 
