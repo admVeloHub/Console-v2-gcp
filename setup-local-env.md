@@ -113,10 +113,12 @@ console.log('Dev Mode:', process.env.REACT_APP_DEV_MODE);
 Para produção, configure as variáveis de ambiente no Cloud Run:
 
 1. Acesse Google Cloud Console → Cloud Run → [Seu serviço] → Edit & Deploy New Revision
-2. Configure as seguintes variáveis de ambiente:
-   - `REACT_APP_API_URL` = `https://backend-gcp-278491073220.us-east1.run.app/api`
-   - `REACT_APP_GOOGLE_CLIENT_ID` = [Seu Client ID do Google OAuth]
+2. Configure as seguintes variáveis de ambiente do container:
+   - `google-client-id` = [Seu Client ID do Google OAuth]
+   - `authorized-domain` = [Domínio autorizado, ex: velotax.com.br]
    - `NODE_ENV` = `production`
+
+**Importante:** As variáveis `google-client-id` e `authorized-domain` são usadas durante o build do Docker e mapeadas para `REACT_APP_GOOGLE_CLIENT_ID` e `REACT_APP_AUTHORIZED_DOMAIN` respectivamente.
 
 ---
 

@@ -1,6 +1,10 @@
 # cloudbuild.yaml
 # Configuração para Cloud Build com Cloud Run
-# VERSION: v1.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+# VERSION: v1.2.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+
+substitutions:
+  _GOOGLE_CLIENT_ID: '278491073220-eb4ogvn3aifu0ut9mq3rvu5r9r9l3137.apps.googleusercontent.com'
+  _AUTHORIZED_DOMAIN: 'velotax.com.br'
 
 steps:
   # Build da imagem Docker
@@ -8,9 +12,11 @@ steps:
     args: 
       - 'build'
       - '--build-arg'
-      - 'REACT_APP_API_URL=https://backend-gcp-278491073220.us-east1.run.app/api'
+      - 'google-client-id=${_GOOGLE_CLIENT_ID}'
       - '--build-arg'
-      - 'REACT_APP_GOOGLE_CLIENT_ID=278491073220-eb4ogvn3aifu0ut9mq3rvu5r9r9l3137.apps.googleusercontent.com'
+      - 'authorized-domain=${_AUTHORIZED_DOMAIN}'
+      - '--build-arg'
+      - 'REACT_APP_API_URL=https://backend-gcp-278491073220.us-east1.run.app/api'
       - '-t'
       - 'gcr.io/$PROJECT_ID/frontend-console:$COMMIT_SHA'
       - '-t'
@@ -54,7 +60,7 @@ steps:
       - '--timeout'
       - '300'
       - '--set-env-vars'
-      - 'NODE_ENV=production'
+      - 'NODE_ENV=production,google-client-id=${_GOOGLE_CLIENT_ID},authorized-domain=${_AUTHORIZED_DOMAIN}'
     id: 'deploy-cloud-run'
 
 images:

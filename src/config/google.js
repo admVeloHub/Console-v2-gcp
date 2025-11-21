@@ -11,7 +11,7 @@
 //    - https://seu-dominio.com (produção)
 
 // Client ID do Google OAuth - VeloHub Console
-// VERSION: v3.5.6 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.5.7 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 // Removido fallback hardcoded - deve ser configurado via variável de ambiente no Cloud Run
 
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
@@ -22,10 +22,19 @@ if (!GOOGLE_CLIENT_ID) {
 
 export { GOOGLE_CLIENT_ID };
 
-// Domínios autorizados para login
+// Domínio autorizado para login (configurado via variável de ambiente)
+const AUTHORIZED_DOMAIN = process.env.REACT_APP_AUTHORIZED_DOMAIN || 'velotax.com.br';
+
+// Domínios autorizados para login (mantido para compatibilidade)
 export const AUTHORIZED_EMAILS = [
   'lucas.gravina@velotax.com.br'
 ];
+
+// Função para verificar se email pertence ao domínio autorizado
+export const isAuthorizedDomain = (email) => {
+  if (!email) return false;
+  return email.endsWith(`@${AUTHORIZED_DOMAIN}`);
+};
 
 // Configurações do Google OAuth
 export const GOOGLE_OAUTH_CONFIG = {
