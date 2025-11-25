@@ -130,33 +130,49 @@ const AnaliseGPTAccordion = ({
                   fontFamily: 'Poppins',
                   color: '#666666'
                 }}>
-                  {analise.mes}/{analise.ano} • {new Date(analise.createdAt).toLocaleDateString('pt-BR')}
+                  {analise.mes && analise.ano ? `${analise.mes}/${analise.ano}` : ''} 
+                  {analise.createdAt ? ` • ${new Date(analise.createdAt).toLocaleDateString('pt-BR')}` : ''}
                 </Typography>
               </Box>
             </Box>
             
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Chip
-                label={`${analise.pontuacaoGPT} pts`}
-                sx={{
-                  backgroundColor: getScoreColor(analise.pontuacaoGPT),
-                  color: '#ffffff',
-                  fontFamily: 'Poppins',
-                  fontWeight: 500
-                }}
-              />
-              
-              <Chip
-                label={getScoreLabel(analise.pontuacaoGPT)}
-                size="small"
-                sx={{
-                  backgroundColor: getScoreColor(analise.pontuacaoGPT),
-                  color: '#ffffff',
-                  fontFamily: 'Poppins',
-                  fontWeight: 500,
-                  opacity: 0.8
-                }}
-              />
+              {analise.pontuacaoGPT !== null && analise.pontuacaoGPT !== undefined ? (
+                <>
+                  <Chip
+                    label={`${analise.pontuacaoGPT} pts`}
+                    sx={{
+                      backgroundColor: getScoreColor(analise.pontuacaoGPT),
+                      color: '#ffffff',
+                      fontFamily: 'Poppins',
+                      fontWeight: 500
+                    }}
+                  />
+                  
+                  <Chip
+                    label={getScoreLabel(analise.pontuacaoGPT)}
+                    size="small"
+                    sx={{
+                      backgroundColor: getScoreColor(analise.pontuacaoGPT),
+                      color: '#ffffff',
+                      fontFamily: 'Poppins',
+                      fontWeight: 500,
+                      opacity: 0.8
+                    }}
+                  />
+                </>
+              ) : (
+                <Chip
+                  label="Pontuação não disponível"
+                  size="small"
+                  sx={{
+                    backgroundColor: '#B0BEC5',
+                    color: '#ffffff',
+                    fontFamily: 'Poppins',
+                    fontWeight: 500
+                  }}
+                />
+              )}
               
               {analise.palavrasCriticas && analise.palavrasCriticas.length > 0 && (
                 <Chip
@@ -193,7 +209,7 @@ const AnaliseGPTAccordion = ({
                 mb: 2,
                 lineHeight: 1.6
               }}>
-                {analise.analiseGPT ? 
+                {analise.analiseGPT && typeof analise.analiseGPT === 'string' && analise.analiseGPT.trim() ? 
                   (analise.analiseGPT.length > 200 ? 
                     `${analise.analiseGPT.substring(0, 200)}...` : 
                     analise.analiseGPT
@@ -202,8 +218,8 @@ const AnaliseGPTAccordion = ({
                 }
               </Typography>
               
-              {/* Palavras críticas */}
-              {analise.palavrasCriticas && analise.palavrasCriticas.length > 0 && (
+            {/* Palavras críticas */}
+              {analise.palavrasCriticas && Array.isArray(analise.palavrasCriticas) && analise.palavrasCriticas.length > 0 && (
                 <Box sx={{ mb: 2 }}>
                   <Typography variant="body2" sx={{ 
                     fontFamily: 'Poppins', 
@@ -237,7 +253,7 @@ const AnaliseGPTAccordion = ({
                 mb: 2,
                 flexWrap: 'wrap'
               }}>
-                {analise.confianca && (
+                {analise.confianca !== null && analise.confianca !== undefined && (
                   <Chip
                     label={`Confiança: ${analise.confianca}%`}
                     size="small"

@@ -43,7 +43,7 @@ const UploadAudioModal = ({
   onClose, 
   onUpload, 
   avaliacaoId,
-  avaliacaoNome 
+  avaliacao 
 }) => {
   // Estados do modal
   const [dragActive, setDragActive] = useState(false);
@@ -53,9 +53,14 @@ const UploadAudioModal = ({
   const [audioId, setAudioId] = useState(null);
   const [processingStatus, setProcessingStatus] = useState(null); // 'uploading', 'processing', 'completed', 'error'
   const [statusMessage, setStatusMessage] = useState('');
+  const [audioStatus, setAudioStatus] = useState(null);
+  const [audioJaEnviado, setAudioJaEnviado] = useState(false);
   
   // Ref para função de desconexão do monitoramento
   const stopMonitoringRef = useRef(null);
+  
+  // Extrair avaliacaoNome do objeto avaliacao se disponível
+  const avaliacaoNome = avaliacao?.colaboradorNome || null;
   
   // Estados de feedback
   const [snackbar, setSnackbar] = useState({ 
@@ -82,6 +87,45 @@ const UploadAudioModal = ({
     return true;
   };
 
+  // Buscar status de áudio quando avaliacaoId muda
+  useEffect(() => {
+    const buscarStatusAudio = async () => {
+      if (!avaliacaoId || !open) {
+        setAudioStatus(null);
+        setAudioJaEnviado(false);
+        return;
+      }
+
+      try {
+        const API_URL = process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app';
+        const response = await fetch(`${API_URL}/api/audio-analise/status-por-avaliacao/${avaliacaoId}`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data) {
+            setAudioStatus(data.data);
+            setAudioJaEnviado(data.data.sent === true);
+            if (data.data.audioId) {
+              setAudioId(data.data.audioId);
+            }
+          } else {
+            setAudioStatus(null);
+            setAudioJaEnviado(false);
+          }
+        } else {
+          setAudioStatus(null);
+          setAudioJaEnviado(false);
+        }
+      } catch (error) {
+        console.warn('Erro ao buscar status de áudio:', error);
+        setAudioStatus(null);
+        setAudioJaEnviado(false);
+      }
+    };
+
+    buscarStatusAudio();
+  }, [avaliacaoId, open]);
+
   // Limpar estados ao fechar modal
   useEffect(() => {
     if (!open) {
@@ -98,6 +142,8 @@ const UploadAudioModal = ({
       setProcessingStatus(null);
       setStatusMessage('');
       setUploading(false);
+      setAudioStatus(null);
+      setAudioJaEnviado(false);
     }
   }, [open]);
 
@@ -330,8 +376,104 @@ const UploadAudioModal = ({
             </Box>
           )}
 
+          {/* Mensagem quando áudio já foi enviado */}
+          {audioJaEnviado && !uploading && (
+            <Box sx={{ mb: 3, p: 2, bgcolor: '#E3F2FD', borderRadius: '8px', border: '1px solid #90CAF9' }}>
+              <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#1976D2', mb: 1 }}>
+                ⚠️ Um áudio já foi enviado para esta avaliação. Aguarde o processamento concluir antes de enviar um novo arquivo.
+              </Typography>
+            </Box>
+          )}
+
+          {/* Seção de informações após envio */}
+          {audioStatus && audioStatus.sent && (
+            <Box sx={{ mb: 3, p: 2, bgcolor: 'var(--cor-fundo)', borderRadius: '8px', border: '1px solid var(--blue-opaque)' }}>
+              <Typography variant="h6" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: 'var(--blue-dark)', mb: 2 }}>
+                Informações do Áudio Enviado
+              </Typography>
+              
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                {/* Nome do agente */}
+                {avaliacao?.colaboradorNome && (
+                  <Box>
+                    <Typography variant="body2" sx={{ fontFamily: 'Poppins', fontWeight: 500, color: '#666666' }}>
+                      Agente:
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontFamily: 'Poppins', color: 'var(--blue-dark)' }}>
+                      {avaliacao.colaboradorNome}
+                    </Typography>
+                  </Box>
+                )}
+                
+                {/* Nome do arquivo */}
+                {audioStatus.nomeArquivo && (
+                  <Box>
+                    <Typography variant="body2" sx={{ fontFamily: 'Poppins', fontWeight: 500, color: '#666666' }}>
+                      Arquivo:
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontFamily: 'Poppins', color: 'var(--blue-dark)' }}>
+                      {audioStatus.nomeArquivo}
+                    </Typography>
+                  </Box>
+                )}
+                
+                {/* Data e hora da ligação */}
+                {avaliacao?.dataLigacao && (
+                  <Box>
+                    <Typography variant="body2" sx={{ fontFamily: 'Poppins', fontWeight: 500, color: '#666666' }}>
+                      Data e Hora da Ligação:
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontFamily: 'Poppins', color: 'var(--blue-dark)' }}>
+                      {(() => {
+                        try {
+                          const dataLigacao = new Date(avaliacao.dataLigacao);
+                          const dia = String(dataLigacao.getDate()).padStart(2, '0');
+                          const mes = String(dataLigacao.getMonth() + 1).padStart(2, '0');
+                          const ano = dataLigacao.getFullYear();
+                          const horas = String(dataLigacao.getHours()).padStart(2, '0');
+                          const minutos = String(dataLigacao.getMinutes()).padStart(2, '0');
+                          return `${dia}/${mes}/${ano} ${horas}:${minutos}`;
+                        } catch (e) {
+                          return avaliacao.dataLigacao;
+                        }
+                      })()}
+                    </Typography>
+                  </Box>
+                )}
+                
+                {/* Marcadores de status */}
+                <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
+                  <Chip
+                    label="Enviado"
+                    size="small"
+                    sx={{
+                      fontFamily: 'Poppins',
+                      fontWeight: 500,
+                      backgroundColor: audioStatus.treated 
+                        ? '#1634FF' 
+                        : 'rgba(22, 52, 255, 0.3)',
+                      color: '#ffffff'
+                    }}
+                  />
+                  <Chip
+                    label="Processado"
+                    size="small"
+                    sx={{
+                      fontFamily: 'Poppins',
+                      fontWeight: 500,
+                      backgroundColor: audioStatus.treated 
+                        ? '#1634FF' 
+                        : '#B0BEC5',
+                      color: '#ffffff'
+                    }}
+                  />
+                </Box>
+              </Box>
+            </Box>
+          )}
+
           {/* Zona de drop */}
-          {!uploading && (
+          {!uploading && !audioJaEnviado && (
             <Box
               onDragEnter={handleDrag}
               onDragLeave={handleDrag}
@@ -488,7 +630,7 @@ const UploadAudioModal = ({
             {processingStatus === 'completed' ? 'Fechar' : 'Cancelar'}
           </Button>
           
-          {!uploading && (
+          {!uploading && !audioJaEnviado && (
             <Button
               onClick={handleUpload}
               disabled={!selectedFile}

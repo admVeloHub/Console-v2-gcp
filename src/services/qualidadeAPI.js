@@ -358,6 +358,26 @@ export const limparDadosLocais = () => {
 // ===== AVALIAÇÕES - API MONGODB =====
 
 // Obter todas as avaliações
+// Função auxiliar para buscar status de áudio por avaliacaoId
+const buscarStatusAudio = async (avaliacaoId) => {
+  try {
+    if (!avaliacaoId) return null;
+    
+    const API_URL = process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app';
+    const response = await fetch(`${API_URL}/api/audio-analise/status-por-avaliacao/${avaliacaoId}`);
+    
+    if (!response.ok) {
+      return null;
+    }
+    
+    const data = await response.json();
+    return data.success && data.data ? data.data : null;
+  } catch (error) {
+    console.warn(`⚠️ Erro ao buscar status de áudio para avaliação ${avaliacaoId}:`, error.message);
+    return null;
+  }
+};
+
 export const getAvaliacoes = async () => {
   try {
     const response = await qualidadeAvaliacoesAPI.getAll();
@@ -369,7 +389,30 @@ export const getAvaliacoes = async () => {
     console.log(`📊 Avaliações extraídas: ${Array.isArray(avaliacoes) ? avaliacoes.length : 0}`);
     
     // Garantir que sempre retorne um array
-    return Array.isArray(avaliacoes) ? avaliacoes : [];
+    const avaliacoesArray = Array.isArray(avaliacoes) ? avaliacoes : [];
+    
+    // Buscar status de áudio para cada avaliação
+    const avaliacoesComStatus = await Promise.all(
+      avaliacoesArray.map(async (avaliacao) => {
+        try {
+          const audioStatus = await buscarStatusAudio(avaliacao._id);
+          return {
+            ...avaliacao,
+            audioStatus: audioStatus || null,
+            audioSent: audioStatus?.sent || false
+          };
+        } catch (error) {
+          console.warn(`⚠️ Erro ao buscar status de áudio para ${avaliacao._id}:`, error.message);
+          return {
+            ...avaliacao,
+            audioStatus: null,
+            audioSent: false
+          };
+        }
+      })
+    );
+    
+    return avaliacoesComStatus;
   } catch (error) {
     console.error('❌ Erro ao carregar avaliações da API:', error);
     // Não fazer fallback - retornar array vazio em caso de erro
