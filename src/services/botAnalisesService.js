@@ -1,4 +1,4 @@
-// VERSION: v3.2.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.3.0 | DATE: 2025-11-25 | AUTHOR: VeloHub Development Team
 
 // Configuração da API
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app/api';
@@ -707,24 +707,26 @@ class BotAnalisesService {
     return periodosMap[periodo] || 7;
   }
   
-  processarDadosGrafico(periodos, tipo) {
-    const dados = {};
-    periodos.forEach(periodo => {
-      // Simular dados baseados no tipo
-      switch (tipo) {
-        case 'totalUso':
-          dados[periodo] = Math.floor(Math.random() * 10) + 1;
-          break;
-        case 'feedbacksPositivos':
-          dados[periodo] = Math.floor(Math.random() * 3);
-          break;
-        case 'feedbacksNegativos':
-          dados[periodo] = Math.floor(Math.random() * 2);
-          break;
-      }
-    });
-    return dados;
-  }
+  // FUNÇÃO DESABILITADA - Não deve ser usada pois gera dados aleatórios falsos
+  // O gráfico deve mostrar APENAS datas reais com ocorrências registradas
+  // processarDadosGrafico(periodos, tipo) {
+  //   const dados = {};
+  //   periodos.forEach(periodo => {
+  //     // Simular dados baseados no tipo
+  //     switch (tipo) {
+  //       case 'totalUso':
+  //         dados[periodo] = Math.floor(Math.random() * 10) + 1;
+  //         break;
+  //       case 'feedbacksPositivos':
+  //         dados[periodo] = Math.floor(Math.random() * 3);
+  //         break;
+  //       case 'feedbacksNegativos':
+  //         dados[periodo] = Math.floor(Math.random() * 2);
+  //         break;
+  //     }
+  //   });
+  //   return dados;
+  // }
   
   
   
