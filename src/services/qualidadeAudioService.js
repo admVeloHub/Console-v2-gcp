@@ -30,20 +30,28 @@ const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
  * @param {string} nomeArquivo - Nome do arquivo
  * @param {string} mimeType - Tipo MIME do arquivo
  * @param {number} fileSize - Tamanho do arquivo em bytes
+ * @param {string} avaliacaoId - ID da avaliação (opcional)
  * @returns {Promise<Object>} Resposta com Signed URL e audioId
  */
-export const generateUploadUrl = async (nomeArquivo, mimeType, fileSize) => {
+export const generateUploadUrl = async (nomeArquivo, mimeType, fileSize, avaliacaoId = null) => {
   try {
+    const body = {
+      nomeArquivo,
+      mimeType,
+      fileSize
+    };
+
+    // Adicionar avaliacaoId se fornecido
+    if (avaliacaoId) {
+      body.avaliacaoId = avaliacaoId;
+    }
+
     const response = await fetch(`${API_URL}/api/audio-analise/generate-upload-url`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        nomeArquivo,
-        mimeType,
-        fileSize
-      })
+      body: JSON.stringify(body)
     });
 
     if (!response.ok) {
@@ -150,7 +158,8 @@ export const uploadAudioParaAnalise = async (avaliacaoId, audioFile, onProgress)
     const uploadData = await generateUploadUrl(
       audioFile.name,
       audioFile.type,
-      audioFile.size
+      audioFile.size,
+      avaliacaoId
     );
 
     // 2. Fazer upload direto para GCS com retry
@@ -172,7 +181,8 @@ export const uploadAudioParaAnalise = async (avaliacaoId, audioFile, onProgress)
           const newUploadData = await generateUploadUrl(
             audioFile.name,
             audioFile.type,
-            audioFile.size
+            audioFile.size,
+            avaliacaoId
           );
           uploadData.uploadUrl = newUploadData.uploadUrl;
           uploadData.audioId = newUploadData.audioId;
@@ -553,7 +563,7 @@ export const listarAnalisesPorColaborador = async (colaboradorNome, mes, ano) =>
     if (mes) params.append('mes', mes);
     if (ano) params.append('ano', ano);
     
-    const response = await fetch(`${API_URL}/api/analise-audio/listar?${params}`);
+    const response = await fetch(`${API_URL}/api/audio-analise/listar?${params}`);
     
     if (!response.ok) {
       throw new Error('Erro ao listar análises');

@@ -132,7 +132,8 @@ const QualidadeModulePage = () => {
     procedimentoIncorreto: false,
     encerramentoBrusco: false,
     observacoes: '',
-    dataLigacao: ''
+    dataLigacao: '',
+    horaLigacao: ''
   });
   
   // Estados de UI
@@ -316,6 +317,9 @@ const QualidadeModulePage = () => {
         encerramentoBrusco: avaliacao.encerramentoBrusco,
         observacoes: avaliacao.observacoes || '',
         dataLigacao: avaliacao.dataLigacao ? (avaliacao.dataLigacao.includes('T') ? avaliacao.dataLigacao.split('T')[0] : avaliacao.dataLigacao) : '',
+        horaLigacao: avaliacao.dataLigacao && avaliacao.dataLigacao.includes('T') 
+          ? avaliacao.dataLigacao.split('T')[1]?.substring(0, 5) || '' 
+          : '',
         arquivoLigacao: null
       });
       
@@ -342,6 +346,7 @@ const QualidadeModulePage = () => {
         encerramentoBrusco: false,
         observacoes: '',
         dataLigacao: '',
+        horaLigacao: '',
         arquivoLigacao: null
       });
     }
@@ -367,6 +372,7 @@ const QualidadeModulePage = () => {
       encerramentoBrusco: false,
       observacoes: '',
       dataLigacao: '',
+      horaLigacao: '',
       arquivoLigacao: null,
     });
   };
@@ -388,10 +394,27 @@ const QualidadeModulePage = () => {
       const funcionarioSelecionado = funcionarios.find(f => 
         (f.colaboradorNome || f.nomeCompleto) === formData.colaboradorNome
       );
+      
+      // Combinar data e hora em um único string datetime
+      let dataLigacaoCombinada = '';
+      if (formData.dataLigacao) {
+        if (formData.horaLigacao) {
+          // Combinar data e hora: "YYYY-MM-DDTHH:mm"
+          dataLigacaoCombinada = `${formData.dataLigacao}T${formData.horaLigacao}`;
+        } else {
+          // Apenas data: "YYYY-MM-DD"
+          dataLigacaoCombinada = formData.dataLigacao;
+        }
+      }
+      
       const dadosParaEnvio = {
         ...formData,
-        colaboradorNome: formData.colaboradorNome // colaboradorNome já é o nome agora
+        colaboradorNome: formData.colaboradorNome, // colaboradorNome já é o nome agora
+        dataLigacao: dataLigacaoCombinada
       };
+      
+      // Remover horaLigacao do objeto de envio (já foi combinado com dataLigacao)
+      delete dadosParaEnvio.horaLigacao;
       
       // Debug dos dados antes do envio
       console.log('🔍 DEBUG - Salvando avaliação:', avaliacaoEditando ? 'EDITANDO' : 'CRIANDO');
@@ -717,7 +740,7 @@ const QualidadeModulePage = () => {
             />
             <Tab 
               value="gpt" 
-              label="Análise GPT"
+              label="Análise IA"
               id="qualidade-tab-2"
               aria-controls="qualidade-tabpanel-2"
             />
@@ -935,34 +958,34 @@ const QualidadeModulePage = () => {
             mt: 1
           }}>
             <CardContent sx={{ p: 0 }}>
-              {/* Header com título, botão, seletor e filtro de período */}
-              <Box sx={{ 
-                display: 'flex', 
-                flexDirection: 'column',
-                gap: 2,
-                mb: 3 
-              }}>
-                {/* Primeira linha: Título e controles principais */}
+              {/* Header com título, botão, seletor e filtro de período - Tudo em uma única linha */}
                 <Box sx={{ 
                   display: 'flex', 
                   justifyContent: 'space-between', 
-                  alignItems: 'center'
+                alignItems: 'center',
+                gap: 1.6,
+                mb: 3,
+                flexWrap: 'wrap'
                 }}>
                   {/* Título */}
                   <Typography variant="h5" sx={{ 
                     fontFamily: 'Poppins', 
                     color: '#000058', 
                     fontWeight: 500,
-                    fontSize: '1.2rem'
+                  fontSize: '1.2rem',
+                  flexShrink: 0
                   }}>
                     Relatório Individual
                   </Typography>
 
-                  {/* Linha com botão e seletor */}
+                {/* Controles: Botão, Seletor, Filtros de Data e Limpar */}
                   <Box sx={{ 
                     display: 'flex', 
                     alignItems: 'center',
-                    gap: 1.6
+                  gap: 1.6,
+                  flexWrap: 'wrap',
+                  flex: 1,
+                  justifyContent: 'flex-end'
                   }}>
                     {/* Botão Gerar Relatório */}
                     <Button
@@ -977,7 +1000,8 @@ const QualidadeModulePage = () => {
                         fontSize: '0.8rem',
                         borderRadius: '6.4px',
                         px: 2.4,
-                        py: 0.4,
+                      py: 0.2,
+                      height: '32px',
                         backgroundColor: '#006AB9 !important',
                         color: '#F3F7FC !important',
                         '&:hover': {
@@ -993,7 +1017,7 @@ const QualidadeModulePage = () => {
                     </Button>
                     
                     {/* Seleção de Colaborador */}
-                    <FormControl size="small" sx={{ minWidth: 200 }} className="velohub-select-alinhado">
+                  <FormControl size="small" sx={{ minWidth: 200, height: '32px' }} className="velohub-select-alinhado">
                     <InputLabel 
                       sx={{ 
                         fontFamily: 'Poppins', 
@@ -1017,8 +1041,10 @@ const QualidadeModulePage = () => {
                       sx={{ 
                         fontFamily: 'Poppins',
                         fontSize: '0.8rem',
+                        height: '32px',
                         '& .MuiOutlinedInput-root': {
                           borderRadius: '6.4px',
+                          height: '32px',
                           '& fieldset': {
                             borderColor: '#000058'
                           },
@@ -1032,13 +1058,14 @@ const QualidadeModulePage = () => {
                         '& .MuiSelect-select': {
                           display: 'flex',
                           alignItems: 'center',
-                          paddingTop: '6.4px !important',
-                          paddingBottom: '8px !important',
-                          boxSizing: 'border-box'
+                          paddingTop: '6px !important',
+                          paddingBottom: '6px !important',
+                          boxSizing: 'border-box',
+                          height: '32px !important'
                         },
                         '& .MuiInputBase-input': {
-                          padding: '8px 14px !important',
-                          height: '24px !important',
+                          padding: '6px 14px !important',
+                          height: '32px !important',
                           display: 'flex',
                           alignItems: 'center'
                         }
@@ -1055,16 +1082,8 @@ const QualidadeModulePage = () => {
                       ))}
                     </Select>
                     </FormControl>
-                  </Box>
-                </Box>
 
-                {/* Segunda linha: Filtro de Período (alinhado à direita, abaixo do seletor) */}
-                <Box sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'flex-end',
-                  alignItems: 'center',
-                  gap: 1.6
-                }}>
+                  {/* Campo Data Início */}
                   <TextField
                     type="date"
                     label="Início"
@@ -1074,9 +1093,11 @@ const QualidadeModulePage = () => {
                     InputLabelProps={{ shrink: true }}
                     sx={{
                       width: '140px',
+                      height: '32px',
                       '& .MuiOutlinedInput-root': {
                         fontFamily: 'Poppins',
-                        fontSize: '0.64rem',
+                        fontSize: '0.8rem',
+                        height: '32px',
                         '& fieldset': {
                           borderColor: '#000058'
                         },
@@ -1089,19 +1110,21 @@ const QualidadeModulePage = () => {
                       },
                       '& .MuiInputLabel-root': {
                         fontFamily: 'Poppins',
-                        fontSize: '0.64rem',
+                        fontSize: '0.8rem',
                         color: '#000058',
                         '&.Mui-focused': {
                           color: '#006AB9'
                         }
                       },
                       '& .MuiInputBase-input': {
-                        fontSize: '0.64rem',
-                        padding: '6.4px 10px'
+                        fontSize: '0.8rem',
+                        padding: '6px 10px',
+                        height: '32px'
                       }
                     }}
                   />
                   
+                  {/* Campo Data Fim */}
                   <TextField
                     type="date"
                     label="Fim"
@@ -1111,9 +1134,11 @@ const QualidadeModulePage = () => {
                     InputLabelProps={{ shrink: true }}
                     sx={{
                       width: '140px',
+                      height: '32px',
                       '& .MuiOutlinedInput-root': {
                         fontFamily: 'Poppins',
-                        fontSize: '0.64rem',
+                        fontSize: '0.8rem',
+                        height: '32px',
                         '& fieldset': {
                           borderColor: '#000058'
                         },
@@ -1126,19 +1151,21 @@ const QualidadeModulePage = () => {
                       },
                       '& .MuiInputLabel-root': {
                         fontFamily: 'Poppins',
-                        fontSize: '0.64rem',
+                        fontSize: '0.8rem',
                         color: '#000058',
                         '&.Mui-focused': {
                           color: '#006AB9'
                         }
                       },
                       '& .MuiInputBase-input': {
-                        fontSize: '0.64rem',
-                        padding: '6.4px 10px'
+                        fontSize: '0.8rem',
+                        padding: '6px 10px',
+                        height: '32px'
                       }
                     }}
                   />
 
+                  {/* Botão Limpar */}
                   <Button
                     variant="outlined"
                     size="small"
@@ -1150,11 +1177,12 @@ const QualidadeModulePage = () => {
                     sx={{
                       fontFamily: 'Poppins',
                       fontWeight: 500,
-                      fontSize: '0.64rem',
+                      fontSize: '0.8rem',
                       borderRadius: '6.4px',
-                      px: 1.2,
-                      py: 0.4,
+                      px: 1.6,
+                      py: 0.2,
                       minWidth: 'auto',
+                      height: '32px',
                       borderColor: '#000058',
                       color: '#000058',
                       '&:hover': {
@@ -1259,7 +1287,7 @@ const QualidadeModulePage = () => {
                           fontFamily: 'Poppins', 
                           color: '#FCC200'
                         }}>
-                          Média GPT
+                          Média IA
                         </Typography>
                       </Card>
                     </Grid>
@@ -1777,19 +1805,31 @@ const QualidadeModulePage = () => {
               />
             </Grid>
             
-            {/* Campo vazio para manter consistência de layout */}
             <Grid item xs={12} md={6}>
-              <Box sx={{ 
-                height: '44.8px', // Altura padrão do TextField reduzida 20%
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'transparent',
+              <TextField
+                fullWidth
+                size="small"
+                label="Hora da Ligação"
+                type="time"
+                value={formData.horaLigacao}
+                onChange={(e) => setFormData({ ...formData, horaLigacao: e.target.value })}
+                InputLabelProps={{
+                  shrink: true,
+                  style: { fontFamily: 'Poppins', fontSize: '0.8rem' }
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    fontFamily: 'Poppins',
                 fontSize: '0.8rem',
-                fontFamily: 'Poppins'
-              }}>
-                Espaço reservado
-              </Box>
+                    '&:hover fieldset': {
+                      borderColor: '#1694FF'
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#000058'
+                    }
+                  }
+                }}
+              />
             </Grid>
             
             {/* Critérios de Avaliação */}

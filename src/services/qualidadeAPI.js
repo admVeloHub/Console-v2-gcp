@@ -632,10 +632,36 @@ export const gerarRelatorioAgente = async (colaboradorNome, dataInicio = null, d
     console.log(`📊 DEBUG - Total de avaliações com GPT (filtradas): ${avaliacoesFiltradasComGPT.length}`);
     console.log(`📊 DEBUG - Total de avaliações com GPT (gráfico): ${avaliacoesParaGraficoComGPT.length}`);
 
+    // Buscar média IA do backend
+    let mediaIA = null;
+    try {
+      const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app/api';
+      const params = new URLSearchParams();
+      if (dataInicio) params.append('dataInicio', dataInicio);
+      if (dataFim) params.append('dataFim', dataFim);
+      
+      const mediaResponse = await fetch(`${API_BASE_URL}/audio-analise/media-agente/${encodeURIComponent(colaboradorNome)}?${params}`);
+      if (mediaResponse.ok) {
+        const mediaData = await mediaResponse.json();
+        if (mediaData.success) {
+          mediaIA = mediaData.mediaIA;
+          console.log(`📊 DEBUG - Média IA obtida do backend: ${mediaIA}, Total análises: ${mediaData.totalAnalises}`);
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Não foi possível buscar média IA do backend:', error.message);
+    }
+
     // Usar função utilitária para gerar relatório
     // Passar avaliações filtradas para cards e todas para gráfico
     const { gerarRelatorioAgente: gerarRelatorioAgenteUtil } = await import('../types/qualidade');
     const relatorio = gerarRelatorioAgenteUtil(colaboradorNome, avaliacoesFiltradasComGPT, avaliacoesParaGraficoComGPT);
+    
+    // Substituir mediaGPT pela mediaIA do backend se disponível
+    if (relatorio && mediaIA !== null) {
+      relatorio.mediaGPT = mediaIA;
+    }
+    
     console.log(`📊 DEBUG - Relatório gerado:`, relatorio ? 'Sucesso' : 'Null');
     return relatorio;
   } catch (error) {
