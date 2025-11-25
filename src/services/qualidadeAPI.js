@@ -392,26 +392,22 @@ export const getAvaliacoes = async () => {
     // Garantir que sempre retorne um array
     const avaliacoesArray = Array.isArray(avaliacoes) ? avaliacoes : [];
     
-    // Buscar status de áudio para cada avaliação
-    const avaliacoesComStatus = await Promise.all(
-      avaliacoesArray.map(async (avaliacao) => {
-        try {
-          const audioStatus = await buscarStatusAudio(avaliacao._id);
-          return {
-            ...avaliacao,
-            audioStatus: audioStatus || null,
-            audioSent: audioStatus?.sent || false
-          };
-        } catch (error) {
-          console.warn(`⚠️ Erro ao buscar status de áudio para ${avaliacao._id}:`, error.message);
-          return {
-            ...avaliacao,
-            audioStatus: null,
-            audioSent: false
-          };
-        }
-      })
-    );
+    // Mapear status de áudio diretamente dos campos da avaliação
+    const avaliacoesComStatus = avaliacoesArray.map((avaliacao) => {
+      // Os campos de status de áudio agora estão diretamente na avaliação
+      return {
+        ...avaliacao,
+        audioStatus: avaliacao.audioSent || avaliacao.audioTreated ? {
+          sent: avaliacao.audioSent || false,
+          treated: avaliacao.audioTreated || false,
+          nomeArquivoAudio: avaliacao.nomeArquivoAudio || null,
+          audioCreatedAt: avaliacao.audioCreatedAt || null,
+          audioUpdatedAt: avaliacao.audioUpdatedAt || null
+        } : null,
+        audioSent: avaliacao.audioSent || false,
+        audioTreated: avaliacao.audioTreated || false
+      };
+    });
     
     return avaliacoesComStatus;
   } catch (error) {

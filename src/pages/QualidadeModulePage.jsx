@@ -514,22 +514,24 @@ const QualidadeModulePage = () => {
 
   // Função para determinar status do áudio
   const getAudioStatus = (avaliacao) => {
-    // Verificar se treated=true (processamento concluído)
-    if (avaliacao.audioStatus?.treated === true) {
+    // Usar campos diretamente da avaliação (fundidos de audio_analise_status)
+    // Verde quando treated=true (processamento concluído)
+    if (avaliacao.audioTreated === true) {
       return 'completo'; // Verde
     }
     
-    // Verificar se sent=true e treated=false (enviado mas não processado)
+    // Amarelo quando sent=true mas treated=false (enviado mas não processado)
+    if (avaliacao.audioSent === true && avaliacao.audioTreated === false) {
+      return 'enviando'; // Amarelo
+    }
+    
+    // Compatibilidade com campos antigos (durante migração)
+    if (avaliacao.audioStatus?.treated === true) {
+      return 'completo'; // Verde
+    }
     if (avaliacao.audioStatus?.sent === true && avaliacao.audioStatus?.treated === false) {
       return 'enviando'; // Amarelo
     }
-    
-    // Verificar se audioSent=true (compatibilidade com campo direto)
-    if (avaliacao.audioSent === true) {
-      return 'enviando'; // Amarelo
-    }
-    
-    // Compatibilidade com campos antigos
     if (avaliacao.audioGptId) return 'completo'; // Verde
     if (avaliacao.uploadingAudio) return 'enviando'; // Amarelo
     

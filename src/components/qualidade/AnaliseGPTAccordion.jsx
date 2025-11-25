@@ -14,7 +14,8 @@ import {
   Avatar,
   Chip,
   Button,
-  Collapse
+  Collapse,
+  LinearProgress
 } from '@mui/material';
 import {
   ExpandMore as ExpandMoreIcon,
@@ -139,27 +140,27 @@ const AnaliseGPTAccordion = ({
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               {analise.pontuacaoGPT !== null && analise.pontuacaoGPT !== undefined ? (
                 <>
-                  <Chip
-                    label={`${analise.pontuacaoGPT} pts`}
-                    sx={{
-                      backgroundColor: getScoreColor(analise.pontuacaoGPT),
-                      color: '#ffffff',
-                      fontFamily: 'Poppins',
-                      fontWeight: 500
-                    }}
-                  />
-                  
-                  <Chip
-                    label={getScoreLabel(analise.pontuacaoGPT)}
-                    size="small"
-                    sx={{
-                      backgroundColor: getScoreColor(analise.pontuacaoGPT),
-                      color: '#ffffff',
-                      fontFamily: 'Poppins',
-                      fontWeight: 500,
-                      opacity: 0.8
-                    }}
-                  />
+              <Chip
+                label={`${analise.pontuacaoGPT} pts`}
+                sx={{
+                  backgroundColor: getScoreColor(analise.pontuacaoGPT),
+                  color: '#ffffff',
+                  fontFamily: 'Poppins',
+                  fontWeight: 500
+                }}
+              />
+              
+              <Chip
+                label={getScoreLabel(analise.pontuacaoGPT)}
+                size="small"
+                sx={{
+                  backgroundColor: getScoreColor(analise.pontuacaoGPT),
+                  color: '#ffffff',
+                  fontFamily: 'Poppins',
+                  fontWeight: 500,
+                  opacity: 0.8
+                }}
+              />
                 </>
               ) : (
                 <Chip
@@ -202,24 +203,190 @@ const AnaliseGPTAccordion = ({
               pt: 2, 
               borderTop: '1px solid var(--blue-opaque)'
             }}>
-              {/* Resumo da análise */}
+              {/* Campo Emoção */}
+              {analise.emotion && (
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="subtitle2" sx={{ 
+                    fontFamily: 'Poppins', 
+                    fontWeight: 600,
+                    color: '#000058',
+                    mb: 1.5
+                  }}>
+                    Emoção
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                    {analise.emotion.tom && (
+                      <Box>
+                        <Typography variant="body2" sx={{ 
+                          fontFamily: 'Poppins',
+                          color: '#666666',
+                          mb: 0.5
+                        }}>
+                          Tom: 
+                          <Chip 
+                            label={analise.emotion.tom} 
+                            size="small" 
+                            sx={{ 
+                              ml: 1,
+                              backgroundColor: analise.emotion.tom === 'positivo' ? '#15A237' : 
+                                             analise.emotion.tom === 'negativo' ? '#f44336' : '#FCC200',
+                              color: '#ffffff',
+                              fontFamily: 'Poppins'
+                            }} 
+                          />
+                        </Typography>
+                      </Box>
+                    )}
+                    {analise.emotion.empatia !== null && analise.emotion.empatia !== undefined && (() => {
+                      const empatiaPercentual = Math.round(analise.emotion.empatia * 100);
+                      return (
+                        <Box>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                            <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666' }}>
+                              Empatia
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontFamily: 'Poppins', fontWeight: 500, color: '#000058' }}>
+                              {empatiaPercentual}%
+                            </Typography>
+                          </Box>
+                          <LinearProgress 
+                            variant="determinate" 
+                            value={empatiaPercentual} 
+                            sx={{ 
+                              height: 8, 
+                              borderRadius: 4,
+                              backgroundColor: '#e0e0e0',
+                              '& .MuiLinearProgress-bar': {
+                                backgroundColor: '#1694FF'
+                              }
+                            }} 
+                          />
+                        </Box>
+                      );
+                    })()}
+                    {analise.emotion.profissionalismo !== null && analise.emotion.profissionalismo !== undefined && (() => {
+                      const profissionalismoPercentual = Math.round(analise.emotion.profissionalismo * 100);
+                      return (
+                        <Box>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                            <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666' }}>
+                              Profissionalismo
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontFamily: 'Poppins', fontWeight: 500, color: '#000058' }}>
+                              {profissionalismoPercentual}%
+                            </Typography>
+                          </Box>
+                          <LinearProgress 
+                            variant="determinate" 
+                            value={profissionalismoPercentual} 
+                            sx={{ 
+                              height: 8, 
+                              borderRadius: 4,
+                              backgroundColor: '#e0e0e0',
+                              '& .MuiLinearProgress-bar': {
+                                backgroundColor: '#15A237'
+                              }
+                            }} 
+                          />
+                        </Box>
+                      );
+                    })()}
+                  </Box>
+                </Box>
+              )}
+
+              {/* Campo Nuance */}
+              {analise.nuance && (
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="subtitle2" sx={{ 
+                    fontFamily: 'Poppins', 
+                    fontWeight: 600,
+                    color: '#000058',
+                    mb: 1.5
+                  }}>
+                    Nuance
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                    {analise.nuance.clareza !== null && analise.nuance.clareza !== undefined && (() => {
+                      const clarezaPercentual = Math.round(analise.nuance.clareza * 100);
+                      return (
+                        <Box>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                            <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666' }}>
+                              Clareza
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontFamily: 'Poppins', fontWeight: 500, color: '#000058' }}>
+                              {clarezaPercentual}%
+                            </Typography>
+                          </Box>
+                          <LinearProgress 
+                            variant="determinate" 
+                            value={clarezaPercentual} 
+                            sx={{ 
+                              height: 8, 
+                              borderRadius: 4,
+                              backgroundColor: '#e0e0e0',
+                              '& .MuiLinearProgress-bar': {
+                                backgroundColor: '#1694FF'
+                              }
+                            }} 
+                          />
+                        </Box>
+                      );
+                    })()}
+                    {analise.nuance.tensao !== null && analise.nuance.tensao !== undefined && (() => {
+                      const tensaoPercentual = Math.round(analise.nuance.tensao * 100);
+                      return (
+                        <Box>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                            <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666' }}>
+                              Tensão
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontFamily: 'Poppins', fontWeight: 500, color: '#000058' }}>
+                              {tensaoPercentual}%
+                            </Typography>
+                          </Box>
+                          <LinearProgress 
+                            variant="determinate" 
+                            value={tensaoPercentual} 
+                            sx={{ 
+                              height: 8, 
+                              borderRadius: 4,
+                              backgroundColor: '#e0e0e0',
+                              '& .MuiLinearProgress-bar': {
+                                backgroundColor: tensaoPercentual > 50 ? '#f44336' : '#FCC200'
+                              }
+                            }} 
+                          />
+                        </Box>
+                      );
+                    })()}
+                  </Box>
+                </Box>
+              )}
+
+              {/* Campo Análise */}
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle2" sx={{ 
+                  fontFamily: 'Poppins', 
+                  fontWeight: 600,
+                  color: '#000058',
+                  mb: 1
+                }}>
+                  Análise
+                </Typography>
               <Typography variant="body2" sx={{ 
                 fontFamily: 'Poppins',
                 color: '#666666',
-                mb: 2,
                 lineHeight: 1.6
               }}>
-                {analise.analiseGPT && typeof analise.analiseGPT === 'string' && analise.analiseGPT.trim() ? 
-                  (analise.analiseGPT.length > 200 ? 
-                    `${analise.analiseGPT.substring(0, 200)}...` : 
-                    analise.analiseGPT
-                  ) : 
-                  'Análise não disponível'
-                }
+                  {analise.gptAnalysis?.analysis || analise.qualityAnalysis?.analysis || 'Análise não disponível'}
               </Typography>
+              </Box>
               
-            {/* Palavras críticas */}
-              {analise.palavrasCriticas && Array.isArray(analise.palavrasCriticas) && analise.palavrasCriticas.length > 0 && (
+              {/* Palavras Críticas */}
+              {(analise.gptAnalysis?.palavrasCriticas || analise.qualityAnalysis?.palavrasCriticas) && 
+               (analise.gptAnalysis?.palavrasCriticas?.length > 0 || analise.qualityAnalysis?.palavrasCriticas?.length > 0) && (
                 <Box sx={{ mb: 2 }}>
                   <Typography variant="body2" sx={{ 
                     fontFamily: 'Poppins', 
@@ -230,7 +397,7 @@ const AnaliseGPTAccordion = ({
                     Palavras Críticas Detectadas:
                   </Typography>
                   <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                    {analise.palavrasCriticas.map((palavra, index) => (
+                    {(analise.gptAnalysis?.palavrasCriticas || analise.qualityAnalysis?.palavrasCriticas || []).map((palavra, index) => (
                       <Chip
                         key={index}
                         label={palavra}
@@ -241,6 +408,36 @@ const AnaliseGPTAccordion = ({
                           fontFamily: 'Poppins'
                         }}
                       />
+                    ))}
+                  </Box>
+                </Box>
+              )}
+
+              {/* Cálculo Detalhado */}
+              {analise.calculoDetalhado && Array.isArray(analise.calculoDetalhado) && analise.calculoDetalhado.length > 0 && (
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="body2" sx={{ 
+                    fontFamily: 'Poppins', 
+                    fontWeight: 500,
+                    color: '#000058',
+                    mb: 1
+                  }}>
+                    Cálculo Detalhado:
+                  </Typography>
+                  <Box sx={{ 
+                    backgroundColor: '#f8f9fa',
+                    padding: 1.5,
+                    borderRadius: '8px'
+                  }}>
+                    {analise.calculoDetalhado.map((linha, index) => (
+                      <Typography key={index} variant="body2" sx={{ 
+                        fontFamily: 'Poppins',
+                        color: '#666666',
+                        mb: 0.5,
+                        fontSize: '0.875rem'
+                      }}>
+                        {linha}
+                      </Typography>
                     ))}
                   </Box>
                 </Box>

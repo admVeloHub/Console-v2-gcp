@@ -106,8 +106,9 @@ const UploadAudioModal = ({
           if (data.success && data.data) {
             setAudioStatus(data.data);
             setAudioJaEnviado(data.data.sent === true);
-            if (data.data.audioId) {
-              setAudioId(data.data.audioId);
+            // Não precisamos mais de audioId, mas manter para compatibilidade durante migração
+            if (data.data.avaliacaoId) {
+              // Usar avaliacaoId em vez de audioId
             }
           } else {
             setAudioStatus(null);
@@ -207,7 +208,8 @@ const UploadAudioModal = ({
       
       // Upload concluído
       setUploadProgress(100);
-      setAudioId(result.audioId);
+      // Usar avaliacaoId em vez de audioId
+      const avaliacaoIdParaMonitorar = result.avaliacaoId || avaliacaoId;
       setStatusMessage('Upload concluído! Iniciando processamento...');
       
       // Chamar callback do componente pai se fornecido
@@ -220,7 +222,7 @@ const UploadAudioModal = ({
       setStatusMessage('Processando áudio com IA...');
 
       const stopMonitoring = monitorarProcessamento(
-        result.audioId,
+        avaliacaoIdParaMonitorar,
         // onStatusChange
         (statusData) => {
           const status = statusData.status || statusData.data?.status;
@@ -407,13 +409,13 @@ const UploadAudioModal = ({
                 )}
                 
                 {/* Nome do arquivo */}
-                {audioStatus.nomeArquivo && (
+                {(audioStatus.nomeArquivoAudio || audioStatus.nomeArquivo) && (
                   <Box>
                     <Typography variant="body2" sx={{ fontFamily: 'Poppins', fontWeight: 500, color: '#666666' }}>
                       Arquivo:
                     </Typography>
                     <Typography variant="body1" sx={{ fontFamily: 'Poppins', color: 'var(--blue-dark)' }}>
-                      {audioStatus.nomeArquivo}
+                      {audioStatus.nomeArquivoAudio || audioStatus.nomeArquivo}
                     </Typography>
                   </Box>
                 )}
@@ -450,9 +452,7 @@ const UploadAudioModal = ({
                     sx={{
                       fontFamily: 'Poppins',
                       fontWeight: 500,
-                      backgroundColor: audioStatus.treated 
-                        ? '#1634FF' 
-                        : 'rgba(22, 52, 255, 0.3)',
+                      backgroundColor: '#006AB9', // Azul opaco do LAYOUT_GUIDELINES.md
                       color: '#ffffff'
                     }}
                   />
@@ -463,8 +463,8 @@ const UploadAudioModal = ({
                       fontFamily: 'Poppins',
                       fontWeight: 500,
                       backgroundColor: audioStatus.treated 
-                        ? '#1634FF' 
-                        : '#B0BEC5',
+                        ? '#1634FF' // Azul médio quando treated=true
+                        : '#B0BEC5', // Cinza opaco (aspecto desativado) quando treated=false
                       color: '#ffffff'
                     }}
                   />
