@@ -363,8 +363,9 @@ const buscarStatusAudio = async (avaliacaoId) => {
   try {
     if (!avaliacaoId) return null;
     
-    const API_URL = process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app';
-    const response = await fetch(`${API_URL}/api/audio-analise/status-por-avaliacao/${avaliacaoId}`);
+    // Normalizar URL base removendo /api se existir no final
+    const baseUrl = (process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app').replace(/\/api\/?$/, '');
+    const response = await fetch(`${baseUrl}/api/audio-analise/status-por-avaliacao/${avaliacaoId}`);
     
     if (!response.ok) {
       return null;
@@ -678,12 +679,13 @@ export const gerarRelatorioAgente = async (colaboradorNome, dataInicio = null, d
     // Buscar média IA do backend
     let mediaIA = null;
     try {
-      const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app/api';
+      // Normalizar URL base removendo /api se existir no final
+      const baseUrl = (process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app').replace(/\/api\/?$/, '');
       const params = new URLSearchParams();
       if (dataInicio) params.append('dataInicio', dataInicio);
       if (dataFim) params.append('dataFim', dataFim);
       
-      const mediaResponse = await fetch(`${API_BASE_URL}/audio-analise/media-agente/${encodeURIComponent(colaboradorNome)}?${params}`);
+      const mediaResponse = await fetch(`${baseUrl}/api/audio-analise/media-agente/${encodeURIComponent(colaboradorNome)}?${params}`);
       if (mediaResponse.ok) {
         const mediaData = await mediaResponse.json();
         if (mediaData.success) {

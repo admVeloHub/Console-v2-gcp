@@ -97,8 +97,9 @@ const UploadAudioModal = ({
       }
 
       try {
-        const API_URL = process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app';
-        const response = await fetch(`${API_URL}/api/audio-analise/status-por-avaliacao/${avaliacaoId}`);
+        // Normalizar URL base removendo /api se existir no final
+        const baseUrl = (process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app').replace(/\/api\/?$/, '');
+        const response = await fetch(`${baseUrl}/api/audio-analise/status-por-avaliacao/${avaliacaoId}`);
         
         if (response.ok) {
           const data = await response.json();
