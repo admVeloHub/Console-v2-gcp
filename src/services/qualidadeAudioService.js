@@ -36,7 +36,7 @@ const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
  * @param {string} mimeType - Tipo MIME do arquivo
  * @param {number} fileSize - Tamanho do arquivo em bytes
  * @param {string} avaliacaoId - ID da avaliação (opcional)
- * @returns {Promise<Object>} Resposta com Signed URL e audioId
+ * @returns {Promise<Object>} Resposta com Signed URL e avaliacaoId
  */
 export const generateUploadUrl = async (nomeArquivo, mimeType, fileSize, avaliacaoId = null) => {
   try {
@@ -67,11 +67,15 @@ export const generateUploadUrl = async (nomeArquivo, mimeType, fileSize, avaliac
     const data = await response.json();
     
     // Validar resposta
-    if (!data.success || !data.data || !data.data.uploadUrl || !data.data.audioId) {
+    if (!data.success || !data.data || !data.data.uploadUrl) {
       throw new Error('Resposta inválida do servidor ao gerar URL de upload');
     }
 
-    return data.data;
+    // Retornar dados com avaliacaoId em vez de audioId
+    return {
+      ...data.data,
+      avaliacaoId: data.data.avaliacaoId || avaliacaoId
+    };
   } catch (error) {
     console.error('Erro ao gerar URL de upload:', error);
     throw error;
@@ -190,7 +194,7 @@ export const uploadAudioParaAnalise = async (avaliacaoId, audioFile, onProgress)
             avaliacaoId
           );
           uploadData.uploadUrl = newUploadData.uploadUrl;
-          uploadData.audioId = newUploadData.audioId;
+          uploadData.avaliacaoId = newUploadData.avaliacaoId;
           uploadData.fileName = newUploadData.fileName;
           
           // Esperar um pouco antes de tentar novamente
@@ -211,7 +215,7 @@ export const uploadAudioParaAnalise = async (avaliacaoId, audioFile, onProgress)
 
     // 3. Retornar dados do upload
     return {
-      audioId: uploadData.audioId,
+      avaliacaoId: uploadData.avaliacaoId || avaliacaoId,
       fileName: uploadData.fileName,
       status: 'uploaded',
       bucket: uploadData.bucket
@@ -224,12 +228,12 @@ export const uploadAudioParaAnalise = async (avaliacaoId, audioFile, onProgress)
 
 /**
  * Verificar status do processamento GPT
- * @param {string} uploadId - ID do upload (audioId)
+ * @param {string} avaliacaoId - ID da avaliação
  * @returns {Promise<Object>} Status do processamento
  */
-export const verificarStatusAnaliseGPT = async (uploadId) => {
+export const verificarStatusAnaliseGPT = async (avaliacaoId) => {
   try {
-    const response = await fetch(`${API_URL}/api/audio-analise/status/${uploadId}`);
+    const response = await fetch(`${API_URL}/api/audio-analise/status/${avaliacaoId}`);
     
     if (!response.ok) {
       const error = await response.json();
@@ -243,12 +247,12 @@ export const verificarStatusAnaliseGPT = async (uploadId) => {
       return {
         success: true,
         status: data.data.status, // 'pendente', 'processando', 'concluido'
-        audioId: data.data.audioId,
-        nomeArquivo: data.data.nomeArquivo,
+        avaliacaoId: data.data.avaliacaoId,
+        nomeArquivoAudio: data.data.nomeArquivoAudio,
         sent: data.data.sent,
         treated: data.data.treated,
-        createdAt: data.data.createdAt,
-        updatedAt: data.data.updatedAt
+        audioCreatedAt: data.data.audioCreatedAt,
+        audioUpdatedAt: data.data.audioUpdatedAt
       };
     }
     
@@ -261,12 +265,12 @@ export const verificarStatusAnaliseGPT = async (uploadId) => {
 
 /**
  * Obter resultado da análise GPT
- * @param {string} uploadId - ID do upload (audioId)
+ * @param {string} avaliacaoId - ID da avaliação
  * @returns {Promise<Object>} Resultado da análise
  */
-export const obterResultadoAnalise = async (uploadId) => {
+export const obterResultadoAnalise = async (avaliacaoId) => {
   try {
-    const response = await fetch(`${API_URL}/api/audio-analise/result/${uploadId}`);
+    const response = await fetch(`${API_URL}/api/audio-analise/result/${avaliacaoId}`);
     
     if (!response.ok) {
       const error = await response.json();
@@ -288,14 +292,14 @@ export const obterResultadoAnalise = async (uploadId) => {
 
 /**
  * Criar conexão SSE para monitorar eventos de áudio
- * @param {string} audioId - ID do áudio a monitorar
+ * @param {string} avaliacaoId - ID da avaliação a monitorar
  * @param {Object} callbacks - Callbacks para eventos
  * @param {Function} callbacks.onStatusChange - Callback quando status muda
  * @param {Function} callbacks.onComplete - Callback quando processamento completa
  * @param {Function} callbacks.onError - Callback para erros
  * @returns {Function} Função para desconectar
  */
-export const createSSEConnection = (audioId, callbacks = {}) => {
+export const createSSEConnection = (avaliacaoId, callbacks = {}) => {
   let eventSource = null;
   let reconnectTimeout = null;
   let reconnectAttempts = 0;
@@ -312,15 +316,15 @@ export const createSSEConnection = (audioId, callbacks = {}) => {
         try {
           const data = JSON.parse(event.data);
           
-          // Filtrar eventos apenas para este audioId
-          if (data.audioId === audioId || data.audioId === audioId.toString()) {
+          // Filtrar eventos apenas para este avaliacaoId
+          if (data.avaliacaoId === avaliacaoId || data.avaliacaoId === avaliacaoId.toString()) {
             const status = data.status;
 
             if (callbacks.onStatusChange) {
               callbacks.onStatusChange({
                 status,
-                audioId: data.audioId,
-                nomeArquivo: data.nomeArquivo,
+                avaliacaoId: data.avaliacaoId,
+                nomeArquivoAudio: data.nomeArquivoAudio,
                 timestamp: data.timestamp
               });
             }
@@ -329,8 +333,8 @@ export const createSSEConnection = (audioId, callbacks = {}) => {
               if (callbacks.onComplete) {
                 callbacks.onComplete({
                   status,
-                  audioId: data.audioId,
-                  nomeArquivo: data.nomeArquivo,
+                  avaliacaoId: data.avaliacaoId,
+                  nomeArquivoAudio: data.nomeArquivoAudio,
                   timestamp: data.timestamp
                 });
               }
@@ -413,13 +417,13 @@ export const createSSEConnection = (audioId, callbacks = {}) => {
 
 /**
  * Monitorar status do processamento com SSE (preferencial) e polling (fallback)
- * @param {string} uploadId - ID do upload (audioId)
+ * @param {string} avaliacaoId - ID da avaliação
  * @param {Function} onStatusChange - Callback para mudanças de status
  * @param {Function} onComplete - Callback quando processamento completo
  * @param {Function} onError - Callback para erros
  * @returns {Function} Função para parar o monitoramento
  */
-export const monitorarProcessamento = (uploadId, onStatusChange, onComplete, onError) => {
+export const monitorarProcessamento = (avaliacaoId, onStatusChange, onComplete, onError) => {
   let sseDisconnect = null;
   let pollingStop = null;
   let useSSE = true;
@@ -427,14 +431,14 @@ export const monitorarProcessamento = (uploadId, onStatusChange, onComplete, onE
 
   // Tentar SSE primeiro
   try {
-    sseDisconnect = createSSEConnection(uploadId, {
+    sseDisconnect = createSSEConnection(avaliacaoId, {
       onStatusChange: (data) => {
         if (!isStopped) {
           onStatusChange({
             success: true,
             status: data.status,
-            audioId: data.audioId,
-            nomeArquivo: data.nomeArquivo
+            avaliacaoId: data.avaliacaoId,
+            nomeArquivoAudio: data.nomeArquivoAudio
           });
         }
       },
@@ -443,8 +447,8 @@ export const monitorarProcessamento = (uploadId, onStatusChange, onComplete, onE
           onComplete({
             success: true,
             status: 'concluido',
-            audioId: data.audioId,
-            nomeArquivo: data.nomeArquivo
+            avaliacaoId: data.avaliacaoId,
+            nomeArquivoAudio: data.nomeArquivoAudio
           });
         }
       },
@@ -459,7 +463,7 @@ export const monitorarProcessamento = (uploadId, onStatusChange, onComplete, onE
           }
           
           // Iniciar polling
-          pollingStop = startPolling(uploadId, onStatusChange, onComplete, onError);
+          pollingStop = startPolling(avaliacaoId, onStatusChange, onComplete, onError);
         } else if (!isStopped) {
           onError(error);
         }
@@ -469,7 +473,7 @@ export const monitorarProcessamento = (uploadId, onStatusChange, onComplete, onE
     // Se não conseguir criar SSE, usar polling diretamente
     console.warn('SSE não disponível, usando polling:', error.message);
     useSSE = false;
-    pollingStop = startPolling(uploadId, onStatusChange, onComplete, onError);
+    pollingStop = startPolling(avaliacaoId, onStatusChange, onComplete, onError);
   }
 
   // Função para parar monitoramento
@@ -490,13 +494,13 @@ export const monitorarProcessamento = (uploadId, onStatusChange, onComplete, onE
 
 /**
  * Iniciar polling para verificar status
- * @param {string} uploadId - ID do upload
+ * @param {string} avaliacaoId - ID da avaliação
  * @param {Function} onStatusChange - Callback para mudanças de status
  * @param {Function} onComplete - Callback quando completo
  * @param {Function} onError - Callback para erros
  * @returns {Function} Função para parar polling
  */
-const startPolling = (uploadId, onStatusChange, onComplete, onError) => {
+const startPolling = (avaliacaoId, onStatusChange, onComplete, onError) => {
   let isPolling = true;
   let pollCount = 0;
   const maxPolls = 120; // 10 minutos (5s * 120)
@@ -511,7 +515,7 @@ const startPolling = (uploadId, onStatusChange, onComplete, onError) => {
     }
     
     try {
-      const statusData = await verificarStatusAnaliseGPT(uploadId);
+      const statusData = await verificarStatusAnaliseGPT(avaliacaoId);
       
       if (statusData.success) {
         const status = statusData.status;
@@ -605,6 +609,50 @@ export const auditarAvaliacaoGPT = async (uploadId, auditoriaData) => {
     return await response.json();
   } catch (error) {
     console.error('Erro ao auditar análise:', error);
+    throw error;
+  }
+};
+
+/**
+ * Editar análise GPT ou Quality
+ * @param {string} analiseId - ID da análise
+ * @param {string} analysis - Texto da análise editado
+ * @param {string} tipo - Tipo da análise ('gpt' ou 'quality')
+ * @returns {Promise<Object>} Resultado da edição
+ */
+export const editarAnaliseGPT = async (analiseId, analysis, tipo = 'gpt') => {
+  try {
+    if (!analiseId) {
+      throw new Error('ID da análise é obrigatório');
+    }
+
+    if (!analysis || typeof analysis !== 'string') {
+      throw new Error('Campo analysis é obrigatório e deve ser uma string');
+    }
+
+    if (tipo !== 'gpt' && tipo !== 'quality') {
+      throw new Error('Tipo deve ser "gpt" ou "quality"');
+    }
+
+    const response = await fetch(`${API_URL}/api/audio-analise/${analiseId}/editar-analise`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        analysis: analysis,
+        tipo: tipo
+      })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || error.message || 'Erro ao editar análise');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Erro ao editar análise:', error);
     throw error;
   }
 };

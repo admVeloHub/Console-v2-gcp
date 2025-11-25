@@ -7,7 +7,7 @@
  * AUTHOR: VeloHub Development Team
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -28,25 +28,44 @@ import {
   TextField,
   IconButton,
   Collapse,
-  Alert
+  Alert,
+  CircularProgress
 } from '@mui/material';
 import {
   Close as CloseIcon,
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
   Search as SearchIcon,
-  Gavel as GavelIcon
+  Gavel as GavelIcon,
+  Edit as EditIcon,
+  Save as SaveIcon,
+  Cancel as CancelIcon
 } from '@mui/icons-material';
+import { editarAnaliseGPT } from '../../services/qualidadeAudioService';
 
 const DetalhesAnaliseModal = ({ 
   open, 
   onClose, 
   analise,
   onAuditar,
-  podeAuditar = false 
+  podeAuditar = false,
+  onAnaliseAtualizada
 }) => {
   const [transcricaoExpandida, setTranscricaoExpandida] = useState(false);
   const [buscaTranscricao, setBuscaTranscricao] = useState('');
+  const [editandoAnalise, setEditandoAnalise] = useState(false);
+  const [analiseEditada, setAnaliseEditada] = useState('');
+  const [salvandoAnalise, setSalvandoAnalise] = useState(false);
+  const [erroSalvar, setErroSalvar] = useState(null);
+
+  // Resetar estados quando o modal fechar ou análise mudar
+  useEffect(() => {
+    if (!open) {
+      setEditandoAnalise(false);
+      setAnaliseEditada('');
+      setErroSalvar(null);
+    }
+  }, [open]);
 
   if (!analise) return null;
 
@@ -66,7 +85,9 @@ const DetalhesAnaliseModal = ({
     const labels = {
       saudacaoAdequada: 'Saudação Adequada',
       escutaAtiva: 'Escuta Ativa',
+      clarezaObjetividade: 'Clareza e Objetividade',
       resolucaoQuestao: 'Resolução da Questão',
+      dominioAssunto: 'Domínio do Assunto',
       empatiaCordialidade: 'Empatia e Cordialidade',
       direcionouPesquisa: 'Direcionamento de Pesquisa',
       procedimentoIncorreto: 'Procedimento Incorreto',
@@ -79,7 +100,9 @@ const DetalhesAnaliseModal = ({
     const pontuacoes = {
       saudacaoAdequada: valor ? 10 : 0,
       escutaAtiva: valor ? 25 : 0,
+      clarezaObjetividade: valor ? 15 : 0,
       resolucaoQuestao: valor ? 40 : 0,
+      dominioAssunto: valor ? 20 : 0,
       empatiaCordialidade: valor ? 15 : 0,
       direcionouPesquisa: valor ? 10 : 0,
       procedimentoIncorreto: valor ? -60 : 0,
@@ -117,7 +140,7 @@ const DetalhesAnaliseModal = ({
         justifyContent: 'space-between',
         alignItems: 'center'
       }}>
-        Detalhes da Análise GPT
+        Detalhes da Análise por IA
         <IconButton onClick={onClose} size="small">
           <CloseIcon />
         </IconButton>
@@ -135,85 +158,109 @@ const DetalhesAnaliseModal = ({
             Informações da Avaliação
           </Typography>
           
-          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 2 }}>
-            <Chip
-              label={`${analise.colaboradorNome}`}
-              sx={{
-                backgroundColor: '#1694FF',
-                color: '#ffffff',
-                fontFamily: 'Poppins',
-                fontWeight: 500
-              }}
-            />
-            <Chip
-              label={`${analise.mes}/${analise.ano}`}
-              sx={{
-                backgroundColor: '#666666',
-                color: '#ffffff',
-                fontFamily: 'Poppins'
-              }}
-            />
-            <Chip
-              label={`${analise.dataAvaliacao ? new Date(analise.dataAvaliacao).toLocaleDateString('pt-BR') : 'Data não disponível'}`}
-              sx={{
-                backgroundColor: '#666666',
-                color: '#ffffff',
-                fontFamily: 'Poppins'
-              }}
-            />
-          </Box>
-
-          {analise.avaliacaoOriginal && (
-            <Box sx={{ 
-              backgroundColor: '#f5f5f5', 
-              padding: 2, 
-              borderRadius: '8px',
-              mb: 2
-            }}>
-              <Typography variant="body2" sx={{ fontFamily: 'Poppins', mb: 1 }}>
-                <strong>Avaliador Humano:</strong> {analise.avaliacaoOriginal.avaliador || 'Não informado'}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flexWrap: 'wrap' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="body2" sx={{ 
+                fontFamily: 'Poppins', 
+                fontWeight: 500,
+                color: '#666666'
+              }}>
+                Colaborador:
               </Typography>
-              <Typography variant="body2" sx={{ fontFamily: 'Poppins' }}>
-                <strong>Pontuação Humana:</strong> {analise.avaliacaoOriginal.pontuacaoTotal || 0} pontos
+              <Typography variant="body2" sx={{ 
+                fontFamily: 'Poppins',
+                color: '#000058',
+                fontWeight: 500
+              }}>
+                {analise.colaboradorNome || 'Não disponível'}
               </Typography>
             </Box>
-          )}
+            
+            {analise.dataLigacao && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="body2" sx={{ 
+                  fontFamily: 'Poppins', 
+                  fontWeight: 500,
+                  color: '#666666'
+                }}>
+                  Data da ligação:
+                </Typography>
+                <Typography variant="body2" sx={{ 
+                  fontFamily: 'Poppins',
+                  color: '#000058'
+                }}>
+                  {new Date(analise.dataLigacao).toLocaleString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </Typography>
+              </Box>
+            )}
+            
+            {analise.createdAt && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="body2" sx={{ 
+                  fontFamily: 'Poppins', 
+                  fontWeight: 500,
+                  color: '#666666'
+                }}>
+                  Data da avaliação:
+                </Typography>
+                <Typography variant="body2" sx={{ 
+                  fontFamily: 'Poppins',
+                  color: '#000058'
+                }}>
+                  {new Date(analise.createdAt).toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                  })}
+                </Typography>
+              </Box>
+            )}
+          </Box>
         </Box>
 
         <Divider sx={{ my: 3 }} />
 
         {/* Seção 2: Relatório GPT */}
         <Box sx={{ mb: 3 }}>
-          <Typography variant="h6" sx={{ 
-            fontFamily: 'Poppins', 
-            fontWeight: 600, 
-            color: '#000058',
-            mb: 2
-          }}>
-            Relatório da Análise GPT
-          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h6" sx={{ 
+              fontFamily: 'Poppins', 
+              fontWeight: 600, 
+              color: '#000058'
+            }}>
+              Relatório da Análise
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+              <Chip
+                label={`${analise.pontuacaoGPT} pontos`}
+                sx={{
+                  backgroundColor: getScoreColor(analise.pontuacaoGPT),
+                  color: '#ffffff',
+                  fontFamily: 'Poppins',
+                  fontWeight: 600,
+                  fontSize: '1rem'
+                }}
+              />
+              <Chip
+                label={getScoreLabel(analise.pontuacaoGPT)}
+                sx={{
+                  backgroundColor: getScoreColor(analise.pontuacaoGPT),
+                  color: '#ffffff',
+                  fontFamily: 'Poppins',
+                  opacity: 0.8
+                }}
+              />
+            </Box>
+          </Box>
           
-          <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
-            <Chip
-              label={`${analise.pontuacaoGPT} pontos`}
-              sx={{
-                backgroundColor: getScoreColor(analise.pontuacaoGPT),
-                color: '#ffffff',
-                fontFamily: 'Poppins',
-                fontWeight: 600,
-                fontSize: '1rem'
-              }}
-            />
-            <Chip
-              label={getScoreLabel(analise.pontuacaoGPT)}
-              sx={{
-                backgroundColor: getScoreColor(analise.pontuacaoGPT),
-                color: '#ffffff',
-                fontFamily: 'Poppins',
-                opacity: 0.8
-              }}
-            />
-            {analise.confianca && (
+          {analise.confianca && (
+            <Box sx={{ mb: 2 }}>
               <Chip
                 label={`Confiança: ${analise.confianca}%`}
                 sx={{
@@ -222,16 +269,8 @@ const DetalhesAnaliseModal = ({
                   fontFamily: 'Poppins'
                 }}
               />
-            )}
-          </Box>
-
-          <Typography variant="body1" sx={{ 
-            fontFamily: 'Poppins',
-            lineHeight: 1.6,
-            mb: 2
-          }}>
-            {analise.analiseGPT || 'Análise não disponível'}
-          </Typography>
+            </Box>
+          )}
 
           {/* Cálculo Detalhado */}
           {analise.calculoDetalhado && analise.calculoDetalhado.length > 0 && (
@@ -270,7 +309,7 @@ const DetalhesAnaliseModal = ({
             color: '#000058',
             mb: 2
           }}>
-            Comparação de Critérios
+            Critérios de Avaliação
           </Typography>
           
           <TableContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid #e0e0e0' }}>
@@ -285,10 +324,16 @@ const DetalhesAnaliseModal = ({
                 </TableRow>
               </TableHead>
               <TableBody>
-                {analise.criteriosGPT && Object.entries(analise.criteriosGPT).map(([criterio, valorGPT]) => {
-                  const valorHumano = analise.avaliacaoOriginal?.criterios?.[criterio];
-                  const pontos = getCriterioPontuacao(criterio, valorGPT);
-                  const divergencia = valorGPT !== valorHumano;
+                {(() => {
+                  // Obter critérios de gptAnalysis ou qualityAnalysis
+                  const criterios = analise.gptAnalysis?.criterios || analise.qualityAnalysis?.criterios || {};
+                  // Obter critérios humanos diretamente de avaliacaoMonitorId populado
+                  const avaliacaoMonitor = analise.avaliacaoMonitorId || analise.avaliacaoOriginal;
+                  return Object.entries(criterios).map(([criterio, valorGPT]) => {
+                    // Buscar critério humano diretamente do avaliacaoMonitorId populado
+                    const valorHumano = avaliacaoMonitor?.[criterio];
+                    const pontos = getCriterioPontuacao(criterio, valorGPT);
+                    const divergencia = valorHumano !== undefined && valorGPT !== valorHumano;
                   
                   return (
                     <TableRow 
@@ -363,7 +408,7 @@ const DetalhesAnaliseModal = ({
                       </TableCell>
                     </TableRow>
                   );
-                })}
+                })})()}
               </TableBody>
             </Table>
           </TableContainer>
@@ -371,7 +416,156 @@ const DetalhesAnaliseModal = ({
 
         <Divider sx={{ my: 3 }} />
 
-        {/* Seção 4: Palavras Críticas */}
+        {/* Seção 4: Análise Editável */}
+        <Box sx={{ mb: 3 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h6" sx={{ 
+              fontFamily: 'Poppins', 
+              fontWeight: 600, 
+              color: '#000058'
+            }}>
+              Análise
+            </Typography>
+            {podeAuditar && !editandoAnalise && (
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<EditIcon />}
+                onClick={() => {
+                  // Buscar o texto da análise (priorizar gptAnalysis, depois qualityAnalysis)
+                  const textoAnalise = analise.gptAnalysis?.analysis || 
+                                       analise.qualityAnalysis?.analysis || 
+                                       '';
+                  setAnaliseEditada(textoAnalise);
+                  setEditandoAnalise(true);
+                  setErroSalvar(null);
+                }}
+                sx={{
+                  fontFamily: 'Poppins',
+                  fontWeight: 500,
+                  borderColor: '#FCC200',
+                  color: '#000000',
+                  '&:hover': {
+                    borderColor: '#e6b000',
+                    backgroundColor: 'rgba(252, 194, 0, 0.1)'
+                  }
+                }}
+              >
+                Auditoria
+              </Button>
+            )}
+          </Box>
+
+          {erroSalvar && (
+            <Alert severity="error" sx={{ mb: 2, fontFamily: 'Poppins' }}>
+              {erroSalvar}
+            </Alert>
+          )}
+
+          {editandoAnalise ? (
+            <Box>
+              <TextField
+                fullWidth
+                multiline
+                rows={8}
+                value={analiseEditada}
+                onChange={(e) => setAnaliseEditada(e.target.value)}
+                variant="outlined"
+                sx={{
+                  mb: 2,
+                  '& .MuiOutlinedInput-root': {
+                    fontFamily: 'Poppins'
+                  }
+                }}
+              />
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <Button
+                  variant="contained"
+                  startIcon={salvandoAnalise ? <CircularProgress size={16} /> : <SaveIcon />}
+                  onClick={async () => {
+                    try {
+                      setSalvandoAnalise(true);
+                      setErroSalvar(null);
+                      
+                      // Determinar o tipo da análise (gpt ou quality)
+                      // Priorizar gptAnalysis se existir, senão usar qualityAnalysis
+                      const tipo = (analise.gptAnalysis && (analise.gptAnalysis.analysis || Object.keys(analise.gptAnalysis).length > 0)) ? 'gpt' : 'quality';
+                      
+                      const resultado = await editarAnaliseGPT(analise._id, analiseEditada, tipo);
+                      
+                      // Atualizar o objeto analise localmente
+                      if (tipo === 'gpt') {
+                        analise.gptAnalysis = analise.gptAnalysis || {};
+                        analise.gptAnalysis.analysis = analiseEditada;
+                      } else {
+                        analise.qualityAnalysis = analise.qualityAnalysis || {};
+                        analise.qualityAnalysis.analysis = analiseEditada;
+                      }
+                      
+                      setEditandoAnalise(false);
+                      setSalvandoAnalise(false);
+                      setErroSalvar(null);
+                      
+                      // Notificar componente pai se necessário
+                      if (onAnaliseAtualizada) {
+                        onAnaliseAtualizada(analise);
+                      }
+                    } catch (error) {
+                      console.error('Erro ao salvar análise:', error);
+                      setErroSalvar(error.message || 'Erro ao salvar análise');
+                      setSalvandoAnalise(false);
+                    }
+                  }}
+                  disabled={salvandoAnalise}
+                  sx={{
+                    fontFamily: 'Poppins',
+                    fontWeight: 500,
+                    backgroundColor: '#15A237',
+                    '&:hover': {
+                      backgroundColor: '#128a2e'
+                    }
+                  }}
+                >
+                  Salvar
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<CancelIcon />}
+                  onClick={() => {
+                    setEditandoAnalise(false);
+                    setAnaliseEditada('');
+                    setErroSalvar(null);
+                  }}
+                  disabled={salvandoAnalise}
+                  sx={{
+                    fontFamily: 'Poppins',
+                    fontWeight: 500,
+                    borderColor: '#666666',
+                    color: '#666666',
+                    '&:hover': {
+                      borderColor: '#000000',
+                      backgroundColor: 'rgba(0, 0, 0, 0.05)'
+                    }
+                  }}
+                >
+                  Cancelar
+                </Button>
+              </Box>
+            </Box>
+          ) : (
+            <Typography variant="body1" sx={{ 
+              fontFamily: 'Poppins',
+              lineHeight: 1.6,
+              whiteSpace: 'pre-wrap'
+            }}>
+              {analise.gptAnalysis?.analysis || analise.qualityAnalysis?.analysis || 'Análise não disponível'}
+            </Typography>
+          )}
+        </Box>
+
+        <Divider sx={{ my: 3 }} />
+
+        {/* Seção 5: Palavras Críticas */}
         {analise.palavrasCriticas && analise.palavrasCriticas.length > 0 && (
           <Box sx={{ mb: 3 }}>
             <Typography variant="h6" sx={{ 
