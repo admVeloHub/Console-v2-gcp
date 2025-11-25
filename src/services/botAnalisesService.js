@@ -1,7 +1,12 @@
 // VERSION: v3.3.0 | DATE: 2025-11-25 | AUTHOR: VeloHub Development Team
 
-// Configuração da API
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app/api';
+// Função auxiliar para normalizar URL base (remove /api do final se existir)
+const normalizeBaseUrl = (url) => {
+  return url.replace(/\/api\/?$/, '');
+};
+
+// Configuração da API - garantir que sempre termine com /api
+const API_BASE_URL = normalizeBaseUrl(process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app') + '/api';
 
 // Import do novo endpoint FAQ
 import { faqBotAPI } from './api';

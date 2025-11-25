@@ -95,9 +95,14 @@ export const sendUserPing = async (user) => {
 
     console.log('Enviando ping do usuário:', pingData);
 
-    // URL do backend - usar a mesma configuração da API principal
-    const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app/api';
-    const apiUrl = `${API_BASE_URL}/user-ping`;
+    // Função auxiliar para normalizar URL base (remove /api do final se existir)
+    const normalizeBaseUrl = (url) => {
+      return url.replace(/\/api\/?$/, '');
+    };
+    
+    // URL do backend - garantir que sempre termine com /api
+    const baseUrl = normalizeBaseUrl(process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app');
+    const apiUrl = `${baseUrl}/api/user-ping`;
 
     const response = await fetch(apiUrl, {
       method: 'POST',

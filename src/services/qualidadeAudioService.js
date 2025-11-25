@@ -7,7 +7,12 @@
  * AUTHOR: VeloHub Development Team
  */
 
-const API_URL = 'https://backend-gcp-278491073220.us-east1.run.app';
+// Função auxiliar para normalizar URL base (remove /api do final se existir)
+const normalizeBaseUrl = (url) => {
+  return url.replace(/\/api\/?$/, '');
+};
+
+const API_URL = normalizeBaseUrl(process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app');
 const SSE_URL = `${API_URL}/events`;
 
 // Formatos aceitos (atualizado conforme backend)

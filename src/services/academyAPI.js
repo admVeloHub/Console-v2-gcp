@@ -1,8 +1,13 @@
 // VERSION: v1.0.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
 import axios from 'axios';
 
-// Configuração base da API
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app/api';
+// Função auxiliar para normalizar URL base (remove /api do final se existir)
+const normalizeBaseUrl = (url) => {
+  return url.replace(/\/api\/?$/, '');
+};
+
+// Configuração base da API - garantir que sempre termine com /api
+const API_BASE_URL = normalizeBaseUrl(process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app') + '/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
