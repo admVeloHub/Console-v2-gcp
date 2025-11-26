@@ -85,7 +85,7 @@ export const getAuthorizedUser = async (email) => {
         },
         _funcoesAdministrativas: {
           avaliador: true,
-          auditor: true,
+          auditoria: true,
           relatoriosGestao: true
         }
       };
@@ -131,7 +131,7 @@ export const getAuthorizedUser = async (email) => {
         },
         _funcoesAdministrativas: {
           avaliador: true,
-          auditor: true,
+          auditoria: true,
           relatoriosGestao: true
         }
       };

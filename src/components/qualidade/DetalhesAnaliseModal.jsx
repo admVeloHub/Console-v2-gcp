@@ -2,7 +2,7 @@
  * DetalhesAnaliseModal.jsx
  * Modal para exibir detalhes completos da análise GPT
  * 
- * VERSION: v1.0.0
+ * VERSION: v1.3.0
  * DATE: 2024-12-19
  * AUTHOR: VeloHub Development Team
  */
@@ -39,9 +39,12 @@ import {
   Gavel as GavelIcon,
   Edit as EditIcon,
   Save as SaveIcon,
-  Cancel as CancelIcon
+  Cancel as CancelIcon,
+  CheckCircle as CheckCircleIcon,
+  HighlightOff as CancelXIcon
 } from '@mui/icons-material';
-import { editarAnaliseGPT } from '../../services/qualidadeAudioService';
+import { editarAnaliseGPT, obterResultadoAnalise } from '../../services/qualidadeAudioService';
+import { calcularPontuacaoTotal, PONTUACAO } from '../../types/qualidade';
 
 const DetalhesAnaliseModal = ({ 
   open, 
@@ -57,6 +60,45 @@ const DetalhesAnaliseModal = ({
   const [analiseEditada, setAnaliseEditada] = useState('');
   const [salvandoAnalise, setSalvandoAnalise] = useState(false);
   const [erroSalvar, setErroSalvar] = useState(null);
+  const [analiseCompleta, setAnaliseCompleta] = useState(null);
+  const [carregandoAnalise, setCarregandoAnalise] = useState(false);
+
+  // Buscar dados completos quando o modal abrir
+  useEffect(() => {
+    const buscarDadosCompletos = async () => {
+      if (!open || !analise) return;
+      
+      // Se já temos avaliacaoMonitorId populado com critérios, usar diretamente
+      if (analise.avaliacaoMonitorId && typeof analise.avaliacaoMonitorId === 'object' && analise.avaliacaoMonitorId.saudacaoAdequada !== undefined) {
+        setAnaliseCompleta(analise);
+        return;
+      }
+      
+      // Caso contrário, buscar dados completos usando avaliacaoId
+      const avaliacaoId = analise.avaliacaoId || analise.avaliacaoMonitorId?._id || analise._id;
+      if (!avaliacaoId) {
+        console.warn('⚠️ Nenhum avaliacaoId encontrado para buscar dados completos');
+        setAnaliseCompleta(analise);
+        return;
+      }
+      
+      try {
+        setCarregandoAnalise(true);
+        console.log('🔍 Buscando dados completos para avaliacaoId:', avaliacaoId);
+        const dadosCompletos = await obterResultadoAnalise(avaliacaoId);
+        console.log('✅ Dados completos recebidos:', dadosCompletos);
+        setAnaliseCompleta(dadosCompletos);
+      } catch (error) {
+        console.error('❌ Erro ao buscar dados completos:', error);
+        // Em caso de erro, usar os dados que já temos
+        setAnaliseCompleta(analise);
+      } finally {
+        setCarregandoAnalise(false);
+      }
+    };
+    
+    buscarDadosCompletos();
+  }, [open, analise]);
 
   // Resetar estados quando o modal fechar ou análise mudar
   useEffect(() => {
@@ -64,8 +106,34 @@ const DetalhesAnaliseModal = ({
       setEditandoAnalise(false);
       setAnaliseEditada('');
       setErroSalvar(null);
+      setAnaliseCompleta(null);
     }
   }, [open]);
+
+  // Debug: Log dos dados recebidos para verificar populate
+  useEffect(() => {
+    if (analiseCompleta && open) {
+      console.log('🔍 DEBUG DetalhesAnaliseModal - Dados completos:', {
+        avaliacaoMonitorId: analiseCompleta.avaliacaoMonitorId,
+        tipoAvaliacaoMonitorId: typeof analiseCompleta.avaliacaoMonitorId,
+        isObject: analiseCompleta.avaliacaoMonitorId && typeof analiseCompleta.avaliacaoMonitorId === 'object',
+        criteriosMonitor: analiseCompleta.avaliacaoMonitorId ? {
+          saudacaoAdequada: analiseCompleta.avaliacaoMonitorId.saudacaoAdequada,
+          escutaAtiva: analiseCompleta.avaliacaoMonitorId.escutaAtiva,
+          clarezaObjetividade: analiseCompleta.avaliacaoMonitorId.clarezaObjetividade,
+          resolucaoQuestao: analiseCompleta.avaliacaoMonitorId.resolucaoQuestao,
+          dominioAssunto: analiseCompleta.avaliacaoMonitorId.dominioAssunto,
+          empatiaCordialidade: analiseCompleta.avaliacaoMonitorId.empatiaCordialidade,
+          direcionouPesquisa: analiseCompleta.avaliacaoMonitorId.direcionouPesquisa,
+          procedimentoIncorreto: analiseCompleta.avaliacaoMonitorId.procedimentoIncorreto,
+          encerramentoBrusco: analiseCompleta.avaliacaoMonitorId.encerramentoBrusco
+        } : null
+      });
+    }
+  }, [analiseCompleta, open]);
+
+  // Usar analiseCompleta se disponível, senão usar analise
+  const analiseExibida = analiseCompleta || analise;
 
   if (!analise) return null;
 
@@ -98,17 +166,83 @@ const DetalhesAnaliseModal = ({
 
   const getCriterioPontuacao = (criterio, valor) => {
     const pontuacoes = {
-      saudacaoAdequada: valor ? 10 : 0,
-      escutaAtiva: valor ? 25 : 0,
-      clarezaObjetividade: valor ? 15 : 0,
-      resolucaoQuestao: valor ? 40 : 0,
-      dominioAssunto: valor ? 20 : 0,
-      empatiaCordialidade: valor ? 15 : 0,
-      direcionouPesquisa: valor ? 10 : 0,
-      procedimentoIncorreto: valor ? -60 : 0,
-      encerramentoBrusco: valor ? -100 : 0
+      saudacaoAdequada: valor ? PONTUACAO.SAUDACAO_ADEQUADA : 0,
+      escutaAtiva: valor ? PONTUACAO.ESCUTA_ATIVA : 0,
+      clarezaObjetividade: valor ? PONTUACAO.CLAREZA_OBJETIVIDADE : 0,
+      resolucaoQuestao: valor ? PONTUACAO.RESOLUCAO_QUESTAO : 0,
+      dominioAssunto: valor ? PONTUACAO.DOMINIO_ASSUNTO : 0,
+      empatiaCordialidade: valor ? PONTUACAO.EMPATIA_CORDIALIDADE : 0,
+      direcionouPesquisa: valor ? PONTUACAO.DIRECIONOU_PESQUISA : 0,
+      procedimentoIncorreto: valor ? PONTUACAO.PROCEDIMENTO_INCORRETO : 0,
+      encerramentoBrusco: valor ? PONTUACAO.ENCERRAMENTO_BRUSCO : 0
     };
     return pontuacoes[criterio] || 0;
+  };
+
+  // Calcular pontuação do monitor humano baseado nos critérios
+  const calcularPontuacaoMonitor = (avaliacaoMonitor) => {
+    if (!avaliacaoMonitor || typeof avaliacaoMonitor !== 'object') {
+      return null;
+    }
+    // Usar pontuacaoTotal se disponível, senão calcular
+    if (avaliacaoMonitor.pontuacaoTotal !== undefined && avaliacaoMonitor.pontuacaoTotal !== null) {
+      return Math.max(0, avaliacaoMonitor.pontuacaoTotal);
+    }
+    return Math.max(0, calcularPontuacaoTotal(avaliacaoMonitor));
+  };
+
+  // Calcular pontuação da IA
+  const calcularPontuacaoIA = () => {
+    const pontuacaoIA = analiseExibida?.gptAnalysis?.pontuacao || 
+                        analiseExibida?.qualityAnalysis?.pontuacao || 
+                        analiseExibida?.pontuacaoGPT || 
+                        analiseExibida?.pontuacaoConsensual;
+    
+    if (pontuacaoIA !== undefined && pontuacaoIA !== null) {
+      return Math.max(0, pontuacaoIA);
+    }
+    
+    // Se não houver pontuação direta, calcular a partir dos critérios
+    const criterios = analiseExibida?.gptAnalysis?.criterios || analiseExibida?.qualityAnalysis?.criterios || {};
+    let total = 0;
+    
+    if (criterios.saudacaoAdequada) total += PONTUACAO.SAUDACAO_ADEQUADA;
+    if (criterios.escutaAtiva) total += PONTUACAO.ESCUTA_ATIVA;
+    if (criterios.clarezaObjetividade) total += PONTUACAO.CLAREZA_OBJETIVIDADE;
+    if (criterios.resolucaoQuestao) total += PONTUACAO.RESOLUCAO_QUESTAO;
+    if (criterios.dominioAssunto) total += PONTUACAO.DOMINIO_ASSUNTO;
+    if (criterios.empatiaCordialidade) total += PONTUACAO.EMPATIA_CORDIALIDADE;
+    if (criterios.direcionouPesquisa) total += PONTUACAO.DIRECIONOU_PESQUISA;
+    if (criterios.procedimentoIncorreto) total += PONTUACAO.PROCEDIMENTO_INCORRETO;
+    if (criterios.encerramentoBrusco) total += PONTUACAO.ENCERRAMENTO_BRUSCO;
+    
+    return Math.max(0, total);
+  };
+
+  // Verificar se é critério detrator
+  const isCriterioDetrator = (criterio) => {
+    return criterio === 'procedimentoIncorreto' || criterio === 'encerramentoBrusco';
+  };
+
+  // Obter ícone e cor para critério
+  const getCriterioIcon = (criterio, valor) => {
+    const isDetrator = isCriterioDetrator(criterio);
+    
+    if (isDetrator) {
+      // Detratores: true = checkmark vermelho, false = X verde
+      if (valor) {
+        return { icon: CheckCircleIcon, color: '#f44336' };
+      } else {
+        return { icon: CancelXIcon, color: '#15A237' };
+      }
+    } else {
+      // Outros: true = checkmark verde, false = X amarelo
+      if (valor) {
+        return { icon: CheckCircleIcon, color: '#15A237' };
+      } else {
+        return { icon: CancelXIcon, color: '#FCC200' };
+      }
+    }
   };
 
   const filtrarTranscricao = (texto, busca) => {
@@ -117,7 +251,7 @@ const DetalhesAnaliseModal = ({
     return texto.replace(regex, '<mark style="background-color: #FCC200; padding: 2px;">$1</mark>');
   };
 
-  const transcricaoFiltrada = filtrarTranscricao(analise.transcricao || '', buscaTranscricao);
+  const transcricaoFiltrada = filtrarTranscricao(analiseExibida?.transcricao || '', buscaTranscricao);
 
   return (
     <Dialog 
@@ -147,6 +281,14 @@ const DetalhesAnaliseModal = ({
       </DialogTitle>
 
       <DialogContent dividers>
+        {carregandoAnalise && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 4 }}>
+            <CircularProgress />
+            <Typography variant="body2" sx={{ ml: 2, fontFamily: 'Poppins' }}>
+              Carregando dados completos...
+            </Typography>
+          </Box>
+        )}
         {/* Seção 1: Informações da Avaliação */}
         <Box sx={{ mb: 3 }}>
           <Typography variant="h6" sx={{ 
@@ -172,11 +314,11 @@ const DetalhesAnaliseModal = ({
                 color: '#000058',
                 fontWeight: 500
               }}>
-                {analise.colaboradorNome || 'Não disponível'}
+                {analiseExibida?.colaboradorNome || analiseExibida?.avaliacaoMonitorId?.colaboradorNome || 'Não disponível'}
               </Typography>
             </Box>
             
-            {analise.dataLigacao && (
+            {(analiseExibida?.dataLigacao || analiseExibida?.avaliacaoMonitorId?.dataLigacao) && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Typography variant="body2" sx={{ 
                   fontFamily: 'Poppins', 
@@ -189,7 +331,7 @@ const DetalhesAnaliseModal = ({
                   fontFamily: 'Poppins',
                   color: '#000058'
                 }}>
-                  {new Date(analise.dataLigacao).toLocaleString('pt-BR', {
+                  {new Date(analiseExibida?.dataLigacao || analiseExibida?.avaliacaoMonitorId?.dataLigacao).toLocaleString('pt-BR', {
                     day: '2-digit',
                     month: '2-digit',
                     year: 'numeric',
@@ -200,7 +342,7 @@ const DetalhesAnaliseModal = ({
               </Box>
             )}
             
-            {analise.createdAt && (
+            {analiseExibida?.createdAt && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Typography variant="body2" sx={{ 
                   fontFamily: 'Poppins', 
@@ -213,7 +355,7 @@ const DetalhesAnaliseModal = ({
                   fontFamily: 'Poppins',
                   color: '#000058'
                 }}>
-                  {new Date(analise.createdAt).toLocaleDateString('pt-BR', {
+                  {new Date(analiseExibida?.createdAt).toLocaleDateString('pt-BR', {
                     day: '2-digit',
                     month: '2-digit',
                     year: 'numeric'
@@ -221,82 +363,8 @@ const DetalhesAnaliseModal = ({
                 </Typography>
               </Box>
             )}
+
           </Box>
-        </Box>
-
-        <Divider sx={{ my: 3 }} />
-
-        {/* Seção 2: Relatório GPT */}
-        <Box sx={{ mb: 3 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h6" sx={{ 
-              fontFamily: 'Poppins', 
-              fontWeight: 600, 
-              color: '#000058'
-            }}>
-              Relatório da Análise
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-              <Chip
-                label={`${analise.pontuacaoGPT} pontos`}
-                sx={{
-                  backgroundColor: getScoreColor(analise.pontuacaoGPT),
-                  color: '#ffffff',
-                  fontFamily: 'Poppins',
-                  fontWeight: 600,
-                  fontSize: '1rem'
-                }}
-              />
-              <Chip
-                label={getScoreLabel(analise.pontuacaoGPT)}
-                sx={{
-                  backgroundColor: getScoreColor(analise.pontuacaoGPT),
-                  color: '#ffffff',
-                  fontFamily: 'Poppins',
-                  opacity: 0.8
-                }}
-              />
-            </Box>
-          </Box>
-          
-          {analise.confianca && (
-            <Box sx={{ mb: 2 }}>
-              <Chip
-                label={`Confiança: ${analise.confianca}%`}
-                sx={{
-                  backgroundColor: '#1694FF',
-                  color: '#ffffff',
-                  fontFamily: 'Poppins'
-                }}
-              />
-            </Box>
-          )}
-
-          {/* Cálculo Detalhado */}
-          {analise.calculoDetalhado && analise.calculoDetalhado.length > 0 && (
-            <Box sx={{ 
-              backgroundColor: '#f8f9fa', 
-              padding: 2, 
-              borderRadius: '8px',
-              mb: 2
-            }}>
-              <Typography variant="subtitle2" sx={{ 
-                fontFamily: 'Poppins', 
-                fontWeight: 600,
-                mb: 1
-              }}>
-                Cálculo Detalhado:
-              </Typography>
-              {analise.calculoDetalhado.map((linha, index) => (
-                <Typography key={index} variant="body2" sx={{ 
-                  fontFamily: 'Poppins',
-                  mb: 0.5
-                }}>
-                  {linha}
-                </Typography>
-              ))}
-            </Box>
-          )}
         </Box>
 
         <Divider sx={{ my: 3 }} />
@@ -317,21 +385,41 @@ const DetalhesAnaliseModal = ({
               <TableHead>
                 <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
                   <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>Critério</TableCell>
-                  <TableCell align="center" sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>GPT</TableCell>
-                  <TableCell align="center" sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>Humano</TableCell>
+                  <TableCell align="center" sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>IA</TableCell>
+                  <TableCell align="center" sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>Monitor</TableCell>
                   <TableCell align="center" sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>Pontos</TableCell>
                   <TableCell align="center" sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>Status</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {(() => {
+                  // Array fixo com todos os critérios do schema para garantir que todos sejam sempre exibidos
+                  const todosCriterios = [
+                    'saudacaoAdequada',
+                    'escutaAtiva',
+                    'clarezaObjetividade',
+                    'resolucaoQuestao',
+                    'dominioAssunto',
+                    'empatiaCordialidade',
+                    'direcionouPesquisa',
+                    'procedimentoIncorreto',
+                    'encerramentoBrusco'
+                  ];
+                  
                   // Obter critérios de gptAnalysis ou qualityAnalysis
-                  const criterios = analise.gptAnalysis?.criterios || analise.qualityAnalysis?.criterios || {};
+                  const criterios = analiseExibida.gptAnalysis?.criterios || analiseExibida.qualityAnalysis?.criterios || {};
                   // Obter critérios humanos diretamente de avaliacaoMonitorId populado
-                  const avaliacaoMonitor = analise.avaliacaoMonitorId || analise.avaliacaoOriginal;
-                  return Object.entries(criterios).map(([criterio, valorGPT]) => {
+                  // avaliacaoMonitorId pode ser um objeto populado ou um ID, verificar ambos
+                  const avaliacaoMonitor = analiseExibida.avaliacaoMonitorId || analiseExibida.avaliacaoOriginal;
+                  
+                  return todosCriterios.map((criterio) => {
+                    // Buscar valor da IA (GPT) - se não existir, considerar false
+                    const valorGPT = criterios[criterio] ?? false;
                     // Buscar critério humano diretamente do avaliacaoMonitorId populado
-                    const valorHumano = avaliacaoMonitor?.[criterio];
+                    // Os critérios estão diretamente no objeto QualidadeAvaliacao
+                    const valorHumano = avaliacaoMonitor?.[criterio] !== undefined 
+                      ? avaliacaoMonitor[criterio] 
+                      : undefined;
                     const pontos = getCriterioPontuacao(criterio, valorGPT);
                     const divergencia = valorHumano !== undefined && valorGPT !== valorHumano;
                   
@@ -347,27 +435,17 @@ const DetalhesAnaliseModal = ({
                         {getCriterioLabel(criterio)}
                       </TableCell>
                       <TableCell align="center">
-                        <Chip
-                          label={valorGPT ? 'Sim' : 'Não'}
-                          size="small"
-                          sx={{
-                            backgroundColor: valorGPT ? '#15A237' : '#f44336',
-                            color: '#ffffff',
-                            fontFamily: 'Poppins'
-                          }}
-                        />
+                        {(() => {
+                          const { icon: IconGPT, color: colorGPT } = getCriterioIcon(criterio, valorGPT);
+                          return <IconGPT sx={{ color: colorGPT, fontSize: 24 }} />;
+                        })()}
                       </TableCell>
                       <TableCell align="center">
                         {valorHumano !== undefined ? (
-                          <Chip
-                            label={valorHumano ? 'Sim' : 'Não'}
-                            size="small"
-                            sx={{
-                              backgroundColor: valorHumano ? '#15A237' : '#f44336',
-                              color: '#ffffff',
-                              fontFamily: 'Poppins'
-                            }}
-                          />
+                          (() => {
+                            const { icon: IconHumano, color: colorHumano } = getCriterioIcon(criterio, valorHumano);
+                            return <IconHumano sx={{ color: colorHumano, fontSize: 24 }} />;
+                          })()
                         ) : (
                           <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666' }}>
                             N/A
@@ -409,6 +487,80 @@ const DetalhesAnaliseModal = ({
                     </TableRow>
                   );
                 })})()}
+                
+                {/* Linha de Pontuação Total */}
+                {(() => {
+                  const avaliacaoMonitor = analiseExibida.avaliacaoMonitorId || analiseExibida.avaliacaoOriginal;
+                  const pontuacaoIA = calcularPontuacaoIA();
+                  const pontuacaoMonitor = calcularPontuacaoMonitor(avaliacaoMonitor);
+                  const media = pontuacaoMonitor !== null 
+                    ? Math.round((pontuacaoIA + pontuacaoMonitor) / 2) 
+                    : pontuacaoIA;
+                  const statusMedia = getScoreLabel(media);
+                  const corMedia = getScoreColor(media);
+                  
+                  return (
+                    <TableRow 
+                      sx={{ 
+                        backgroundColor: '#f5f5f5',
+                        fontWeight: 600,
+                        '& td': {
+                          fontWeight: 600,
+                          fontSize: '1rem'
+                        }
+                      }}
+                    >
+                      <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>
+                        <strong>Pontuação</strong>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Typography variant="body1" sx={{ 
+                          fontFamily: 'Poppins',
+                          fontWeight: 600,
+                          color: getScoreColor(pontuacaoIA)
+                        }}>
+                          {pontuacaoIA !== null && pontuacaoIA !== undefined ? `${pontuacaoIA} pts` : 'N/A'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        {pontuacaoMonitor !== null ? (
+                          <Typography variant="body1" sx={{ 
+                            fontFamily: 'Poppins',
+                            fontWeight: 600,
+                            color: getScoreColor(pontuacaoMonitor)
+                          }}>
+                            {pontuacaoMonitor} pts
+                          </Typography>
+                        ) : (
+                          <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666' }}>
+                            N/A
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell align="center">
+                        <Typography variant="body1" sx={{ 
+                          fontFamily: 'Poppins',
+                          fontWeight: 600,
+                          color: corMedia
+                        }}>
+                          {media} pts
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Chip
+                          label={statusMedia}
+                          size="small"
+                          sx={{
+                            backgroundColor: corMedia,
+                            color: '#ffffff',
+                            fontFamily: 'Poppins',
+                            fontWeight: 600
+                          }}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })()}
               </TableBody>
             </Table>
           </TableContainer>
@@ -426,15 +578,17 @@ const DetalhesAnaliseModal = ({
             }}>
               Análise
             </Typography>
-            {podeAuditar && !editandoAnalise && (
+            {!editandoAnalise && (
               <Button
                 variant="outlined"
                 size="small"
                 startIcon={<EditIcon />}
+                disabled={!podeAuditar}
                 onClick={() => {
+                  if (!podeAuditar) return;
                   // Buscar o texto da análise (priorizar gptAnalysis, depois qualityAnalysis)
-                  const textoAnalise = analise.gptAnalysis?.analysis || 
-                                       analise.qualityAnalysis?.analysis || 
+                  const textoAnalise = analiseExibida.gptAnalysis?.analysis || 
+                                       analiseExibida.qualityAnalysis?.analysis || 
                                        '';
                   setAnaliseEditada(textoAnalise);
                   setEditandoAnalise(true);
@@ -443,11 +597,15 @@ const DetalhesAnaliseModal = ({
                 sx={{
                   fontFamily: 'Poppins',
                   fontWeight: 500,
-                  borderColor: '#FCC200',
-                  color: '#000000',
-                  '&:hover': {
+                  borderColor: podeAuditar ? '#FCC200' : '#cccccc',
+                  color: podeAuditar ? '#000000' : '#999999',
+                  '&:hover': podeAuditar ? {
                     borderColor: '#e6b000',
                     backgroundColor: 'rgba(252, 194, 0, 0.1)'
+                  } : {},
+                  '&.Mui-disabled': {
+                    borderColor: '#e0e0e0',
+                    color: '#bdbdbd'
                   }
                 }}
               >
@@ -489,17 +647,17 @@ const DetalhesAnaliseModal = ({
                       
                       // Determinar o tipo da análise (gpt ou quality)
                       // Priorizar gptAnalysis se existir, senão usar qualityAnalysis
-                      const tipo = (analise.gptAnalysis && (analise.gptAnalysis.analysis || Object.keys(analise.gptAnalysis).length > 0)) ? 'gpt' : 'quality';
+                      const tipo = (analiseExibida.gptAnalysis && (analiseExibida.gptAnalysis.analysis || Object.keys(analiseExibida.gptAnalysis).length > 0)) ? 'gpt' : 'quality';
                       
-                      const resultado = await editarAnaliseGPT(analise._id, analiseEditada, tipo);
+                      const resultado = await editarAnaliseGPT(analiseExibida?._id || analise?._id, analiseEditada, tipo);
                       
                       // Atualizar o objeto analise localmente
                       if (tipo === 'gpt') {
-                        analise.gptAnalysis = analise.gptAnalysis || {};
-                        analise.gptAnalysis.analysis = analiseEditada;
+                        analiseExibida.gptAnalysis = analiseExibida.gptAnalysis || {};
+                        analiseExibida.gptAnalysis.analysis = analiseEditada;
                       } else {
-                        analise.qualityAnalysis = analise.qualityAnalysis || {};
-                        analise.qualityAnalysis.analysis = analiseEditada;
+                        analiseExibida.qualityAnalysis = analiseExibida.qualityAnalysis || {};
+                        analiseExibida.qualityAnalysis.analysis = analiseEditada;
                       }
                       
                       setEditandoAnalise(false);
@@ -558,7 +716,7 @@ const DetalhesAnaliseModal = ({
               lineHeight: 1.6,
               whiteSpace: 'pre-wrap'
             }}>
-              {analise.gptAnalysis?.analysis || analise.qualityAnalysis?.analysis || 'Análise não disponível'}
+              {analiseExibida.gptAnalysis?.analysis || analiseExibida.qualityAnalysis?.analysis || 'Análise não disponível'}
             </Typography>
           )}
         </Box>
@@ -566,43 +724,42 @@ const DetalhesAnaliseModal = ({
         <Divider sx={{ my: 3 }} />
 
         {/* Seção 5: Palavras Críticas */}
-        {analise.palavrasCriticas && analise.palavrasCriticas.length > 0 && (
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="h6" sx={{ 
-              fontFamily: 'Poppins', 
-              fontWeight: 600, 
-              color: '#f44336',
-              mb: 2
-            }}>
-              ⚠️ Palavras Críticas Detectadas
-            </Typography>
-            
-            <Alert severity="warning" sx={{ fontFamily: 'Poppins', mb: 2 }}>
-              As seguintes palavras críticas foram identificadas na ligação:
-            </Alert>
-            
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-              {analise.palavrasCriticas.map((palavra, index) => (
-                <Chip
-                  key={index}
-                  label={palavra}
-                  sx={{
-                    backgroundColor: '#f44336',
-                    color: '#ffffff',
-                    fontFamily: 'Poppins',
-                    fontWeight: 500
-                  }}
-                />
-              ))}
+        {analiseExibida.palavrasCriticas && analiseExibida.palavrasCriticas.length > 0 && (
+          <>
+            <Divider sx={{ my: 3 }} />
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h6" sx={{ 
+                fontFamily: 'Poppins', 
+                fontWeight: 600, 
+                color: '#f44336',
+                mb: 2
+              }}>
+                ⚠️ Palavras Críticas Detectadas
+              </Typography>
+              
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                {analiseExibida.palavrasCriticas.map((palavra, index) => (
+                  <Chip
+                    key={index}
+                    label={palavra}
+                    sx={{
+                      backgroundColor: '#f44336',
+                      color: '#ffffff',
+                      fontFamily: 'Poppins',
+                      fontWeight: 500
+                    }}
+                  />
+                ))}
+              </Box>
             </Box>
-          </Box>
+          </>
         )}
 
-        <Divider sx={{ my: 3 }} />
-
-        {/* Seção 5: Transcrição */}
-        {analise.transcricao && (
-          <Box sx={{ mb: 3 }}>
+        {/* Seção 6: Transcrição */}
+        {analiseExibida?.transcricao && (
+          <>
+            <Divider sx={{ my: 3 }} />
+            <Box sx={{ mb: 3 }}>
             <Box sx={{ 
               display: 'flex', 
               justifyContent: 'space-between', 
@@ -663,11 +820,14 @@ const DetalhesAnaliseModal = ({
               </Box>
             </Collapse>
           </Box>
+          </>
         )}
 
-        {/* Seção 6: Auditoria (se aplicável) */}
-        {analise.auditoriaGestor && (
-          <Box sx={{ mb: 3 }}>
+        {/* Seção 7: Auditoria (se aplicável) */}
+        {analiseExibida?.auditoriaGestor && (
+          <>
+            <Divider sx={{ my: 3 }} />
+            <Box sx={{ mb: 3 }}>
             <Typography variant="h6" sx={{ 
               fontFamily: 'Poppins', 
               fontWeight: 600, 
@@ -678,23 +838,23 @@ const DetalhesAnaliseModal = ({
             </Typography>
             
             <Box sx={{ 
-              backgroundColor: analise.auditoriaGestor.aprovado ? '#d4edda' : '#f8d7da', 
+              backgroundColor: analiseExibida.auditoriaGestor.aprovado ? '#d4edda' : '#f8d7da', 
               padding: 2, 
               borderRadius: '8px',
-              border: `1px solid ${analise.auditoriaGestor.aprovado ? '#c3e6cb' : '#f5c6cb'}`
+              border: `1px solid ${analiseExibida.auditoriaGestor.aprovado ? '#c3e6cb' : '#f5c6cb'}`
             }}>
               <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
                 <Chip
-                  label={analise.auditoriaGestor.aprovado ? 'Aprovado' : 'Requer Correções'}
+                  label={analiseExibida.auditoriaGestor.aprovado ? 'Aprovado' : 'Requer Correções'}
                   sx={{
-                    backgroundColor: analise.auditoriaGestor.aprovado ? '#15A237' : '#f44336',
+                    backgroundColor: analiseExibida.auditoriaGestor.aprovado ? '#15A237' : '#f44336',
                     color: '#ffffff',
                     fontFamily: 'Poppins',
                     fontWeight: 500
                   }}
                 />
                 <Chip
-                  label={`Auditor: ${analise.auditoriaGestor.auditor}`}
+                  label={`Auditor: ${analiseExibida.auditoriaGestor.auditor}`}
                   sx={{
                     backgroundColor: '#666666',
                     color: '#ffffff',
@@ -702,7 +862,7 @@ const DetalhesAnaliseModal = ({
                   }}
                 />
                 <Chip
-                  label={`Data: ${new Date(analise.auditoriaGestor.dataAuditoria).toLocaleDateString('pt-BR')}`}
+                  label={`Data: ${new Date(analiseExibida.auditoriaGestor.dataAuditoria).toLocaleDateString('pt-BR')}`}
                   sx={{
                     backgroundColor: '#666666',
                     color: '#ffffff',
@@ -711,16 +871,17 @@ const DetalhesAnaliseModal = ({
                 />
               </Box>
               
-              {analise.auditoriaGestor.comentarios && (
+              {analiseExibida?.auditoriaGestor?.comentarios && (
                 <Typography variant="body2" sx={{ 
                   fontFamily: 'Poppins',
                   lineHeight: 1.6
                 }}>
-                  <strong>Comentários:</strong> {analise.auditoriaGestor.comentarios}
+                  <strong>Comentários:</strong> {analiseExibida.auditoriaGestor.comentarios}
                 </Typography>
               )}
             </Box>
           </Box>
+          </>
         )}
       </DialogContent>
 
@@ -735,25 +896,6 @@ const DetalhesAnaliseModal = ({
         >
           Fechar
         </Button>
-        
-        {podeAuditar && !analise.auditoriaGestor && (
-          <Button
-            variant="contained"
-            startIcon={<GavelIcon />}
-            onClick={() => onAuditar(analise)}
-            sx={{
-              fontFamily: 'Poppins',
-              fontWeight: 600,
-              backgroundColor: '#FCC200',
-              color: '#000000',
-              '&:hover': {
-                backgroundColor: '#e6b000'
-              }
-            }}
-          >
-            Auditar Análise
-          </Button>
-        )}
       </DialogActions>
     </Dialog>
   );

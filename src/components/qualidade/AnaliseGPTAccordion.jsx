@@ -2,7 +2,7 @@
  * AnaliseGPTAccordion.jsx
  * Componente de acordeão para lista de análises GPT
  * 
- * VERSION: v1.0.0
+ * VERSION: v1.2.0
  * DATE: 2024-12-19
  * AUTHOR: VeloHub Development Team
  */
@@ -142,22 +142,21 @@ const AnaliseGPTAccordion = ({
                 <>
               <Chip
                 label={`${analise.pontuacaoGPT} pts`}
+                size="medium"
                 sx={{
                   backgroundColor: getScoreColor(analise.pontuacaoGPT),
                   color: '#ffffff',
-                  fontFamily: 'Poppins',
-                  fontWeight: 500
+                  fontFamily: 'Poppins'
                 }}
               />
               
               <Chip
                 label={getScoreLabel(analise.pontuacaoGPT)}
-                size="small"
+                size="medium"
                 sx={{
                   backgroundColor: getScoreColor(analise.pontuacaoGPT),
                   color: '#ffffff',
                   fontFamily: 'Poppins',
-                  fontWeight: 500,
                   opacity: 0.8
                 }}
               />
@@ -165,12 +164,11 @@ const AnaliseGPTAccordion = ({
               ) : (
                 <Chip
                   label="Pontuação não disponível"
-                  size="small"
+                  size="medium"
                   sx={{
                     backgroundColor: '#B0BEC5',
                     color: '#ffffff',
-                    fontFamily: 'Poppins',
-                    fontWeight: 500
+                    fontFamily: 'Poppins'
                   }}
                 />
               )}
@@ -178,12 +176,11 @@ const AnaliseGPTAccordion = ({
               {analise.palavrasCriticas && analise.palavrasCriticas.length > 0 && (
                 <Chip
                   label="⚠️ Palavras Críticas"
-                  size="small"
+                  size="medium"
                   sx={{
                     backgroundColor: '#f44336',
                     color: '#ffffff',
-                    fontFamily: 'Poppins',
-                    fontWeight: 500
+                    fontFamily: 'Poppins'
                   }}
                 />
               )}
@@ -225,7 +222,7 @@ const AnaliseGPTAccordion = ({
                           Tom: 
                           <Chip 
                             label={analise.emotion.tom} 
-                            size="small" 
+                            size="medium" 
                             sx={{ 
                               ml: 1,
                               backgroundColor: analise.emotion.tom === 'positivo' ? '#15A237' : 
@@ -401,43 +398,13 @@ const AnaliseGPTAccordion = ({
                       <Chip
                         key={index}
                         label={palavra}
-                        size="small"
+                        size="medium"
                         sx={{
                           backgroundColor: '#f44336',
                           color: '#ffffff',
                           fontFamily: 'Poppins'
                         }}
                       />
-                    ))}
-                  </Box>
-                </Box>
-              )}
-
-              {/* Cálculo Detalhado */}
-              {analise.calculoDetalhado && Array.isArray(analise.calculoDetalhado) && analise.calculoDetalhado.length > 0 && (
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="body2" sx={{ 
-                    fontFamily: 'Poppins', 
-                    fontWeight: 500,
-                    color: '#000058',
-                    mb: 1
-                  }}>
-                    Cálculo Detalhado:
-                  </Typography>
-                  <Box sx={{ 
-                    backgroundColor: '#f8f9fa',
-                    padding: 1.5,
-                    borderRadius: '8px'
-                  }}>
-                    {analise.calculoDetalhado.map((linha, index) => (
-                      <Typography key={index} variant="body2" sx={{ 
-                        fontFamily: 'Poppins',
-                        color: '#666666',
-                        mb: 0.5,
-                        fontSize: '0.875rem'
-                      }}>
-                        {linha}
-                      </Typography>
                     ))}
                   </Box>
                 </Box>
@@ -453,7 +420,7 @@ const AnaliseGPTAccordion = ({
                 {analise.confianca !== null && analise.confianca !== undefined && (
                   <Chip
                     label={`Confiança: ${analise.confianca}%`}
-                    size="small"
+                    size="medium"
                     sx={{
                       backgroundColor: '#1694FF',
                       color: '#ffffff',
@@ -465,7 +432,7 @@ const AnaliseGPTAccordion = ({
                 {analise.status && (
                   <Chip
                     label={`Status: ${analise.status}`}
-                    size="small"
+                    size="medium"
                     sx={{
                       backgroundColor: analise.status === 'completed' ? '#15A237' : '#FCC200',
                       color: '#ffffff',

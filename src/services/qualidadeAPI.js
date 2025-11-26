@@ -801,63 +801,90 @@ export const getAvaliacoesGPT = async (avaliacaoId = null) => {
 };
 
 // 2. Obter avaliação GPT por ID
+// DEPRECATED: Esta função não deve mais ser usada. Use buscarResultadoAnalise do qualidadeAudioService.js
 export const getAvaliacaoGPTById = async (id) => {
-  try {
-    const response = await gptAPI.get(`/avaliacoes-gpt/${id}`);
-    console.log(`📊 Avaliação GPT carregada: ${id}`);
-    return response.data;
-  } catch (error) {
-    console.error('❌ Erro ao carregar avaliação GPT por ID:', error);
-    return null;
-  }
+  console.warn('⚠️ DEPRECATED: getAvaliacaoGPTById está deprecado. Use buscarResultadoAnalise() do qualidadeAudioService.js para buscar de audio_analise_results.');
+  return null;
 };
 
 // 3. Obter avaliação GPT por ID da avaliação original
+// DEPRECATED: Agora busca de audio_analise_results ao invés de qualidade_avaliacoes_gpt
 export const getAvaliacaoGPTByAvaliacaoId = async (avaliacaoId) => {
   try {
-    const response = await gptAPI.get(`/avaliacoes-gpt/avaliacao/${avaliacaoId}`);
-    console.log(`📊 Avaliação GPT carregada para avaliação: ${avaliacaoId}`);
-    return response.data;
+    // Normalizar URL base removendo /api se existir no final
+    const baseUrl = (process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app').replace(/\/api\/?$/, '');
+    
+    // Buscar de audio_analise_results ao invés de qualidade_avaliacoes_gpt
+    const response = await fetch(`${baseUrl}/api/audio-analise/result/${avaliacaoId}`);
+    
+    if (!response.ok) {
+      // Se não encontrar em audio_analise_results, retornar null (não há análise ainda)
+      if (response.status === 404) {
+        console.log(`📊 Nenhuma análise GPT encontrada em audio_analise_results para avaliação: ${avaliacaoId}`);
+        return null;
+      }
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const result = await response.json();
+    
+    if (!result.success || !result.data) {
+      console.log(`📊 Resposta inválida de audio_analise_results para avaliação: ${avaliacaoId}`);
+      return null;
+    }
+    
+    // Se não houver gptAnalysis, retornar null
+    if (!result.data.gptAnalysis) {
+      console.log(`📊 Nenhuma análise GPT encontrada em audio_analise_results.gptAnalysis para avaliação: ${avaliacaoId}`);
+      return null;
+    }
+    
+    // Mapear dados de audio_analise_results.gptAnalysis para formato esperado (compatibilidade)
+    const gptAnalysis = result.data.gptAnalysis;
+    const mappedData = {
+      _id: result.data._id,
+      avaliacao_id: result.data.avaliacaoMonitorId,
+      analiseGPT: gptAnalysis.analysis || '',
+      pontuacaoGPT: gptAnalysis.pontuacao || 0,
+      criteriosGPT: gptAnalysis.criterios || {},
+      confianca: gptAnalysis.confianca || 0,
+      palavrasCriticas: gptAnalysis.palavrasCriticas || [],
+      calculoDetalhado: [], // Campo não existe em audio_analise_results - retornar array vazio
+      createdAt: result.data.createdAt,
+      updatedAt: result.data.updatedAt,
+      // Campos adicionais disponíveis em audio_analise_results
+      recomendacoes: gptAnalysis.recomendacoes || [],
+      validacaoGemini: gptAnalysis.validacaoGemini || null
+    };
+    
+    console.log(`📊 Avaliação GPT carregada de audio_analise_results para avaliação: ${avaliacaoId}`);
+    return mappedData;
   } catch (error) {
-    console.error('❌ Erro ao carregar avaliação GPT por avaliação ID:', error);
+    console.error('❌ Erro ao carregar análise GPT de audio_analise_results:', error);
     return null;
   }
 };
 
 // 4. Criar nova avaliação GPT
+// DEPRECATED: Esta função não deve mais ser usada. Análises GPT são criadas automaticamente via Worker em audio_analise_results
 export const createAvaliacaoGPT = async (dadosGPT) => {
-  try {
-    const response = await gptAPI.post('/avaliacoes-gpt', dadosGPT);
-    console.log(`✅ Avaliação GPT criada: ${dadosGPT.avaliacaoId}`);
-    return response.data;
-  } catch (error) {
-    console.error('❌ Erro ao criar avaliação GPT:', error);
-    return null;
-  }
+  console.warn('⚠️ DEPRECATED: createAvaliacaoGPT está deprecado. Análises GPT são criadas automaticamente via Worker em audio_analise_results.');
+  console.warn('⚠️ Use uploadAudioParaAnalise() do qualidadeAudioService.js para análise de áudio.');
+  return null;
 };
 
 // 5. Atualizar avaliação GPT
+// DEPRECATED: Esta função não deve mais ser usada. Atualizações devem ser feitas em audio_analise_results.gptAnalysis
 export const updateAvaliacaoGPT = async (id, dadosGPT) => {
-  try {
-    const response = await gptAPI.put(`/avaliacoes-gpt/${id}`, dadosGPT);
-    console.log(`✅ Avaliação GPT atualizada: ${id}`);
-    return response.data;
-  } catch (error) {
-    console.error('❌ Erro ao atualizar avaliação GPT:', error);
-    return null;
-  }
+  console.warn('⚠️ DEPRECATED: updateAvaliacaoGPT está deprecado. Use editarAnaliseGPT() do qualidadeAudioService.js para atualizar análise em audio_analise_results.');
+  return null;
 };
 
 // 6. Deletar avaliação GPT
+// DEPRECATED: Esta função não deve mais ser usada. Dados estão em audio_analise_results
 export const deleteAvaliacaoGPT = async (id) => {
-  try {
-    const response = await gptAPI.delete(`/avaliacoes-gpt/${id}`);
-    console.log(`✅ Avaliação GPT deletada: ${id}`);
-    return response.data;
-  } catch (error) {
-    console.error('❌ Erro ao deletar avaliação GPT:', error);
-    return null;
-  }
+  console.warn('⚠️ DEPRECATED: deleteAvaliacaoGPT está deprecado. Dados de análise GPT estão em audio_analise_results.');
+  return null;
 };
 
 // ========================================

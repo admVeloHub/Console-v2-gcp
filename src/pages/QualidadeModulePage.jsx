@@ -924,27 +924,20 @@ const QualidadeModulePage = () => {
                             {renderAudioIcon(avaliacao)}
                           </TableCell>
                           <TableCell sx={{ fontSize: '0.8rem', py: 0.8 }}>
-                            <Box sx={{ display: 'flex', gap: 0.8 }}>
+                            <Box sx={{ display: 'flex', gap: 1 }}>
                             <IconButton
-                              size="small"
+                              size="medium"
                               onClick={() => abrirModalAvaliacao(avaliacao)}
-                              sx={{ color: '#1694FF', padding: '0.4rem' }}
+                              sx={{ color: '#1694FF', padding: '0.6rem' }}
                             >
-                              <Edit sx={{ fontSize: '0.8rem' }} />
+                              <Edit sx={{ fontSize: '1.1rem' }} />
                             </IconButton>
                             <IconButton
-                              size="small"
-                              onClick={() => abrirModalGPT(avaliacao)}
-                              sx={{ color: '#9C27B0', padding: '0.4rem' }}
-                            >
-                              <Psychology sx={{ fontSize: '0.8rem' }} />
-                            </IconButton>
-                            <IconButton
-                              size="small"
+                              size="medium"
                               onClick={() => excluirAvaliacao(avaliacao._id)}
-                              sx={{ color: '#EF4444', padding: '0.4rem' }}
+                              sx={{ color: '#EF4444', padding: '0.6rem' }}
                             >
-                              <Delete sx={{ fontSize: '0.8rem' }} />
+                              <Delete sx={{ fontSize: '1.1rem' }} />
                             </IconButton>
                             </Box>
                           </TableCell>
@@ -2362,7 +2355,11 @@ const QualidadeModulePage = () => {
         onClose={fecharModalDetalhes}
         analise={analiseSelecionada}
         onAuditar={abrirModalAuditoria}
-        podeAuditar={user?._funcoesAdministrativas?.auditoria === true}
+        podeAuditar={
+          user?._funcoesAdministrativas?.auditoria === true || 
+          user?._funcoesAdministrativas?.auditor === true ||
+          (user?.email === 'lucas.gravina@velotax.com.br' || user?._userMail === 'lucas.gravina@velotax.com.br')
+        }
       />
 
       {/* Snackbar */}
