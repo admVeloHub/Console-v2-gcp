@@ -1,9 +1,10 @@
-// VERSION: v1.3.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.4.0 | DATE: 2025-11-26 | AUTHOR: VeloHub Development Team
 
+import * as XLSX from 'xlsx';
 import { getAvaliacoes } from './qualidadeAPI';
 import { getFuncionarios } from './qualidadeAPI';
 
-// Exportar avaliações para Excel/CSV
+// Exportar avaliações para Excel (XLSX)
 export const exportAvaliacoesToExcel = async () => {
   try {
     const avaliacoes = await getAvaliacoes();
@@ -13,7 +14,10 @@ export const exportAvaliacoesToExcel = async () => {
       return;
     }
 
-    // Criar CSV
+    // Criar workbook
+    const workbook = XLSX.utils.book_new();
+
+    // Criar dados da planilha
     const headers = [
       'ID', 'Colaborador', 'Avaliador', 'Mês', 'Ano', 'Data Avaliação',
       'Saudação Adequada', 'Escuta Ativa', 'Resolução Questão', 'Empatia/Cordialidade',
@@ -21,15 +25,15 @@ export const exportAvaliacoesToExcel = async () => {
       'Pontuação Total', 'Observações', 'Arquivo de Áudio'
     ];
 
-    const csvContent = [
-      headers.join(','),
+    const dados = [
+      headers,
       ...avaliacoes.map(avaliacao => [
         avaliacao._id,
-        `"${avaliacao.colaboradorNome}"`,
-        `"${avaliacao.avaliador}"`,
-        avaliacao.mes,
-        avaliacao.ano,
-        avaliacao.dataAvaliacao,
+        avaliacao.colaboradorNome || '',
+        avaliacao.avaliador || '',
+        avaliacao.mes || '',
+        avaliacao.ano || '',
+        avaliacao.dataAvaliacao ? new Date(avaliacao.dataAvaliacao).toLocaleDateString('pt-BR') : '',
         avaliacao.saudacaoAdequada ? 'Sim' : 'Não',
         avaliacao.escutaAtiva ? 'Sim' : 'Não',
         avaliacao.resolucaoQuestao ? 'Sim' : 'Não',
@@ -37,27 +41,246 @@ export const exportAvaliacoesToExcel = async () => {
         avaliacao.direcionouPesquisa ? 'Sim' : 'Não',
         avaliacao.procedimentoIncorreto ? 'Sim' : 'Não',
         avaliacao.encerramentoBrusco ? 'Sim' : 'Não',
-        avaliacao.pontuacaoTotal,
-        `"${avaliacao.observacoesModeracao || ''}"`,
-        avaliacao.arquivoLigacao ? 'Sim' : 'Não'
-      ].join(','))
-    ].join('\n');
+        avaliacao.pontuacaoTotal || 0,
+        avaliacao.observacoesModeracao || '',
+        (avaliacao.nomeArquivoAudio || avaliacao.audioSent || avaliacao.audioTreated) ? 'Sim' : 'Não'
+      ])
+    ];
+
+    // Criar worksheet
+    const worksheet = XLSX.utils.aoa_to_sheet(dados);
+    
+    // Ajustar largura das colunas
+    const colWidths = [
+      { wch: 25 }, // ID
+      { wch: 20 }, // Colaborador
+      { wch: 20 }, // Avaliador
+      { wch: 8 },  // Mês
+      { wch: 8 },  // Ano
+      { wch: 15 }, // Data Avaliação
+      { wch: 18 }, // Saudação Adequada
+      { wch: 12 }, // Escuta Ativa
+      { wch: 18 }, // Resolução Questão
+      { wch: 20 }, // Empatia/Cordialidade
+      { wch: 18 }, // Direcionou Pesquisa
+      { wch: 20 }, // Procedimento Incorreto
+      { wch: 18 }, // Encerramento Brusco
+      { wch: 15 }, // Pontuação Total
+      { wch: 30 }, // Observações
+      { wch: 15 }  // Arquivo de Áudio
+    ];
+    worksheet['!cols'] = colWidths;
+
+    // Adicionar worksheet ao workbook
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Avaliações');
+
+    // Gerar nome do arquivo com data
+    const dataAtual = new Date().toISOString().split('T')[0];
+    const nomeArquivo = `avaliacoes_qualidade_${dataAtual}.xlsx`;
 
     // Download
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `avaliacoes_qualidade_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    XLSX.writeFile(workbook, nomeArquivo);
 
-    console.log('✅ Exportação para Excel concluída:', avaliacoes.length, 'avaliações');
+    console.log('✅ Exportação para Excel (XLSX) concluída:', avaliacoes.length, 'avaliações');
   } catch (error) {
     console.error('❌ Erro ao exportar para Excel:', error);
     alert('Erro ao exportar dados para Excel');
+  }
+};
+
+// Exportar análises IA para Excel (XLSX)
+export const exportAnaliseIAToXLSX = async (analisesGPT, colaboradorNome, mes, ano) => {
+  try {
+    if (!analisesGPT || analisesGPT.length === 0) {
+      alert('Não há análises IA para exportar');
+      return;
+    }
+
+    // Criar workbook
+    const workbook = XLSX.utils.book_new();
+
+    // === ABA 1: DADOS PRINCIPAIS ===
+    const headersPrincipais = [
+      'ID', 'Colaborador', 'Data Ligação', 'Data Análise', 'Status',
+      'Pontuação Total', 'Confiança (%)', 'Duração (min)', 'Resolvido',
+      'Saudação Adequada', 'Escuta Ativa', 'Clareza/Objetividade', 
+      'Resolução Questão', 'Domínio Assunto', 'Empatia/Cordialidade',
+      'Direcionou Pesquisa', 'Procedimento Incorreto', 'Encerramento Brusco'
+    ];
+
+    const dadosPrincipais = [
+      headersPrincipais,
+      ...analisesGPT.map(analise => {
+        const avaliacaoMonitor = analise.avaliacaoMonitorId || analise.avaliacaoOriginal || {};
+        const gptAnalysis = analise.gptAnalysis || analise.qualityAnalysis || {};
+        const criterios = gptAnalysis.criterios || {};
+        const resumoAtendimento = gptAnalysis.resumoAtendimento || {};
+        
+        // Pontuação pode estar em vários lugares
+        const pontuacao = analise.pontuacaoGPT || 
+                         analise.pontuacaoConsensual || 
+                         gptAnalysis.pontuacao || 
+                         avaliacaoMonitor.pontuacaoTotal || 
+                         0;
+        
+        // Confiança pode estar direto ou dentro de gptAnalysis
+        const confianca = analise.confianca !== undefined && analise.confianca !== null 
+          ? analise.confianca 
+          : (gptAnalysis.confianca !== undefined && gptAnalysis.confianca !== null 
+              ? Math.round(gptAnalysis.confianca * 100) 
+              : null);
+        
+        return [
+          analise._id || analise.avaliacaoId || '',
+          colaboradorNome || avaliacaoMonitor.colaboradorNome || analise.colaboradorNome || '',
+          analise.dataLigacao ? new Date(analise.dataLigacao).toLocaleDateString('pt-BR') : '',
+          analise.createdAt ? new Date(analise.createdAt).toLocaleDateString('pt-BR') : '',
+          analise.status || 'N/A',
+          pontuacao,
+          confianca !== null ? `${confianca}%` : 'N/A',
+          resumoAtendimento.duracao ? `${Math.round(resumoAtendimento.duracao / 60)}` : 'N/A',
+          resumoAtendimento.resolvido ? 'Sim' : 'Não',
+          criterios.saudacaoAdequada === true ? 'Sim' : (criterios.saudacaoAdequada === false ? 'Não' : 'N/A'),
+          criterios.escutaAtiva === true ? 'Sim' : (criterios.escutaAtiva === false ? 'Não' : 'N/A'),
+          criterios.clarezaObjetividade === true ? 'Sim' : (criterios.clarezaObjetividade === false ? 'Não' : 'N/A'),
+          criterios.resolucaoQuestao === true ? 'Sim' : (criterios.resolucaoQuestao === false ? 'Não' : 'N/A'),
+          criterios.dominioAssunto === true ? 'Sim' : (criterios.dominioAssunto === false ? 'Não' : 'N/A'),
+          criterios.empatiaCordialidade === true ? 'Sim' : (criterios.empatiaCordialidade === false ? 'Não' : 'N/A'),
+          criterios.direcionouPesquisa === true ? 'Sim' : (criterios.direcionouPesquisa === false ? 'Não' : 'N/A'),
+          criterios.procedimentoIncorreto === true ? 'Sim' : (criterios.procedimentoIncorreto === false ? 'Não' : 'N/A'),
+          criterios.encerramentoBrusco === true ? 'Sim' : (criterios.encerramentoBrusco === false ? 'Não' : 'N/A')
+        ];
+      })
+    ];
+
+    const worksheetPrincipais = XLSX.utils.aoa_to_sheet(dadosPrincipais);
+    const colWidthsPrincipais = [
+      { wch: 25 }, { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 12 },
+      { wch: 15 }, { wch: 12 }, { wch: 12 }, { wch: 10 },
+      { wch: 18 }, { wch: 12 }, { wch: 18 }, { wch: 18 }, { wch: 15 },
+      { wch: 20 }, { wch: 18 }, { wch: 20 }, { wch: 18 }
+    ];
+    worksheetPrincipais['!cols'] = colWidthsPrincipais;
+    XLSX.utils.book_append_sheet(workbook, worksheetPrincipais, 'Dados Principais');
+
+    // === ABA 2: ANÁLISE EMOCIONAL ===
+    const headersEmocional = [
+      'ID', 'Colaborador', 'Empatia (%)', 'Tom', 'Sentimento', 'Confiança (%)'
+    ];
+
+    const dadosEmocional = [
+      headersEmocional,
+      ...analisesGPT.map(analise => {
+        const gptAnalysis = analise.gptAnalysis || analise.qualityAnalysis || {};
+        // Emotion pode estar direto ou dentro de gptAnalysis
+        const emotion = analise.emotion || gptAnalysis.emotion || {};
+        
+        // Confiança pode estar direto ou dentro de gptAnalysis
+        const confianca = analise.confianca !== undefined && analise.confianca !== null 
+          ? analise.confianca 
+          : (gptAnalysis.confianca !== undefined && gptAnalysis.confianca !== null 
+              ? Math.round(gptAnalysis.confianca * 100) 
+              : null);
+        
+        return [
+          analise._id || analise.avaliacaoId || '',
+          colaboradorNome || analise.colaboradorNome || '',
+          emotion.empatia !== null && emotion.empatia !== undefined ? `${Math.round(emotion.empatia * 100)}%` : 'N/A',
+          emotion.tom || 'N/A',
+          emotion.sentimento || 'N/A',
+          confianca !== null ? `${confianca}%` : 'N/A'
+        ];
+      })
+    ];
+
+    const worksheetEmocional = XLSX.utils.aoa_to_sheet(dadosEmocional);
+    const colWidthsEmocional = [
+      { wch: 25 }, { wch: 20 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 12 }
+    ];
+    worksheetEmocional['!cols'] = colWidthsEmocional;
+    XLSX.utils.book_append_sheet(workbook, worksheetEmocional, 'Análise Emocional');
+
+    // === ABA 3: NUANCE ===
+    const headersNuance = [
+      'ID', 'Colaborador', 'Clareza (%)', 'Tensão (%)'
+    ];
+
+    const dadosNuance = [
+      headersNuance,
+      ...analisesGPT.map(analise => {
+        // Nuance pode estar direto ou dentro de gptAnalysis
+        const nuance = analise.nuance || (analise.gptAnalysis || analise.qualityAnalysis || {}).nuance || {};
+        
+        return [
+          analise._id || analise.avaliacaoId || '',
+          colaboradorNome || analise.colaboradorNome || '',
+          nuance.clareza !== null && nuance.clareza !== undefined ? `${Math.round(nuance.clareza * 100)}%` : 'N/A',
+          nuance.tensao !== null && nuance.tensao !== undefined ? `${Math.round(nuance.tensao * 100)}%` : 'N/A'
+        ];
+      })
+    ];
+
+    const worksheetNuance = XLSX.utils.aoa_to_sheet(dadosNuance);
+    const colWidthsNuance = [
+      { wch: 25 }, { wch: 20 }, { wch: 12 }, { wch: 12 }
+    ];
+    worksheetNuance['!cols'] = colWidthsNuance;
+    XLSX.utils.book_append_sheet(workbook, worksheetNuance, 'Nuance');
+
+    // === ABA 4: RESUMO ESTATÍSTICO ===
+    const totalAnalises = analisesGPT.length;
+    const pontuacoes = analisesGPT
+      .map(a => {
+        return a.pontuacaoGPT || 
+               a.pontuacaoConsensual || 
+               (a.gptAnalysis || a.qualityAnalysis || {}).pontuacao || 
+               ((a.avaliacaoMonitorId || {}).pontuacaoTotal) || 
+               0;
+      })
+      .filter(p => p > 0);
+    
+    const mediaPontuacao = pontuacoes.length > 0 
+      ? (pontuacoes.reduce((sum, p) => sum + p, 0) / pontuacoes.length).toFixed(2)
+      : 0;
+    
+    const resolvidos = analisesGPT.filter(a => {
+      const gptAnalysis = a.gptAnalysis || a.qualityAnalysis || {};
+      const resumoAtendimento = gptAnalysis.resumoAtendimento || {};
+      return resumoAtendimento.resolvido === true;
+    }).length;
+
+    const dadosResumo = [
+      ['Métrica', 'Valor'],
+      ['Total de Análises', totalAnalises],
+      ['Média de Pontuação', mediaPontuacao],
+      ['Análises Resolvidas', resolvidos],
+      ['Taxa de Resolução', totalAnalises > 0 ? `${((resolvidos / totalAnalises) * 100).toFixed(2)}%` : '0%'],
+      ['Colaborador', colaboradorNome || 'N/A'],
+      ['Período', mes && ano ? `${mes}/${ano}` : 'Todos'],
+      ['Data de Exportação', new Date().toLocaleDateString('pt-BR')],
+      ['Hora de Exportação', new Date().toLocaleTimeString('pt-BR')]
+    ];
+
+    const worksheetResumo = XLSX.utils.aoa_to_sheet(dadosResumo);
+    const colWidthsResumo = [
+      { wch: 25 }, { wch: 20 }
+    ];
+    worksheetResumo['!cols'] = colWidthsResumo;
+    XLSX.utils.book_append_sheet(workbook, worksheetResumo, 'Resumo');
+
+    // Gerar nome do arquivo
+    const dataAtual = new Date().toISOString().split('T')[0];
+    const nomeColaboradorArquivo = colaboradorNome ? colaboradorNome.replace(/\s+/g, '_') : 'Todos';
+    const periodoArquivo = mes && ano ? `_${mes}_${ano}` : '';
+    const nomeArquivo = `analise_ia_${nomeColaboradorArquivo}${periodoArquivo}_${dataAtual}.xlsx`;
+
+    // Download
+    XLSX.writeFile(workbook, nomeArquivo);
+
+    console.log('✅ Exportação Análise IA (XLSX) concluída:', totalAnalises, 'análises');
+  } catch (error) {
+    console.error('❌ Erro ao exportar Análise IA:', error);
+    alert('Erro ao exportar dados da Análise IA');
   }
 };
 

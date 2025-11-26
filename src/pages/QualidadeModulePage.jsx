@@ -66,7 +66,7 @@ import {
   gerarRelatorioAgente,
   gerarRelatorioGestao
 } from '../services/qualidadeAPI';
-import { exportAvaliacoesToExcel, exportAvaliacoesToPDF } from '../services/qualidadeExport';
+import { exportAvaliacoesToExcel, exportAvaliacoesToPDF, exportAnaliseIAToXLSX } from '../services/qualidadeExport';
 import { analyzeCallWithGPT } from '../services/gptService';
 import { getAvaliadoresValidos } from '../services/userService';
 import { 
@@ -494,20 +494,20 @@ const QualidadeModulePage = () => {
     setAvaliacaoParaUpload(null);
   };
 
-  const handleUploadAudio = async (avaliacaoId, audioFile) => {
+  const handleUploadAudio = async (result) => {
     try {
-      const result = await uploadAudioParaAnalise(avaliacaoId, audioFile);
-      
-      // Atualizar estado da avaliação para mostrar que está processando
-      setAvaliacoes(prev => prev.map(avaliacao => 
-        avaliacao._id === avaliacaoId 
-          ? { ...avaliacao, uploadingAudio: true, audioUploadId: result.audioId }
-          : avaliacao
-      ));
+      // O upload já foi feito pelo modal, apenas atualizar estado
+      if (result && result.avaliacaoId) {
+        setAvaliacoes(prev => prev.map(avaliacao => 
+          avaliacao._id === result.avaliacaoId 
+            ? { ...avaliacao, uploadingAudio: true, audioUploadId: result.avaliacaoId }
+            : avaliacao
+        ));
+      }
       
       return result;
     } catch (error) {
-      console.error('Erro no upload:', error);
+      console.error('Erro ao processar resultado do upload:', error);
       throw error;
     }
   };
@@ -1615,6 +1615,31 @@ const QualidadeModulePage = () => {
                   }}
                 >
                   Buscar Análises
+                </Button>
+                <Button
+                  variant="contained"
+                  size="small"
+                  startIcon={<Assessment />}
+                  onClick={() => exportAnaliseIAToXLSX(analisesGPT, filtrosGPT.colaborador, filtrosGPT.mes, filtrosGPT.ano)}
+                  disabled={!analisesGPT || analisesGPT.length === 0}
+                  sx={{
+                    fontFamily: 'Poppins',
+                    fontWeight: 500,
+                    fontSize: '0.8rem',
+                    py: 0.4,
+                    px: 1.2,
+                    backgroundColor: '#15A237',
+                    color: '#ffffff',
+                    '&:hover': {
+                      backgroundColor: '#128A2F'
+                    },
+                    '&:disabled': {
+                      backgroundColor: '#B0BEC5',
+                      color: '#ffffff'
+                    }
+                  }}
+                >
+                  Exportar XLSX
                 </Button>
               </Box>
 

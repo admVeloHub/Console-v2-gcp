@@ -1,6 +1,6 @@
-// VERSION: v2.11.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v2.12.0 | DATE: 2025-11-26 | AUTHOR: VeloHub Development Team
 import React, { useState, useCallback, useEffect } from 'react';
-import { Typography, Box, Tabs, Tab, Container, Grid, Card, CardContent, FormControl, InputLabel, Select, MenuItem, Button, Accordion, AccordionSummary, AccordionDetails, Chip, Alert, CircularProgress } from '@mui/material';
+import { Typography, Box, Tabs, Tab, Container, Grid, Card, CardContent, FormControl, InputLabel, Select, MenuItem, Button, Accordion, AccordionSummary, AccordionDetails, Chip, Alert, CircularProgress, Checkbox, FormControlLabel } from '@mui/material';
 import { QuestionAnswer, People, Schedule, TrendingUp, TrendingDown, DateRange, Timeline, PieChart as PieChartIcon, ShowChart, Person, FileDownload, PictureAsPdf, ListAlt, EmojiEvents, Analytics, Psychology, Refresh, Search, ExpandMore } from '@mui/icons-material';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 import * as XLSX from 'xlsx';
@@ -653,6 +653,47 @@ const BotAnalisesPage = () => {
     });
   };
 
+  // Atualizar status resolvido do feedback
+  const handleToggleResolvido = useCallback(async (feedbackId, currentStatus) => {
+    try {
+      const newStatus = !currentStatus;
+      
+      // Atualização otimista - atualiza UI antes da confirmação do backend
+      setFeedbacks(prevFeedbacks => 
+        prevFeedbacks.map(feedback => 
+          feedback._id === feedbackId 
+            ? { ...feedback, resolvido: newStatus }
+            : feedback
+        )
+      );
+
+      // Chamar API para atualizar no backend
+      const response = await botFeedbackAPI.update(feedbackId, { resolvido: newStatus });
+      
+      if (!response.success) {
+        // Reverter atualização otimista em caso de erro
+        setFeedbacks(prevFeedbacks => 
+          prevFeedbacks.map(feedback => 
+            feedback._id === feedbackId 
+              ? { ...feedback, resolvido: currentStatus }
+              : feedback
+          )
+        );
+        console.error('Erro ao atualizar status resolvido:', response.error);
+      }
+    } catch (error) {
+      // Reverter atualização otimista em caso de erro
+      setFeedbacks(prevFeedbacks => 
+        prevFeedbacks.map(feedback => 
+          feedback._id === feedbackId 
+            ? { ...feedback, resolvido: currentStatus }
+            : feedback
+        )
+      );
+      console.error('Erro ao atualizar status resolvido:', error);
+    }
+  }, []);
+
   const opcoesPeriodo = [
     { value: '1dia', label: 'Último dia' },
     { value: '7dias', label: 'Últimos 7 dias' },
@@ -1225,49 +1266,49 @@ const BotAnalisesPage = () => {
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart 
                           data={(() => {
-                            // GARANTIA 100%: Usar apenas períodos com dados reais válidos
-                            const periodosComDados = Object.keys(dadosGrafico.totalUso)
-                              .filter(periodo => {
-                                // VALIDAÇÃO TRIPLA - só incluir se tiver dados reais
-                                const temPerguntas = dadosGrafico.totalUso[periodo] > 0;
-                                const temFeedbacksPos = dadosGrafico.feedbacksPositivos[periodo] > 0;
-                                const temFeedbacksNeg = dadosGrafico.feedbacksNegativos[periodo] > 0;
-                                
-                                // Só incluir se tiver pelo menos um tipo de atividade real
-                                return temPerguntas || temFeedbacksPos || temFeedbacksNeg;
-                              })
-                              .sort((a, b) => {
-                                const dateA = new Date(a);
-                                const dateB = new Date(b);
-                                return dateA - dateB; // Ordem cronológica crescente
-                              })
-                              .map(periodo => {
-                                // Formatar data para exibição mantendo identificação única
-                                let dataFormatada;
-                                if (periodo.includes('-')) {
-                                  const data = new Date(periodo);
-                                  // Formato: DD/MM/YY para economizar espaço mas manter identificação
-                                  dataFormatada = data.toLocaleDateString('pt-BR', { 
-                                    day: '2-digit', 
-                                    month: '2-digit', 
-                                    year: '2-digit' 
-                                  });
-                                } else {
-                                  dataFormatada = periodo;
-                                }
-                                
-                                return {
-                                  periodo: dataFormatada,
-                                  periodoOriginal: periodo, // Manter referência original
-                                  totalUso: dadosGrafico.totalUso[periodo] || undefined, // SEM || 0 - apenas valores reais
-                                  feedbacksPositivos: dadosGrafico.feedbacksPositivos[periodo] || undefined, // SEM || 0
-                                  feedbacksNegativos: dadosGrafico.feedbacksNegativos[periodo] || undefined // SEM || 0
-                                };
-                              })
-                              .filter(item => {
-                                // FILTRO FINAL DE SEGURANÇA - só incluir se tiver pelo menos um valor real
-                                return (item.totalUso > 0) || (item.feedbacksPositivos > 0) || (item.feedbacksNegativos > 0);
-                              });
+                            // Coletar TODAS as datas de TODAS as fontes de dados
+                            const todasAsDatas = new Set([
+                              ...Object.keys(dadosGrafico.totalUso || {}),
+                              ...Object.keys(dadosGrafico.feedbacksPositivos || {}),
+                              ...Object.keys(dadosGrafico.feedbacksNegativos || {})
+                            ]);
+                            
+                            // Filtrar APENAS datas com dados REAIS (maior que 0)
+                            const datasValidas = Array.from(todasAsDatas).filter(periodo => {
+                              const totalUso = dadosGrafico.totalUso?.[periodo] || 0;
+                              const feedbacksPos = dadosGrafico.feedbacksPositivos?.[periodo] || 0;
+                              const feedbacksNeg = dadosGrafico.feedbacksNegativos?.[periodo] || 0;
+                              
+                              // Só incluir se tiver pelo menos um tipo de atividade real (> 0)
+                              return totalUso > 0 || feedbacksPos > 0 || feedbacksNeg > 0;
+                            });
+                            
+                            // Ordenar cronologicamente
+                            const datasOrdenadas = datasValidas.sort((a, b) => {
+                              const dateA = new Date(a);
+                              const dateB = new Date(b);
+                              return dateA - dateB; // Ordem cronológica crescente
+                            });
+                            
+                            // Mapear para formato do gráfico
+                            const periodosComDados = datasOrdenadas.map(periodo => {
+                              // Formatar data para exibição - APENAS formatação visual, SEM conversão
+                              let dataFormatada;
+                              if (periodo.includes('-')) {
+                                const [ano, mes, dia] = periodo.split('-');
+                                dataFormatada = `${dia}/${mes}/${ano.slice(-2)}`;
+                              } else {
+                                dataFormatada = periodo;
+                              }
+                              
+                              return {
+                                periodo: dataFormatada,
+                                periodoOriginal: periodo, // Manter referência original
+                                totalUso: dadosGrafico.totalUso?.[periodo] || 0,
+                                feedbacksPositivos: dadosGrafico.feedbacksPositivos?.[periodo] || 0,
+                                feedbacksNegativos: dadosGrafico.feedbacksNegativos?.[periodo] || 0
+                              };
+                            });
                             
                             return periodosComDados;
                           })()}
@@ -1299,8 +1340,6 @@ const BotAnalisesPage = () => {
                             textAnchor="end"
                             height={80}
                             tick={{ fontSize: 12 }}
-                            domain={['dataMin', 'dataMax']}
-                            tickCount={undefined}
                             allowDecimals={false}
                             type="category"
                             scale="point"
@@ -1334,14 +1373,10 @@ const BotAnalisesPage = () => {
                               return [value, labels[name] || name];
                             }}
                             labelFormatter={(label) => {
-                              // Formatar a data para exibição mais amigável
+                              // Formatar a data para exibição - APENAS formatação visual, SEM conversão
                               if (label.includes('-')) {
-                                const date = new Date(label);
-                                return date.toLocaleDateString('pt-BR', {
-                                  day: '2-digit',
-                                  month: '2-digit',
-                                  year: 'numeric'
-                                });
+                                const [ano, mes, dia] = label.split('-');
+                                return `${dia}/${mes}/${ano.slice(-2)}`;
                               }
                               return label;
                             }}
@@ -2205,7 +2240,15 @@ const BotAnalisesPage = () => {
                       >
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', pr: 2 }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Typography sx={{ fontFamily: 'Poppins', fontWeight: 600, color: 'var(--blue-dark)' }}>
+                            <Typography 
+                              sx={{ 
+                                fontFamily: 'Poppins', 
+                                fontWeight: 600, 
+                                color: 'var(--blue-dark)',
+                                textDecoration: feedback.resolvido ? 'line-through' : 'none',
+                                opacity: feedback.resolvido ? 0.6 : 1
+                              }}
+                            >
                               {feedback.colaboradorNome || 'Usuário desconhecido'}
                             </Typography>
                             <Chip
@@ -2215,7 +2258,37 @@ const BotAnalisesPage = () => {
                                 backgroundColor: feedback.details?.feedbackType === 'positive' ? '#15A237' : '#FF0000',
                                 color: 'white',
                                 fontFamily: 'Poppins',
-                                fontWeight: 500
+                                fontWeight: 500,
+                                opacity: feedback.resolvido ? 0.6 : 1
+                              }}
+                            />
+                            <FormControlLabel
+                              control={
+                                <Checkbox
+                                  checked={feedback.resolvido || false}
+                                  onChange={(e) => {
+                                    e.stopPropagation();
+                                    handleToggleResolvido(feedback._id, feedback.resolvido || false);
+                                  }}
+                                  onClick={(e) => e.stopPropagation()}
+                                  sx={{
+                                    color: 'var(--blue-medium)',
+                                    '&.Mui-checked': {
+                                      color: '#15A237'
+                                    }
+                                  }}
+                                />
+                              }
+                              label="Resolvido"
+                              onClick={(e) => e.stopPropagation()}
+                              sx={{
+                                fontFamily: 'Poppins',
+                                fontSize: '0.875rem',
+                                color: feedback.resolvido ? '#15A237' : 'var(--gray)',
+                                fontWeight: feedback.resolvido ? 600 : 400,
+                                '& .MuiFormControlLabel-label': {
+                                  fontSize: '0.875rem'
+                                }
                               }}
                             />
                           </Box>
