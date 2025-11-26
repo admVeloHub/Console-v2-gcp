@@ -945,32 +945,31 @@ class BotAnalisesService {
   }
 
   // Dados para gráfico de linhas - Uso da Operação
+  // AGORA CALCULADO NO BACKEND - busca diretamente do endpoint otimizado
   async getDadosUsoOperacao(periodoFiltro = '7dias', exibicaoFiltro = 'dia') {
     try {
       console.log(`🔄 getDadosUsoOperacao chamado: periodo=${periodoFiltro}, exibicao=${exibicaoFiltro}`);
       
-      // Verificar se pode usar cache
-      if (this.podeUsarCache(periodoFiltro)) {
-        console.log('📦 Usando cache, recalculando gráfico para exibição:', exibicaoFiltro);
-        const dadosCache = this.filtrarCache(periodoFiltro);
-        if (dadosCache && dadosCache.dadosBrutos) {
-          // Recalcular gráfico com a exibição correta E período correto
-          const dadosGrafico = this.calcularDadosGrafico(dadosCache.dadosBrutos.atividades, exibicaoFiltro, periodoFiltro);
-          console.log('📊 Gráfico recalculado:', Object.keys(dadosGrafico.totalUso).length, 'períodos');
-          return dadosGrafico;
+      // Buscar dados diretamente do endpoint do backend que já calcula tudo
+      const response = await this.makeRequestWithRetry('/bot-analises/dados-uso-operacao', {
+        params: { 
+          periodo: periodoFiltro,
+          exibicao: exibicaoFiltro
         }
-      } else {
-        // Se não pode usar cache, limpar cache antigo
-        this.limparCache();
-      }
-
-      console.log('🆕 Buscando novos dados do backend');
-      // Buscar novos dados
-      const dados = await this.buscarNovosDados(periodoFiltro, exibicaoFiltro);
+      });
       
-      return dados?.dadosGrafico || { totalUso: {}, feedbacksPositivos: {}, feedbacksNegativos: {} };
+      if (response.success && response.data) {
+        console.log('✅ Dados recebidos do backend:', {
+          totalUso: Object.keys(response.data.totalUso || {}).length,
+          feedbacksPositivos: Object.keys(response.data.feedbacksPositivos || {}).length,
+          feedbacksNegativos: Object.keys(response.data.feedbacksNegativos || {}).length
+        });
+        return response.data;
+      }
+      
+      return { totalUso: {}, feedbacksPositivos: {}, feedbacksNegativos: {} };
     } catch (error) {
-      console.error('Erro ao buscar dados de uso:', error);
+      console.error('❌ Erro ao buscar dados de uso do backend:', error);
       return { totalUso: {}, feedbacksPositivos: {}, feedbacksNegativos: {} };
     }
   }
