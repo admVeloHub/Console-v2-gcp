@@ -6,7 +6,7 @@ import { healthAPI } from '../../services/api';
 const Footer = () => {
   const [apiStatus, setApiStatus] = useState({
     isOnline: false,
-    version: '4.2.1',
+    version: '5.0.0',
     loading: true
   });
 
@@ -18,14 +18,14 @@ const Footer = () => {
         
         setApiStatus({
           isOnline: response.status === 'OK',
-          version: '4.2.1', // Sempre usar versão fixa do frontend
+          version: '5.0.0', // Sempre usar versão fixa do frontend
           loading: false
         });
       } catch (error) {
         // Silenciar erro de conexão - API pode não estar rodando em desenvolvimento
         setApiStatus({
           isOnline: false,
-          version: '4.2.1',
+          version: '5.0.0',
           loading: false
         });
       }
