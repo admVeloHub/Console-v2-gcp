@@ -76,7 +76,7 @@ export const AuthProvider = ({ children }) => {
               },
               _funcoesAdministrativas: {
                 avaliador: true,
-                auditor: true,
+                auditoria: true,
                 relatoriosGestao: true
               }
             };

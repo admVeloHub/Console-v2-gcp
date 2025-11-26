@@ -355,7 +355,8 @@ const UploadAudioModal = ({
         PaperProps={{
           sx: {
             borderRadius: '12px',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+            maxHeight: 'none'
           }
         }}
       >
@@ -366,13 +367,13 @@ const UploadAudioModal = ({
           borderBottom: '1px solid var(--blue-opaque)',
           pb: 2
         }}>
-          📤 Upload de Áudio para Análise GPT
+          Upload de Áudio para Análise GPT
         </DialogTitle>
 
-        <DialogContent sx={{ pt: 3 }}>
+        <DialogContent sx={{ pt: 3, overflow: 'visible' }}>
           {/* Informações da avaliação */}
           {avaliacaoNome && (
-            <Box sx={{ mb: 3, p: 2, bgcolor: 'var(--cor-fundo)', borderRadius: '8px' }}>
+            <Box sx={{ mb: audioJaEnviado && !uploading ? 1.5 : 3, p: 2, bgcolor: 'var(--cor-fundo)', borderRadius: '8px' }}>
               <Typography variant="body2" sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
                 Avaliação: <strong>{avaliacaoNome}</strong>
               </Typography>
@@ -383,7 +384,7 @@ const UploadAudioModal = ({
           {audioJaEnviado && !uploading && (
             <Box sx={{ mb: 3, p: 2, bgcolor: '#E3F2FD', borderRadius: '8px', border: '1px solid #90CAF9' }}>
               <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#1976D2', mb: 1 }}>
-                ⚠️ Um áudio já foi enviado para esta avaliação. Aguarde o processamento concluir antes de enviar um novo arquivo.
+                Um áudio já foi enviado para esta avaliação. Aguarde o processamento concluir antes de enviar um novo arquivo.
               </Typography>
             </Box>
           )}
@@ -628,7 +629,7 @@ const UploadAudioModal = ({
               color: 'var(--gray)'
             }}
           >
-            {processingStatus === 'completed' ? 'Fechar' : 'Cancelar'}
+            Fechar
           </Button>
           
           {!uploading && !audioJaEnviado && (
