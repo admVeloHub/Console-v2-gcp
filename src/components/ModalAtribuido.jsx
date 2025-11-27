@@ -1,3 +1,4 @@
+// VERSION: v1.3.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -33,6 +34,19 @@ const ModalAtribuido = ({ ticket, open, onClose, onUpdate }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
   const [selectedTicket, setSelectedTicket] = useState(ticket);
+
+  // Função para verificar se o ticket é de conteúdo
+  const isTicketConteudo = (ticket) => {
+    if (!ticket) return false;
+    // Verificar pelo ID primeiro (mais confiável)
+    if (ticket._id && ticket._id.startsWith('TKC-')) {
+      return true;
+    }
+    // Verificar pelo gênero
+    const generoLower = ticket._genero?.toLowerCase();
+    const generosConteudo = ['artigo', 'processo', 'roteiro', 'treinamento', 'funcionalidade', 'recurso adicional', 'recurso'];
+    return generosConteudo.includes(generoLower);
+  };
 
   // Atualizar estados quando ticket muda
   useEffect(() => {
@@ -264,9 +278,9 @@ const ModalAtribuido = ({ ticket, open, onClose, onUpdate }) => {
           justifyContent: 'space-between',
           pb: 1
         }}>
-          {ticket._genero === 'conteudos' ?
-            `${ticket._id} - ${ticket._tipo} - ${ticket._assunto}` :
-            `${ticket._id} - ${ticket._tipo} - ${ticket._direcionamento}`
+          {isTicketConteudo(ticket) ?
+            `${ticket._id} - ${ticket._tipo} - ${ticket._assunto || ticket._direcionamento || 'Não informado'}` :
+            `${ticket._id} - ${ticket._tipo} - ${ticket._direcionamento || 'Não informado'}`
           }
           <IconButton onClick={onClose} size="small">
             <CloseIcon />
@@ -330,10 +344,10 @@ const ModalAtribuido = ({ ticket, open, onClose, onUpdate }) => {
               {/* Linha 2 correta */}
               <Box>
                 <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, mb: 0.5 }}>
-                  {ticket._genero === 'conteudos' ? 'Assunto/Direcionamento:' : 'Direcionamento:'}
+                  {isTicketConteudo(ticket) ? 'Assunto/Direcionamento:' : 'Direcionamento:'}
                 </Typography>
                 <Typography sx={{ fontFamily: 'Poppins' }}>
-                  {ticket._genero === 'conteudos' ? (ticket._assunto || ticket._direcionamento || 'Não informado') : (ticket._direcionamento || 'Não informado')}
+                  {isTicketConteudo(ticket) ? (ticket._assunto || ticket._direcionamento || 'Não informado') : (ticket._direcionamento || 'Não informado')}
                 </Typography>
               </Box>
               <Box>
