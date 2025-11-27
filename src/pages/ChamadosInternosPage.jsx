@@ -1,4 +1,4 @@
-// VERSION: v3.2.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.3.4 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -146,6 +146,25 @@ const ChamadosInternosPage = () => {
     } else {
       return `${Math.ceil(remainingHours / 24)}d`;
     }
+  };
+
+  const limitSolicitanteName = (name) => {
+    if (!name) return 'Não informado';
+    const words = name.split(' ');
+    return words.slice(0, 2).join(' ');
+  };
+
+  // Função para verificar se o ticket é de conteúdo
+  const isTicketConteudo = (ticket) => {
+    if (!ticket) return false;
+    // Verificar pelo ID primeiro (mais confiável)
+    if (ticket._id && ticket._id.startsWith('TKC-')) {
+      return true;
+    }
+    // Verificar pelo gênero
+    const generoLower = ticket._genero?.toLowerCase();
+    const generosConteudo = ['artigo', 'processo', 'roteiro', 'treinamento', 'funcionalidade', 'recurso adicional', 'recurso'];
+    return generosConteudo.includes(generoLower);
   };
 
   // Função para mapear _genero do ticket para a chave de _userTickets
@@ -417,6 +436,14 @@ const ChamadosInternosPage = () => {
                     color: 'var(--blue-dark)',
                     textAlign: 'left'
                   }}>
+                    Gênero
+                  </TableCell>
+                  <TableCell sx={{
+                    fontFamily: 'Poppins',
+                    fontWeight: 600,
+                    color: 'var(--blue-dark)',
+                    textAlign: 'left'
+                  }}>
                     Tipo
                   </TableCell>
                   <TableCell sx={{
@@ -441,7 +468,7 @@ const ChamadosInternosPage = () => {
                     color: 'var(--blue-dark)',
                     textAlign: 'center'
                   }}>
-                    Situação
+                    Status
                   </TableCell>
                   <TableCell sx={{
                     fontFamily: 'Poppins',
@@ -466,30 +493,89 @@ const ChamadosInternosPage = () => {
                       }
                     }}
                   >
-                    <TableCell sx={{ fontFamily: 'Poppins', textAlign: 'left' }}>
+                    <TableCell sx={{ 
+                      fontFamily: 'Poppins', 
+                      textAlign: 'left',
+                      fontSize: '0.75rem',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      maxWidth: '100px'
+                    }}>
                       {ticket._id}
                     </TableCell>
-                    <TableCell sx={{ fontFamily: 'Poppins', textAlign: 'left' }}>
-                      {ticket._corpo && ticket._corpo.length > 0 ? ticket._corpo[0].userName : 'Não informado'}
+                    <TableCell sx={{ 
+                      fontFamily: 'Poppins', 
+                      textAlign: 'left',
+                      fontSize: '0.75rem',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      maxWidth: '150px'
+                    }}>
+                      {limitSolicitanteName(ticket._corpo && ticket._corpo.length > 0 ? ticket._corpo[0].userName : 'Não informado')}
                     </TableCell>
-                    <TableCell sx={{ fontFamily: 'Poppins', textAlign: 'left' }}>
+                    <TableCell sx={{ 
+                      fontFamily: 'Poppins', 
+                      textAlign: 'left',
+                      fontSize: '0.75rem',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      maxWidth: '100px'
+                    }}>
                       {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString('pt-BR') : 'Não informado'}
                     </TableCell>
-                    <TableCell sx={{ fontFamily: 'Poppins', textAlign: 'left' }}>
+                    <TableCell sx={{ 
+                      fontFamily: 'Poppins', 
+                      textAlign: 'left',
+                      fontSize: '0.75rem',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      maxWidth: '120px'
+                    }}>
+                      {ticket._genero || 'Não informado'}
+                    </TableCell>
+                    <TableCell sx={{ 
+                      fontFamily: 'Poppins', 
+                      textAlign: 'left',
+                      fontSize: '0.75rem',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      maxWidth: '120px'
+                    }}>
                       {ticket._tipo || 'Não informado'}
                     </TableCell>
-                    <TableCell sx={{ fontFamily: 'Poppins', textAlign: 'left' }}>
+                    <TableCell sx={{ 
+                      fontFamily: 'Poppins', 
+                      textAlign: 'left',
+                      fontSize: '0.75rem',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      maxWidth: '200px'
+                    }}>
                       {ticket._assunto || ticket._direcionamento || 'Não informado'}
                     </TableCell>
-                    <TableCell sx={{ fontFamily: 'Poppins', textAlign: 'center' }}>
+                    <TableCell sx={{ 
+                      fontFamily: 'Poppins', 
+                      textAlign: 'center',
+                      fontSize: '0.75rem'
+                    }}>
                       <Chip
                         label={calculateSLA(ticket.createdAt)}
                         size="small"
                         color="info"
                         variant="outlined"
+                        sx={{ fontSize: '0.7rem' }}
                       />
                     </TableCell>
-                    <TableCell sx={{ textAlign: 'center' }}>
+                    <TableCell sx={{ 
+                      textAlign: 'center',
+                      fontSize: '0.75rem'
+                    }}>
                       <Chip
                         label={ticket._statusConsole || ticket._statusHub || 'Não definida'}
                         size="small"
@@ -498,11 +584,12 @@ const ChamadosInternosPage = () => {
                           color: getStatusColor(ticket._statusConsole || ticket._statusHub).color,
                           fontFamily: 'Poppins',
                           fontWeight: 500,
-                          border: 'none'
+                          border: 'none',
+                          fontSize: '0.7rem'
                         }}
                       />
                     </TableCell>
-                    <TableCell>
+                    <TableCell sx={{ fontSize: '0.75rem' }}>
                       {(() => {
                         if (ticket._atribuido) {
                           // Show assigned agent's avatar and name
@@ -511,31 +598,34 @@ const ChamadosInternosPage = () => {
                               sx={{
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '10px',
-                                padding: '8px 12px',
+                                gap: '8px',
+                                padding: '4px 8px',
                                 backgroundColor: 'white',
                                 borderRadius: '16px',
                                 border: '1px solid #e0e0e0',
                                 transition: 'all 0.3s ease',
-                                cursor: 'default'
+                                cursor: 'default',
+                                maxWidth: '200px',
+                                overflow: 'hidden'
                               }}
                             >
                               <Box
                                 component="img"
-                                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(ticket._atribuido)}&background=1634FF&color=fff&size=32&bold=true`}
+                                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(ticket._atribuido)}&background=1634FF&color=fff&size=24&bold=true`}
                                 alt="Avatar"
                                 sx={{
-                                  width: '32px',
-                                  height: '32px',
+                                  width: '24px',
+                                  height: '24px',
                                   borderRadius: '50%',
-                                  objectFit: 'cover'
+                                  objectFit: 'cover',
+                                  flexShrink: 0
                                 }}
                               />
                               <Typography
                                 sx={{
                                   color: 'var(--cor-texto)',
                                   fontWeight: 500,
-                                  fontSize: '0.9rem',
+                                  fontSize: '0.75rem',
                                   fontFamily: 'Poppins',
                                   maxWidth: '120px',
                                   overflow: 'hidden',
@@ -576,7 +666,7 @@ const ChamadosInternosPage = () => {
                               sx={{
                                 color: 'var(--cor-texto)',
                                 fontWeight: 500,
-                                fontSize: '0.9rem',
+                                fontSize: '0.75rem',
                                 fontFamily: 'Poppins'
                               }}
                             >
@@ -649,6 +739,14 @@ const ChamadosInternosPage = () => {
                     color: 'var(--blue-dark)',
                     textAlign: 'left'
                   }}>
+                    Gênero
+                  </TableCell>
+                  <TableCell sx={{
+                    fontFamily: 'Poppins',
+                    fontWeight: 600,
+                    color: 'var(--blue-dark)',
+                    textAlign: 'left'
+                  }}>
                     Tipo
                   </TableCell>
                   <TableCell sx={{
@@ -673,7 +771,7 @@ const ChamadosInternosPage = () => {
                     color: 'var(--blue-dark)',
                     textAlign: 'center'
                   }}>
-                    Situação
+                    Status
                   </TableCell>
                   <TableCell sx={{
                     fontFamily: 'Poppins',
@@ -698,30 +796,79 @@ const ChamadosInternosPage = () => {
                       }
                     }}
                   >
-                    <TableCell sx={{ fontFamily: 'Poppins' }}>
+                    <TableCell sx={{ 
+                      fontFamily: 'Poppins',
+                      fontSize: '0.75rem',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      maxWidth: '100px'
+                    }}>
                       {ticket._id}
                     </TableCell>
-                    <TableCell sx={{ fontFamily: 'Poppins' }}>
-                      {ticket._userEmail || 'Não informado'}
+                    <TableCell sx={{ 
+                      fontFamily: 'Poppins',
+                      fontSize: '0.75rem',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      maxWidth: '150px'
+                    }}>
+                      {limitSolicitanteName(ticket._corpo && ticket._corpo.length > 0 ? ticket._corpo[0].userName : ticket._userEmail || 'Não informado')}
                     </TableCell>
-                    <TableCell sx={{ fontFamily: 'Poppins' }}>
+                    <TableCell sx={{ 
+                      fontFamily: 'Poppins',
+                      fontSize: '0.75rem',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      maxWidth: '100px'
+                    }}>
                       {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString('pt-BR') : 'Não informado'}
                     </TableCell>
-                    <TableCell sx={{ fontFamily: 'Poppins' }}>
+                    <TableCell sx={{ 
+                      fontFamily: 'Poppins',
+                      fontSize: '0.75rem',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      maxWidth: '120px'
+                    }}>
+                      {ticket._genero || 'Não informado'}
+                    </TableCell>
+                    <TableCell sx={{ 
+                      fontFamily: 'Poppins',
+                      fontSize: '0.75rem',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      maxWidth: '120px'
+                    }}>
                       {ticket._tipo || 'Não informado'}
                     </TableCell>
-                    <TableCell sx={{ fontFamily: 'Poppins' }}>
+                    <TableCell sx={{ 
+                      fontFamily: 'Poppins',
+                      fontSize: '0.75rem',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      maxWidth: '200px'
+                    }}>
                       {ticket._assunto || ticket._direcionamento || 'Não informado'}
                     </TableCell>
-                    <TableCell sx={{ fontFamily: 'Poppins' }}>
+                    <TableCell sx={{ 
+                      fontFamily: 'Poppins',
+                      fontSize: '0.75rem'
+                    }}>
                       <Chip
                         label={calculateSLA(ticket.createdAt)}
                         size="small"
                         color="info"
                         variant="outlined"
+                        sx={{ fontSize: '0.7rem' }}
                       />
                     </TableCell>
-                    <TableCell>
+                    <TableCell sx={{ fontSize: '0.75rem' }}>
                       <Chip
                         label={ticket._statusHub || ticket._statusConsole || 'Não definida'}
                         size="small"
@@ -730,7 +877,8 @@ const ChamadosInternosPage = () => {
                           color: getStatusColor(ticket._statusConsole || ticket._statusHub).color,
                           fontFamily: 'Poppins',
                           fontWeight: 500,
-                          border: 'none'
+                          border: 'none',
+                          fontSize: '0.7rem'
                         }}
                       />
                     </TableCell>
@@ -792,72 +940,85 @@ const ChamadosInternosPage = () => {
                 fontWeight: 600,
                 color: 'var(--blue-dark)'
               }}>
-                {selectedTicket._genero === 'conteudos' ?
-                  `${selectedTicket._id} - ${selectedTicket._tipo} - ${selectedTicket._assunto}` :
-                  `${selectedTicket._id} - ${selectedTicket._tipo} - ${selectedTicket._direcionamento}`
+                {isTicketConteudo(selectedTicket) ?
+                  `${selectedTicket._id} - ${selectedTicket._tipo} - ${selectedTicket._assunto || selectedTicket._direcionamento || 'Não informado'}` :
+                  `${selectedTicket._id} - ${selectedTicket._tipo} - ${selectedTicket._direcionamento || 'Não informado'}`
                 }
               </DialogTitle>
               <DialogContent>
                 <Box sx={{ mt: 2 }}>
                   <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 3 }}>
+                    {/* Linha 1 */}
                     <Box>
-                      <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>
+                      <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.75rem' }}>
                         Solicitante:
                       </Typography>
-                      <Typography sx={{ fontFamily: 'Poppins' }}>
+                      <Typography sx={{ fontFamily: 'Poppins', fontSize: '0.7rem' }}>
                         {selectedTicket._corpo && selectedTicket._corpo.length > 0 ? selectedTicket._corpo[0].userName : 'Não informado'}
                       </Typography>
                     </Box>
                     <Box>
-                      <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>
+                      <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.75rem' }}>
                         Email:
                       </Typography>
-                      <Typography sx={{ fontFamily: 'Poppins' }}>
+                      <Typography sx={{ fontFamily: 'Poppins', fontSize: '0.7rem' }}>
                         {selectedTicket._userEmail || 'Não informado'}
                       </Typography>
                     </Box>
+                    {/* Linha 2 */}
                     <Box>
-                      <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>
+                      <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.75rem' }}>
                         Data:
                       </Typography>
-                      <Typography sx={{ fontFamily: 'Poppins' }}>
+                      <Typography sx={{ fontFamily: 'Poppins', fontSize: '0.7rem' }}>
                         {selectedTicket.createdAt ? new Date(selectedTicket.createdAt).toLocaleDateString('pt-BR') : 'Não informado'}
                       </Typography>
                     </Box>
                     <Box>
-                      <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>
+                      <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.75rem' }}>
                         SLA:
                       </Typography>
-                      <Typography sx={{ fontFamily: 'Poppins' }}>
+                      <Typography sx={{ fontFamily: 'Poppins', fontSize: '0.7rem' }}>
                         {calculateSLA(selectedTicket.createdAt)}
                       </Typography>
                     </Box>
+                    {/* Linha 3 */}
                     <Box>
-                      <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>
-                        {selectedTicket._genero === 'conteudos' ? 'Assunto/Direcionamento:' : 'Direcionamento:'}
+                      <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.75rem' }}>
+                        {isTicketConteudo(selectedTicket) ? 'Assunto/Direcionamento:' : 'Direcionamento:'}
                       </Typography>
-                      <Typography sx={{ fontFamily: 'Poppins' }}>
-                        {selectedTicket._genero === 'conteudos' ? (selectedTicket._assunto || selectedTicket._direcionamento || 'Não informado') : (selectedTicket._direcionamento || 'Não informado')}
+                      <Typography sx={{ fontFamily: 'Poppins', fontSize: '0.7rem' }}>
+                        {isTicketConteudo(selectedTicket) ? (selectedTicket._assunto || selectedTicket._direcionamento || 'Não informado') : (selectedTicket._direcionamento || 'Não informado')}
                       </Typography>
                     </Box>
                     <Box>
-                      <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>
+                      <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.75rem' }}>
                         Atribuído:
                       </Typography>
-                      <Typography sx={{ fontFamily: 'Poppins' }}>
+                      <Typography sx={{ fontFamily: 'Poppins', fontSize: '0.7rem' }}>
                         {selectedTicket._atribuido || 'Não atribuído'}
                       </Typography>
                     </Box>
+                    {/* Linha 4 */}
                     <Box>
-                      <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>
+                      <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.75rem' }}>
                         Processo em Andamento:
                       </Typography>
-                      <Typography sx={{ fontFamily: 'Poppins' }}>
+                      <Typography sx={{ fontFamily: 'Poppins', fontSize: '0.7rem' }}>
                         {selectedTicket._processamento || 'Não informado'}
                       </Typography>
                     </Box>
                     <Box>
-                      <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>
+                      <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.75rem' }}>
+                        Gênero:
+                      </Typography>
+                      <Typography sx={{ fontFamily: 'Poppins', fontSize: '0.7rem' }}>
+                        {selectedTicket._genero || 'Não informado'}
+                      </Typography>
+                    </Box>
+                    {/* Linha 5 */}
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.75rem' }}>
                         Status:
                       </Typography>
                       <Chip
@@ -868,24 +1029,29 @@ const ChamadosInternosPage = () => {
                           color: getStatusColor(selectedTicket._statusConsole || selectedTicket._statusHub).color,
                           fontFamily: 'Poppins',
                           fontWeight: 500,
-                          border: 'none'
+                          border: 'none',
+                          fontSize: '0.65rem',
+                          height: '20px'
                         }}
                         variant="filled"
                       />
                     </Box>
+                    <Box>
+                      {/* Vazio - coluna 2 da linha 5 */}
+                    </Box>
                   </Box>
 
                   <Box sx={{ mb: 3 }}>
-                    <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, mb: 1 }}>
+                    <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, mb: 1, fontSize: '0.75rem' }}>
                       Ocorrência:
                     </Typography>
-                    <Typography sx={{ fontFamily: 'Poppins', mb: 2 }}>
+                    <Typography sx={{ fontFamily: 'Poppins', mb: 2, fontSize: '0.75rem' }}>
                       {selectedTicket._obs || 'Não informado'}
                     </Typography>
                   </Box>
 
                   <Box>
-                    <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, mb: 1 }}>
+                    <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, mb: 1, fontSize: '0.75rem' }}>
                       Corpo da Mensagem:
                     </Typography>
                     {selectedTicket._corpo && selectedTicket._corpo.length > 0 ? (
@@ -897,18 +1063,18 @@ const ChamadosInternosPage = () => {
                               fontFamily: 'Poppins',
                               fontWeight: 600,
                               color: mensagem.autor === 'admin' ? 'var(--blue-dark)' : 'var(--blue-medium)',
-                              fontSize: '1rem'
+                              fontSize: '0.75rem'
                             }}
                           >
-                            {mensagem.userName} <span style={{ fontStyle: 'italic', color: 'black', fontSize: '0.75rem', fontWeight: 300 }}>{new Date(mensagem.timestamp).toLocaleDateString('pt-BR')}, {new Date(mensagem.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                            {mensagem.userName} <span style={{ fontStyle: 'italic', color: 'black', fontSize: '0.65rem', fontWeight: 300 }}>{new Date(mensagem.timestamp).toLocaleDateString('pt-BR')}, {new Date(mensagem.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
                           </Typography>
-                          <Typography sx={{ fontFamily: 'Poppins', mt: 0.5 }}>
+                          <Typography sx={{ fontFamily: 'Poppins', mt: 0.5, fontSize: '0.75rem' }}>
                             {mensagem.mensagem}
                           </Typography>
                         </Box>
                       ))
                     ) : (
-                      <Typography sx={{ fontFamily: 'Poppins' }}>
+                      <Typography sx={{ fontFamily: 'Poppins', fontSize: '0.75rem' }}>
                         Não há mensagens no ticket
                       </Typography>
                     )}
