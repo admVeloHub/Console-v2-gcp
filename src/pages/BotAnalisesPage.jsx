@@ -1,4 +1,4 @@
-// VERSION: v2.12.0 | DATE: 2025-11-26 | AUTHOR: VeloHub Development Team
+// VERSION: v2.12.1 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
 import React, { useState, useCallback, useEffect } from 'react';
 import { Typography, Box, Tabs, Tab, Container, Grid, Card, CardContent, FormControl, InputLabel, Select, MenuItem, Button, Accordion, AccordionSummary, AccordionDetails, Chip, Alert, CircularProgress, Checkbox, FormControlLabel } from '@mui/material';
 import { QuestionAnswer, People, Schedule, TrendingUp, TrendingDown, DateRange, Timeline, PieChart as PieChartIcon, ShowChart, Person, FileDownload, PictureAsPdf, ListAlt, EmojiEvents, Analytics, Psychology, Refresh, Search, ExpandMore } from '@mui/icons-material';
@@ -836,7 +836,7 @@ const BotAnalisesPage = () => {
           <Card sx={{
             background: 'var(--cor-container)',
             borderRadius: '16px',
-            border: '1px solid var(--cor-borda)',
+            border: '1px solid rgba(0, 0, 0, 0.12)',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
             mb: 4
           }}>
@@ -1587,7 +1587,7 @@ const BotAnalisesPage = () => {
           <Card sx={{
             background: 'var(--cor-container)',
             borderRadius: '16px',
-            border: '1px solid var(--cor-borda)',
+            border: '1px solid rgba(0, 0, 0, 0.12)',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
             mb: 4
           }}>
@@ -1650,7 +1650,7 @@ const BotAnalisesPage = () => {
                     <Box sx={{ 
                       height: '350px',
                       overflow: 'auto',
-                      border: '1px solid var(--cor-borda)',
+                      border: '1px solid rgba(0, 0, 0, 0.12)',
                       borderRadius: '4px'
                     }}>
                       {listaAtividades.map((atividade, index) => (
@@ -1781,7 +1781,7 @@ const BotAnalisesPage = () => {
                     <Box sx={{ 
                       height: '350px',
                       overflow: 'auto',
-                      border: '1px solid var(--cor-borda)',
+                      border: '1px solid rgba(0, 0, 0, 0.12)',
                       borderRadius: '4px'
                     }}>
                       {dadosRankingAgentes.map((agente, index) => (
@@ -1859,7 +1859,7 @@ const BotAnalisesPage = () => {
           <Card sx={{
             background: 'var(--cor-container)',
             borderRadius: '16px',
-            border: '1px solid var(--cor-borda)',
+            border: '1px solid rgba(0, 0, 0, 0.12)',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
             mb: 4,
             mt: 4
@@ -1997,7 +1997,7 @@ const BotAnalisesPage = () => {
                                <Grid item xs={12} md={4}>
                                  <Box sx={{ 
                                    p: 2,
-                                   border: '1px solid var(--cor-borda)',
+                                   border: '1px solid rgba(0, 0, 0, 0.12)',
                                    borderRadius: '8px',
                                    height: '100%',
                                    backgroundColor: 'rgba(22, 52, 255, 0.02)'
@@ -2059,7 +2059,7 @@ const BotAnalisesPage = () => {
                                <Grid item xs={12} md={4}>
                                  <Box sx={{ 
                                    p: 2,
-                                   border: '1px solid var(--cor-borda)',
+                                   border: '1px solid rgba(0, 0, 0, 0.12)',
                                    borderRadius: '8px',
                                    height: '100%',
                                    backgroundColor: 'rgba(21, 162, 55, 0.02)'
@@ -2125,7 +2125,7 @@ const BotAnalisesPage = () => {
                                <Grid item xs={12} md={4}>
                                  <Box sx={{ 
                                    p: 2,
-                                   border: '1px solid var(--cor-borda)',
+                                   border: '1px solid rgba(0, 0, 0, 0.12)',
                                    borderRadius: '8px',
                                    height: '100%',
                                    backgroundColor: 'rgba(255, 99, 132, 0.02)'

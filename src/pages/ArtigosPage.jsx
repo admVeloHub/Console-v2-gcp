@@ -1,4 +1,4 @@
-// VERSION: v3.6.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// VERSION: v3.6.1 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { 
   Container, 
@@ -413,7 +413,7 @@ const ArtigosPage = () => {
                         },
                         '& .MuiOutlinedInput-root': {
                           '& fieldset': {
-                            borderColor: 'var(--blue-dark)',
+                            borderColor: 'rgba(0, 0, 0, 0.12)',
                           },
                           '&:hover fieldset': {
                             borderColor: 'var(--blue-medium)',
@@ -438,7 +438,7 @@ const ArtigosPage = () => {
                         label="Categoria"
                         sx={{
                           '& .MuiOutlinedInput-notchedOutline': {
-                            borderColor: 'var(--blue-dark)',
+                            borderColor: 'rgba(0, 0, 0, 0.12)',
                           },
                           '&:hover .MuiOutlinedInput-notchedOutline': {
                             borderColor: 'var(--blue-medium)',
@@ -475,7 +475,7 @@ const ArtigosPage = () => {
                         },
                         '& .MuiOutlinedInput-root': {
                           '& fieldset': {
-                            borderColor: 'var(--blue-dark)',
+                            borderColor: 'rgba(0, 0, 0, 0.12)',
                           },
                           '&:hover fieldset': {
                             borderColor: 'var(--blue-medium)',

@@ -1,4 +1,4 @@
-/* VERSION: v1.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team */
+/* VERSION: v1.0.1 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team */
 /* Integração dos estilos do VeloInsights com o tema do Console */
 
 /* Importar estilos base do VeloInsights */
@@ -16,7 +16,7 @@
   --color-bg-primary: var(--cor-container);
   --color-bg-secondary: var(--cor-card);
   --color-text-primary: var(--gray);
-  --color-text-secondary: var(--cor-texto-secundario);
+  --color-text-secondary: var(--blue-dark);
   --color-blue-primary: var(--blue-medium);
   --color-blue-dark: var(--blue-dark);
   --color-blue-light: var(--blue-light);
@@ -29,7 +29,7 @@
   --color-container-bg: var(--cor-container);
   
   /* Bordas e sombras */
-  --color-border: var(--cor-borda);
+  --color-border: rgba(0, 0, 0, 0.12);
   --color-shadow: rgba(0, 0, 0, 0.1);
   
   /* Cores de status */
