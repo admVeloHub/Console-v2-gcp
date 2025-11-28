@@ -1,4 +1,4 @@
-// VERSION: v3.6.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.7.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { AppBar, Toolbar, Typography, IconButton, Box, Menu, MenuItem, Avatar, Chip } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -13,15 +13,23 @@ const Header = () => {
   const { user, logout } = useAuth();
 
   useEffect(() => {
-    // Carregar tema salvo
+    // Carregar tema salvo - Sistema unificado
     const savedTheme = localStorage.getItem('velohub-theme') || 'light';
     const isDark = savedTheme === 'dark';
     setIsDarkMode(isDark);
     
+    // Aplicar tema no documentElement
     if (isDark) {
       document.documentElement.classList.add('dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+    
+    // Sincronizar com sistema do IGP (se existir)
+    if (localStorage.getItem('veloinsights-theme')) {
+      localStorage.setItem('veloinsights-theme', savedTheme);
     }
   }, []);
 
@@ -29,12 +37,19 @@ const Header = () => {
     const newTheme = !isDarkMode;
     setIsDarkMode(newTheme);
     
+    // Sistema unificado de tema
     if (newTheme) {
       document.documentElement.classList.add('dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
       localStorage.setItem('velohub-theme', 'dark');
+      // Sincronizar com sistema do IGP
+      localStorage.setItem('veloinsights-theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
+      document.documentElement.setAttribute('data-theme', 'light');
       localStorage.setItem('velohub-theme', 'light');
+      // Sincronizar com sistema do IGP
+      localStorage.setItem('veloinsights-theme', 'light');
     }
   };
 

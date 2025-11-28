@@ -151,7 +151,7 @@ const IGPPage = () => {
             onChange={(e, v) => setActiveTab(availableTabs[v]?.id || 0)}
             aria-label="veloinsights tabs"
             sx={{
-              borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+              borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
               '& .MuiTab-root': {
                 fontSize: '1rem',
                 fontFamily: 'Poppins',
@@ -162,8 +162,7 @@ const IGPPage = () => {
                   color: 'var(--blue-light)',
                 },
                 '&:not(.Mui-selected)': {
-                  color: 'var(--gray)',
-                  opacity: 0.7,
+                  color: 'rgba(0, 0, 0, 0.35)',
                 }
               },
               '& .MuiTabs-indicator': {

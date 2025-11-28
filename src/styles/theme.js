@@ -1,8 +1,14 @@
-// VERSION: v3.1.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.2.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
 import { createTheme } from '@mui/material/styles';
+
+// Verificar se tema escuro está ativo
+const isDarkMode = typeof window !== 'undefined' && 
+  (document.documentElement.classList.contains('dark') || 
+   localStorage.getItem('velohub-theme') === 'dark');
 
 export const velohubTheme = createTheme({
   palette: {
+    mode: isDarkMode ? 'dark' : 'light',
     primary: {
       main: '#1634FF', // --blue-medium
       dark: '#000058', // --blue-dark
@@ -18,12 +24,12 @@ export const velohubTheme = createTheme({
       main: '#FCC200', // --yellow
     },
     background: {
-      default: '#f0f4f8', // --cor-fundo
-      paper: '#F3F7FC', // --cor-container
+      default: isDarkMode ? '#272A30' : '#f0f4f8', // --cor-fundo-escuro : --cor-fundo
+      paper: isDarkMode ? '#323a42' : '#F3F7FC', // --cor-container-escuro : --cor-container
     },
     text: {
-      primary: '#272A30', // --gray
-      secondary: '#000058', // --blue-dark
+      primary: isDarkMode ? '#F3F7FC' : '#272A30', // --texto-principal-escuro : --gray
+      secondary: isDarkMode ? '#B0BEC5' : '#000058', // --texto-secundario-escuro : --blue-dark
     },
   },
   typography: {

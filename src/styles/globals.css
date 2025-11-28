@@ -1,4 +1,4 @@
-/* VERSION: v3.1.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team */
+/* VERSION: v3.2.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team */
 
 /* Importar fontes VeloHub */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Anton&display=swap');
@@ -41,11 +41,61 @@
   --sombra-header-escura: rgba(0, 102, 171, 0.3);
 }
 
-/* Tema escuro */
+/* Tema escuro - COMPATÍVEL COM LAYOUT_GUIDELINES.md */
 .dark {
   --cor-fundo: var(--cor-fundo-escuro);
   --cor-container: var(--cor-container-escuro);
   --cor-card: var(--cor-card-escuro);
+}
+
+/* Aplicar tema escuro em todos os elementos principais */
+.dark .velohub-container {
+  background-color: var(--cor-container-escuro);
+  box-shadow: 0 4px 20px var(--sombra-escura);
+}
+
+.dark .velohub-card {
+  background-color: var(--cor-card-escuro);
+  border: 1px solid var(--borda-escura);
+  box-shadow: 0 8px 32px var(--sombra-escura);
+}
+
+.dark .velohub-card:hover {
+  border-color: var(--blue-light);
+  box-shadow: 0 20px 40px var(--sombra-escura);
+}
+
+/* Header no tema escuro */
+.dark .velohub-header {
+  background-color: var(--cor-header-escuro);
+  border-bottom: 1px solid var(--divisoria-escura);
+  box-shadow: 0 4px 20px var(--sombra-header-escura);
+}
+
+/* Textos no tema escuro */
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+  color: var(--texto-principal-escuro);
+}
+
+.dark p, .dark span, .dark div, .dark li {
+  color: var(--texto-secundario-escuro);
+}
+
+.dark .highlight, .dark .accent {
+  color: var(--texto-destaque-escuro);
+}
+
+/* Scrollbar no tema escuro */
+.dark ::-webkit-scrollbar-track {
+  background: var(--cor-fundo-escuro);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: var(--blue-medium);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: var(--blue-light);
 }
 
 /* Reset e Base */
@@ -228,6 +278,11 @@ body {
   margin: 12.8px 0;
 }
 
+.dark .container-main {
+  background-color: var(--cor-container-escuro);
+  box-shadow: 0 3.2px 16px var(--sombra-escura);
+}
+
 .container-secondary {
   background: transparent;
   border: 1.5px solid var(--blue-dark);
@@ -237,10 +292,78 @@ body {
   box-shadow: none;
 }
 
-.velohub-card {
-  background-color: var(--cor-card);
-  border-radius: 6.4px;
-  box-shadow: 0 1.6px 8px rgba(0, 0, 0, 0.05);
-  padding: 16px;
-  margin: 9.6px 0;
+.dark .container-secondary {
+  border-color: var(--borda-escura);
+}
+
+/* Material-UI Components - Tema Escuro */
+.dark .MuiCard-root {
+  background-color: var(--cor-card-escuro) !important;
+  border-color: var(--borda-escura) !important;
+  color: var(--texto-principal-escuro) !important;
+}
+
+.dark .MuiPaper-root {
+  background-color: var(--cor-container-escuro) !important;
+  color: var(--texto-principal-escuro) !important;
+}
+
+.dark .MuiTypography-root {
+  color: var(--texto-principal-escuro) !important;
+}
+
+.dark .MuiTypography-body1,
+.dark .MuiTypography-body2 {
+  color: var(--texto-secundario-escuro) !important;
+}
+
+.dark .MuiButton-outlined {
+  border-color: var(--borda-escura) !important;
+  color: var(--texto-principal-escuro) !important;
+}
+
+.dark .MuiButton-outlined:hover {
+  border-color: var(--blue-light) !important;
+  background-color: rgba(22, 148, 255, 0.1) !important;
+}
+
+.dark .MuiTextField-root .MuiOutlinedInput-root {
+  background-color: var(--cor-container-escuro) !important;
+  color: var(--texto-principal-escuro) !important;
+  border-color: var(--borda-escura) !important;
+}
+
+.dark .MuiTextField-root .MuiOutlinedInput-root:hover {
+  border-color: var(--blue-light) !important;
+}
+
+.dark .MuiTextField-root .MuiOutlinedInput-root.Mui-focused {
+  border-color: var(--blue-light) !important;
+}
+
+.dark .MuiInputLabel-root {
+  color: var(--texto-secundario-escuro) !important;
+}
+
+.dark .MuiSelect-select {
+  background-color: var(--cor-container-escuro) !important;
+  color: var(--texto-principal-escuro) !important;
+}
+
+.dark .MuiMenuItem-root {
+  background-color: var(--cor-container-escuro) !important;
+  color: var(--texto-principal-escuro) !important;
+}
+
+.dark .MuiMenuItem-root:hover {
+  background-color: rgba(22, 148, 255, 0.1) !important;
+}
+
+/* Tabs - Tema Escuro */
+.dark .MuiTabs-root {
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dark .MuiTab-root:not(.Mui-selected) {
+  color: rgba(255, 255, 255, 0.35) !important;
 }
