@@ -2,7 +2,7 @@
  * qualidadeAudioService.js
  * Serviço para upload e análise de áudios com GPT
  * 
- * VERSION: v2.0.0
+ * VERSION: v2.1.0
  * DATE: 2025-01-30
  * AUTHOR: VeloHub Development Team
  */
@@ -213,7 +213,16 @@ export const uploadAudioParaAnalise = async (avaliacaoId, audioFile, onProgress)
       throw lastError || new Error('Falha no upload após múltiplas tentativas');
     }
 
-    // 3. Retornar dados do upload
+    // 3. Confirmar upload bem-sucedido no backend
+    try {
+      await confirmUploadSuccess(uploadData.avaliacaoId || avaliacaoId, uploadData.fileName);
+    } catch (confirmError) {
+      console.error('⚠️  Erro ao confirmar upload no backend (não crítico):', confirmError);
+      // Não lançar erro, pois o upload foi bem-sucedido
+      // O backend pode verificar o arquivo no bucket se necessário
+    }
+
+    // 4. Retornar dados do upload
     return {
       avaliacaoId: uploadData.avaliacaoId || avaliacaoId,
       fileName: uploadData.fileName,
@@ -222,6 +231,39 @@ export const uploadAudioParaAnalise = async (avaliacaoId, audioFile, onProgress)
     };
   } catch (error) {
     console.error('Erro no upload de áudio:', error);
+    throw error;
+  }
+};
+
+/**
+ * Confirmar upload bem-sucedido no backend
+ * @param {string} avaliacaoId - ID da avaliação
+ * @param {string} fileName - Nome do arquivo enviado
+ * @returns {Promise<void>}
+ */
+const confirmUploadSuccess = async (avaliacaoId, fileName) => {
+  try {
+    const response = await fetch(`${API_URL}/api/audio-analise/confirm-upload`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        avaliacaoId,
+        fileName
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Erro ao confirmar upload');
+    }
+
+    const data = await response.json();
+    console.log('✅ Upload confirmado no backend:', data);
+    return data;
+  } catch (error) {
+    console.error('Erro ao confirmar upload:', error);
     throw error;
   }
 };
@@ -747,6 +789,7 @@ export default {
   generateUploadUrl,
   uploadToGCS,
   uploadAudioParaAnalise,
+  confirmUploadSuccess,
   verificarStatusAnaliseGPT,
   obterResultadoAnalise,
   createSSEConnection,
