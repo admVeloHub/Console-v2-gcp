@@ -1,4 +1,4 @@
-// VERSION: v1.3.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.4.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
 import React, { useState } from 'react';
 import { Container, Box, Typography, Button, Card, CardContent } from '@mui/material';
 import { ArrowBack, People, Assessment } from '@mui/icons-material';
@@ -23,17 +23,17 @@ const QualidadePage = () => {
           startIcon={<ArrowBack />}
           onClick={() => navigate('/')}
           sx={{
-            color: '#000058',
-            borderColor: '#000058',
+            color: 'var(--blue-dark)',
+            borderColor: 'var(--blue-dark)',
             fontFamily: 'Poppins',
             fontWeight: 500,
             fontSize: '0.8rem',
             py: 0.4,
             px: 1.2,
             '&:hover': {
-              backgroundColor: '#1694FF',
-              color: '#ffffff',
-              borderColor: '#1694FF'
+              backgroundColor: 'var(--blue-light)',
+              color: 'var(--white)',
+              borderColor: 'var(--blue-light)'
             }
           }}
         >
@@ -52,11 +52,12 @@ const QualidadePage = () => {
         {/* Card Funcionários */}
         <Card
           onClick={() => handleModuleClick('funcionarios')}
+          className="velohub-card"
           sx={{
             cursor: 'pointer',
-            backgroundColor: '#ffffff',
+            backgroundColor: 'var(--cor-card)',
             borderRadius: '12.8px',
-            border: '1px solid #e0e0e0',
+            border: '1px solid rgba(22, 52, 255, 0.1)',
             boxShadow: '0 3.2px 16px rgba(0, 0, 0, 0.1)',
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             position: 'relative',
@@ -68,7 +69,7 @@ const QualidadePage = () => {
               left: 0,
               right: 0,
               height: '3.2px',
-              background: 'linear-gradient(90deg, #000058, #1694FF)',
+              background: 'linear-gradient(90deg, var(--blue-dark), var(--blue-light))',
               transform: 'scaleX(0)',
               transformOrigin: 'left',
               transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
@@ -79,7 +80,7 @@ const QualidadePage = () => {
             '&:hover': {
               transform: 'translateY(-9.6px) scale(1.02)',
               boxShadow: '0 16px 32px rgba(0, 0, 0, 0.15)',
-              borderColor: '#1694FF'
+              borderColor: 'var(--blue-light)'
             }
           }}
         >
@@ -88,8 +89,8 @@ const QualidadePage = () => {
               <Box sx={{
                 p: 1.6,
                 borderRadius: '9.6px',
-                backgroundColor: '#1694FF',
-                color: '#ffffff',
+                backgroundColor: 'var(--blue-light)',
+                color: 'var(--white)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
@@ -100,7 +101,7 @@ const QualidadePage = () => {
                 <Typography variant="h5" sx={{ 
                   fontFamily: 'Poppins', 
                   fontWeight: 700, 
-                  color: '#000058',
+                  color: 'var(--blue-dark)',
                   mb: 0.8,
                   fontSize: '1.28rem'
                 }}>
@@ -108,7 +109,7 @@ const QualidadePage = () => {
                 </Typography>
                 <Typography variant="body1" sx={{ 
                   fontFamily: 'Poppins', 
-                  color: '#666666',
+                  color: 'var(--gray)',
                   lineHeight: 1.5,
                   fontSize: '0.8rem'
                 }}>
@@ -122,11 +123,12 @@ const QualidadePage = () => {
         {/* Card Módulo de Qualidade */}
         <Card
           onClick={() => handleModuleClick('qualidade')}
+          className="velohub-card"
           sx={{
             cursor: 'pointer',
-            backgroundColor: '#ffffff',
+            backgroundColor: 'var(--cor-card)',
             borderRadius: '12.8px',
-            border: '1px solid #e0e0e0',
+            border: '1px solid rgba(22, 52, 255, 0.1)',
             boxShadow: '0 3.2px 16px rgba(0, 0, 0, 0.1)',
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             position: 'relative',
@@ -138,7 +140,7 @@ const QualidadePage = () => {
               left: 0,
               right: 0,
               height: '3.2px',
-              background: 'linear-gradient(90deg, #000058, #1694FF)',
+              background: 'linear-gradient(90deg, var(--blue-dark), var(--blue-light))',
               transform: 'scaleX(0)',
               transformOrigin: 'left',
               transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
@@ -149,7 +151,7 @@ const QualidadePage = () => {
             '&:hover': {
               transform: 'translateY(-9.6px) scale(1.02)',
               boxShadow: '0 16px 32px rgba(0, 0, 0, 0.15)',
-              borderColor: '#1694FF'
+              borderColor: 'var(--blue-light)'
             }
           }}
         >
@@ -158,8 +160,8 @@ const QualidadePage = () => {
               <Box sx={{
                 p: 1.6,
                 borderRadius: '9.6px',
-                backgroundColor: '#000058',
-                color: '#ffffff',
+                backgroundColor: 'var(--blue-dark)',
+                color: 'var(--white)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
@@ -170,7 +172,7 @@ const QualidadePage = () => {
                 <Typography variant="h5" sx={{ 
                   fontFamily: 'Poppins', 
                   fontWeight: 700, 
-                  color: '#000058',
+                  color: 'var(--blue-dark)',
                   mb: 0.8,
                   fontSize: '1.28rem'
                 }}>
@@ -178,7 +180,7 @@ const QualidadePage = () => {
                 </Typography>
                 <Typography variant="body1" sx={{ 
                   fontFamily: 'Poppins', 
-                  color: '#666666',
+                  color: 'var(--gray)',
                   lineHeight: 1.5,
                   fontSize: '0.8rem'
                 }}>

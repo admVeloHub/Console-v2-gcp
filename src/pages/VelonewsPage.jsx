@@ -270,7 +270,7 @@ const VelonewsPage = () => {
             onChange={(e, v) => setActiveTab(v)}
             aria-label="velonews tabs"
             sx={{
-              borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+              borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
               '& .MuiTab-root': {
                 fontSize: '1rem',
                 fontFamily: 'Poppins',
@@ -281,8 +281,7 @@ const VelonewsPage = () => {
                   color: 'var(--blue-light)',
                 },
                 '&:not(.Mui-selected)': {
-                  color: 'var(--gray)',
-                  opacity: 0.7,
+                  color: 'rgba(0, 0, 0, 0.35)',
                 }
               },
               '& .MuiTabs-indicator': {
