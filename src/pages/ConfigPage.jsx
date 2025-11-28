@@ -1,4 +1,4 @@
-// VERSION: v3.9.2 | DATE: 2025-11-13 | AUTHOR: VeloHub Development Team
+// VERSION: v3.9.4 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -162,7 +162,7 @@ const ConfigPage = () => {
   // Mapeamento dos tipos de tickets dos chamados internos
   const ticketTypes = [
     { key: 'artigos', label: 'Artigos' },
-    { key: 'processos', label: 'Processos' },
+    { key: 'processos', label: 'Velobot' },
     { key: 'roteiros', label: 'Roteiros' },
     { key: 'treinamentos', label: 'Treinamentos' },
     { key: 'funcionalidades', label: 'Funcionalidades' },

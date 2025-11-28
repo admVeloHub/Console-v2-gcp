@@ -1,4 +1,4 @@
-// VERSION: v1.3.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.3.2 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -44,7 +44,7 @@ const ModalAtribuido = ({ ticket, open, onClose, onUpdate }) => {
     }
     // Verificar pelo gênero
     const generoLower = ticket._genero?.toLowerCase();
-    const generosConteudo = ['artigo', 'processo', 'roteiro', 'treinamento', 'funcionalidade', 'recurso adicional', 'recurso'];
+    const generosConteudo = ['artigo', 'processo', 'velobot', 'roteiro', 'treinamento', 'funcionalidade', 'recurso adicional', 'recurso'];
     return generosConteudo.includes(generoLower);
   };
 

@@ -1,4 +1,4 @@
-// VERSION: v1.4.0 | DATE: 2025-11-26 | AUTHOR: VeloHub Development Team
+// VERSION: v1.5.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
 
 import * as XLSX from 'xlsx';
 import { getAvaliacoes } from './qualidadeAPI';
@@ -17,12 +17,14 @@ export const exportAvaliacoesToExcel = async () => {
     // Criar workbook
     const workbook = XLSX.utils.book_new();
 
-    // Criar dados da planilha
+    // Criar dados da planilha com todos os campos do schema
     const headers = [
-      'ID', 'Colaborador', 'Avaliador', 'Mês', 'Ano', 'Data Avaliação',
-      'Saudação Adequada', 'Escuta Ativa', 'Resolução Questão', 'Empatia/Cordialidade',
-      'Direcionou Pesquisa', 'Procedimento Incorreto', 'Encerramento Brusco',
-      'Pontuação Total', 'Observações', 'Arquivo de Áudio'
+      'ID', 'Colaborador', 'Avaliador', 'Mês', 'Ano', 'Data Ligação',
+      'Saudação Adequada', 'Escuta Ativa', 'Clareza/Objetividade', 'Resolução Questão',
+      'Domínio do Assunto', 'Empatia/Cordialidade', 'Direcionou Pesquisa',
+      'Procedimento Incorreto', 'Encerramento Brusco', 'Pontuação Total',
+      'Observações', 'Nome Arquivo Áudio', 'Áudio Enviado', 'Áudio Processado',
+      'Data Criação Áudio', 'Data Atualização Áudio', 'Data Criação', 'Data Atualização'
     ];
 
     const dados = [
@@ -33,17 +35,25 @@ export const exportAvaliacoesToExcel = async () => {
         avaliacao.avaliador || '',
         avaliacao.mes || '',
         avaliacao.ano || '',
-        avaliacao.dataAvaliacao ? new Date(avaliacao.dataAvaliacao).toLocaleDateString('pt-BR') : '',
+        avaliacao.dataLigacao ? new Date(avaliacao.dataLigacao).toLocaleDateString('pt-BR') : '',
         avaliacao.saudacaoAdequada ? 'Sim' : 'Não',
         avaliacao.escutaAtiva ? 'Sim' : 'Não',
+        avaliacao.clarezaObjetividade !== undefined ? (avaliacao.clarezaObjetividade ? 'Sim' : 'Não') : '',
         avaliacao.resolucaoQuestao ? 'Sim' : 'Não',
+        avaliacao.dominioAssunto !== undefined ? (avaliacao.dominioAssunto ? 'Sim' : 'Não') : '',
         avaliacao.empatiaCordialidade ? 'Sim' : 'Não',
         avaliacao.direcionouPesquisa ? 'Sim' : 'Não',
         avaliacao.procedimentoIncorreto ? 'Sim' : 'Não',
         avaliacao.encerramentoBrusco ? 'Sim' : 'Não',
         avaliacao.pontuacaoTotal || 0,
-        avaliacao.observacoesModeracao || '',
-        (avaliacao.nomeArquivoAudio || avaliacao.audioSent || avaliacao.audioTreated) ? 'Sim' : 'Não'
+        avaliacao.observacoes || avaliacao.observacoesModeracao || '',
+        avaliacao.nomeArquivoAudio || '',
+        avaliacao.audioSent ? 'Sim' : 'Não',
+        avaliacao.audioTreated ? 'Sim' : 'Não',
+        avaliacao.audioCreatedAt ? new Date(avaliacao.audioCreatedAt).toLocaleDateString('pt-BR') + ' ' + new Date(avaliacao.audioCreatedAt).toLocaleTimeString('pt-BR') : '',
+        avaliacao.audioUpdatedAt ? new Date(avaliacao.audioUpdatedAt).toLocaleDateString('pt-BR') + ' ' + new Date(avaliacao.audioUpdatedAt).toLocaleTimeString('pt-BR') : '',
+        avaliacao.createdAt ? new Date(avaliacao.createdAt).toLocaleDateString('pt-BR') + ' ' + new Date(avaliacao.createdAt).toLocaleTimeString('pt-BR') : '',
+        avaliacao.updatedAt ? new Date(avaliacao.updatedAt).toLocaleDateString('pt-BR') + ' ' + new Date(avaliacao.updatedAt).toLocaleTimeString('pt-BR') : ''
       ])
     ];
 
@@ -55,19 +65,27 @@ export const exportAvaliacoesToExcel = async () => {
       { wch: 25 }, // ID
       { wch: 20 }, // Colaborador
       { wch: 20 }, // Avaliador
-      { wch: 8 },  // Mês
+      { wch: 10 }, // Mês
       { wch: 8 },  // Ano
-      { wch: 15 }, // Data Avaliação
+      { wch: 15 }, // Data Ligação
       { wch: 18 }, // Saudação Adequada
       { wch: 12 }, // Escuta Ativa
+      { wch: 20 }, // Clareza/Objetividade
       { wch: 18 }, // Resolução Questão
+      { wch: 18 }, // Domínio do Assunto
       { wch: 20 }, // Empatia/Cordialidade
       { wch: 18 }, // Direcionou Pesquisa
       { wch: 20 }, // Procedimento Incorreto
       { wch: 18 }, // Encerramento Brusco
       { wch: 15 }, // Pontuação Total
       { wch: 30 }, // Observações
-      { wch: 15 }  // Arquivo de Áudio
+      { wch: 30 }, // Nome Arquivo Áudio
+      { wch: 15 }, // Áudio Enviado
+      { wch: 18 }, // Áudio Processado
+      { wch: 20 }, // Data Criação Áudio
+      { wch: 20 }, // Data Atualização Áudio
+      { wch: 20 }, // Data Criação
+      { wch: 20 }  // Data Atualização
     ];
     worksheet['!cols'] = colWidths;
 

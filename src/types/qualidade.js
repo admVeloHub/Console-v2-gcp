@@ -1,4 +1,4 @@
-// VERSION: v1.6.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.6.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 /**
  * @typedef {Object} Funcionario
@@ -283,11 +283,20 @@ export const gerarRelatorioAgente = (colaboradorNome, avaliacoesFiltradas, avali
   // Gerar histórico com notas reais, mediana e tendência usando todas as avaliações do gráfico
   const historico = [];
   
-  // Ordenar avaliações por createdAt (cronológica: antigo → recente)
+  // Ordenar avaliações por período (mes/ano) cronologicamente: antigo → recente
   const avaliacoesOrdenadas = [...avaliacoesGrafico].sort((a, b) => {
-    const dataA = a.createdAt ? new Date(a.createdAt).getTime() : (a.dataAvaliacao ? new Date(a.dataAvaliacao).getTime() : 0);
-    const dataB = b.createdAt ? new Date(b.createdAt).getTime() : (b.dataAvaliacao ? new Date(b.dataAvaliacao).getTime() : 0);
-    return dataA - dataB;
+    // Criar chave de ordenação: ano primeiro, depois mês
+    const mesA = MESES.indexOf(a.mes || '');
+    const mesB = MESES.indexOf(b.mes || '');
+    const anoA = a.ano || 0;
+    const anoB = b.ano || 0;
+    
+    // Comparar por ano primeiro
+    if (anoA !== anoB) {
+      return anoA - anoB;
+    }
+    // Se mesmo ano, comparar por mês
+    return mesA - mesB;
   });
   
   // Calcular mediana geral (usando todas as avaliações do gráfico)
@@ -297,54 +306,62 @@ export const gerarRelatorioAgente = (colaboradorNome, avaliacoesFiltradas, avali
     ? (notasOrdenadas[notasOrdenadas.length / 2 - 1] + notasOrdenadas[notasOrdenadas.length / 2]) / 2
     : notasOrdenadas[Math.floor(notasOrdenadas.length / 2)];
   
-  // Agrupar avaliações por data (createdAt) e calcular média quando houver múltiplas na mesma data
-  const avaliacoesPorData = {};
+  // Agrupar avaliações por período (mes/ano) e calcular média quando houver múltiplas no mesmo período
+  const avaliacoesPorPeriodo = {};
   avaliacoesOrdenadas.forEach(avaliacao => {
-    if (!avaliacao.createdAt) return;
+    // Validar que temos mes e ano
+    if (!avaliacao.mes || !avaliacao.ano) return;
     
-    const dataCriacao = new Date(avaliacao.createdAt);
-    if (isNaN(dataCriacao.getTime())) return;
+    // Criar chave única por período (mes/ano)
+    const chavePeriodo = `${avaliacao.mes}/${avaliacao.ano}`;
     
-    // Normalizar para início do dia (chave única por data)
-    const dataNormalizada = new Date(dataCriacao);
-    dataNormalizada.setHours(0, 0, 0, 0);
-    const chaveData = dataNormalizada.toISOString().split('T')[0];
-    
-    if (!avaliacoesPorData[chaveData]) {
-      avaliacoesPorData[chaveData] = [];
+    if (!avaliacoesPorPeriodo[chavePeriodo]) {
+      avaliacoesPorPeriodo[chavePeriodo] = [];
     }
-    avaliacoesPorData[chaveData].push(avaliacao);
+    avaliacoesPorPeriodo[chavePeriodo].push(avaliacao);
   });
   
-  // Converter para array e ordenar por data
-  const datasOrdenadas = Object.keys(avaliacoesPorData).sort();
+  // Converter para array e ordenar por período cronologicamente
+  const periodosOrdenados = Object.keys(avaliacoesPorPeriodo).sort((a, b) => {
+    // Extrair mes e ano de cada chave
+    const [mesA, anoA] = a.split('/');
+    const [mesB, anoB] = b.split('/');
+    
+    const indiceMesA = MESES.indexOf(mesA);
+    const indiceMesB = MESES.indexOf(mesB);
+    const numAnoA = parseInt(anoA, 10);
+    const numAnoB = parseInt(anoB, 10);
+    
+    // Comparar por ano primeiro
+    if (numAnoA !== numAnoB) {
+      return numAnoA - numAnoB;
+    }
+    // Se mesmo ano, comparar por mês
+    return indiceMesA - indiceMesB;
+  });
   
-  // Gerar pontos para o gráfico (últimas 30 datas ou todas se menos)
-  const pontosGrafico = Math.min(30, datasOrdenadas.length);
-  const datasParaGrafico = datasOrdenadas.slice(-pontosGrafico);
+  // Gerar pontos para o gráfico (últimos 30 períodos ou todos se menos)
+  const pontosGrafico = Math.min(30, periodosOrdenados.length);
+  const periodosParaGrafico = periodosOrdenados.slice(-pontosGrafico);
   
-  datasParaGrafico.forEach((chaveData, index) => {
-    const avaliacoesNaData = avaliacoesPorData[chaveData];
+  periodosParaGrafico.forEach((chavePeriodo, index) => {
+    const avaliacoesNoPeriodo = avaliacoesPorPeriodo[chavePeriodo];
     
-    // Calcular média quando houver múltiplas avaliações na mesma data
-    const mediaNotaNaData = avaliacoesNaData.reduce((sum, a) => sum + (a.pontuacaoTotal || 0), 0) / avaliacoesNaData.length;
+    // Calcular média quando houver múltiplas avaliações no mesmo período
+    const mediaNotaNoPeriodo = avaliacoesNoPeriodo.reduce((sum, a) => sum + (a.pontuacaoTotal || 0), 0) / avaliacoesNoPeriodo.length;
     
-    // Formatar data como DD/MM/YYYY
-    const data = new Date(chaveData);
-    const dia = String(data.getDate()).padStart(2, '0');
-    const mes = String(data.getMonth() + 1).padStart(2, '0');
-    const ano = data.getFullYear();
-    const periodo = `${dia}/${mes}/${ano}`;
+    // Formatar período como "Mês/Ano" (ex: "Abril/2025")
+    const periodo = chavePeriodo;
     
-    // Calcular tendência (média móvel das últimas 3 datas)
+    // Calcular tendência (média móvel dos últimos 3 períodos)
     const inicioTendencia = Math.max(0, index - 2);
-    const datasTendencia = datasParaGrafico.slice(inicioTendencia, index + 1);
-    const avaliacoesTendencia = datasTendencia.flatMap(chave => avaliacoesPorData[chave]);
+    const periodosTendencia = periodosParaGrafico.slice(inicioTendencia, index + 1);
+    const avaliacoesTendencia = periodosTendencia.flatMap(chave => avaliacoesPorPeriodo[chave]);
     const tendenciaValor = avaliacoesTendencia.reduce((sum, a) => sum + (a.pontuacaoTotal || 0), 0) / avaliacoesTendencia.length;
     
     historico.push({
       periodo,
-      notaReal: Math.round(mediaNotaNaData * 100) / 100,
+      notaReal: Math.round(mediaNotaNoPeriodo * 100) / 100,
       mediana: Math.round(mediana * 100) / 100,
       tendencia: Math.round(tendenciaValor * 100) / 100
     });

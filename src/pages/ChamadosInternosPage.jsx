@@ -1,4 +1,4 @@
-// VERSION: v3.3.4 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.3.6 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -163,7 +163,7 @@ const ChamadosInternosPage = () => {
     }
     // Verificar pelo gênero
     const generoLower = ticket._genero?.toLowerCase();
-    const generosConteudo = ['artigo', 'processo', 'roteiro', 'treinamento', 'funcionalidade', 'recurso adicional', 'recurso'];
+    const generosConteudo = ['artigo', 'processo', 'velobot', 'roteiro', 'treinamento', 'funcionalidade', 'recurso adicional', 'recurso'];
     return generosConteudo.includes(generoLower);
   };
 
@@ -177,6 +177,7 @@ const ChamadosInternosPage = () => {
     const conteudosMap = {
       'artigo': 'artigos',
       'processo': 'processos',
+      'velobot': 'processos',
       'roteiro': 'roteiros',
       'treinamento': 'treinamentos',
       'funcionalidade': 'funcionalidades',
