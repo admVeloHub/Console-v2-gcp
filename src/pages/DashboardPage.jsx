@@ -1,4 +1,4 @@
-// VERSION: v4.1.2 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// VERSION: v4.1.3 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
 import React from 'react';
 import { Container, Grid, Typography, Box, Card, CardContent } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
@@ -236,19 +236,19 @@ const DashboardPage = () => {
           p: 4,
           backgroundColor: 'var(--cor-container)',
           borderRadius: '12px',
-          border: '1px solid var(--cor-borda)'
+          border: '1px solid rgba(0, 0, 0, 0.12)'
         }}>
           <Typography variant="h5" sx={{ 
             fontFamily: 'Poppins', 
             fontWeight: 600, 
-            color: 'var(--cor-texto)',
+            color: 'var(--gray)',
             mb: 2
           }}>
             Nenhuma funcionalidade disponível
           </Typography>
           <Typography variant="body1" sx={{ 
             fontFamily: 'Poppins', 
-            color: 'var(--cor-texto-secundario)'
+            color: 'var(--blue-dark)'
           }}>
             Entre em contato com o administrador para obter permissões de acesso.
           </Typography>

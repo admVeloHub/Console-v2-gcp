@@ -1,4 +1,4 @@
-// VERSION: v3.7.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// VERSION: v3.7.2 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { AppBar, Toolbar, Typography, IconButton, Box, Menu, MenuItem, Avatar, Chip } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -67,7 +67,7 @@ const Header = () => {
         backgroundColor: isDarkMode ? 'var(--cor-header-escuro)' : 'var(--cor-container)',
         color: isDarkMode ? 'var(--texto-principal-escuro)' : 'var(--gray)',
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-        borderBottom: `1px solid ${isDarkMode ? 'var(--divisoria-escura)' : 'var(--borda-escura)'}`
+        borderBottom: isDarkMode ? '1px solid var(--divisoria-escura)' : '1px solid rgba(0, 0, 0, 0.12)'
       }}
     >
       <Toolbar>
@@ -180,7 +180,7 @@ const Header = () => {
               sx={{
                 background: 'none',
                 border: 'none',
-                color: 'var(--cor-texto-secundario)',
+                color: 'var(--blue-dark)',
                 cursor: 'pointer',
                 padding: '4px',
                 borderRadius: '4px',
@@ -189,7 +189,7 @@ const Header = () => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 '&:hover': {
-                  color: 'var(--cor-accent)',
+                  color: 'var(--blue-medium)',
                   backgroundColor: 'rgba(22, 52, 255, 0.1)'
                 }
               }}

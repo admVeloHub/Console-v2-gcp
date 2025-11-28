@@ -1,4 +1,4 @@
-// VERSION: v5.0.3 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v5.0.4 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Chip } from '@mui/material';
 import { healthAPI } from '../../services/api';
@@ -52,13 +52,14 @@ const Footer = () => {
 
   return (
     <Box 
+      className="velohub-footer"
       sx={{ 
         position: 'fixed',
         bottom: 0,
         right: 0,
         left: 0,
         backgroundColor: 'var(--cor-container)',
-        borderTop: '1px solid var(--borda-escura)',
+        borderTop: '1px solid rgba(0, 0, 0, 0.12)',
         padding: '8px 16px',
         display: 'flex',
         justifyContent: 'space-between',

@@ -1,4 +1,4 @@
-/* VERSION: v3.2.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team */
+/* VERSION: v3.2.1 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team */
 
 /* Importar fontes VeloHub */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Anton&display=swap');
@@ -357,6 +357,11 @@ body {
 
 .dark .MuiMenuItem-root:hover {
   background-color: rgba(22, 148, 255, 0.1) !important;
+}
+
+/* Footer - Tema Escuro */
+.dark .velohub-footer {
+  border-top-color: var(--divisoria-escura) !important;
 }
 
 /* Tabs - Tema Escuro */
