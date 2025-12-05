@@ -785,6 +785,61 @@ export const getStatusText = (status) => {
   return texts[status] || 'Status desconhecido';
 };
 
+/**
+ * Reenviar áudio para Pub/Sub para reprocessamento
+ * @param {string} avaliacaoId - ID da avaliação
+ * @returns {Promise<object>} - Resultado do reenvio
+ */
+export const reenviarAudioPubSub = async (avaliacaoId) => {
+  try {
+    if (!avaliacaoId) {
+      throw new Error('avaliacaoId é obrigatório');
+    }
+
+    // Normalizar URL base removendo /api se existir no final
+    const baseUrl = (process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app').replace(/\/api\/?$/, '');
+    const url = `${baseUrl}/api/audio-analise/reenviar-pubsub/${avaliacaoId}`;
+    
+    console.log('🔄 Reenviando áudio para Pub/Sub:', { avaliacaoId, url });
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    console.log('📡 Resposta do servidor:', { status: response.status, statusText: response.statusText });
+
+    if (!response.ok) {
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch (e) {
+        errorData = { error: `Erro HTTP ${response.status}: ${response.statusText}` };
+      }
+      console.error('❌ Erro na resposta:', errorData);
+      throw new Error(errorData.error || `Erro ao reenviar áudio: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log('✅ Dados recebidos:', data);
+    
+    if (!data.success) {
+      throw new Error(data.error || 'Erro ao reenviar áudio');
+    }
+
+    return {
+      success: true,
+      message: data.message || 'Áudio reenviado com sucesso',
+      data: data.data
+    };
+  } catch (error) {
+    console.error('❌ Erro ao reenviar áudio para Pub/Sub:', error);
+    throw error;
+  }
+};
+
 export default {
   generateUploadUrl,
   uploadToGCS,
@@ -796,6 +851,7 @@ export default {
   monitorarProcessamento,
   listarAnalisesPorColaborador,
   auditarAvaliacaoGPT,
+  reenviarAudioPubSub,
   validarArquivoAudio,
   formatarTamanhoArquivo,
   getStatusColor,

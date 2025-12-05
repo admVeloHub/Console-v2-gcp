@@ -1,4 +1,4 @@
-// VERSION: v1.30.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.30.5 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 
@@ -555,11 +555,44 @@ const QualidadeModulePage = () => {
 
     switch (status) {
       case 'completo':
-        return <Mic sx={{ ...iconProps.sx, color: '#15A237' }} {...iconProps} />;
+        return (
+          <Mic 
+            {...iconProps}
+            sx={{ 
+              ...iconProps.sx,
+              color: '#15A237',
+              '& svg': {
+                color: '#15A237'
+              }
+            }} 
+          />
+        );
       case 'enviando':
-        return <Mic sx={{ ...iconProps.sx, color: '#FCC200' }} {...iconProps} />;
+        return (
+          <Mic 
+            {...iconProps}
+            sx={{ 
+              ...iconProps.sx,
+              color: '#FCC200',
+              '& svg': {
+                color: '#FCC200'
+              }
+            }} 
+          />
+        );
       default:
-        return <MicOff sx={{ ...iconProps.sx, color: '#B0BEC5' }} {...iconProps} />;
+        return (
+          <MicOff 
+            {...iconProps}
+            sx={{ 
+              ...iconProps.sx,
+              color: '#B0BEC5',
+              '& svg': {
+                color: '#B0BEC5'
+              }
+            }} 
+          />
+        );
     }
   };
 
