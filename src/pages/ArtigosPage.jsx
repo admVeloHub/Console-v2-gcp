@@ -1,4 +1,4 @@
-// VERSION: v3.6.1 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// VERSION: v3.8.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { 
   Container, 
@@ -28,6 +28,10 @@ import {
 import { Save, Search, Delete } from '@mui/icons-material';
 import { artigosAPI } from '../services/api';
 import BackButton from '../components/common/BackButton';
+import MarkdownEditor from '../components/common/MarkdownEditor';
+import MarkdownRenderer from '../components/common/MarkdownRenderer';
+import { processImageUploads, countTemporaryImages } from '../utils/imageUploadProcessor';
+import { clearAllTemporaryImages } from '../utils/imageStorage';
 
 const ArtigosPage = () => {
   const [activeTab, setActiveTab] = useState(0);
@@ -38,6 +42,7 @@ const ArtigosPage = () => {
     categoria_id: '',
     categoria_titulo: ''
   });
+  const [attachedVideos, setAttachedVideos] = useState([]);
 
   // Estados para a aba "Gerenciar Artigos"
   const [artigosList, setArtigosList] = useState([]);
@@ -52,6 +57,7 @@ const ArtigosPage = () => {
     categoria_id: '',
     categoria_titulo: ''
   });
+  const [editAttachedVideos, setEditAttachedVideos] = useState([]);
   const [loadingArtigos, setLoadingArtigos] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -98,7 +104,39 @@ const ArtigosPage = () => {
     setLoading(true);
 
     try {
-      await artigosAPI.create(formData);
+      // Processar uploads de imagens temporárias antes de salvar
+      let processedContent = formData.artigo_conteudo;
+      let imageFileNames = [];
+      const imageCount = countTemporaryImages(formData.artigo_conteudo);
+      
+      if (imageCount > 0) {
+        console.log(`📤 Processando ${imageCount} imagem(ns) antes de salvar...`);
+        const result = await processImageUploads(formData.artigo_conteudo, 'artigos', (current, total) => {
+          console.log(`⬆️ Upload de imagem ${current}/${total}`);
+        });
+        processedContent = result.markdown;
+        imageFileNames = result.imageFileNames;
+        console.log('✅ Todas imagens processadas com sucesso');
+        console.log(`📋 Caminhos relativos para media.images:`, imageFileNames);
+      }
+
+      // Extrair URLs dos vídeos anexados
+      const videoUrls = attachedVideos.map(v => v.url);
+
+      const dataToSubmit = {
+        ...formData,
+        artigo_conteudo: processedContent, // Conteúdo com URLs do GCS
+        media: {                           // Objeto de mídia
+          images: imageFileNames,          // Array de caminhos relativos das imagens no GCS
+          videos: videoUrls                // Array de URLs dos vídeos do YouTube
+        }
+      };
+
+      await artigosAPI.create(dataToSubmit);
+      
+      // Limpar imagens temporárias do localStorage após sucesso
+      clearAllTemporaryImages('artigos');
+      
       setSnackbar({
         open: true,
         message: 'Artigo criado com sucesso!',
@@ -112,6 +150,7 @@ const ArtigosPage = () => {
         categoria_id: '',
         categoria_titulo: ''
       });
+      setAttachedVideos([]);
     } catch (error) {
       setSnackbar({
         open: true,
@@ -204,14 +243,42 @@ const ArtigosPage = () => {
   // 3. Selecionar Artigo para Edição
   const handleSelectArtigo = (artigo) => {
     setSelectedArtigo(artigo);
+    
+    // Normalizar categoria_id para garantir que corresponda exatamente a um dos valores disponíveis
+    let normalizedCategoriaId = artigo.categoria_id || '';
+    if (normalizedCategoriaId) {
+      // Buscar categoria correspondente (case-insensitive)
+      const matchingCategory = categories.find(cat => 
+        cat.categoria_id.toLowerCase() === normalizedCategoriaId.toLowerCase()
+      );
+      if (matchingCategory) {
+        normalizedCategoriaId = matchingCategory.categoria_id; // Usar o valor exato da lista
+      } else {
+        // Se não encontrar correspondência, usar o valor original ou vazio
+        normalizedCategoriaId = '';
+      }
+    }
+    
     setEditFormData({
       id: artigo._id,
       tag: artigo.tag || '',
       artigo_titulo: artigo.artigo_titulo || '',
       artigo_conteudo: artigo.artigo_conteudo || '',
-      categoria_id: artigo.categoria_id || '',
-      categoria_titulo: artigo.categoria_titulo || ''
+      categoria_id: normalizedCategoriaId,
+      categoria_titulo: categories.find(cat => cat.categoria_id === normalizedCategoriaId)?.categoria_titulo || artigo.categoria_titulo || ''
     });
+    
+    // Carregar vídeos existentes
+    if (artigo.media && artigo.media.videos && Array.isArray(artigo.media.videos)) {
+      const videos = artigo.media.videos.map(url => ({
+        url: url,
+        videoId: url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/)?.[1] || '',
+        title: 'Vídeo do YouTube'
+      }));
+      setEditAttachedVideos(videos);
+    } else {
+      setEditAttachedVideos([]);
+    }
   };
 
   // 4. Atualizar Artigo
@@ -230,16 +297,42 @@ const ArtigosPage = () => {
     try {
       setLoading(true);
       
+      // Processar uploads de imagens temporárias antes de atualizar
+      let processedContent = editFormData.artigo_conteudo;
+      let imageFileNames = [];
+      const imageCount = countTemporaryImages(editFormData.artigo_conteudo);
+      
+      if (imageCount > 0) {
+        console.log(`📤 Processando ${imageCount} imagem(ns) antes de atualizar...`);
+        const result = await processImageUploads(editFormData.artigo_conteudo, 'artigos', (current, total) => {
+          console.log(`⬆️ Upload de imagem ${current}/${total}`);
+        });
+        processedContent = result.markdown;
+        imageFileNames = result.imageFileNames;
+        console.log('✅ Todas imagens processadas com sucesso');
+        console.log(`📋 Caminhos relativos para media.images:`, imageFileNames);
+      }
+      
+      // Extrair URLs dos vídeos anexados
+      const videoUrls = editAttachedVideos.map(v => v.url);
+      
       // Payload conforme schema MongoDB
       const updateData = {
         tag: editFormData.tag,
         artigo_titulo: editFormData.artigo_titulo,
-        artigo_conteudo: editFormData.artigo_conteudo,
+        artigo_conteudo: processedContent, // Conteúdo com URLs do GCS
         categoria_id: editFormData.categoria_id,
-        categoria_titulo: editFormData.categoria_titulo
+        categoria_titulo: editFormData.categoria_titulo,
+        media: {                           // Objeto de mídia
+          images: imageFileNames.length > 0 ? imageFileNames : (selectedArtigo?.media?.images || []), // Preservar imagens existentes se não houver novas
+          videos: videoUrls                // Array de URLs dos vídeos do YouTube
+        }
       };
       
       await artigosAPI.update(editFormData.id, updateData);
+      
+      // Limpar imagens temporárias do localStorage após sucesso
+      clearAllTemporaryImages('artigos');
       
       setSnackbar({
         open: true,
@@ -260,6 +353,7 @@ const ArtigosPage = () => {
         categoria_id: '',
         categoria_titulo: ''
       });
+      setEditAttachedVideos([]);
     } catch (error) {
       setSnackbar({
         open: true,
@@ -461,34 +555,34 @@ const ArtigosPage = () => {
                   </Grid>
 
                   <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      multiline
-                      rows={6.4}
-                      label="Conteúdo do Artigo"
-                      value={formData.artigo_conteudo}
-                      onChange={handleInputChange('artigo_conteudo')}
-                      required
-                      sx={{
-                        '& .MuiInputLabel-root': {
-                          fontSize: '0.8rem',
-                        },
-                        '& .MuiOutlinedInput-root': {
-                          '& fieldset': {
-                            borderColor: 'rgba(0, 0, 0, 0.12)',
-                          },
-                          '&:hover fieldset': {
-                            borderColor: 'var(--blue-medium)',
-                          },
-                          '&.Mui-focused fieldset': {
-                            borderColor: 'var(--blue-medium)',
-                          },
-                        },
-                        '& .MuiOutlinedInput-input': {
-                          fontSize: '0.8rem',
-                        },
-                      }}
-                    />
+                    <Box>
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          mb: 1, 
+                          fontSize: '0.8rem', 
+                          fontFamily: 'Poppins',
+                          color: 'rgba(0, 0, 0, 0.6)'
+                        }}
+                      >
+                        Conteúdo do Artigo *
+                      </Typography>
+                      <MarkdownEditor
+                        value={formData.artigo_conteudo}
+                        onChange={(value) => setFormData(prev => ({ ...prev, artigo_conteudo: value }))}
+                        placeholder="Digite o conteúdo do artigo..."
+                        enableImageUpload={true}
+                        pageId="artigos"
+                        rows={6}
+                        onVideoChange={(video) => {
+                          setAttachedVideos(prev => [...prev, video]);
+                        }}
+                        onVideoRemove={(index) => {
+                          setAttachedVideos(prev => prev.filter((_, i) => i !== index));
+                        }}
+                        attachedVideos={attachedVideos}
+                      />
+                    </Box>
                   </Grid>
 
                   <Grid item xs={12}>
@@ -607,28 +701,34 @@ const ArtigosPage = () => {
                     
                     {/* Campo Conteúdo */}
                     <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        label="Conteúdo do Artigo"
-                        value={editFormData.artigo_conteudo}
-                        onChange={(e) => setEditFormData({...editFormData, artigo_conteudo: e.target.value})}
-                        multiline
-                        rows={5}
-                        disabled={!selectedArtigo}
-                        required
-                        size="small"
-                        sx={{
-                          '& .MuiInputLabel-root': {
-                            fontSize: '0.64rem',
-                          },
-                          '& .MuiOutlinedInput-root': {
-                            fontFamily: 'Poppins'
-                          },
-                          '& .MuiOutlinedInput-input': {
-                            fontSize: '0.64rem',
-                          }
-                        }}
-                      />
+                      <Box>
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            mb: 1, 
+                            fontSize: '0.8rem', 
+                            fontFamily: 'Poppins',
+                            color: 'rgba(0, 0, 0, 0.6)'
+                          }}
+                        >
+                          Conteúdo do Artigo *
+                        </Typography>
+                        <MarkdownEditor
+                          value={editFormData.artigo_conteudo}
+                          onChange={(value) => setEditFormData(prev => ({ ...prev, artigo_conteudo: value }))}
+                          placeholder="Digite o conteúdo do artigo..."
+                          enableImageUpload={true}
+                          pageId="artigos"
+                          rows={5}
+                          onVideoChange={(video) => {
+                            setEditAttachedVideos(prev => [...prev, video]);
+                          }}
+                          onVideoRemove={(index) => {
+                            setEditAttachedVideos(prev => prev.filter((_, i) => i !== index));
+                          }}
+                          attachedVideos={editAttachedVideos}
+                        />
+                      </Box>
                     </Grid>
                     
                     {/* Botões Salvar e Delete */}
@@ -775,6 +875,14 @@ const ArtigosPage = () => {
                                   px: 0.8
                                 }
                               }}
+                            />
+                          )}
+                          
+                          {artigo.artigo_conteudo && (
+                            <MarkdownRenderer 
+                              content={artigo.artigo_conteudo} 
+                              maxLength={80}
+                              sx={{ fontSize: '0.64rem', color: 'var(--gray)', mb: 0.8 }}
                             />
                           )}
                           

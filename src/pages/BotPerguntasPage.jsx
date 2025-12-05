@@ -1,4 +1,4 @@
-// VERSION: v4.2.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v4.4.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
 import React, { useState, useCallback, useEffect } from 'react';
 import { 
   Container, 
@@ -23,6 +23,10 @@ import {
 import { Save, Search, Delete } from '@mui/icons-material';
 import { botPerguntasAPI } from '../services/api';
 import BackButton from '../components/common/BackButton';
+import MarkdownEditor from '../components/common/MarkdownEditor';
+import MarkdownRenderer from '../components/common/MarkdownRenderer';
+import { processImageUploads, countTemporaryImages } from '../utils/imageUploadProcessor';
+import { clearAllTemporaryImages } from '../utils/imageStorage';
 
 const BotPerguntasPage = () => {
   const [activeTab, setActiveTab] = useState(0);
@@ -33,6 +37,7 @@ const BotPerguntasPage = () => {
     question: '',        // Pergunta (permanece)
     tabulacao: ''        // Tabulação (substitui URLs de imagens)
   });
+  const [attachedVideos, setAttachedVideos] = useState([]);
 
   // Estados para a aba "Gerenciar Perguntas"
   const [perguntasList, setPerguntasList] = useState([]);
@@ -47,6 +52,7 @@ const BotPerguntasPage = () => {
     sinonimos: '',
     tabulacao: ''
   });
+  const [editAttachedVideos, setEditAttachedVideos] = useState([]);
   const [loadingPerguntas, setLoadingPerguntas] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -80,13 +86,36 @@ const BotPerguntasPage = () => {
         return;
       }
 
+      // Processar uploads de imagens temporárias antes de salvar
+      let processedResposta = formData.context;
+      let imageFileNames = [];
+      const imageCount = countTemporaryImages(formData.context);
+      
+      if (imageCount > 0) {
+        console.log(`📤 Processando ${imageCount} imagem(ns) antes de salvar...`);
+        const result = await processImageUploads(formData.context, 'bot_perguntas', (current, total) => {
+          console.log(`⬆️ Upload de imagem ${current}/${total}`);
+        });
+        processedResposta = result.markdown;
+        imageFileNames = result.imageFileNames;
+        console.log('✅ Todas imagens processadas com sucesso');
+        console.log(`📋 Caminhos relativos para media.images:`, imageFileNames);
+      }
+
+      // Extrair URLs dos vídeos anexados
+      const videoUrls = attachedVideos.map(v => v.url);
+
       // Mapear dados para o schema do MongoDB conforme diretrizes
       const mappedData = {
         pergunta: formData.question,        // Pergunta → pergunta (minúscula)
-        resposta: formData.context,         // Resposta → resposta (minúscula)
+        resposta: processedResposta,         // Resposta → resposta (minúscula) - com URLs do GCS
         palavrasChave: formData.keywords,   // "Palavras-chave" → palavrasChave (camelCase)
         sinonimos: formData.sinonimos,      // Sinonimos → sinonimos (minúscula)
-        tabulacao: formData.tabulacao       // Tabulação → tabulacao (minúscula)
+        tabulacao: formData.tabulacao,      // Tabulação → tabulacao (minúscula)
+        media: {                            // Objeto de mídia
+          images: imageFileNames,           // Array de caminhos relativos das imagens no GCS
+          videos: videoUrls                 // Array de URLs dos vídeos do YouTube
+        }
       };
 
       console.log('🔍 Debug - Dados mapeados para envio:', mappedData);
@@ -98,6 +127,9 @@ const BotPerguntasPage = () => {
       // Enviar dados para API
       const response = await botPerguntasAPI.create(mappedData);
       
+      // Limpar imagens temporárias do localStorage após sucesso
+      clearAllTemporaryImages('bot_perguntas');
+      
       // Reset form
       setFormData({
         keywords: '',
@@ -106,6 +138,7 @@ const BotPerguntasPage = () => {
         question: '',
         tabulacao: ''
       });
+      setAttachedVideos([]);
 
       // Mostrar sucesso
       setSnackbar({
@@ -214,6 +247,18 @@ const BotPerguntasPage = () => {
       sinonimos: pergunta.sinonimos || '',
       tabulacao: pergunta.tabulacao || ''
     });
+    
+    // Carregar vídeos existentes
+    if (pergunta.media && pergunta.media.videos && Array.isArray(pergunta.media.videos)) {
+      const videos = pergunta.media.videos.map(url => ({
+        url: url,
+        videoId: url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/)?.[1] || '',
+        title: 'Vídeo do YouTube'
+      }));
+      setEditAttachedVideos(videos);
+    } else {
+      setEditAttachedVideos([]);
+    }
   };
 
   // 4. Atualizar Pergunta
@@ -232,16 +277,42 @@ const BotPerguntasPage = () => {
     try {
       setLoading(true);
       
+      // Processar uploads de imagens temporárias antes de atualizar
+      let processedResposta = editFormData.resposta;
+      let imageFileNames = [];
+      const imageCount = countTemporaryImages(editFormData.resposta);
+      
+      if (imageCount > 0) {
+        console.log(`📤 Processando ${imageCount} imagem(ns) antes de atualizar...`);
+        const result = await processImageUploads(editFormData.resposta, 'bot_perguntas', (current, total) => {
+          console.log(`⬆️ Upload de imagem ${current}/${total}`);
+        });
+        processedResposta = result.markdown;
+        imageFileNames = result.imageFileNames;
+        console.log('✅ Todas imagens processadas com sucesso');
+        console.log(`📋 Caminhos relativos para media.images:`, imageFileNames);
+      }
+      
+      // Extrair URLs dos vídeos anexados
+      const videoUrls = editAttachedVideos.map(v => v.url);
+      
       // Payload conforme schema MongoDB
       const updateData = {
         pergunta: editFormData.pergunta,
-        resposta: editFormData.resposta,
+        resposta: processedResposta, // Resposta com URLs do GCS
         palavrasChave: editFormData.palavrasChave,
         sinonimos: editFormData.sinonimos,
-        tabulacao: editFormData.tabulacao
+        tabulacao: editFormData.tabulacao,
+        media: {                            // Objeto de mídia
+          images: imageFileNames.length > 0 ? imageFileNames : (selectedPergunta?.media?.images || []), // Preservar imagens existentes se não houver novas
+          videos: videoUrls                 // Array de URLs dos vídeos do YouTube
+        }
       };
       
       await botPerguntasAPI.update(editFormData.id, updateData);
+      
+      // Limpar imagens temporárias do localStorage após sucesso
+      clearAllTemporaryImages('bot_perguntas');
       
       setSnackbar({
         open: true,
@@ -427,27 +498,34 @@ const BotPerguntasPage = () => {
               </Grid>
 
               <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Resposta"
-                  value={formData.context}
-                  onChange={handleInputChange('context')}
-                  multiline
-                  rows={2.4}
-                  required
-                  placeholder="Digite a resposta que o bot deve fornecer..."
-                  sx={{
-                    '& .MuiInputLabel-root': {
-                      fontSize: '0.8rem',
-                    },
-                    '& .MuiOutlinedInput-root': {
-                      fontFamily: 'Poppins'
-                    },
-                    '& .MuiOutlinedInput-input': {
-                      fontSize: '0.8rem',
-                    }
-                  }}
-                />
+                <Box>
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      mb: 1, 
+                      fontSize: '0.8rem', 
+                      fontFamily: 'Poppins',
+                      color: 'rgba(0, 0, 0, 0.6)'
+                    }}
+                  >
+                    Resposta *
+                  </Typography>
+                  <MarkdownEditor
+                    value={formData.context}
+                    onChange={(value) => setFormData(prev => ({ ...prev, context: value }))}
+                    placeholder="Digite a resposta que o bot deve fornecer..."
+                    enableImageUpload={true}
+                    pageId="bot_perguntas"
+                    rows={3}
+                    onVideoChange={(video) => {
+                      setAttachedVideos(prev => [...prev, video]);
+                    }}
+                    onVideoRemove={(index) => {
+                      setAttachedVideos(prev => prev.filter((_, i) => i !== index));
+                    }}
+                    attachedVideos={attachedVideos}
+                  />
+                </Box>
               </Grid>
 
               <Grid item xs={12}>
@@ -568,26 +646,34 @@ const BotPerguntasPage = () => {
                     
                     {/* Campo Resposta */}
                     <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        label="Resposta"
-                        value={editFormData.resposta}
-                        onChange={(e) => setEditFormData({...editFormData, resposta: e.target.value})}
-                        multiline
-                        rows={2}
-                        disabled={!selectedPergunta}
-                        required
-                        size="small"
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
+                      <Box>
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            mb: 1, 
+                            fontSize: '0.8rem', 
                             fontFamily: 'Poppins',
-                            fontSize: '0.8rem'
-                          },
-                          '& .MuiInputLabel-root': {
-                            fontSize: '0.8rem'
-                          }
-                        }}
-                      />
+                            color: 'rgba(0, 0, 0, 0.6)'
+                          }}
+                        >
+                          Resposta *
+                        </Typography>
+                        <MarkdownEditor
+                          value={editFormData.resposta}
+                          onChange={(value) => setEditFormData(prev => ({ ...prev, resposta: value }))}
+                          placeholder="Digite a resposta que o bot deve fornecer..."
+                          enableImageUpload={true}
+                          pageId="bot_perguntas"
+                          rows={3}
+                          onVideoChange={(video) => {
+                            setEditAttachedVideos(prev => [...prev, video]);
+                          }}
+                          onVideoRemove={(index) => {
+                            setEditAttachedVideos(prev => prev.filter((_, i) => i !== index));
+                          }}
+                          attachedVideos={editAttachedVideos}
+                        />
+                      </Box>
                     </Grid>
                     
                     {/* Campo Palavras-chave */}
@@ -788,9 +874,11 @@ const BotPerguntasPage = () => {
                             {pergunta.pergunta}
                           </Typography>
                           
-                          <Typography variant="body2" sx={{ fontSize: '0.72rem', color: 'var(--gray)', fontFamily: 'Poppins', mb: 0.8 }}>
-                            {pergunta.resposta?.substring(0, 100)}...
-                          </Typography>
+                          <MarkdownRenderer 
+                            content={pergunta.resposta} 
+                            maxLength={100}
+                            sx={{ fontSize: '0.72rem', color: 'var(--gray)', mb: 0.8 }}
+                          />
                           
                           <Typography variant="caption" sx={{ fontSize: '0.64rem', color: 'var(--gray)', fontFamily: 'Poppins', display: 'block' }}>
                             {new Date(pergunta.createdAt).toLocaleDateString('pt-BR', {

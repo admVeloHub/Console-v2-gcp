@@ -1,4 +1,4 @@
-// VERSION: v4.4.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v4.8.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
 import React, { useState, useCallback, useEffect } from 'react';
 import { 
   Container, 
@@ -16,11 +16,20 @@ import {
   Tabs,
   Tab,
   CircularProgress,
-  Chip
+  Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions
 } from '@mui/material';
-import { Save, Add, Warning, Search } from '@mui/icons-material';
+import { Save, Add, Warning, Search, Delete } from '@mui/icons-material';
 import { velonewsAPI } from '../services/api';
 import BackButton from '../components/common/BackButton';
+import MarkdownEditor from '../components/common/MarkdownEditor';
+import MarkdownRenderer from '../components/common/MarkdownRenderer';
+import { processImageUploads, countTemporaryImages } from '../utils/imageUploadProcessor';
+import { clearAllTemporaryImages } from '../utils/imageStorage';
 
 const VelonewsPage = () => {
   const [activeTab, setActiveTab] = useState(0);
@@ -29,6 +38,7 @@ const VelonewsPage = () => {
     content: '',
     isCritical: false
   });
+  const [attachedVideos, setAttachedVideos] = useState([]);
 
   // Estados para a aba "Localizar Notícias"
   const [newsList, setNewsList] = useState([]);
@@ -42,9 +52,11 @@ const VelonewsPage = () => {
     isCritical: false,
     solved: false
   });
+  const [editAttachedVideos, setEditAttachedVideos] = useState([]);
   const [loadingNews, setLoadingNews] = useState(false);
 
   const [loading, setLoading] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
@@ -64,12 +76,51 @@ const VelonewsPage = () => {
     setLoading(true);
 
     try {
+      // Processar uploads de imagens temporárias antes de salvar
+      let processedContent = formData.content;
+      let imageFileNames = [];
+      
+      // DEBUG: Verificar conteúdo antes de processar
+      console.log('🔍 [handleSubmit] Conteúdo antes de processar:', formData.content.substring(0, 200));
+      console.log('🔍 [handleSubmit] Tipo:', typeof formData.content);
+      
+      const imageCount = countTemporaryImages(formData.content);
+      console.log(`🔍 [handleSubmit] Imagens temporárias encontradas: ${imageCount}`);
+      
+      if (imageCount > 0) {
+        console.log(`📤 Processando ${imageCount} imagem(ns) antes de publicar...`);
+        const result = await processImageUploads(formData.content, 'velonews', (current, total) => {
+          console.log(`⬆️ Upload de imagem ${current}/${total}`);
+        });
+        processedContent = result.markdown;
+        imageFileNames = result.imageFileNames;
+        console.log('✅ Todas imagens processadas com sucesso');
+        console.log(`📋 Caminhos relativos para media.images:`, imageFileNames);
+        console.log('🔍 [handleSubmit] Conteúdo após processamento:', processedContent.substring(0, 200));
+      } else {
+        console.warn('⚠️ [handleSubmit] Nenhuma imagem temporária detectada - verificando conteúdo manualmente...');
+        // Debug adicional
+        const hasBlob = formData.content.includes('blob:');
+        const hasTemp = formData.content.includes('temp:');
+        const hasImgTag = formData.content.includes('<img');
+        console.log(`   - Contém "blob:": ${hasBlob}`);
+        console.log(`   - Contém "temp:": ${hasTemp}`);
+        console.log(`   - Contém "<img": ${hasImgTag}`);
+      }
+
+      // Extrair URLs dos vídeos anexados
+      const videoUrls = attachedVideos.map(v => v.url);
+
       // Mapear dados para o schema MongoDB conforme diretrizes
       const mappedData = {
         titulo: formData.title,        // title → titulo (português)
-        conteudo: formData.content,    // content → conteudo (português)
+        conteudo: processedContent,    // content → conteudo (português) - com URLs completas do GCS no markdown
         isCritical: formData.isCritical, // Campo já correto
-        solved: false                  // SEMPRE false ao publicar nova notícia
+        solved: false,                 // SEMPRE false ao publicar nova notícia
+        media: {                       // Objeto de mídia
+          images: imageFileNames,      // Array de caminhos relativos das imagens no GCS (ex: "img_velonews/timestamp-file.png")
+          videos: videoUrls             // Array de URLs dos vídeos do YouTube
+        }
       };
 
       console.log('🔍 DEBUG - Dados mapeados para envio:', mappedData);
@@ -77,12 +128,16 @@ const VelonewsPage = () => {
       // Enviar dados mapeados para API
       const response = await velonewsAPI.create(mappedData);
       
+      // Limpar imagens temporárias do localStorage após sucesso
+      clearAllTemporaryImages('velonews');
+      
       // Reset form
       setFormData({
         title: '',
         content: '',
         isCritical: false
       });
+      setAttachedVideos([]);
 
       // Mostrar sucesso
       setSnackbar({
@@ -183,6 +238,18 @@ const VelonewsPage = () => {
       isCritical: news.isCritical || false,  // Carregar estado do DB
       solved: news.solved || false           // Carregar estado do DB
     });
+    
+    // Carregar vídeos existentes
+    if (news.media && news.media.videos && Array.isArray(news.media.videos)) {
+      const videos = news.media.videos.map(url => ({
+        url: url,
+        videoId: url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/)?.[1] || '',
+        title: 'Vídeo do YouTube'
+      }));
+      setEditAttachedVideos(videos);
+    } else {
+      setEditAttachedVideos([]);
+    }
   };
 
   // 4. Atualizar Notícia (Payload completo com solved)
@@ -201,15 +268,41 @@ const VelonewsPage = () => {
     try {
       setLoading(true);
       
+      // Processar uploads de imagens temporárias antes de atualizar
+      let processedContent = editFormData.conteudo;
+      let imageFileNames = [];
+      const imageCount = countTemporaryImages(editFormData.conteudo);
+      
+      if (imageCount > 0) {
+        console.log(`📤 Processando ${imageCount} imagem(ns) antes de atualizar...`);
+        const result = await processImageUploads(editFormData.conteudo, 'velonews', (current, total) => {
+          console.log(`⬆️ Upload de imagem ${current}/${total}`);
+        });
+        processedContent = result.markdown;
+        imageFileNames = result.imageFileNames;
+        console.log('✅ Todas imagens processadas com sucesso');
+        console.log(`📋 Caminhos relativos para media.images:`, imageFileNames);
+      }
+      
+      // Extrair URLs dos vídeos anexados
+      const videoUrls = editAttachedVideos.map(v => v.url);
+      
       // Payload COMPLETO conforme schema MongoDB
       const updateData = {
         titulo: editFormData.titulo,
-        conteudo: editFormData.conteudo,
+        conteudo: processedContent, // Conteúdo com URLs completas do GCS no markdown
         isCritical: editFormData.isCritical,
-        solved: editFormData.solved  // Incluir solved no payload
+        solved: editFormData.solved, // Incluir solved no payload
+        media: {                     // Objeto de mídia
+          images: imageFileNames.length > 0 ? imageFileNames : (selectedNews?.media?.images || []), // Preservar imagens existentes se não houver novas
+          videos: videoUrls          // Array de URLs dos vídeos do YouTube
+        }
       };
       
       await velonewsAPI.update(editFormData.id, updateData);
+      
+      // Limpar imagens temporárias do localStorage após sucesso
+      clearAllTemporaryImages('velonews');
       
       setSnackbar({
         open: true,
@@ -240,7 +333,54 @@ const VelonewsPage = () => {
     }
   };
 
-  // 5. useEffect para Carregar Dados
+  // 5. Deletar Notícia
+  const handleDeleteVelonews = async () => {
+    if (!editFormData.id) {
+      setSnackbar({
+        open: true,
+        message: 'Selecione uma notícia para deletar',
+        severity: 'warning'
+      });
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      await velonewsAPI.delete(editFormData.id);
+      
+      setSnackbar({
+        open: true,
+        message: 'Notícia deletada com sucesso!',
+        severity: 'success'
+      });
+      
+      // Recarregar lista
+      await loadNewsList();
+      
+      // Limpar seleção
+      setSelectedNews(null);
+      setEditFormData({
+        id: '',
+        titulo: '',
+        conteudo: '',
+        isCritical: false,
+        solved: false
+      });
+      
+      // Fechar diálogo
+      setDeleteDialogOpen(false);
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: error.message || 'Erro ao deletar notícia',
+        severity: 'error'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 6. useEffect para Carregar Dados
   useEffect(() => {
     if (activeTab === 1) {
       loadNewsList();
@@ -336,26 +476,34 @@ const VelonewsPage = () => {
               </Grid>
 
               <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Conteúdo da Notícia"
-                  value={formData.content}
-                  onChange={handleInputChange('content')}
-                  multiline
-                  rows={4.8}
-                  required
-                  sx={{
-                    '& .MuiInputLabel-root': {
-                      fontSize: '0.8rem',
-                    },
-                    '& .MuiOutlinedInput-root': {
-                      fontFamily: 'Poppins'
-                    },
-                    '& .MuiOutlinedInput-input': {
-                      fontSize: '0.8rem',
-                    }
-                  }}
-                />
+                <Box>
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      mb: 1, 
+                      fontSize: '0.8rem', 
+                      fontFamily: 'Poppins',
+                      color: 'rgba(0, 0, 0, 0.6)'
+                    }}
+                  >
+                    Conteúdo da Notícia *
+                  </Typography>
+                  <MarkdownEditor
+                    value={formData.content}
+                    onChange={(value) => setFormData(prev => ({ ...prev, content: value }))}
+                    placeholder="Digite o conteúdo da notícia..."
+                    enableImageUpload={true}
+                    pageId="velonews"
+                    rows={5}
+                    onVideoChange={(video) => {
+                      setAttachedVideos(prev => [...prev, video]);
+                    }}
+                    onVideoRemove={(index) => {
+                      setAttachedVideos(prev => prev.filter((_, i) => i !== index));
+                    }}
+                    attachedVideos={attachedVideos}
+                  />
+                </Box>
               </Grid>
 
               <Grid item xs={12}>
@@ -429,6 +577,40 @@ const VelonewsPage = () => {
         </>
       )}
 
+      {/* Dialog de confirmação de exclusão */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title" sx={{ fontFamily: 'Poppins', fontSize: '0.96rem' }}>
+          Confirmar Exclusão
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-dialog-description" sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
+            Tem certeza que deseja deletar a notícia "{editFormData.titulo}"? Esta ação não pode ser desfeita.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => setDeleteDialogOpen(false)} 
+            sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}
+          >
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleDeleteVelonews} 
+            color="error" 
+            variant="contained"
+            disabled={loading}
+            sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}
+          >
+            {loading ? 'Deletando...' : 'Deletar'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Tab 1: Localizar Notícias */}
       {activeTab === 1 && (
         <Box sx={{ display: 'flex', gap: 0 }}>
@@ -469,28 +651,34 @@ const VelonewsPage = () => {
                     
                     {/* Campo Conteúdo */}
                     <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        label="Conteúdo da Notícia"
-                        value={editFormData.conteudo}
-                        onChange={(e) => setEditFormData({...editFormData, conteudo: e.target.value})}
-                        multiline
-                        rows={5}
-                        disabled={!selectedNews}
-                        required
-                        size="small"
-                        sx={{
-                          '& .MuiInputLabel-root': {
-                            fontSize: '0.64rem',
-                          },
-                          '& .MuiOutlinedInput-root': {
-                            fontFamily: 'Poppins'
-                          },
-                          '& .MuiOutlinedInput-input': {
-                            fontSize: '0.64rem',
-                          }
-                        }}
-                      />
+                      <Box>
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            mb: 1, 
+                            fontSize: '0.8rem', 
+                            fontFamily: 'Poppins',
+                            color: 'rgba(0, 0, 0, 0.6)'
+                          }}
+                        >
+                          Conteúdo da Notícia *
+                        </Typography>
+                        <MarkdownEditor
+                          value={editFormData.conteudo}
+                          onChange={(value) => setEditFormData(prev => ({ ...prev, conteudo: value }))}
+                          placeholder="Digite o conteúdo da notícia..."
+                          enableImageUpload={true}
+                          pageId="velonews"
+                          rows={5}
+                          onVideoChange={(video) => {
+                            setEditAttachedVideos(prev => [...prev, video]);
+                          }}
+                          onVideoRemove={(index) => {
+                            setEditAttachedVideos(prev => prev.filter((_, i) => i !== index));
+                          }}
+                          attachedVideos={editAttachedVideos}
+                        />
+                      </Box>
                     </Grid>
                     
                     {/* Checkboxes: Urgente e Resolvido */}
@@ -540,29 +728,52 @@ const VelonewsPage = () => {
                       </Box>
                     </Grid>
                     
-                    {/* Botão Salvar */}
+                    {/* Botões Salvar e Delete */}
                     <Grid item xs={12}>
-                      <Button
-                        type="submit"
-                        variant="contained"
-                        disabled={!selectedNews || loading}
-                        startIcon={<Save sx={{ fontSize: '0.8rem' }} />}
-                        size="small"
-                        sx={{
-                          backgroundColor: 'var(--blue-medium)',
-                          color: 'white',
-                          fontFamily: 'Poppins',
-                          fontWeight: 600,
-                          fontSize: '0.8rem',
-                          py: 0.8,
-                          px: 1.6,
-                          '&:hover': {
-                            backgroundColor: 'var(--blue-dark)'
-                          }
-                        }}
-                      >
-                        {loading ? 'Salvando...' : 'Salvar Alterações'}
-                      </Button>
+                      <Box sx={{ display: 'flex', gap: 1.6 }}>
+                        <Button
+                          type="submit"
+                          variant="contained"
+                          disabled={!selectedNews || loading}
+                          startIcon={<Save sx={{ fontSize: '0.8rem' }} />}
+                          size="small"
+                          sx={{
+                            backgroundColor: 'var(--blue-medium)',
+                            color: 'white',
+                            fontFamily: 'Poppins',
+                            fontWeight: 600,
+                            fontSize: '0.8rem',
+                            py: 0.8,
+                            px: 1.6,
+                            '&:hover': {
+                              backgroundColor: 'var(--blue-dark)'
+                            }
+                          }}
+                        >
+                          {loading ? 'Salvando...' : 'Salvar Alterações'}
+                        </Button>
+                        <Button
+                          variant="contained"
+                          disabled={!selectedNews || loading}
+                          startIcon={<Delete sx={{ fontSize: '0.8rem' }} />}
+                          size="small"
+                          onClick={() => setDeleteDialogOpen(true)}
+                          sx={{
+                            fontFamily: 'Poppins',
+                            fontWeight: 600,
+                            fontSize: '0.8rem',
+                            py: 0.8,
+                            px: 1.6,
+                            backgroundColor: '#d32f2f',
+                            color: 'white',
+                            '&:hover': {
+                              backgroundColor: '#b71c1c'
+                            }
+                          }}
+                        >
+                          Delete
+                        </Button>
+                      </Box>
                     </Grid>
                   </Grid>
                 </form>
@@ -663,6 +874,14 @@ const VelonewsPage = () => {
                               )}
                             </Box>
                           </Box>
+                          
+                          {news.conteudo && (
+                            <MarkdownRenderer 
+                              content={news.conteudo} 
+                              maxLength={80}
+                              sx={{ fontSize: '0.64rem', color: 'var(--gray)', mb: 0.8 }}
+                            />
+                          )}
                           
                           <Typography variant="caption" sx={{ fontSize: '0.64rem', color: 'var(--gray)', fontFamily: 'Poppins' }}>
                             {new Date(news.createdAt).toLocaleDateString('pt-BR', {

@@ -2,7 +2,7 @@
  * UploadAudioModal.jsx
  * Modal para upload de arquivos de áudio para análise GPT
  * 
- * VERSION: v2.0.0
+ * VERSION: v2.1.0
  * DATE: 2025-01-30
  * AUTHOR: VeloHub Development Team
  */
@@ -27,7 +27,8 @@ import {
   AudioFile as AudioFileIcon,
   CheckCircle as CheckCircleIcon,
   Error as ErrorIcon,
-  HourglassEmpty as HourglassEmptyIcon
+  HourglassEmpty as HourglassEmptyIcon,
+  Refresh as RefreshIcon
 } from '@mui/icons-material';
 import {
   uploadAudioParaAnalise,
@@ -35,7 +36,8 @@ import {
   validarArquivoAudio,
   formatarTamanhoArquivo,
   getStatusText,
-  getStatusColor
+  getStatusColor,
+  reenviarAudioPubSub
 } from '../../services/qualidadeAudioService';
 
 const UploadAudioModal = ({ 
@@ -55,6 +57,7 @@ const UploadAudioModal = ({
   const [statusMessage, setStatusMessage] = useState('');
   const [audioStatus, setAudioStatus] = useState(null);
   const [audioJaEnviado, setAudioJaEnviado] = useState(false);
+  const [reenviando, setReenviando] = useState(false);
   
   // Ref para função de desconexão do monitoramento
   const stopMonitoringRef = useRef(null);
@@ -75,6 +78,59 @@ const UploadAudioModal = ({
 
   const handleCloseSnackbar = () => {
     setSnackbar(prev => ({ ...prev, open: false }));
+  };
+
+  // Verificar se passaram mais de 30 minutos desde o envio
+  const podeReenviar = () => {
+    if (!audioStatus || !audioStatus.sent || audioStatus.treated) {
+      return false;
+    }
+
+    const audioCreatedAt = audioStatus.audioCreatedAt || audioStatus.audioUpdatedAt;
+    if (!audioCreatedAt) {
+      return false;
+    }
+
+    const dataEnvio = new Date(audioCreatedAt);
+    const agora = new Date();
+    const diferencaMinutos = (agora - dataEnvio) / (1000 * 60);
+
+    return diferencaMinutos > 30;
+  };
+
+  // Função para reenviar áudio para Pub/Sub
+  const handleReenviarAudio = async () => {
+    // Tentar obter avaliacaoId de diferentes fontes
+    const idParaUsar = avaliacaoId || avaliacao?._id || audioStatus?.avaliacaoId;
+    
+    if (!idParaUsar) {
+      console.error('❌ avaliacaoId não encontrado:', { avaliacaoId, avaliacao, audioStatus });
+      showSnackbar('ID da avaliação não encontrado', 'error');
+      return;
+    }
+
+    console.log('🔄 Iniciando reenvio de áudio:', { idParaUsar, avaliacaoId, avaliacaoIdDoObjeto: avaliacao?._id });
+
+    try {
+      setReenviando(true);
+      await reenviarAudioPubSub(idParaUsar);
+      showSnackbar('Áudio reenviado para processamento com sucesso!', 'success');
+      
+      // Atualizar status do áudio após reenvio
+      const baseUrl = (process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app').replace(/\/api\/?$/, '');
+      const response = await fetch(`${baseUrl}/api/audio-analise/status-por-avaliacao/${idParaUsar}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          setAudioStatus(data.data);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Erro ao reenviar áudio:', error);
+      showSnackbar(error.message || 'Erro ao reenviar áudio. Tente novamente.', 'error');
+    } finally {
+      setReenviando(false);
+    }
   };
 
   // Validação de arquivo usando serviço
@@ -446,7 +502,7 @@ const UploadAudioModal = ({
                 )}
                 
                 {/* Marcadores de status */}
-                <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
+                <Box sx={{ display: 'flex', gap: 2, mt: 1, flexWrap: 'wrap' }}>
                   <Chip
                     label="Enviado"
                     size="small"
@@ -469,6 +525,34 @@ const UploadAudioModal = ({
                       color: '#ffffff'
                     }}
                   />
+                  {/* Chip de reenvio */}
+                  {podeReenviar() && (
+                    <Chip
+                      icon={reenviando ? <CircularProgress size={14} sx={{ color: '#ffffff' }} /> : <RefreshIcon sx={{ fontSize: '14px !important', color: '#ffffff' }} />}
+                      label="Reenviar"
+                      size="small"
+                      onClick={handleReenviarAudio}
+                      disabled={reenviando}
+                      sx={{
+                        fontFamily: 'Poppins',
+                        fontWeight: 500,
+                        backgroundColor: '#FCC200', // Amarelo do LAYOUT_GUIDELINES.md
+                        color: '#ffffff',
+                        cursor: reenviando ? 'default' : 'pointer',
+                        '&:hover': {
+                          backgroundColor: reenviando ? '#FCC200' : '#E6B000' // Amarelo mais escuro no hover
+                        },
+                        '&:disabled': {
+                          backgroundColor: '#B0BEC5',
+                          opacity: 0.7
+                        },
+                        '& .MuiChip-icon': {
+                          marginLeft: '8px',
+                          marginRight: '-4px'
+                        }
+                      }}
+                    />
+                  )}
                 </Box>
               </Box>
             </Box>
