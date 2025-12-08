@@ -1,4 +1,4 @@
-// VERSION: v3.8.4 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// VERSION: v3.8.5 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
@@ -176,7 +176,7 @@ const AppContent = () => {
               </ProtectedRoute>
             } />
             <Route path="/whatsapp" element={
-              <ProtectedRoute requiredPermission="config">
+              <ProtectedRoute requiredPermission="whatsapp">
                 <WhatsAppAdmin />
               </ProtectedRoute>
             } />

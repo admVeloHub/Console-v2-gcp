@@ -132,7 +132,7 @@ const DashboardPage = () => {
       icon: <ChatOutlined sx={{ fontSize: '2.24rem' }} />,
       path: '/whatsapp',
       color: 'secondary',
-      permission: 'config'
+      permission: 'whatsapp'
     }
   ];
 
