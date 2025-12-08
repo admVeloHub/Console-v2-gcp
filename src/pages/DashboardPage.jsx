@@ -1,4 +1,4 @@
-// VERSION: v4.1.3 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// VERSION: v4.1.4 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
 import React from 'react';
 import { Container, Grid, Typography, Box, Card, CardContent } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
@@ -13,7 +13,8 @@ import {
   SettingsOutlined,
   EngineeringOutlined,
   AnalyticsOutlined,
-  SchoolOutlined
+  SchoolOutlined,
+  ChatOutlined
 } from '@mui/icons-material';
 import DashboardCard from '../components/Dashboard/DashboardCard';
 import { useAuth } from '../contexts/AuthContext';
@@ -115,7 +116,7 @@ const DashboardPage = () => {
     }
   ];
 
-  // Terceira fileira: Chamados Internos (OPCIONAL)
+  // Terceira fileira: Chamados Internos, WhatsApp (OPCIONAL)
   const thirdRowCards = [
     {
       title: 'Chamados Internos',
@@ -124,6 +125,14 @@ const DashboardPage = () => {
       path: '/chamados-internos',
       color: 'secondary',
       permission: 'chamadosInternos'
+    },
+    {
+      title: 'WhatsApp',
+      description: 'Gerenciar conexão WhatsApp do sistema',
+      icon: <ChatOutlined sx={{ fontSize: '2.24rem' }} />,
+      path: '/whatsapp',
+      color: 'secondary',
+      permission: 'config'
     }
   ];
 

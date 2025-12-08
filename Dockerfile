@@ -1,8 +1,8 @@
 # Dockerfile para Cloud Run - Frontend React Console VeloHub
-# VERSION: v1.4.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+# VERSION: v1.5.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
 
 # Stage 1: Build da aplicação React
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
@@ -34,7 +34,7 @@ ENV REACT_APP_AUTHORIZED_DOMAIN=$REACT_APP_AUTHORIZED_DOMAIN
 RUN npm run build
 
 # Stage 2: Produção - Servidor Express
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
