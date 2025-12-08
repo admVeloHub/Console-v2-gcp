@@ -1,14 +1,15 @@
 /**
  * VeloHub Console - WhatsApp API Service
- * VERSION: v1.0.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+ * VERSION: v1.1.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
  * 
  * Serviço para comunicação com API WhatsApp do SKYNET
  */
 
 import axios from 'axios';
 
-// URL base do SKYNET (pode ser configurada via variável de ambiente)
-const SKYNET_API_URL = process.env.REACT_APP_SKYNET_API_URL || 'http://localhost:3001';
+// URL base do SKYNET em produção
+// Pode ser sobrescrita via variável de ambiente REACT_APP_SKYNET_API_URL
+const SKYNET_API_URL = process.env.REACT_APP_SKYNET_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app';
 
 const whatsappApi = axios.create({
   baseURL: SKYNET_API_URL,
