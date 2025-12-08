@@ -1,8 +1,9 @@
 /**
  * VeloHub Console - WhatsApp API Service
- * VERSION: v1.1.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+ * VERSION: v1.2.0 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
  * 
  * Serviço para comunicação com API WhatsApp do SKYNET
+ * Requer permissão 'whatsapp' no sistema de permissionamento
  */
 
 import axios from 'axios';
@@ -17,6 +18,24 @@ const whatsappApi = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 30000, // 30 segundos para operações WhatsApp
+});
+
+// Interceptor para adicionar email do usuário nas requisições
+whatsappApi.interceptors.request.use((config) => {
+  // Obter email do usuário do localStorage
+  try {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      const user = JSON.parse(storedUser);
+      const userEmail = user.email || user._userMail;
+      if (userEmail) {
+        config.headers['X-User-Email'] = userEmail;
+      }
+    }
+  } catch (error) {
+    console.warn('[WhatsApp API] Erro ao obter email do usuário:', error);
+  }
+  return config;
 });
 
 /**

@@ -1,4 +1,4 @@
-// VERSION: v3.9.4 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// VERSION: v3.9.5 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -123,7 +123,8 @@ const ConfigPage = () => {
       capacity: false,
       config: false,
       servicos: false,
-      academy: false
+      academy: false,
+      whatsapp: false
     },
     tiposTickets: {
       artigos: false,
@@ -156,7 +157,8 @@ const ConfigPage = () => {
     { key: 'capacity', label: 'Capacity' },
     { key: 'config', label: 'Config' },
     { key: 'servicos', label: 'Serviços' },
-    { key: 'academy', label: 'Academy' }
+    { key: 'academy', label: 'Academy' },
+    { key: 'whatsapp', label: 'WhatsApp' }
   ];
 
   // Mapeamento dos tipos de tickets dos chamados internos
@@ -193,7 +195,9 @@ const ConfigPage = () => {
           qualidade: false,
           capacity: false,
           config: false,
-          servicos: false
+          servicos: false,
+          academy: false,
+          whatsapp: false
         },
         tiposTickets: user._userTickets || {
           artigos: false,
@@ -233,7 +237,8 @@ const ConfigPage = () => {
           capacity: false,
           config: false,
           servicos: false,
-          academy: false
+          academy: false,
+          whatsapp: false
         },
         tiposTickets: {
           artigos: false,
