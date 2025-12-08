@@ -1,4 +1,4 @@
-// VERSION: v3.8.3 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.8.4 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
@@ -33,6 +33,7 @@ import BotAnalisesPage from './pages/BotAnalisesPage';
 import CapacityPage from './pages/CapacityPage';
 import HubAnalisesPage from './pages/HubAnalisesPage';
 import AcademyPage from './pages/AcademyPage';
+import WhatsAppAdmin from './components/whatsapp/WhatsAppAdmin';
 
 // Componente para rotas protegidas
 const ProtectedRoute = ({ children, requiredPermission }) => {
@@ -172,6 +173,11 @@ const AppContent = () => {
             <Route path="/academy" element={
               <ProtectedRoute requiredPermission="academy">
                 <AcademyPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/whatsapp" element={
+              <ProtectedRoute requiredPermission="config">
+                <WhatsAppAdmin />
               </ProtectedRoute>
             } />
         <Route path="/login" element={<Navigate to="/" replace />} />
