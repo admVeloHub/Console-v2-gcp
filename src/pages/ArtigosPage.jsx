@@ -1,4 +1,4 @@
-// VERSION: v3.8.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// VERSION: v3.8.1 | DATE: 2025-01-31 | AUTHOR: VeloHub Development Team
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { 
   Container, 
@@ -272,7 +272,7 @@ const ArtigosPage = () => {
     if (artigo.media && artigo.media.videos && Array.isArray(artigo.media.videos)) {
       const videos = artigo.media.videos.map(url => ({
         url: url,
-        videoId: url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/)?.[1] || '',
+        videoId: url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([^&\n?#]{11})/)?.[1] || '',
         title: 'Vídeo do YouTube'
       }));
       setEditAttachedVideos(videos);
