@@ -252,7 +252,10 @@ const BotPerguntasPage = () => {
     if (pergunta.media && pergunta.media.videos && Array.isArray(pergunta.media.videos)) {
       const videos = pergunta.media.videos.map(url => ({
         url: url,
-        videoId: url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([^&\n?#]{11})/)?.[1] || '',
+        videoId: url.match(/(?:https?:\/\/)?(?:www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/)?.[1] || 
+                 url.match(/(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/)?.[1] ||
+                 url.match(/(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/)?.[1] ||
+                 url.match(/(?:https?:\/\/)?youtu\.be\/([a-zA-Z0-9_-]{11})/)?.[1] || '',
         title: 'Vídeo do YouTube'
       }));
       setEditAttachedVideos(videos);
