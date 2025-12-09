@@ -1,4 +1,4 @@
-// VERSION: v3.4.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// VERSION: v3.4.1 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
@@ -286,8 +286,8 @@ const MarkdownEditor = ({
   // Função para extrair ID do vídeo do YouTube
   const extractYouTubeVideoId = useCallback((url) => {
     const patterns = [
-      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
-      /youtube\.com\/watch\?.*v=([^&\n?#]+)/
+      /(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([^&\n?#]{11})/,
+      /youtube\.com\/watch\?.*v=([^&\n?#]{11})/
     ];
     
     for (const pattern of patterns) {

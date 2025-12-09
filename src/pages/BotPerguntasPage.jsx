@@ -1,4 +1,4 @@
-// VERSION: v4.4.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// VERSION: v4.4.1 | DATE: 2025-01-31 | AUTHOR: VeloHub Development Team
 import React, { useState, useCallback, useEffect } from 'react';
 import { 
   Container, 
@@ -252,7 +252,7 @@ const BotPerguntasPage = () => {
     if (pergunta.media && pergunta.media.videos && Array.isArray(pergunta.media.videos)) {
       const videos = pergunta.media.videos.map(url => ({
         url: url,
-        videoId: url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/)?.[1] || '',
+        videoId: url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([^&\n?#]{11})/)?.[1] || '',
         title: 'Vídeo do YouTube'
       }));
       setEditAttachedVideos(videos);
