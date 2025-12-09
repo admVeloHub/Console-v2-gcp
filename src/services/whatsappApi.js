@@ -1,9 +1,12 @@
 /**
  * VeloHub Console - WhatsApp API Service
- * VERSION: v1.2.0 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
+ * VERSION: v1.2.1 | DATE: 2025-01-31 | AUTHOR: VeloHub Development Team
  * 
  * Serviço para comunicação com API WhatsApp do SKYNET
  * Requer permissão 'whatsapp' no sistema de permissionamento
+ * 
+ * Mudanças v1.2.1:
+ * - Adicionados logs informativos sobre requisições WhatsApp
  */
 
 import axios from 'axios';
@@ -20,7 +23,7 @@ const whatsappApi = axios.create({
   timeout: 30000, // 30 segundos para operações WhatsApp
 });
 
-// Interceptor para adicionar email do usuário nas requisições
+// Interceptor para adicionar email do usuário nas requisições e logs
 whatsappApi.interceptors.request.use((config) => {
   // Obter email do usuário do localStorage
   try {
@@ -35,8 +38,34 @@ whatsappApi.interceptors.request.use((config) => {
   } catch (error) {
     console.warn('[WhatsApp API] Erro ao obter email do usuário:', error);
   }
+  
+  // Log da requisição
+  console.log(`[WhatsApp API] ${config.method?.toUpperCase()} ${config.url}`, {
+    baseURL: config.baseURL,
+    timeout: config.timeout
+  });
+  
   return config;
 });
+
+// Interceptor de resposta para logs
+whatsappApi.interceptors.response.use(
+  (response) => {
+    console.log(`[WhatsApp API] ✅ ${response.config.method?.toUpperCase()} ${response.config.url} - Status: ${response.status}`, {
+      data: response.data
+    });
+    return response;
+  },
+  (error) => {
+    console.error(`[WhatsApp API] ❌ ${error.config?.method?.toUpperCase()} ${error.config?.url} - Erro:`, {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      message: error.message
+    });
+    return Promise.reject(error);
+  }
+);
 
 /**
  * Obter status da conexão WhatsApp
@@ -45,9 +74,9 @@ whatsappApi.interceptors.request.use((config) => {
 export const getStatus = async () => {
   try {
     const response = await whatsappApi.get('/api/whatsapp/status');
+    console.log('[WhatsApp API] Status recebido:', response.data);
     return response.data;
   } catch (error) {
-    console.error('[WhatsApp API] Erro ao obter status:', error);
     throw new Error(error.response?.data?.error || 'Erro ao obter status do WhatsApp');
   }
 };
@@ -59,9 +88,9 @@ export const getStatus = async () => {
 export const getQR = async () => {
   try {
     const response = await whatsappApi.get('/api/whatsapp/qr');
+    console.log('[WhatsApp API] QR recebido:', { hasQR: response.data.hasQR, expiresIn: response.data.expiresIn });
     return response.data;
   } catch (error) {
-    console.error('[WhatsApp API] Erro ao obter QR:', error);
     throw new Error(error.response?.data?.error || 'Erro ao obter QR code');
   }
 };
@@ -73,9 +102,9 @@ export const getQR = async () => {
 export const logout = async () => {
   try {
     const response = await whatsappApi.post('/api/whatsapp/logout');
+    console.log('[WhatsApp API] Logout realizado:', response.data);
     return response.data;
   } catch (error) {
-    console.error('[WhatsApp API] Erro ao fazer logout:', error);
     throw new Error(error.response?.data?.error || 'Erro ao fazer logout');
   }
 };
@@ -87,9 +116,9 @@ export const logout = async () => {
 export const getNumber = async () => {
   try {
     const response = await whatsappApi.get('/api/whatsapp/number');
+    console.log('[WhatsApp API] Número recebido:', response.data);
     return response.data;
   } catch (error) {
-    console.error('[WhatsApp API] Erro ao obter número:', error);
     throw new Error(error.response?.data?.error || 'Erro ao obter número conectado');
   }
 };

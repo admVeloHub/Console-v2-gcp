@@ -24,16 +24,13 @@ export const isUserAuthorized = async (email) => {
     
     // BYPASS TEMPORÁRIO: Permitir login do Lucas Gravina
     if (email === 'lucas.gravina@velotax.com.br') {
-      console.log('🚨 BYPASS ATIVADO: Permitindo login do Lucas Gravina');
       return true;
     }
     
     const response = await usersAPI.isAuthorized(email);
-    console.log('Resposta da verificação:', response);
     
     // O campo 'authorized' está no nível raiz da resposta
     const isAuthorized = response.authorized;
-    console.log('Usuário autorizado?', isAuthorized);
     
     return isAuthorized;
   } catch (error) {
@@ -41,7 +38,6 @@ export const isUserAuthorized = async (email) => {
     
     // BYPASS TEMPORÁRIO: Em caso de erro, permitir login do Lucas Gravina
     if (email === 'lucas.gravina@velotax.com.br') {
-      console.log('🚨 BYPASS ATIVADO (erro): Permitindo login do Lucas Gravina');
       return true;
     }
     
@@ -54,7 +50,6 @@ export const getAuthorizedUser = async (email) => {
   try {
     // BYPASS TEMPORÁRIO: Retornar dados do Lucas Gravina
     if (email === 'lucas.gravina@velotax.com.br') {
-      console.log('🚨 BYPASS ATIVADO: Retornando dados do Lucas Gravina');
       return {
         _userMail: 'lucas.gravina@velotax.com.br',
         _userId: 'Lucas Gravina',
@@ -100,7 +95,6 @@ export const getAuthorizedUser = async (email) => {
     
     // BYPASS TEMPORÁRIO: Em caso de erro, retornar dados do Lucas Gravina
     if (email === 'lucas.gravina@velotax.com.br') {
-      console.log('🚨 BYPASS ATIVADO (erro): Retornando dados do Lucas Gravina');
       return {
         _userMail: 'lucas.gravina@velotax.com.br',
         _userId: 'Lucas Gravina',

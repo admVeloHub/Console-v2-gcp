@@ -23,12 +23,6 @@ const DashboardPage = () => {
   const navigate = useNavigate();
   const { hasPermission, user } = useAuth();
 
-  // Debug: verificar se é o gravina dev
-  console.log('🔍 DEBUG - Usuário atual:', user);
-  console.log('🔍 DEBUG - Email do usuário:', user?.email || user?._userMail);
-  console.log('🔍 DEBUG - É Gravina@DEV?', (user?.email === 'lucas.gravina@velotax.com.br' || user?._userMail === 'lucas.gravina@velotax.com.br'));
-  console.log('🔍 DEBUG - Tem permissão servicos?', hasPermission('servicos'));
-
   // Primeira fileira: Artigos, Velonews, Bot Perguntas, Serviços, Academy (ESSENCIAL)
   const firstRowCards = [
     {
@@ -153,11 +147,6 @@ const DashboardPage = () => {
   const hasConfigPermission = hasPermission(configCard.permission);
 
   // Debug: mostrar quais cards estão sendo renderizados
-  console.log('🎯 CARDS FILTRADOS:');
-  console.log('📋 Primeira fileira:', filteredFirstRowCards.map(c => c.title));
-  console.log('📋 Segunda fileira:', filteredSecondRowCards.map(c => c.title));
-  console.log('📋 Terceira fileira:', filteredThirdRowCards.map(c => c.title));
-  console.log('⚙️ Config visível:', hasConfigPermission);
 
   const handleCardClick = (path) => {
     navigate(path);
