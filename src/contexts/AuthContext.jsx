@@ -43,7 +43,6 @@ export const AuthProvider = ({ children }) => {
           
           // BYPASS TEMPORÁRIO: Para Lucas Gravina, garantir dados completos
           if (parsedUser.email === 'lucas.gravina@velotax.com.br' || parsedUser._userMail === 'lucas.gravina@velotax.com.br') {
-            console.log('🚨 BYPASS ATIVADO: Aplicando dados completos do Lucas Gravina no checkAuth');
             const bypassUserData = {
               ...parsedUser,
               _userMail: 'lucas.gravina@velotax.com.br',
@@ -126,7 +125,6 @@ export const AuthProvider = ({ children }) => {
 
     const syncUserPermissions = async () => {
       try {
-        console.log('🔄 Sincronizando permissões do usuário:', user.email);
         const freshUser = await getAuthorizedUser(user.email);
         
         if (freshUser && freshUser.success) {
@@ -230,12 +228,6 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('isAuthenticated', 'true');
     localStorage.setItem('lastActivity', Date.now().toString());
 
-    console.log('✅ Estado de autenticação atualizado:', {
-      isAuthenticated: true,
-      userEmail: userData.email,
-      timestamp: new Date().toISOString()
-    });
-
     // Enviar ping para o backend após login bem-sucedido
     try {
       // Debug das permissões (apenas em desenvolvimento)
@@ -273,11 +265,8 @@ export const AuthProvider = ({ children }) => {
   const hasPermission = (permission) => {
     if (!user) return false;
     
-    console.log('🔍 DEBUG - Verificando permissão:', permission, 'para usuário:', user.email || user._userMail);
-    
     // BYPASS TEMPORÁRIO: Para Lucas Gravina, retornar true para todas as permissões
     if (user.email === 'lucas.gravina@velotax.com.br' || user._userMail === 'lucas.gravina@velotax.com.br') {
-      console.log('🚨 BYPASS ATIVADO: Permitindo todas as permissões para Lucas Gravina');
       return true;
     }
     

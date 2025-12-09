@@ -67,14 +67,6 @@ const ProtectedRoute = ({ children, requiredPermission }) => {
 const AppContent = () => {
   const { isAuthenticated, loading } = useAuth();
 
-  // Log para debug do estado de autenticação
-  useEffect(() => {
-    console.log('🔄 AppContent - Estado de autenticação:', {
-      isAuthenticated,
-      loading,
-      timestamp: new Date().toISOString()
-    });
-  }, [isAuthenticated, loading]);
 
   if (loading) {
     return (
@@ -90,11 +82,8 @@ const AppContent = () => {
   }
 
   if (!isAuthenticated) {
-    console.log('🔒 Usuário não autenticado - mostrando LoginPage');
     return <LoginPage />;
   }
-
-  console.log('✅ Usuário autenticado - mostrando Dashboard');
 
   return (
     <div className="App">

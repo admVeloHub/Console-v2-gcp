@@ -1,8 +1,12 @@
 /**
  * VeloHub Console - WhatsApp Admin Component
- * VERSION: v1.0.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+ * VERSION: v1.1.0 | DATE: 2025-01-31 | AUTHOR: VeloHub Development Team
  * 
  * Componente para gerenciamento da conexão WhatsApp via SKYNET
+ * 
+ * Mudanças v1.1.0:
+ * - Polling agora funciona mesmo quando conectado (10s intervalo)
+ * - Polling mais frequente quando desconectado (5s intervalo)
  */
 
 import React, { useState, useEffect } from 'react';
@@ -48,15 +52,13 @@ const WhatsAppAdmin = () => {
     loadStatus();
   }, []);
 
-  // Atualizar status periodicamente se desconectado
+  // Atualizar status periodicamente (sempre, mas com intervalos diferentes)
   useEffect(() => {
-    if (status && !status.connected) {
-      const interval = setInterval(() => {
-        loadStatus();
-      }, 5000); // Atualizar a cada 5 segundos se desconectado
-      
-      return () => clearInterval(interval);
-    }
+    const interval = setInterval(() => {
+      loadStatus();
+    }, status?.connected ? 10000 : 5000); // 10s se conectado, 5s se desconectado
+    
+    return () => clearInterval(interval);
   }, [status?.connected]);
 
   const loadStatus = async () => {
