@@ -1,5 +1,6 @@
 # Dockerfile para Cloud Run - Frontend React Console VeloHub
-# VERSION: v1.5.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+# VERSION: v1.6.0 | DATE: 2025-01-31 | AUTHOR: VeloHub Development Team
+# CHANGELOG: v1.6.0 - Adicionado fallback para REACT_APP_GOOGLE_CLIENT_ID caso não seja passado como build arg
 
 # Stage 1: Build da aplicação React
 FROM node:20-alpine AS builder
@@ -21,9 +22,11 @@ COPY . .
 #
 # REACT_APP_GOOGLE_CLIENT_ID: OBRIGATÓRIO - Client ID do Google OAuth (deve ser passado como build arg)
 # REACT_APP_AUTHORIZED_DOMAIN: Domínio autorizado para validação de email
+# 
+# FALLBACK: Valores padrão caso não sejam passados como build args (para source-based deploy)
 ARG REACT_APP_API_URL=https://backend-gcp-278491073220.us-east1.run.app/api
-ARG REACT_APP_GOOGLE_CLIENT_ID
-ARG REACT_APP_AUTHORIZED_DOMAIN
+ARG REACT_APP_GOOGLE_CLIENT_ID=278491073220-7u7hh1tji5dd65qagkprc1acenagql5o.apps.googleusercontent.com
+ARG REACT_APP_AUTHORIZED_DOMAIN=velotax.com.br
 
 # Definir como variáveis de ambiente para o build
 ENV REACT_APP_API_URL=$REACT_APP_API_URL
