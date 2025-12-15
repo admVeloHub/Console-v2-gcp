@@ -1,4 +1,5 @@
-// VERSION: v1.32.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.33.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.33.0 - Adicionada normalização de formato de acessos (array vazio/null -> objeto {Velohub: Boolean, Console: Boolean}) para compatibilidade com novo schema
 
 import { qualidadeFuncionariosAPI, qualidadeAvaliacoesAPI, qualidadeFuncoesAPI } from './api';
 import axios from 'axios';
@@ -34,6 +35,44 @@ export const testarAPI = async () => {
   }
 };
 
+// Função auxiliar para normalizar formato de acessos
+const normalizarAcessos = (acessos) => {
+  // Se for null ou undefined, retornar objeto vazio
+  if (!acessos) {
+    return { Velohub: false, Console: false, Academy: false };
+  }
+  
+  // Se já for objeto booleano, retornar como está (garantindo que tenha Velohub, Console e Academy)
+  if (typeof acessos === 'object' && !Array.isArray(acessos)) {
+    return {
+      Velohub: acessos.Velohub === true,
+      Console: acessos.Console === true,
+      Academy: acessos.Academy === true
+    };
+  }
+  
+  // Se for array (formato antigo), converter para objeto booleano
+  if (Array.isArray(acessos)) {
+    const novoAcessos = { Velohub: false, Console: false, Academy: false };
+    acessos.forEach(acesso => {
+      if (acesso && acesso.sistema) {
+        const sistema = acesso.sistema.toLowerCase();
+        if (sistema === 'velohub') {
+          novoAcessos.Velohub = true;
+        } else if (sistema === 'console') {
+          novoAcessos.Console = true;
+        } else if (sistema === 'academy') {
+          novoAcessos.Academy = true;
+        }
+      }
+    });
+    return novoAcessos;
+  }
+  
+  // Fallback: objeto vazio
+  return { Velohub: false, Console: false, Academy: false };
+};
+
 // Obter todos os funcionários
 export const getFuncionarios = async () => {
   try {
@@ -46,8 +85,15 @@ export const getFuncionarios = async () => {
     const funcionarios = response?.data || response;
     console.log(`📊 Funcionários extraídos: ${Array.isArray(funcionarios) ? funcionarios.length : 0}`);
     
-    // Garantir que sempre retorne um array
-    return Array.isArray(funcionarios) ? funcionarios : [];
+    // Normalizar formato de acessos para cada funcionário
+    const funcionariosNormalizados = Array.isArray(funcionarios) 
+      ? funcionarios.map(func => ({
+          ...func,
+          acessos: normalizarAcessos(func.acessos)
+        }))
+      : [];
+    
+    return funcionariosNormalizados;
   } catch (error) {
     console.error('❌ Erro ao carregar funcionários da API:', error);
     console.error('❌ Detalhes do erro:', error.response?.data || error.message);
@@ -67,8 +113,15 @@ export const getFuncionariosAtivos = async () => {
     const funcionarios = response?.data || response;
     console.log(`📊 Funcionários ativos extraídos: ${Array.isArray(funcionarios) ? funcionarios.length : 0}`);
     
-    // Garantir que sempre retorne um array
-    return Array.isArray(funcionarios) ? funcionarios : [];
+    // Normalizar formato de acessos para cada funcionário
+    const funcionariosNormalizados = Array.isArray(funcionarios)
+      ? funcionarios.map(func => ({
+          ...func,
+          acessos: normalizarAcessos(func.acessos)
+        }))
+      : [];
+    
+    return funcionariosNormalizados;
   } catch (error) {
     console.error('❌ Erro ao carregar funcionários ativos da API:', error);
     // Fallback para localStorage se API falhar
@@ -91,34 +144,53 @@ export const addFuncionario = async (funcionarioData) => {
       return isNaN(data.getTime()) ? null : data;
     };
     
+    // Normalizar acessos: garantir formato objeto booleano
+    let acessosNormalizados = null;
+    if (funcionarioData.acessos) {
+      if (typeof funcionarioData.acessos === 'object' && !Array.isArray(funcionarioData.acessos)) {
+        // Formato novo: objeto booleano
+        const novoAcessos = {};
+        if (funcionarioData.acessos.Velohub === true) {
+          novoAcessos.Velohub = true;
+        }
+        if (funcionarioData.acessos.Console === true) {
+          novoAcessos.Console = true;
+        }
+        // Apenas definir se houver pelo menos um valor true
+        acessosNormalizados = Object.keys(novoAcessos).length > 0 ? novoAcessos : null;
+      }
+    }
+    
     // Converter strings de data para Date conforme schema MongoDB
     const novoFuncionario = {
       colaboradorNome: funcionarioData.colaboradorNome.trim(),
       dataAniversario: converterData(funcionarioData.dataAniversario),
+      CPF: funcionarioData.CPF || null,
+      profile_pic: funcionarioData.profile_pic || null,
       empresa: funcionarioData.empresa || '',
       dataContratado: converterData(funcionarioData.dataContratado),
       telefone: funcionarioData.telefone || '',
-      atuacao: funcionarioData.atuacao || '',
+      userMail: funcionarioData.userMail || null,
+      password: funcionarioData.password || null,
+      atuacao: funcionarioData.atuacao || [],
       escala: funcionarioData.escala || '',
-      acessos: (funcionarioData.acessos || []).map(acesso => ({
-        sistema: acesso.sistema || '',
-        perfil: acesso.perfil || '',
-        observacoes: acesso.observacoes || '',
-        updatedAt: new Date()
-      })),
+      acessos: acessosNormalizados,
       desligado: funcionarioData.desligado || false,
       dataDesligamento: converterData(funcionarioData.dataDesligamento),
       afastado: funcionarioData.afastado || false,
-      dataAfastamento: converterData(funcionarioData.dataAfastamento),
-      createdAt: new Date(),
-      updatedAt: new Date()
+      dataAfastamento: converterData(funcionarioData.dataAfastamento)
     };
     
     console.log('🔍 Debug - Dados validados para POST funcionário:', novoFuncionario);
     
     const response = await qualidadeFuncionariosAPI.create(novoFuncionario);
     console.log(`✅ Funcionário adicionado via API: ${response.colaboradorNome}`);
-    return response;
+    
+    // Normalizar resposta também
+    return {
+      ...response,
+      acessos: normalizarAcessos(response.acessos)
+    };
   } catch (error) {
     console.error('❌ Erro ao adicionar funcionário via API:', error);
     console.error('❌ Detalhes do erro:', error.response?.data || error.message);
@@ -141,24 +213,46 @@ export const updateFuncionario = async (id, funcionarioData) => {
       return isNaN(data.getTime()) ? null : data;
     };
     
+    // Normalizar acessos: garantir formato objeto booleano
+    let acessosNormalizados = null;
+    if (funcionarioData.acessos !== undefined) {
+      if (typeof funcionarioData.acessos === 'object' && !Array.isArray(funcionarioData.acessos)) {
+        // Formato novo: objeto booleano
+        const novoAcessos = {};
+        if (funcionarioData.acessos.Velohub === true) {
+          novoAcessos.Velohub = true;
+        }
+        if (funcionarioData.acessos.Console === true) {
+          novoAcessos.Console = true;
+        }
+        // Apenas definir se houver pelo menos um valor true
+        acessosNormalizados = Object.keys(novoAcessos).length > 0 ? novoAcessos : null;
+      }
+    }
+    
     // Converter strings de data para Date conforme schema
     const funcionarioAtualizado = {
       ...funcionarioData,
       colaboradorNome: funcionarioData.colaboradorNome.trim(),
       dataAniversario: converterData(funcionarioData.dataAniversario),
+      CPF: funcionarioData.CPF !== undefined ? (funcionarioData.CPF || null) : undefined,
+      profile_pic: funcionarioData.profile_pic !== undefined ? (funcionarioData.profile_pic || null) : undefined,
       dataContratado: converterData(funcionarioData.dataContratado),
       dataDesligamento: converterData(funcionarioData.dataDesligamento),
       dataAfastamento: converterData(funcionarioData.dataAfastamento),
-      acessos: (funcionarioData.acessos || []).map(acesso => ({
-        ...acesso,
-        updatedAt: new Date()
-      })),
-      updatedAt: new Date()
+      userMail: funcionarioData.userMail !== undefined ? (funcionarioData.userMail || null) : undefined,
+      password: funcionarioData.password !== undefined ? (funcionarioData.password || null) : undefined,
+      acessos: acessosNormalizados !== undefined ? acessosNormalizados : undefined
     };
     
     const response = await qualidadeFuncionariosAPI.update(id, funcionarioAtualizado);
     console.log(`✅ Funcionário atualizado via API: ${response.colaboradorNome}`);
-    return response;
+    
+    // Normalizar resposta também
+    return {
+      ...response,
+      acessos: normalizarAcessos(response.acessos)
+    };
   } catch (error) {
     console.error('❌ Erro ao atualizar funcionário via API:', error);
     throw error; // Não fazer fallback automático para identificar problemas reais

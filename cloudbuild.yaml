@@ -1,32 +1,40 @@
 # cloudbuild.yaml
 # Configuração para Cloud Build com Cloud Run
-# VERSION: v1.3.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+# VERSION: v1.5.0 | DATE: 2025-01-31 | AUTHOR: VeloHub Development Team
+# CHANGELOG: v1.5.0 - Atualizado para usar GOOGLE_ID_CONSOLE do Secret Manager
 #
-# IMPORTANTE: REACT_APP_GOOGLE_CLIENT_ID deve ser passada como build arg durante o build do Docker
-# Esta variável é incorporada no código JavaScript durante o build e não pode ser alterada em runtime
+# IMPORTANTE: 
+# - GOOGLE_ID_CONSOLE deve estar configurado no Secret Manager do GCP
+# - REACT_APP_GOOGLE_CLIENT_ID é passada como build arg durante o build do Docker
+# - Esta variável é incorporada no código JavaScript durante o build e não pode ser alterada em runtime
 
 substitutions:
-  _GOOGLE_CLIENT_ID: '278491073220-eb4ogvn3aifu0ut9mq3rvu5r9r9l3137.apps.googleusercontent.com'
   _AUTHORIZED_DOMAIN: 'velotax.com.br'
 
 steps:
   # Build da imagem Docker
   # REACT_APP_GOOGLE_CLIENT_ID é passada como build arg e incorporada no build do React
+  # O valor vem do Secret Manager GOOGLE_ID_CONSOLE via availableSecrets
   - name: 'gcr.io/cloud-builders/docker'
-    args: 
-      - 'build'
-      - '--build-arg'
-      - 'REACT_APP_API_URL=https://backend-gcp-278491073220.us-east1.run.app/api'
-      - '--build-arg'
-      - 'REACT_APP_GOOGLE_CLIENT_ID=${_GOOGLE_CLIENT_ID}'
-      - '--build-arg'
-      - 'REACT_APP_AUTHORIZED_DOMAIN=${_AUTHORIZED_DOMAIN}'
-      - '-t'
-      - 'gcr.io/$PROJECT_ID/frontend-console:$COMMIT_SHA'
-      - '-t'
-      - 'gcr.io/$PROJECT_ID/frontend-console:latest'
-      - '.'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "🔍 Verificando GOOGLE_CLIENT_ID do Secret Manager..."
+        if [ -z "$$GOOGLE_CLIENT_ID" ]; then
+          echo "❌ ERRO: GOOGLE_CLIENT_ID não está disponível!"
+          exit 1
+        fi
+        echo "✅ GOOGLE_CLIENT_ID obtido (primeiros 30 chars): $${GOOGLE_CLIENT_ID:0:30}..."
+        docker build \
+          --build-arg REACT_APP_API_URL=https://backend-gcp-278491073220.us-east1.run.app/api \
+          --build-arg REACT_APP_GOOGLE_CLIENT_ID="$$GOOGLE_CLIENT_ID" \
+          --build-arg REACT_APP_AUTHORIZED_DOMAIN=${_AUTHORIZED_DOMAIN} \
+          -t gcr.io/$PROJECT_ID/frontend-console:$COMMIT_SHA \
+          -t gcr.io/$PROJECT_ID/frontend-console:latest \
+          .
     id: 'build-image'
+    secretEnv: ['GOOGLE_CLIENT_ID']
   
   # Push da imagem para Container Registry
   - name: 'gcr.io/cloud-builders/docker'
@@ -74,6 +82,12 @@ images:
 options:
   machineType: 'E2_HIGHCPU_8'
   logging: CLOUD_LOGGING_ONLY
+
+# Configurar acesso ao Secret Manager
+availableSecrets:
+  secretManager:
+    - versionName: projects/$PROJECT_ID/secrets/GOOGLE_ID_CONSOLE/versions/latest
+      env: 'GOOGLE_CLIENT_ID'
 
 timeout: '1200s'
 

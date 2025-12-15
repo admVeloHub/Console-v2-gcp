@@ -11,14 +11,23 @@
 //    - https://seu-dominio.com (produção)
 
 // Client ID do Google OAuth - VeloHub Console
-// VERSION: v3.5.8 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
-// Fallback hardcoded como precaução - prioriza variável de ambiente se disponível
+// VERSION: v3.6.0 | DATE: 2025-01-31 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v3.6.0 - Atualizado para usar GOOGLE_ID_CONSOLE do Secret Manager via build arg
+// IMPORTANTE: Em produção, REACT_APP_GOOGLE_CLIENT_ID é configurado via build arg do Docker
+// que busca o valor do Secret Manager GOOGLE_ID_CONSOLE durante o Cloud Build
 
-const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '278491073220-eb4ogvn3aifu0ut9mq3rvu5r9r9l3137.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
-if (!process.env.REACT_APP_GOOGLE_CLIENT_ID) {
-  console.warn('⚠️ REACT_APP_GOOGLE_CLIENT_ID não configurada. Usando Client ID hardcoded como fallback.');
-  console.warn('Configure REACT_APP_GOOGLE_CLIENT_ID como build arg durante o build do Docker para produção.');
+if (!GOOGLE_CLIENT_ID) {
+  console.error('❌ REACT_APP_GOOGLE_CLIENT_ID não configurada. Google OAuth não funcionará.');
+  console.error('Configure REACT_APP_GOOGLE_CLIENT_ID como build arg durante o build do Docker.');
+  console.error('O valor deve vir do Secret Manager: GOOGLE_ID_CONSOLE');
+} else {
+  console.log('✅ Google Client ID configurado:', GOOGLE_CLIENT_ID.substring(0, 30) + '...');
+  console.log('📍 Origem atual:', window.location.origin);
+  console.log('📍 Client ID completo (primeiros 50 chars):', GOOGLE_CLIENT_ID.substring(0, 50));
+  console.log('⚠️ Certifique-se de que esta origem está autorizada no Google Cloud Console');
+  console.log('⚠️ Verifique se o Client ID acima corresponde ao configurado no Google Cloud Console');
 }
 
 export { GOOGLE_CLIENT_ID };

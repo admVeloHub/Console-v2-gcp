@@ -1,4 +1,5 @@
-// VERSION: v1.2.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.4.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.4.0 - Reorganização de serviços, adicionado Divida Zero, removido Saúde Simplificada
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -31,15 +32,17 @@ const ServicosPage = () => {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
 
-  // Configuração dos 7 serviços com mapeamento para o schema
+  // Configuração dos 9 serviços com mapeamento para o schema (ordem reorganizada)
   const services = [
     { key: 'credito-trabalhador', name: 'Crédito Trabalhador', description: 'Sistema de crédito para trabalhadores', schemaKey: '_trabalhador' },
     { key: 'credito-pessoal', name: 'Crédito Pessoal', description: 'Sistema de crédito pessoal', schemaKey: '_pessoal' },
     { key: 'antecipacao', name: 'Antecipação', description: 'Sistema de antecipação de valores', schemaKey: '_antecipacao' },
     { key: 'pagamento-antecipado', name: 'Pagamento Antecipado', description: 'Sistema de pagamentos antecipados', schemaKey: '_pgtoAntecip' },
+    { key: 'clube-velotax', name: 'Clube Velotax', description: 'Sistema do Clube Velotax', schemaKey: '_clubeVelotax' },
     { key: 'modulo-irpf', name: 'Módulo IRPF', description: 'Sistema de declaração IRPF', schemaKey: '_irpf' },
-    { key: 'seguro-prestamista', name: 'Seguro Cred.', description: 'Sistema de seguro prestamista', schemaKey: '_seguroCred' },
-    { key: 'seguro-celular', name: 'Seguro Cel', description: 'Sistema de seguro celular', schemaKey: '_seguroCel' }
+    { key: 'seguro-prestamista', name: 'Prestamista', description: 'Sistema de seguro prestamista', schemaKey: '_seguroCred' },
+    { key: 'seguro-celular', name: 'Seguro Celular', description: 'Sistema de seguro celular', schemaKey: '_seguroCel' },
+    { key: 'divida-zero', name: 'Divida Zero', description: 'Sistema Divida Zero', schemaKey: '_dividaZero' }
   ];
 
   // Função auxiliar para obter valor válido ou 'off' como padrão
@@ -65,9 +68,11 @@ const ServicosPage = () => {
         'credito-pessoal': 'off',
         'antecipacao': 'off',
         'pagamento-antecipado': 'off',
+        'clube-velotax': 'off',
         'modulo-irpf': 'off',
         'seguro-prestamista': 'off',
-        'seguro-celular': 'off'
+        'seguro-celular': 'off',
+        'divida-zero': 'off'
       };
     }
 
@@ -79,9 +84,11 @@ const ServicosPage = () => {
         'credito-pessoal': getValue(backendData['credito-pessoal']),
         'antecipacao': getValue(backendData['antecipacao']),
         'pagamento-antecipado': getValue(backendData['pagamento-antecipado']),
+        'clube-velotax': getValue(backendData['clube-velotax']),
         'modulo-irpf': getValue(backendData['modulo-irpf']),
         'seguro-prestamista': getValue(backendData['seguro-prestamista']),
-        'seguro-celular': getValue(backendData['seguro-celular'])
+        'seguro-celular': getValue(backendData['seguro-celular']),
+        'divida-zero': getValue(backendData['divida-zero'])
       };
     }
     
@@ -94,9 +101,11 @@ const ServicosPage = () => {
       'credito-pessoal': getValue(backendData._pessoal),
       'antecipacao': getValue(backendData._antecipacao),
       'pagamento-antecipado': getValue(backendData._pgtoAntecip),
+      'clube-velotax': getValue(backendData._clubeVelotax),
       'modulo-irpf': getValue(backendData._irpf),
       'seguro-prestamista': getValue(backendData._seguroCred) !== 'off' ? getValue(backendData._seguroCred) : seguroFallback,
-      'seguro-celular': getValue(backendData._seguroCel) !== 'off' ? getValue(backendData._seguroCel) : seguroFallback
+      'seguro-celular': getValue(backendData._seguroCel) !== 'off' ? getValue(backendData._seguroCel) : seguroFallback,
+      'divida-zero': getValue(backendData._dividaZero)
     };
     
     console.log('📊 Dados convertidos do schema:', converted);
@@ -169,9 +178,11 @@ const ServicosPage = () => {
         'credito-pessoal': localStatus['credito-pessoal'] || 'off',
         'antecipacao': localStatus['antecipacao'] || 'off',
         'pagamento-antecipado': localStatus['pagamento-antecipado'] || 'off',
+        'clube-velotax': localStatus['clube-velotax'] || 'off',
         'modulo-irpf': localStatus['modulo-irpf'] || 'off',
         'seguro-prestamista': localStatus['seguro-prestamista'] || 'off',
-        'seguro-celular': localStatus['seguro-celular'] || 'off'
+        'seguro-celular': localStatus['seguro-celular'] || 'off',
+        'divida-zero': localStatus['divida-zero'] || 'off'
       };
 
       console.log('🔍 Enviando dados para o backend:', modulesData);
