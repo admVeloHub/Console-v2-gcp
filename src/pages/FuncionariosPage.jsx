@@ -1,4 +1,5 @@
-// VERSION: v1.9.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// VERSION: v1.10.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.10.0 - Adicionado campo Desk ao modal de acessos. Acessos são completamente opcionais - permitido salvar funcionários mesmo com todos os acessos como false.
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -134,7 +135,8 @@ const FuncionariosPage = () => {
   const [acessoData, setAcessoData] = useState({
     Velohub: false,
     Console: false,
-    Academy: false
+    Academy: false,
+    Desk: false
   });
   
   // Estados de UI
@@ -589,14 +591,15 @@ const FuncionariosPage = () => {
     setFuncionarioSelecionado(funcionario);
     
     // Normalizar acessos do funcionário para o formato objeto booleano
-    let acessosNormalizados = { Velohub: false, Console: false, Academy: false };
+    let acessosNormalizados = { Velohub: false, Console: false, Academy: false, Desk: false };
     if (funcionario.acessos) {
       if (typeof funcionario.acessos === 'object' && !Array.isArray(funcionario.acessos)) {
         // Formato novo: objeto booleano
         acessosNormalizados = {
           Velohub: funcionario.acessos.Velohub === true,
           Console: funcionario.acessos.Console === true,
-          Academy: funcionario.acessos.Academy === true
+          Academy: funcionario.acessos.Academy === true,
+          Desk: funcionario.acessos.Desk === true
         };
       } else if (Array.isArray(funcionario.acessos)) {
         // Formato antigo: array de objetos
@@ -609,6 +612,8 @@ const FuncionariosPage = () => {
               acessosNormalizados.Console = true;
             } else if (sistema === 'academy') {
               acessosNormalizados.Academy = true;
+            } else if (sistema === 'desk') {
+              acessosNormalizados.Desk = true;
             }
           }
         });
@@ -625,7 +630,8 @@ const FuncionariosPage = () => {
     setAcessoData({
       Velohub: false,
       Console: false,
-      Academy: false
+      Academy: false,
+      Desk: false
     });
   };
 
@@ -660,8 +666,12 @@ const FuncionariosPage = () => {
       if (acessoData.Academy === true) {
         novoAcessos.Academy = true;
       }
+      if (acessoData.Desk === true) {
+        novoAcessos.Desk = true;
+      }
       
       // Apenas definir acessos se houver pelo menos um valor true
+      // Se todos forem false, salvar como null (acessos opcionais)
       const acessosParaSalvar = Object.keys(novoAcessos).length > 0 ? novoAcessos : null;
       
       // Buscar funcionário atualizado para garantir que temos todos os dados
@@ -1905,6 +1915,31 @@ const FuncionariosPage = () => {
                 label={
                   <Typography sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
                     Academy
+                  </Typography>
+                }
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={acessoData.Desk === true}
+                    disabled={funcionarioSelecionado?.desligado || funcionarioSelecionado?.afastado}
+                    onChange={(e) => setAcessoData({ 
+                      ...acessoData, 
+                      Desk: e.target.checked 
+                    })}
+                    sx={{
+                      color: '#1694FF',
+                      '&.Mui-checked': {
+                        color: '#1694FF'
+                      }
+                    }}
+                  />
+                }
+                label={
+                  <Typography sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
+                    Desk
                   </Typography>
                 }
               />

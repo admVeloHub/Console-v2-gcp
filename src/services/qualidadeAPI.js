@@ -1,5 +1,6 @@
-// VERSION: v1.33.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
-// CHANGELOG: v1.33.0 - Adicionada normalização de formato de acessos (array vazio/null -> objeto {Velohub: Boolean, Console: Boolean}) para compatibilidade com novo schema
+// VERSION: v1.34.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.34.0 - Adicionado campo Desk ao objeto acessos {Velohub: Boolean, Console: Boolean, Academy: Boolean, Desk: Boolean}. Acessos são completamente opcionais.
+// v1.33.0 - Adicionada normalização de formato de acessos (array vazio/null -> objeto {Velohub: Boolean, Console: Boolean}) para compatibilidade com novo schema
 
 import { qualidadeFuncionariosAPI, qualidadeAvaliacoesAPI, qualidadeFuncoesAPI } from './api';
 import axios from 'axios';
@@ -39,21 +40,22 @@ export const testarAPI = async () => {
 const normalizarAcessos = (acessos) => {
   // Se for null ou undefined, retornar objeto vazio
   if (!acessos) {
-    return { Velohub: false, Console: false, Academy: false };
+    return { Velohub: false, Console: false, Academy: false, Desk: false };
   }
   
-  // Se já for objeto booleano, retornar como está (garantindo que tenha Velohub, Console e Academy)
+  // Se já for objeto booleano, retornar como está (garantindo que tenha Velohub, Console, Academy e Desk)
   if (typeof acessos === 'object' && !Array.isArray(acessos)) {
     return {
       Velohub: acessos.Velohub === true,
       Console: acessos.Console === true,
-      Academy: acessos.Academy === true
+      Academy: acessos.Academy === true,
+      Desk: acessos.Desk === true
     };
   }
   
   // Se for array (formato antigo), converter para objeto booleano
   if (Array.isArray(acessos)) {
-    const novoAcessos = { Velohub: false, Console: false, Academy: false };
+    const novoAcessos = { Velohub: false, Console: false, Academy: false, Desk: false };
     acessos.forEach(acesso => {
       if (acesso && acesso.sistema) {
         const sistema = acesso.sistema.toLowerCase();
@@ -63,6 +65,8 @@ const normalizarAcessos = (acessos) => {
           novoAcessos.Console = true;
         } else if (sistema === 'academy') {
           novoAcessos.Academy = true;
+        } else if (sistema === 'desk') {
+          novoAcessos.Desk = true;
         }
       }
     });
@@ -70,7 +74,7 @@ const normalizarAcessos = (acessos) => {
   }
   
   // Fallback: objeto vazio
-  return { Velohub: false, Console: false, Academy: false };
+  return { Velohub: false, Console: false, Academy: false, Desk: false };
 };
 
 // Obter todos os funcionários
@@ -156,6 +160,12 @@ export const addFuncionario = async (funcionarioData) => {
         if (funcionarioData.acessos.Console === true) {
           novoAcessos.Console = true;
         }
+        if (funcionarioData.acessos.Academy === true) {
+          novoAcessos.Academy = true;
+        }
+        if (funcionarioData.acessos.Desk === true) {
+          novoAcessos.Desk = true;
+        }
         // Apenas definir se houver pelo menos um valor true
         acessosNormalizados = Object.keys(novoAcessos).length > 0 ? novoAcessos : null;
       }
@@ -215,7 +225,7 @@ export const updateFuncionario = async (id, funcionarioData) => {
     
     // Normalizar acessos: garantir formato objeto booleano
     let acessosNormalizados = null;
-    if (funcionarioData.acessos !== undefined) {
+    if (funcionarioData.acessos !== undefined && funcionarioData.acessos !== null) {
       if (typeof funcionarioData.acessos === 'object' && !Array.isArray(funcionarioData.acessos)) {
         // Formato novo: objeto booleano
         const novoAcessos = {};
@@ -225,9 +235,18 @@ export const updateFuncionario = async (id, funcionarioData) => {
         if (funcionarioData.acessos.Console === true) {
           novoAcessos.Console = true;
         }
+        if (funcionarioData.acessos.Academy === true) {
+          novoAcessos.Academy = true;
+        }
+        if (funcionarioData.acessos.Desk === true) {
+          novoAcessos.Desk = true;
+        }
         // Apenas definir se houver pelo menos um valor true
         acessosNormalizados = Object.keys(novoAcessos).length > 0 ? novoAcessos : null;
       }
+    } else if (funcionarioData.acessos === null) {
+      // Se explicitamente null, manter como null
+      acessosNormalizados = null;
     }
     
     // Converter strings de data para Date conforme schema
