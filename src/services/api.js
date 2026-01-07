@@ -23,6 +23,10 @@ api.interceptors.response.use(
   (error) => {
     console.error('API Error:', error);
     
+    // #region agent log
+    fetch('http://127.0.0.1:7247/ingest/cf1cdc1f-7532-4c86-b17c-d3762bee33ea',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.js:24',message:'API interceptor - Erro capturado',data:{hasResponse:!!error.response,status:error.response?.status,statusText:error.response?.statusText,url:error.config?.url,method:error.config?.method,baseURL:error.config?.baseURL,message:error.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+    // #endregion
+    
     if (error.response) {
       // Erro do servidor - preservar detalhes para debug
       console.error('❌ Erro detalhado da API:', {
@@ -107,7 +111,13 @@ export const velonewsAPI = {
 
   // Deletar velonews
   delete: async (id) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7247/ingest/cf1cdc1f-7532-4c86-b17c-d3762bee33ea',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.js:110',message:'velonewsAPI.delete - ID recebido e URL construída',data:{id:id,idType:typeof id,idLength:id?.length,url:`/velonews/${id}`,baseURL:API_BASE_URL,fullURL:`${API_BASE_URL}/velonews/${id}`},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
     const response = await api.delete(`/velonews/${id}`);
+    // #region agent log
+    fetch('http://127.0.0.1:7247/ingest/cf1cdc1f-7532-4c86-b17c-d3762bee33ea',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.js:111',message:'velonewsAPI.delete - Resposta recebida',data:{status:response?.status,statusText:response?.statusText,data:response?.data},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
     return response.data;
   },
 

@@ -381,26 +381,30 @@ const FuncionariosPage = () => {
       }
       
       // Normalizar formato de acessos (suporta formato antigo array e novo objeto)
-      let acessosNormalizados = { Velohub: false, Console: false, Academy: false };
-      if (funcionario.acessos) {
+      let acessosNormalizados = { Velohub: false, Console: false, Academy: false, Desk: false };
+      if (funcionario.acessos && typeof funcionario.acessos === 'object') {
         if (Array.isArray(funcionario.acessos)) {
           // Formato antigo: array de objetos
           funcionario.acessos.forEach(acesso => {
-            if (acesso.sistema === 'Velohub' || acesso.sistema === 'velohub') {
-              acessosNormalizados.Velohub = true;
-            }
-            if (acesso.sistema === 'Console' || acesso.sistema === 'console') {
-              acessosNormalizados.Console = true;
-            }
-            if (acesso.sistema === 'Academy' || acesso.sistema === 'academy') {
-              acessosNormalizados.Academy = true;
+            if (acesso && acesso.sistema) {
+              const sistema = acesso.sistema.toLowerCase();
+              if (sistema === 'velohub') {
+                acessosNormalizados.Velohub = true;
+              } else if (sistema === 'console') {
+                acessosNormalizados.Console = true;
+              } else if (sistema === 'academy') {
+                acessosNormalizados.Academy = true;
+              } else if (sistema === 'desk') {
+                acessosNormalizados.Desk = true;
+              }
             }
           });
-        } else if (typeof funcionario.acessos === 'object') {
+        } else if (!Array.isArray(funcionario.acessos)) {
           // Formato novo: objeto booleano
-          acessosNormalizados.Velohub = funcionario.acessos.Velohub === true;
-          acessosNormalizados.Console = funcionario.acessos.Console === true;
-          acessosNormalizados.Academy = funcionario.acessos.Academy === true;
+          acessosNormalizados.Velohub = funcionario.acessos?.Velohub === true;
+          acessosNormalizados.Console = funcionario.acessos?.Console === true;
+          acessosNormalizados.Academy = funcionario.acessos?.Academy === true;
+          acessosNormalizados.Desk = funcionario.acessos?.Desk === true;
         }
       }
       
@@ -436,7 +440,7 @@ const FuncionariosPage = () => {
         password: '',
         atuacao: [],
         escala: '',
-        acessos: { Velohub: false, Console: false, Academy: false },
+        acessos: { Velohub: false, Console: false, Academy: false, Desk: false },
         desligado: false,
         dataDesligamento: '',
         afastado: false,
@@ -459,10 +463,10 @@ const FuncionariosPage = () => {
       telefone: '',
       userMail: '',
       password: '',
-      atuacao: [],
-      escala: '',
-      acessos: { Velohub: false, Console: false },
-      desligado: false,
+        atuacao: [],
+        escala: '',
+        acessos: { Velohub: false, Console: false, Academy: false, Desk: false },
+        desligado: false,
       dataDesligamento: '',
       afastado: false,
       dataAfastamento: ''
@@ -525,22 +529,41 @@ const FuncionariosPage = () => {
       // Preparar dados para envio
       const dadosParaEnvio = { ...formData };
       
-      // Processar acessos: enviar apenas se pelo menos um estiver marcado como true
-      if (dadosParaEnvio.acessos) {
-        const temAcesso = dadosParaEnvio.acessos.Velohub === true || dadosParaEnvio.acessos.Console === true;
-        if (temAcesso) {
-          // Enviar apenas os campos que são true
-          const acessosEnvio = {};
-          if (dadosParaEnvio.acessos.Velohub === true) {
-            acessosEnvio.Velohub = true;
+      // Se funcionário está desligado ou afastado, forçar acessos como objeto com todos false
+      if (dadosParaEnvio.desligado || dadosParaEnvio.afastado) {
+        dadosParaEnvio.acessos = { Velohub: false, Console: false, Academy: false, Desk: false };
+      } else {
+        // Processar acessos: sempre retornar objeto booleano
+        if (dadosParaEnvio.acessos && typeof dadosParaEnvio.acessos === 'object' && !Array.isArray(dadosParaEnvio.acessos)) {
+          // Verificar todos os 4 campos de acesso
+          const temAcesso = dadosParaEnvio.acessos?.Velohub === true || 
+                           dadosParaEnvio.acessos?.Console === true ||
+                           dadosParaEnvio.acessos?.Academy === true ||
+                           dadosParaEnvio.acessos?.Desk === true;
+          
+          if (temAcesso) {
+            // Enviar apenas os campos que são true
+            const acessosEnvio = {};
+            if (dadosParaEnvio.acessos?.Velohub === true) {
+              acessosEnvio.Velohub = true;
+            }
+            if (dadosParaEnvio.acessos?.Console === true) {
+              acessosEnvio.Console = true;
+            }
+            if (dadosParaEnvio.acessos?.Academy === true) {
+              acessosEnvio.Academy = true;
+            }
+            if (dadosParaEnvio.acessos?.Desk === true) {
+              acessosEnvio.Desk = true;
+            }
+            dadosParaEnvio.acessos = acessosEnvio;
+          } else {
+            // Se nenhum acesso está marcado, enviar objeto com todos false
+            dadosParaEnvio.acessos = { Velohub: false, Console: false, Academy: false, Desk: false };
           }
-          if (dadosParaEnvio.acessos.Console === true) {
-            acessosEnvio.Console = true;
-          }
-          dadosParaEnvio.acessos = acessosEnvio;
         } else {
-          // Se nenhum acesso está marcado, enviar null ou não enviar
-          dadosParaEnvio.acessos = null;
+          // Se acessos não é um objeto válido, definir como objeto com todos false
+          dadosParaEnvio.acessos = { Velohub: false, Console: false, Academy: false, Desk: false };
         }
       }
       
@@ -592,16 +615,16 @@ const FuncionariosPage = () => {
     
     // Normalizar acessos do funcionário para o formato objeto booleano
     let acessosNormalizados = { Velohub: false, Console: false, Academy: false, Desk: false };
-    if (funcionario.acessos) {
-      if (typeof funcionario.acessos === 'object' && !Array.isArray(funcionario.acessos)) {
+    if (funcionario.acessos && typeof funcionario.acessos === 'object') {
+      if (!Array.isArray(funcionario.acessos)) {
         // Formato novo: objeto booleano
         acessosNormalizados = {
-          Velohub: funcionario.acessos.Velohub === true,
-          Console: funcionario.acessos.Console === true,
-          Academy: funcionario.acessos.Academy === true,
-          Desk: funcionario.acessos.Desk === true
+          Velohub: funcionario.acessos?.Velohub === true,
+          Console: funcionario.acessos?.Console === true,
+          Academy: funcionario.acessos?.Academy === true,
+          Desk: funcionario.acessos?.Desk === true
         };
-      } else if (Array.isArray(funcionario.acessos)) {
+      } else {
         // Formato antigo: array de objetos
         funcionario.acessos.forEach(acesso => {
           if (acesso && acesso.sistema) {
@@ -642,11 +665,11 @@ const FuncionariosPage = () => {
         return;
       }
       
-      // Se funcionário está desligado ou afastado, remover todos os acessos
+      // Se funcionário está desligado ou afastado, definir acessos como objeto com todos false
       if (funcionarioSelecionado.desligado || funcionarioSelecionado.afastado) {
         const funcionarioAtualizado = {
           ...funcionarioSelecionado,
-          acessos: null
+          acessos: { Velohub: false, Console: false, Academy: false, Desk: false }
         };
         await updateFuncionario(funcionarioSelecionado._id || funcionarioSelecionado.id, funcionarioAtualizado);
         mostrarSnackbar('Acessos removidos (funcionário desligado/afastado)', 'success');
@@ -670,9 +693,9 @@ const FuncionariosPage = () => {
         novoAcessos.Desk = true;
       }
       
-      // Apenas definir acessos se houver pelo menos um valor true
-      // Se todos forem false, salvar como null (acessos opcionais)
-      const acessosParaSalvar = Object.keys(novoAcessos).length > 0 ? novoAcessos : null;
+      // Sempre salvar como objeto booleano completo
+      // Se todos forem false, salvar como objeto com todos false
+      const acessosParaSalvar = Object.keys(novoAcessos).length > 0 ? novoAcessos : { Velohub: false, Console: false, Academy: false, Desk: false };
       
       // Buscar funcionário atualizado para garantir que temos todos os dados
       const funcionarioAtualizado = {
@@ -1681,8 +1704,8 @@ const FuncionariosPage = () => {
                         desligado: isDesligado,
                         // Se desmarcar desligado, limpar data de desligamento
                         dataDesligamento: isDesligado ? formData.dataDesligamento : '',
-                        // Se marcar como desligado, remover todos os acessos
-                        acessos: isDesligado ? { Velohub: false, Console: false, Academy: false } : formData.acessos
+                        // Se marcar como desligado, remover todos os acessos (todos false)
+                        acessos: isDesligado ? { Velohub: false, Console: false, Academy: false, Desk: false } : formData.acessos
                       });
                     }}
                     sx={{
@@ -1712,8 +1735,8 @@ const FuncionariosPage = () => {
                         afastado: isAfastado,
                         // Se desmarcar afastado, limpar data de afastamento
                         dataAfastamento: isAfastado ? formData.dataAfastamento : '',
-                        // Se marcar como afastado, remover todos os acessos
-                        acessos: isAfastado ? { Velohub: false, Console: false, Academy: false } : formData.acessos
+                        // Se marcar como afastado, remover todos os acessos (todos false)
+                        acessos: isAfastado ? { Velohub: false, Console: false, Academy: false, Desk: false } : formData.acessos
                       });
                     }}
                     sx={{

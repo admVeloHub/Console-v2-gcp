@@ -347,6 +347,10 @@ const VelonewsPage = () => {
       return;
     }
     
+    // #region agent log
+    fetch('http://127.0.0.1:7247/ingest/cf1cdc1f-7532-4c86-b17c-d3762bee33ea',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VelonewsPage.jsx:352',message:'handleDeleteVelonews - ID antes de chamar API',data:{id:editFormData.id,idType:typeof editFormData.id,idLength:editFormData.id?.length,selectedNewsId:selectedNews?._id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    
     try {
       setLoading(true);
       await velonewsAPI.delete(editFormData.id);

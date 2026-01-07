@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
-import { CssBaseline, Box, CircularProgress, Alert, AlertTitle } from '@mui/material';
+import { CssBaseline, Box, CircularProgress, Alert, AlertTitle, Typography } from '@mui/material';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
 // Tema VeloHub
@@ -177,6 +177,55 @@ const AppContent = () => {
 };
 
 function App() {
+  // #region agent log
+  const debugInfo = {
+    hasClientId: !!GOOGLE_CLIENT_ID,
+    clientIdType: typeof GOOGLE_CLIENT_ID,
+    clientIdLength: GOOGLE_CLIENT_ID?.length,
+    clientIdPreview: GOOGLE_CLIENT_ID?.substring(0, 50),
+    envKeys: Object.keys(process.env).filter(k => k.includes('GOOGLE') || k.includes('REACT_APP')).join(', ')
+  };
+  fetch('http://127.0.0.1:7247/ingest/cf1cdc1f-7532-4c86-b17c-d3762bee33ea',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'App.jsx:179',message:'App - Verificando GOOGLE_CLIENT_ID antes de GoogleOAuthProvider',data:debugInfo,timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
+
+  // Validar que o clientId está presente antes de renderizar
+  if (!GOOGLE_CLIENT_ID) {
+    console.error('❌ ERRO CRÍTICO: GOOGLE_CLIENT_ID está undefined!');
+    console.error('📍 Verifique se o arquivo .env existe em: Dev - Console/.env');
+    console.error('📍 Verifique se contém: REACT_APP_GOOGLE_CLIENT_ID=...');
+    console.error('📍 REINICIE o servidor após criar/modificar o arquivo .env');
+    
+    return (
+      <ThemeProvider theme={velohubTheme}>
+        <CssBaseline />
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '100vh',
+          flexDirection: 'column',
+          gap: 2,
+          p: 4
+        }}>
+          <Alert severity="error" sx={{ maxWidth: 600 }}>
+            <AlertTitle>Erro de Configuração</AlertTitle>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              O Google Client ID não está configurado.
+            </Typography>
+            <Typography variant="body2" component="div">
+              <strong>Passos para resolver:</strong>
+              <ol style={{ marginTop: 8, marginBottom: 8 }}>
+                <li>Crie o arquivo <code>.env</code> na raiz do projeto (<code>Dev - Console/.env</code>)</li>
+                <li>Adicione a linha: <code>REACT_APP_GOOGLE_CLIENT_ID=278491073220-7u7hh1tji5dd65qagkprc1acenagql5o.apps.googleusercontent.com</code></li>
+                <li><strong>REINICIE</strong> o servidor de desenvolvimento (pare e execute <code>npm start</code> novamente)</li>
+              </ol>
+            </Typography>
+          </Alert>
+        </Box>
+      </ThemeProvider>
+    );
+  }
+
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <ThemeProvider theme={velohubTheme}>
