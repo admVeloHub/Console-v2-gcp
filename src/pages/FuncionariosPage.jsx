@@ -76,7 +76,7 @@ const normalizeBaseUrl = (url) => {
 };
 
 // ✅ CORREÇÃO 1: Importar API_BASE_URL do arquivo de configuração - garantir que sempre termine com /api
-const API_BASE_URL = normalizeBaseUrl(process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app') + '/api';
+const API_BASE_URL = normalizeBaseUrl(process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app') + '/api';
 
 const FuncionariosPage = () => {
   const navigate = useNavigate();

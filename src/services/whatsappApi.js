@@ -13,7 +13,7 @@ import axios from 'axios';
 
 // URL base do SKYNET em produção
 // Pode ser sobrescrita via variável de ambiente REACT_APP_SKYNET_API_URL
-const SKYNET_API_URL = process.env.REACT_APP_SKYNET_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app';
+const SKYNET_API_URL = process.env.REACT_APP_SKYNET_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app';
 
 const whatsappApi = axios.create({
   baseURL: SKYNET_API_URL,

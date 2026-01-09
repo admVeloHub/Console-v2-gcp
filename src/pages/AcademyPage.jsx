@@ -164,11 +164,20 @@ const AcademyPage = () => {
   const carregarCursos = async () => {
     try {
       setLoading(true);
+      console.log('🔄 Carregando cursos do servidor...');
       const dados = await academyAPI.cursosConteudo.getAll();
-      setCursos(Array.isArray(dados) ? dados : []);
+      console.log('📊 Cursos recebidos:', dados?.length || 0);
+      console.log('📋 Lista de cursos:', dados?.map(c => ({ nome: c.cursoNome, ordem: c.courseOrder, modulos: c.modules?.length || 0 })));
+      
+      const cursosArray = Array.isArray(dados) ? dados : [];
+      setCursos(cursosArray);
+      
+      if (cursosArray.length === 0) {
+        console.warn('⚠️ Nenhum curso encontrado no servidor');
+      }
     } catch (error) {
-      console.error('Erro ao carregar cursos:', error);
-      mostrarSnackbar('Erro ao carregar cursos', 'error');
+      console.error('❌ Erro ao carregar cursos:', error);
+      mostrarSnackbar(`Erro ao carregar cursos: ${error.message}`, 'error');
       setCursos([]);
     } finally {
       setLoading(false);
@@ -255,6 +264,14 @@ const AcademyPage = () => {
     setModalCursoAberto(true);
   };
   
+  // Função para fechar modal após salvar (sem verificar cancelamento)
+  const fecharModalCursoAposSalvar = () => {
+    setModalCursoAberto(false);
+    setCursoEditando(null);
+    setCursoSelecionado(null);
+    limparEstadosTemporarios();
+  };
+
   const fecharModalCurso = () => {
     if (emFluxoCriacao) {
       // Se está em fluxo de criação, pedir confirmação
@@ -307,7 +324,7 @@ const AcademyPage = () => {
     const cursoValidado = {
       cursoClasse: cursoLimpo.cursoClasse,
       cursoNome: cursoLimpo.cursoNome,
-      cursoDescription: cursoLimpo.cursoDescription || null, // Preservar explicitamente (pode ser null ou string)
+      cursoDescription: cursoLimpo.cursoDescription !== undefined ? cursoLimpo.cursoDescription : null,
       courseOrder: cursoLimpo.courseOrder,
       isActive: cursoLimpo.isActive !== undefined ? cursoLimpo.isActive : true,
       modules: []
@@ -318,13 +335,23 @@ const AcademyPage = () => {
       cursoValidado.modules = cursoLimpo.modules.map(modulo => {
         const moduloLimpo = { ...modulo };
         
-        // Validar e limpar sections (temas)
-        if (moduloLimpo.sections && Array.isArray(moduloLimpo.sections)) {
+        // Garantir que sections seja um array (pode ser vazio)
+        if (!moduloLimpo.sections || !Array.isArray(moduloLimpo.sections)) {
+          moduloLimpo.sections = [];
+        }
+        
+        // Validar e limpar sections (temas) apenas se houver sections
+        if (moduloLimpo.sections.length > 0) {
           moduloLimpo.sections = moduloLimpo.sections.map(section => {
             const sectionLimpa = { ...section };
             
-            // Validar e limpar lessons (aulas)
-            if (sectionLimpa.lessons && Array.isArray(sectionLimpa.lessons)) {
+            // Garantir que lessons seja um array (pode ser vazio)
+            if (!sectionLimpa.lessons || !Array.isArray(sectionLimpa.lessons)) {
+              sectionLimpa.lessons = [];
+            }
+            
+            // Validar e limpar lessons (aulas) apenas se houver lessons
+            if (sectionLimpa.lessons.length > 0) {
               sectionLimpa.lessons = sectionLimpa.lessons.map(lesson => {
                 const lessonLimpa = { ...lesson };
                 
@@ -352,24 +379,67 @@ const AcademyPage = () => {
                 return lesson.lessonId && lesson.lessonTitulo;
               });
             }
+            // Se não há lessons, manter array vazio (permitido agora)
             
             return sectionLimpa;
-          }).filter(section => {
-            // Manter apenas seções que têm pelo menos uma aula
-            return section.lessons && section.lessons.length > 0;
           });
+          // Não filtrar seções vazias - permitir temas sem aulas
         }
+        // Se não há sections, manter array vazio (permitido agora)
         
         return moduloLimpo;
-      }).filter(modulo => {
-        // Manter apenas módulos que têm pelo menos uma seção
-        return modulo.sections && modulo.sections.length > 0;
       });
+      // Não filtrar módulos vazios - permitir módulos sem seções
     }
     
     return cursoValidado;
   };
   
+  // Função para salvar curso vazio (sem módulos) durante criação sequencial
+  const salvarCursoVazio = async () => {
+    try {
+      // Validar campos obrigatórios
+      if (!formCurso.cursoNome || !formCurso.cursoNome.trim()) {
+        mostrarSnackbar('Nome do curso é obrigatório', 'error');
+        return;
+      }
+      if (!formCurso.courseOrder || formCurso.courseOrder < 1) {
+        mostrarSnackbar('Ordem do curso deve ser maior que zero', 'error');
+        return;
+      }
+
+      // Criar curso completamente vazio (sem módulos)
+      const dados = {
+        cursoClasse: formCurso.cursoClasse,
+        cursoNome: formCurso.cursoNome,
+        cursoDescription: formCurso.cursoDescription || null,
+        courseOrder: formCurso.courseOrder,
+        isActive: formCurso.isActive,
+        modules: [], // Curso vazio sem módulos
+        createdBy: user?.email || user?._userMail || 'admin@velotax.com.br',
+        version: 1
+      };
+
+      console.log('📤 Salvando curso vazio (sem módulos):', dados);
+      const resultado = await academyAPI.cursosConteudo.create(dados);
+      
+      if (!resultado || resultado.success === false) {
+        const erroMsg = resultado?.error || 'Erro desconhecido ao criar curso';
+        mostrarSnackbar(`Erro ao criar curso: ${erroMsg}`, 'error');
+        console.error('❌ Erro ao criar curso:', resultado);
+        return;
+      }
+
+      mostrarSnackbar('Curso criado com sucesso. Adicione módulos, temas e aulas para completá-lo.');
+      fecharModalCursoAposSalvar();
+      // Recarregar cursos imediatamente após salvar
+      carregarCursos();
+    } catch (error) {
+      console.error('Erro ao salvar curso vazio:', error);
+      mostrarSnackbar(`Erro ao salvar curso: ${error.message}`, 'error');
+    }
+  };
+
   const salvarCurso = async () => {
     try {
       let dados = {
@@ -378,17 +448,21 @@ const AcademyPage = () => {
         cursoDescription: formCurso.cursoDescription || null, // Garantir inclusão explícita (null se vazio)
         courseOrder: formCurso.courseOrder,
         isActive: formCurso.isActive,
-        modules: formCurso.modules,
+        modules: formCurso.modules || [], // Garantir array vazio se não houver módulos
         createdBy: user?.email || user?._userMail || 'admin@velotax.com.br',
         version: cursoEditando ? (cursoEditando.version || 1) + 1 : 1
       };
       
-      // Validar e limpar dados antes de enviar
-      dados = validarELimparCurso(dados);
+      // Validar e limpar dados antes de enviar apenas se houver módulos
+      // Se não houver módulos, manter array vazio
+      if (dados.modules && dados.modules.length > 0) {
+        dados = validarELimparCurso(dados);
+      }
       
       // DEBUG: Verificar se cursoDescription está presente antes de enviar
       console.log('Dados finais antes de enviar:', dados);
       console.log('cursoDescription:', dados.cursoDescription);
+      console.log('Módulos:', dados.modules?.length || 0);
       
       if (cursoEditando) {
         await academyAPI.cursosConteudo.update(cursoEditando._id, dados);
@@ -453,6 +527,14 @@ const AcademyPage = () => {
     setModalModuloAberto(true);
   };
   
+  // Função para fechar modal de módulo após salvar (sem verificar cancelamento)
+  const fecharModalModuloAposSalvar = () => {
+    setModalModuloAberto(false);
+    setModuloEditando(null);
+    // Não limpar cursoContexto quando está salvando módulo temporário
+    // para permitir continuar adicionando mais módulos depois
+  };
+
   const fecharModalModulo = () => {
     if (cursoTemporario) {
       // Se está em fluxo de criação, pedir confirmação
@@ -546,22 +628,67 @@ const AcademyPage = () => {
     abrirModalTema(cursoAtualizado, moduloTemp);
   };
   
+  // Função para salvar módulo no curso temporário sem seguir para o próximo passo
+  const salvarModuloTemporario = () => {
+    // Validar campos obrigatórios
+    if (!formModulo.moduleId || !formModulo.moduleId.trim()) {
+      mostrarSnackbar('ID do módulo é obrigatório', 'error');
+      return;
+    }
+    if (!formModulo.moduleNome || !formModulo.moduleNome.trim()) {
+      mostrarSnackbar('Nome do módulo é obrigatório', 'error');
+      return;
+    }
+
+    // Criar objeto temporário do módulo
+    const moduloTemp = {
+      moduleId: formModulo.moduleId,
+      moduleNome: formModulo.moduleNome,
+      isActive: formModulo.isActive,
+      sections: []
+    };
+
+    // Adicionar módulo ao curso temporário
+    const cursoAtualizado = {
+      ...cursoTemporario,
+      modules: [...(cursoTemporario.modules || []), moduloTemp]
+    };
+
+    setCursoTemporario(cursoAtualizado);
+    mostrarSnackbar('Módulo adicionado ao curso temporário');
+    fecharModalModuloAposSalvar();
+  };
+
   const salvarModulo = async () => {
     try {
       const curso = cursoContexto;
+      
+      // Se está em fluxo de criação (curso temporário), apenas adicionar ao temporário
+      if (cursoTemporario && !curso._id) {
+        salvarModuloTemporario();
+        return;
+      }
+      
+      // Se é curso existente, salvar no banco
       const modulos = [...(curso.modules || [])];
+      
+      // Garantir que o módulo tenha sections como array vazio se não especificado
+      const moduloParaSalvar = {
+        ...formModulo,
+        sections: formModulo.sections || []
+      };
       
       if (moduloEditando) {
         const index = modulos.findIndex(m => m.moduleId === moduloEditando.moduleId);
         if (index >= 0) {
-          modulos[index] = { ...modulos[index], ...formModulo };
+          modulos[index] = { ...modulos[index], ...moduloParaSalvar };
         }
       } else {
-        modulos.push(formModulo);
+        modulos.push(moduloParaSalvar);
       }
       
+      // Enviar apenas os campos necessários, não o curso inteiro
       await academyAPI.cursosConteudo.update(curso._id, {
-        ...curso,
         modules: modulos,
         version: (curso.version || 1) + 1
       });
@@ -571,16 +698,28 @@ const AcademyPage = () => {
       carregarCursos();
     } catch (error) {
       console.error('Erro ao salvar módulo:', error);
-      mostrarSnackbar('Erro ao salvar módulo', 'error');
+      mostrarSnackbar(`Erro ao salvar módulo: ${error.message}`, 'error');
     }
   };
   
   const excluirModulo = async (curso, moduloId) => {
+    // Validar se é o último módulo
+    if (curso.modules && curso.modules.length === 1) {
+      mostrarSnackbar('Não é possível excluir o último módulo. O curso deve ter pelo menos um módulo.', 'error');
+      return;
+    }
+
     if (window.confirm('Tem certeza que deseja excluir este módulo?')) {
       try {
         const modulos = curso.modules.filter(m => m.moduleId !== moduloId);
+        
+        // Validar novamente antes de enviar
+        if (modulos.length === 0) {
+          mostrarSnackbar('Não é possível excluir o último módulo. O curso deve ter pelo menos um módulo.', 'error');
+          return;
+        }
+        
         await academyAPI.cursosConteudo.update(curso._id, {
-          ...curso,
           modules: modulos,
           version: (curso.version || 1) + 1
         });
@@ -588,7 +727,8 @@ const AcademyPage = () => {
         carregarCursos();
       } catch (error) {
         console.error('Erro ao excluir módulo:', error);
-        mostrarSnackbar('Erro ao excluir módulo', 'error');
+        const erroMsg = error.message || 'Erro ao excluir módulo';
+        mostrarSnackbar(`Erro ao excluir módulo: ${erroMsg}`, 'error');
       }
     }
   };
@@ -630,6 +770,14 @@ const AcademyPage = () => {
     setModalTemaAberto(true);
   };
   
+  // Função para fechar modal de tema após salvar (sem verificar cancelamento)
+  const fecharModalTemaAposSalvar = () => {
+    setModalTemaAberto(false);
+    setTemaEditando(null);
+    // Não limpar contexto quando está salvando tema temporário
+    // para permitir continuar adicionando mais temas depois
+  };
+
   const fecharModalTema = () => {
     if (cursoTemporario) {
       // Se está em fluxo de criação, pedir confirmação
@@ -745,29 +893,86 @@ const AcademyPage = () => {
     abrirModalAula(cursoAtualizado, moduloAtualizado, temaTemp);
   };
   
+  // Função para salvar tema no módulo temporário sem seguir para o próximo passo
+  const salvarTemaTemporario = () => {
+    // Validar campos obrigatórios
+    if (!formTema.temaNome || !formTema.temaNome.trim()) {
+      mostrarSnackbar('Nome do tema é obrigatório', 'error');
+      return;
+    }
+    if (!formTema.temaOrder || formTema.temaOrder < 1) {
+      mostrarSnackbar('Ordem do tema deve ser maior que zero', 'error');
+      return;
+    }
+
+    // Criar objeto temporário do tema
+    const temaTemp = {
+      temaNome: formTema.temaNome,
+      temaOrder: formTema.temaOrder,
+      isActive: formTema.isActive,
+      hasQuiz: formTema.hasQuiz || false,
+      quizId: formTema.quizId || '',
+      lessons: []
+    };
+
+    // Adicionar tema ao módulo temporário
+    const moduloAtualizado = {
+      ...moduloTemporario,
+      sections: [...(moduloTemporario.sections || []), temaTemp]
+    };
+
+    // Atualizar módulo no curso temporário
+    const modulosAtualizados = cursoTemporario.modules.map(m => 
+      m.moduleId === moduloTemporario.moduleId ? moduloAtualizado : m
+    );
+
+    const cursoAtualizado = {
+      ...cursoTemporario,
+      modules: modulosAtualizados
+    };
+
+    setCursoTemporario(cursoAtualizado);
+    setModuloTemporario(moduloAtualizado);
+    mostrarSnackbar('Tema adicionado ao módulo temporário');
+    fecharModalTemaAposSalvar();
+  };
+
   const salvarTema = async () => {
     try {
       const curso = cursoContexto;
       const modulo = moduloContexto;
+      
+      // Se está em fluxo de criação (curso temporário), apenas adicionar ao temporário
+      if (cursoTemporario && !curso._id) {
+        salvarTemaTemporario();
+        return;
+      }
+      
+      // Se é curso existente, salvar no banco
       const modulos = [...curso.modules];
       const moduloIndex = modulos.findIndex(m => m.moduleId === modulo.moduleId);
       
       if (moduloIndex >= 0) {
         const sections = [...(modulos[moduloIndex].sections || [])];
         
+        // Garantir que o tema tenha lessons como array vazio se não especificado
+        const temaParaSalvar = {
+          ...formTema,
+          lessons: formTema.lessons || []
+        };
+        
         if (temaEditando) {
           const temaIndex = sections.findIndex(t => t.temaNome === temaEditando.temaNome);
           if (temaIndex >= 0) {
-            sections[temaIndex] = { ...sections[temaIndex], ...formTema };
+            sections[temaIndex] = { ...sections[temaIndex], ...temaParaSalvar };
           }
         } else {
-          sections.push(formTema);
+          sections.push(temaParaSalvar);
         }
         
         modulos[moduloIndex] = { ...modulos[moduloIndex], sections };
         
         await academyAPI.cursosConteudo.update(curso._id, {
-          ...curso,
           modules: modulos,
           version: (curso.version || 1) + 1
         });
@@ -778,7 +983,7 @@ const AcademyPage = () => {
       }
     } catch (error) {
       console.error('Erro ao salvar tema:', error);
-      mostrarSnackbar('Erro ao salvar tema', 'error');
+      mostrarSnackbar(`Erro ao salvar tema: ${error.message}`, 'error');
     }
   };
   
@@ -999,9 +1204,55 @@ const AcademyPage = () => {
         // DEBUG: Verificar dados antes de enviar
         console.log('Dados para salvar (criação sequencial):', dadosParaSalvar);
         console.log('cursoDescription:', dadosParaSalvar.cursoDescription);
+        console.log('Módulos:', dadosParaSalvar.modules?.length || 0);
+        
+        // Validar que há pelo menos um módulo antes de salvar
+        if (!dadosParaSalvar.modules || dadosParaSalvar.modules.length === 0) {
+          mostrarSnackbar('Erro: Curso deve ter pelo menos um módulo com seção e aula válidos', 'error');
+          console.error('Erro: Nenhum módulo válido após validação');
+          return;
+        }
 
         // Salvar curso completo no MongoDB
-        await academyAPI.cursosConteudo.create(dadosParaSalvar);
+        console.log('📤 Enviando dados para API...');
+        let resultado;
+        try {
+          resultado = await academyAPI.cursosConteudo.create(dadosParaSalvar);
+          console.log('📥 Resposta completa da API:', resultado);
+        } catch (error) {
+          console.error('❌ Erro ao chamar API:', error);
+          mostrarSnackbar(`Erro ao criar curso: ${error.message}`, 'error');
+          return;
+        }
+        
+        // Verificar se houve erro na criação
+        if (!resultado) {
+          mostrarSnackbar('Erro: Resposta vazia da API ao criar curso', 'error');
+          console.error('❌ Erro: Resposta vazia da API');
+          return;
+        }
+        
+        // A API retorna { success: true, data: {...} } quando sucesso
+        // ou { success: false, error: '...' } quando erro
+        if (resultado.success === false) {
+          const erroMsg = resultado.error || 'Erro desconhecido ao criar curso';
+          mostrarSnackbar(`Erro ao criar curso: ${erroMsg}`, 'error');
+          console.error('❌ Erro ao criar curso:', resultado);
+          return;
+        }
+        
+        // Verificar se há dados do curso salvo
+        const cursoSalvo = resultado.data;
+        if (!cursoSalvo) {
+          mostrarSnackbar('Erro: Curso não foi retornado pela API após criação', 'error');
+          console.error('❌ Erro: Nenhum dado de curso retornado:', resultado);
+          return;
+        }
+        
+        console.log('✅ Curso salvo com sucesso!');
+        console.log('   ID:', cursoSalvo._id || cursoSalvo.id);
+        console.log('   Nome:', cursoSalvo.cursoNome);
+        console.log('   Módulos:', cursoSalvo.modules?.length || 0);
         
         // Limpar todos os estados temporários
         limparEstadosTemporarios();
@@ -1012,6 +1263,9 @@ const AcademyPage = () => {
         setAulaEditando(null);
         
         mostrarSnackbar('Curso criado com sucesso');
+        
+        // Recarregar cursos imediatamente após salvar
+        console.log('🔄 Recarregando cursos do servidor...');
         carregarCursos();
       } else {
         // Edição de curso existente (comportamento atual)
@@ -1985,6 +2239,15 @@ const AcademyPage = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={fecharModalCurso}>Cancelar</Button>
+          {emFluxoCriacao && (
+            <Button 
+              onClick={salvarCursoVazio} 
+              variant="outlined"
+              sx={{ mr: 1 }}
+            >
+              Salvar
+            </Button>
+          )}
           <Button 
             onClick={emFluxoCriacao ? proximoPassoCurso : salvarCurso} 
             variant="contained"
@@ -2039,6 +2302,15 @@ const AcademyPage = () => {
             </Button>
           )}
           <Button onClick={fecharModalModulo}>Cancelar</Button>
+          {cursoTemporario && (
+            <Button 
+              onClick={salvarModuloTemporario} 
+              variant="outlined"
+              sx={{ mr: 1 }}
+            >
+              Salvar
+            </Button>
+          )}
           <Button 
             onClick={cursoTemporario ? proximoPassoModulo : salvarModulo} 
             variant="contained"
@@ -2097,6 +2369,15 @@ const AcademyPage = () => {
             </Button>
           )}
           <Button onClick={fecharModalTema}>Cancelar</Button>
+          {cursoTemporario && (
+            <Button 
+              onClick={salvarTemaTemporario} 
+              variant="outlined"
+              sx={{ mr: 1 }}
+            >
+              Salvar
+            </Button>
+          )}
           <Button 
             onClick={cursoTemporario ? proximoPassoTema : salvarTema} 
             variant="contained"

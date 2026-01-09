@@ -495,7 +495,7 @@ const buscarStatusAudio = async (avaliacaoId) => {
     if (!avaliacaoId) return null;
     
     // Normalizar URL base removendo /api se existir no final
-    const baseUrl = (process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app').replace(/\/api\/?$/, '');
+    const baseUrl = (process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app').replace(/\/api\/?$/, '');
     const response = await fetch(`${baseUrl}/api/audio-analise/status-por-avaliacao/${avaliacaoId}`);
     
     if (!response.ok) {
@@ -807,7 +807,7 @@ export const gerarRelatorioAgente = async (colaboradorNome, dataInicio = null, d
     let mediaIA = null;
     try {
       // Normalizar URL base removendo /api se existir no final
-      const baseUrl = (process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app').replace(/\/api\/?$/, '');
+      const baseUrl = (process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app').replace(/\/api\/?$/, '');
       const params = new URLSearchParams();
       if (dataInicio) params.append('dataInicio', dataInicio);
       if (dataFim) params.append('dataFim', dataFim);
@@ -902,7 +902,7 @@ export const getAvaliacoesPorColaborador = async (colaboradorNome) => {
 
 // Configuração do axios para API GPT
 const gptAPI = axios.create({
-  baseURL: 'https://backend-gcp-278491073220.us-east1.run.app/api/qualidade',
+  baseURL: 'https://backend-gcp-hfsqj6konq-ue.a.run.app/api/qualidade',
   headers: {
     'Content-Type': 'application/json'
   },
@@ -943,7 +943,7 @@ export const getAvaliacaoGPTById = async (id) => {
 export const getAvaliacaoGPTByAvaliacaoId = async (avaliacaoId) => {
   try {
     // Normalizar URL base removendo /api se existir no final
-    const baseUrl = (process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app').replace(/\/api\/?$/, '');
+    const baseUrl = (process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app').replace(/\/api\/?$/, '');
     
     // Buscar de audio_analise_results ao invés de qualidade_avaliacoes_gpt
     const response = await fetch(`${baseUrl}/api/audio-analise/result/${avaliacaoId}`);

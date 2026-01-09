@@ -12,7 +12,7 @@ const normalizeBaseUrl = (url) => {
   return url.replace(/\/api\/?$/, '');
 };
 
-const API_URL = normalizeBaseUrl(process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app');
+const API_URL = normalizeBaseUrl(process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app');
 const SSE_URL = `${API_URL}/events`;
 
 // Formatos aceitos (atualizado conforme backend)
@@ -797,7 +797,7 @@ export const reenviarAudioPubSub = async (avaliacaoId) => {
     }
 
     // Normalizar URL base removendo /api se existir no final
-    const baseUrl = (process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app').replace(/\/api\/?$/, '');
+    const baseUrl = (process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app').replace(/\/api\/?$/, '');
     const url = `${baseUrl}/api/audio-analise/reenviar-pubsub/${avaliacaoId}`;
     
     console.log('🔄 Reenviando áudio para Pub/Sub:', { avaliacaoId, url });

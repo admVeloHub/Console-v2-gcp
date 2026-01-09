@@ -7,7 +7,7 @@ const normalizeBaseUrl = (url) => {
 };
 
 // Configuração base da API - garantir que sempre termine com /api
-const API_BASE_URL = normalizeBaseUrl(process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app') + '/api';
+const API_BASE_URL = normalizeBaseUrl(process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app') + '/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -49,7 +49,17 @@ api.interceptors.response.use(
       throw new Error(message);
     } else if (error.request) {
       // Erro de rede
-      throw new Error('Erro de conexão. Verifique se o servidor está rodando.');
+      const baseURL = error.config?.baseURL || API_BASE_URL;
+      const url = error.config?.url || '';
+      const fullUrl = `${baseURL}${url}`;
+      console.error('❌ Erro de conexão:', {
+        fullUrl,
+        baseURL,
+        url,
+        message: error.message,
+        code: error.code
+      });
+      throw new Error(`Erro de conexão com ${baseURL}. Verifique se o servidor está rodando.`);
     } else {
       // Outros erros
       throw new Error('Erro inesperado');

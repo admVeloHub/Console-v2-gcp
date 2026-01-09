@@ -101,7 +101,7 @@ export const sendUserPing = async (user) => {
     };
     
     // URL do backend - garantir que sempre termine com /api
-    const baseUrl = normalizeBaseUrl(process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app');
+    const baseUrl = normalizeBaseUrl(process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app');
     const apiUrl = `${baseUrl}/api/user-ping`;
 
     const response = await fetch(apiUrl, {

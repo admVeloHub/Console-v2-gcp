@@ -1,4 +1,4 @@
-// VERSION: v3.0.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// VERSION: v3.0.1 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,
@@ -693,7 +693,14 @@ const HubAnalisesPage = () => {
                   Nenhuma sessão encontrada no histórico.
                 </Alert>
               ) : (
-                <TableContainer component={Paper} sx={{ boxShadow: 'none' }}>
+                <TableContainer 
+                  component={Paper} 
+                  sx={{ 
+                    boxShadow: 'none',
+                    maxHeight: '400px',
+                    overflow: 'auto'
+                  }}
+                >
                   <Table size="small">
                     <TableHead>
                       <TableRow sx={{ backgroundColor: 'var(--cor-container)' }}>
@@ -738,7 +745,7 @@ const HubAnalisesPage = () => {
                                 {loginTime}
                               </TableCell>
                               <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.65rem' }}>
-                                {logoutTime || <Typography component="span" sx={{ color: 'var(--blue-medium)', fontWeight: 500 }}>Em andamento</Typography>}
+                                {logoutTime || <Typography component="span" sx={{ color: 'var(--blue-medium)', fontWeight: 500, fontSize: '0.65rem' }}>Em andamento</Typography>}
                               </TableCell>
                               <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.65rem', fontWeight: session.logoutTimestamp ? 400 : 600 }}>
                                 {duration}

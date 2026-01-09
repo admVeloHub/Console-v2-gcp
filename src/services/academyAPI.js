@@ -7,7 +7,7 @@ const normalizeBaseUrl = (url) => {
 };
 
 // Configuração base da API - garantir que sempre termine com /api
-const API_BASE_URL = normalizeBaseUrl(process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app') + '/api';
+const API_BASE_URL = normalizeBaseUrl(process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app') + '/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -235,44 +235,31 @@ export const aulasAPI = {
   }
 };
 
-// API para Cursos Conteudo (DEPRECATED - usar cursosAPI.getComplete)
+// API para Cursos Conteudo (estrutura aninhada - cursos_conteudo)
 export const cursosConteudoAPI = {
-  // Listar todos os cursos (usa endpoint completo)
+  // Listar todos os cursos (usa endpoint cursos-conteudo diretamente)
   getAll: async () => {
-    const cursos = await cursosAPI.getAll();
-    // Para cada curso, buscar estrutura completa
-    const cursosCompletos = await Promise.all(
-      cursos.map(async (curso) => {
-        try {
-          return await cursosAPI.getComplete(curso._id);
-        } catch (error) {
-          console.warn(`Erro ao buscar curso completo ${curso._id}:`, error);
-          return curso;
-        }
-      })
-    );
-    return cursosCompletos;
+    const response = await api.get('/academy/cursos-conteudo');
+    // A resposta vem como { success: true, data: [...], count: N }
+    const dados = response.data?.data || response.data || [];
+    console.log('📡 Resposta getAll cursos-conteudo:', {
+      success: response.data?.success,
+      count: response.data?.count,
+      dadosLength: Array.isArray(dados) ? dados.length : 'não é array'
+    });
+    return dados;
   },
 
-  // Buscar curso por ID (usa endpoint completo)
+  // Buscar curso por ID (usa endpoint cursos-conteudo diretamente)
   getById: async (id) => {
-    return await cursosAPI.getComplete(id);
+    const response = await api.get(`/academy/cursos-conteudo/${id}`);
+    return response.data?.data || response.data;
   },
 
-  // Buscar cursos ativos (usa endpoint completo)
+  // Buscar cursos ativos (usa endpoint cursos-conteudo diretamente)
   getActive: async () => {
-    const cursos = await cursosAPI.getActive();
-    const cursosCompletos = await Promise.all(
-      cursos.map(async (curso) => {
-        try {
-          return await cursosAPI.getComplete(curso._id);
-        } catch (error) {
-          console.warn(`Erro ao buscar curso completo ${curso._id}:`, error);
-          return curso;
-        }
-      })
-    );
-    return cursosCompletos;
+    const response = await api.get('/academy/cursos-conteudo/active');
+    return response.data?.data || response.data || [];
   },
 
   // Buscar cursos por nome
@@ -287,19 +274,42 @@ export const cursosConteudoAPI = {
     return response.data?.data || response.data || [];
   },
 
-  // Criar novo curso (usa nova API)
+  // Criar novo curso (usa endpoint cursos-conteudo diretamente)
   create: async (data) => {
-    return await cursosAPI.create(data);
+    console.log('📤 API create - Enviando dados:', {
+      cursoNome: data.cursoNome,
+      modules: data.modules?.length || 0
+    });
+    const response = await api.post('/academy/cursos-conteudo', data);
+    console.log('📥 API create - Resposta completa:', response.data);
+    
+    // A resposta vem como { success: true, data: {...} } ou { success: false, error: '...' }
+    if (response.data?.success === false) {
+      const erro = response.data.error || 'Erro ao criar curso';
+      console.error('❌ API create - Erro:', erro);
+      throw new Error(erro);
+    }
+    
+    // Retornar a resposta completa para que o código possa verificar success e data
+    return response.data;
   },
 
-  // Atualizar curso (usa nova API)
+  // Atualizar curso (usa endpoint cursos-conteudo diretamente)
   update: async (id, data) => {
-    return await cursosAPI.update(id, data);
+    const response = await api.put(`/academy/cursos-conteudo/${id}`, data);
+    // A resposta pode vir como { success: true, data: {...} } ou diretamente como objeto
+    const resultado = response.data?.data || response.data;
+    // Se houver erro na resposta, propagar
+    if (response.data?.success === false) {
+      throw new Error(response.data.error || 'Erro ao atualizar curso');
+    }
+    return resultado;
   },
 
-  // Deletar curso (usa nova API)
+  // Deletar curso (usa endpoint cursos-conteudo diretamente)
   delete: async (id) => {
-    return await cursosAPI.delete(id);
+    const response = await api.delete(`/academy/cursos-conteudo/${id}`);
+    return response.data;
   }
 };
 

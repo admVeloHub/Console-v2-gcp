@@ -117,7 +117,7 @@ const UploadAudioModal = ({
       showSnackbar('Áudio reenviado para processamento com sucesso!', 'success');
       
       // Atualizar status do áudio após reenvio
-      const baseUrl = (process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app').replace(/\/api\/?$/, '');
+      const baseUrl = (process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app').replace(/\/api\/?$/, '');
       const response = await fetch(`${baseUrl}/api/audio-analise/status-por-avaliacao/${idParaUsar}`);
       if (response.ok) {
         const data = await response.json();
@@ -154,7 +154,7 @@ const UploadAudioModal = ({
 
       try {
         // Normalizar URL base removendo /api se existir no final
-        const baseUrl = (process.env.REACT_APP_API_URL || 'https://backend-gcp-278491073220.us-east1.run.app').replace(/\/api\/?$/, '');
+        const baseUrl = (process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app').replace(/\/api\/?$/, '');
         const response = await fetch(`${baseUrl}/api/audio-analise/status-por-avaliacao/${avaliacaoId}`);
         
         if (response.ok) {
