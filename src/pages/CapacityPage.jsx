@@ -1,4 +1,4 @@
-// VERSION: v1.7.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.7.1 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
 import React, { useState, useCallback } from 'react';
 import { 
   Container, 
@@ -315,7 +315,7 @@ const CapacityPage = () => {
       )}
 
       {/* Parâmetros do Sistema */}
-      <Card sx={{ mb: 3.2 }}>
+      <Card sx={{ mb: 3.2, backgroundColor: 'var(--cor-card)' }}>
         <CardContent sx={{ fontSize: '0.64em', p: 1.6 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.6 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
@@ -1251,7 +1251,7 @@ const CapacityPage = () => {
                     </thead>
                     <tbody>
                       {results.weekdays.results.map((item, index) => (
-                        <tr key={index} style={{ backgroundColor: index % 2 === 0 ? '#f8f9fa' : 'white' }}>
+                        <tr key={index} style={{ backgroundColor: index % 2 === 0 ? 'var(--cor-container)' : 'var(--cor-card)' }}>
                           <td style={{ padding: '8px', border: '1px solid #ddd' }}>{item.intervalo}:00</td>
                           <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{item.volume}</td>
                           <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{item.hcs}</td>
@@ -1306,7 +1306,7 @@ const CapacityPage = () => {
                     </thead>
                     <tbody>
                       {results.saturday.results.map((item, index) => (
-                        <tr key={index} style={{ backgroundColor: index % 2 === 0 ? '#f8f9fa' : 'white' }}>
+                        <tr key={index} style={{ backgroundColor: index % 2 === 0 ? 'var(--cor-container)' : 'var(--cor-card)' }}>
                           <td style={{ padding: '8px', border: '1px solid #ddd' }}>{item.intervalo}:00</td>
                           <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{item.volume}</td>
                           <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #ddd' }}>{item.hcs}</td>

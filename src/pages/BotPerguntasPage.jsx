@@ -457,14 +457,17 @@ const BotPerguntasPage = () => {
 
           <form onSubmit={handleSubmit}>
             <Grid container spacing={2.4}>
-              <Grid item xs={12} md={6}>
+              {/* Campo Pergunta */}
+              <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  label="Palavras-chave"
-                  value={formData.keywords}
-                  onChange={handleInputChange('keywords')}
+                  label="Pergunta"
+                  value={formData.question}
+                  onChange={handleInputChange('question')}
+                  multiline
+                  rows={1.6}
                   required
-                  placeholder="ex: ajuda, suporte, problema"
+                  placeholder="Digite a pergunta que o bot deve responder..."
                   sx={{
                     '& .MuiInputLabel-root': {
                       fontSize: '0.8rem',
@@ -479,27 +482,7 @@ const BotPerguntasPage = () => {
                 />
               </Grid>
 
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Sinônimos"
-                  value={formData.sinonimos}
-                  onChange={handleInputChange('sinonimos')}
-                  placeholder="ex: auxílio, ajuda, suporte"
-                  sx={{
-                    '& .MuiInputLabel-root': {
-                      fontSize: '0.8rem',
-                    },
-                    '& .MuiOutlinedInput-root': {
-                      fontFamily: 'Poppins'
-                    },
-                    '& .MuiOutlinedInput-input': {
-                      fontSize: '0.8rem',
-                    }
-                  }}
-                />
-              </Grid>
-
+              {/* Campo Resposta */}
               <Grid item xs={12}>
                 <Box>
                   <Typography 
@@ -531,16 +514,15 @@ const BotPerguntasPage = () => {
                 </Box>
               </Grid>
 
-              <Grid item xs={12}>
+              {/* Campo Palavras-chave */}
+              <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label="Pergunta"
-                  value={formData.question}
-                  onChange={handleInputChange('question')}
-                  multiline
-                  rows={1.6}
+                  label="Palavras-chave"
+                  value={formData.keywords}
+                  onChange={handleInputChange('keywords')}
                   required
-                  placeholder="Digite a pergunta que o bot deve responder..."
+                  placeholder="ex: ajuda, suporte, problema"
                   sx={{
                     '& .MuiInputLabel-root': {
                       fontSize: '0.8rem',
@@ -555,6 +537,29 @@ const BotPerguntasPage = () => {
                 />
               </Grid>
 
+              {/* Campo Sinônimos */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Sinônimos"
+                  value={formData.sinonimos}
+                  onChange={handleInputChange('sinonimos')}
+                  placeholder="ex: auxílio, ajuda, suporte"
+                  sx={{
+                    '& .MuiInputLabel-root': {
+                      fontSize: '0.8rem',
+                    },
+                    '& .MuiOutlinedInput-root': {
+                      fontFamily: 'Poppins'
+                    },
+                    '& .MuiOutlinedInput-input': {
+                      fontSize: '0.8rem',
+                    }
+                  }}
+                />
+              </Grid>
+
+              {/* Campo Tabulação */}
               <Grid item xs={12}>
                 <TextField
                   fullWidth

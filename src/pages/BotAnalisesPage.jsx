@@ -1,4 +1,4 @@
-// VERSION: v2.12.1 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// VERSION: v2.12.2 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
 import React, { useState, useCallback, useEffect } from 'react';
 import { Typography, Box, Tabs, Tab, Container, Grid, Card, CardContent, FormControl, InputLabel, Select, MenuItem, Button, Accordion, AccordionSummary, AccordionDetails, Chip, Alert, CircularProgress, Checkbox, FormControlLabel } from '@mui/material';
 import { QuestionAnswer, People, Schedule, TrendingUp, TrendingDown, DateRange, Timeline, PieChart as PieChartIcon, ShowChart, Person, FileDownload, PictureAsPdf, ListAlt, EmojiEvents, Analytics, Psychology, Refresh, Search, ExpandMore } from '@mui/icons-material';
@@ -1352,7 +1352,7 @@ const BotAnalisesPage = () => {
                           />
                           <Tooltip 
                             contentStyle={{
-                              backgroundColor: 'white',
+                              backgroundColor: 'var(--cor-card)',
                               border: '1px solid #ccc',
                               borderRadius: '8px',
                               fontFamily: 'Poppins',
@@ -1501,7 +1501,7 @@ const BotAnalisesPage = () => {
                           </Pie>
                           <Tooltip
                             contentStyle={{
-                              backgroundColor: 'white',
+                              backgroundColor: 'var(--cor-card)',
                               border: '1px solid #ccc',
                               borderRadius: '8px',
                               fontFamily: 'Poppins',
@@ -1565,7 +1565,7 @@ const BotAnalisesPage = () => {
                                  />
                                  <Tooltip 
                                    contentStyle={{
-                                     backgroundColor: 'white',
+                                     backgroundColor: 'var(--cor-card)',
                                      border: '1px solid #ccc',
                                      borderRadius: '8px',
                                      fontFamily: 'Poppins',
@@ -2021,7 +2021,7 @@ const BotAnalisesPage = () => {
                                        <Box key={index} sx={{ 
                                          mb: 1,
                                          p: 1,
-                                         backgroundColor: 'white',
+                                         backgroundColor: 'var(--cor-card)',
                                          borderRadius: '4px',
                                          border: '1px solid #f0f0f0'
                                        }}>
@@ -2083,7 +2083,7 @@ const BotAnalisesPage = () => {
                                        <Box key={index} sx={{ 
                                          mb: 1.5,
                                          p: 1.5,
-                                         backgroundColor: 'white',
+                                         backgroundColor: 'var(--cor-card)',
                                          borderRadius: '4px',
                                          border: '1px solid #f0f0f0'
                                        }}>
@@ -2149,7 +2149,7 @@ const BotAnalisesPage = () => {
                                        <Box key={index} sx={{ 
                                          mb: 1.5,
                                          p: 1.5,
-                                         backgroundColor: 'white',
+                                         backgroundColor: 'var(--cor-card)',
                                          borderRadius: '4px',
                                          border: '1px solid #f0f0f0'
                                        }}>
@@ -2198,7 +2198,7 @@ const BotAnalisesPage = () => {
 
       {activeTab === 1 && (
         <Container maxWidth="xl" sx={{ pt: 3 }}>
-          <Card sx={{ backgroundColor: 'var(--cor-container)' }}>
+          <Card sx={{ backgroundColor: 'var(--cor-card)' }}>
             <CardContent>
               <Typography variant="h6" sx={{ mb: 3, color: 'var(--blue-dark)', fontFamily: 'Poppins', fontWeight: 600 }}>
                 Feedback do Bot

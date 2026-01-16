@@ -43,6 +43,45 @@ const MarkdownEditor = ({
   attachedVideos = [],
   ...props 
 }) => {
+  // Verificar se modo escuro está ativo
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return document.documentElement.classList.contains('dark') || 
+           localStorage.getItem('velohub-theme') === 'dark';
+  });
+  
+  // Monitorar mudanças no tema
+  useEffect(() => {
+    const checkDarkMode = () => {
+      const dark = document.documentElement.classList.contains('dark') || 
+                   localStorage.getItem('velohub-theme') === 'dark';
+      setIsDarkMode(dark);
+    };
+    
+    // Verificar inicialmente
+    checkDarkMode();
+    
+    // Observar mudanças no DOM (quando classe dark é adicionada/removida)
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class', 'data-theme']
+    });
+    
+    // Observar mudanças no localStorage
+    const handleStorageChange = (e) => {
+      if (e.key === 'velohub-theme') {
+        checkDarkMode();
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+  
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
   const [linkText, setLinkText] = useState('');
@@ -797,6 +836,7 @@ const MarkdownEditor = ({
         ))}
       </Box>
       <Box
+        className="markdown-editor-wrapper"
         sx={{
           '& .ql-container': {
             fontFamily: 'Poppins',
@@ -902,18 +942,18 @@ const MarkdownEditor = ({
             }
           },
           '& .ql-container.ql-snow': {
-            border: '1px solid rgba(0, 0, 0, 0.12)',
+            border: isDarkMode ? '1px solid var(--blue-dark)' : '1px solid rgba(0, 0, 0, 0.12)',
             borderTop: 'none',
             '&:hover': {
-              borderColor: 'var(--blue-medium)',
+              borderColor: isDarkMode ? 'var(--blue-light)' : 'var(--blue-medium)',
             },
             '&.ql-focused': {
-              borderColor: 'var(--blue-medium)',
+              borderColor: isDarkMode ? 'var(--blue-light)' : 'var(--blue-medium)',
               borderWidth: '2px',
             }
           },
           '& .ql-toolbar.ql-snow': {
-            border: '1px solid rgba(0, 0, 0, 0.12)',
+            border: isDarkMode ? '1px solid var(--blue-dark)' : '1px solid rgba(0, 0, 0, 0.12)',
             borderBottom: 'none',
           }
         }}

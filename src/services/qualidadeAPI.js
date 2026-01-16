@@ -148,36 +148,19 @@ export const addFuncionario = async (funcionarioData) => {
       return isNaN(data.getTime()) ? null : data;
     };
     
-    // Se funcionário está desligado ou afastado, forçar acessos como objeto com todos false
+    // Sempre enviar objeto completo de acessos com todos os campos
     let acessosNormalizados = { Velohub: false, Console: false, Academy: false, Desk: false };
     if (funcionarioData.desligado || funcionarioData.afastado) {
+      // Se funcionário está desligado ou afastado, forçar acessos como objeto com todos false
       acessosNormalizados = { Velohub: false, Console: false, Academy: false, Desk: false };
-    } else {
-      // Normalizar acessos: garantir formato objeto booleano
-      if (funcionarioData.acessos && typeof funcionarioData.acessos === 'object' && !Array.isArray(funcionarioData.acessos)) {
-        // Formato novo: objeto booleano
-        const novoAcessos = {};
-        // Usar optional chaining para evitar erros
-        if (funcionarioData.acessos?.Velohub === true) {
-          novoAcessos.Velohub = true;
-        }
-        if (funcionarioData.acessos?.Console === true) {
-          novoAcessos.Console = true;
-        }
-        if (funcionarioData.acessos?.Academy === true) {
-          novoAcessos.Academy = true;
-        }
-        if (funcionarioData.acessos?.Desk === true) {
-          novoAcessos.Desk = true;
-        }
-        // Sempre retornar objeto booleano completo
-        acessosNormalizados = {
-          Velohub: novoAcessos.Velohub === true,
-          Console: novoAcessos.Console === true,
-          Academy: novoAcessos.Academy === true,
-          Desk: novoAcessos.Desk === true
-        };
-      }
+    } else if (funcionarioData.acessos && typeof funcionarioData.acessos === 'object' && !Array.isArray(funcionarioData.acessos)) {
+      // Normalizar acessos: sempre enviar objeto completo com todos os campos
+      acessosNormalizados = {
+        Velohub: funcionarioData.acessos?.Velohub === true,
+        Console: funcionarioData.acessos?.Console === true,
+        Academy: funcionarioData.acessos?.Academy === true,
+        Desk: funcionarioData.acessos?.Desk === true
+      };
     }
     
     // Converter strings de data para Date conforme schema MongoDB
@@ -232,40 +215,23 @@ export const updateFuncionario = async (id, funcionarioData) => {
       return isNaN(data.getTime()) ? null : data;
     };
     
-    // Se funcionário está desligado ou afastado, forçar acessos como objeto com todos false
+    // Sempre enviar objeto completo de acessos com todos os campos
     let acessosNormalizados = { Velohub: false, Console: false, Academy: false, Desk: false };
     if (funcionarioData.desligado || funcionarioData.afastado) {
+      // Se funcionário está desligado ou afastado, forçar acessos como objeto com todos false
       acessosNormalizados = { Velohub: false, Console: false, Academy: false, Desk: false };
     } else if (funcionarioData.acessos !== undefined && funcionarioData.acessos !== null) {
-      // Normalizar acessos: garantir formato objeto booleano
+      // Normalizar acessos: sempre enviar objeto completo com todos os campos
       if (typeof funcionarioData.acessos === 'object' && !Array.isArray(funcionarioData.acessos)) {
-        // Formato novo: objeto booleano
-        const novoAcessos = {};
-        // Usar optional chaining para evitar erros
-        if (funcionarioData.acessos?.Velohub === true) {
-          novoAcessos.Velohub = true;
-        }
-        if (funcionarioData.acessos?.Console === true) {
-          novoAcessos.Console = true;
-        }
-        if (funcionarioData.acessos?.Academy === true) {
-          novoAcessos.Academy = true;
-        }
-        if (funcionarioData.acessos?.Desk === true) {
-          novoAcessos.Desk = true;
-        }
-        // Sempre retornar objeto booleano completo
         acessosNormalizados = {
-          Velohub: novoAcessos.Velohub === true,
-          Console: novoAcessos.Console === true,
-          Academy: novoAcessos.Academy === true,
-          Desk: novoAcessos.Desk === true
+          Velohub: funcionarioData.acessos?.Velohub === true,
+          Console: funcionarioData.acessos?.Console === true,
+          Academy: funcionarioData.acessos?.Academy === true,
+          Desk: funcionarioData.acessos?.Desk === true
         };
       }
-    } else if (funcionarioData.acessos === null || funcionarioData.acessos === undefined) {
-      // Se explicitamente null ou undefined, converter para objeto com todos false
-      acessosNormalizados = { Velohub: false, Console: false, Academy: false, Desk: false };
     }
+    // Se acessos é null ou undefined, manter objeto com todos false (já inicializado acima)
     
     // Converter strings de data para Date conforme schema
     const funcionarioAtualizado = {

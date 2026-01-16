@@ -1,4 +1,4 @@
-// VERSION: v1.4.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// VERSION: v1.4.1 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
 // CHANGELOG: v1.4.0 - Reorganização de serviços, adicionado Divida Zero, removido Saúde Simplificada
 import React, { useState, useEffect } from 'react';
 import {
@@ -340,14 +340,18 @@ const ServicosPage = () => {
               return (
                 <Grid item xs={12} md={6} lg={4} key={service.key}>
                   <Card 
+                    className="servico-card"
                     sx={{ 
                       height: '100%',
                       display: 'flex',
                       flexDirection: 'column',
+                      backgroundColor: 'var(--cor-card)', /* Usa variável CSS que muda com tema */
+                      border: '1px solid transparent !important',
                       transition: 'all 0.3s ease',
                       '&:hover': {
                         transform: 'translateY(-4px)',
-                        boxShadow: '0 8px 25px rgba(0,0,0,0.15)'
+                        boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+                        border: '1px solid var(--blue-medium) !important'
                       }
                     }}
                   >

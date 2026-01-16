@@ -1,8 +1,17 @@
 /**
  * VeloHub Console - WhatsApp Admin Component
- * VERSION: v1.1.0 | DATE: 2025-01-31 | AUTHOR: VeloHub Development Team
+ * VERSION: v1.4.1 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
  * 
  * Componente para gerenciamento da conexão WhatsApp via SKYNET
+ * 
+ * Mudanças v1.4.0:
+ * - Adicionado novo container "VeloDesk" com mesma estrutura do primeiro
+ * 
+ * Mudanças v1.3.0:
+ * - Container renomeado de "Status da Conexão" para "Requisições de Produto"
+ * 
+ * Mudanças v1.2.0:
+ * - Removido título "Gerenciamento WhatsApp" (agora está na aba)
  * 
  * Mudanças v1.1.0:
  * - Polling agora funciona mesmo quando conectado (10s intervalo)
@@ -43,6 +52,7 @@ const WhatsAppAdmin = () => {
   const [number, setNumber] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [refreshingVeloDesk, setRefreshingVeloDesk] = useState(false);
   const [logoutLoading, setLogoutLoading] = useState(false);
   const [error, setError] = useState(null);
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
@@ -97,6 +107,14 @@ const WhatsAppAdmin = () => {
     await loadStatus();
   };
 
+  const handleRefreshVeloDesk = async () => {
+    setRefreshingVeloDesk(true);
+    // Simular atualização
+    setTimeout(() => {
+      setRefreshingVeloDesk(false);
+    }, 1000);
+  };
+
   const handleLogout = async () => {
     if (!window.confirm('Tem certeza que deseja desconectar o WhatsApp? Um novo QR code será gerado.')) {
       return;
@@ -140,10 +158,6 @@ const WhatsAppAdmin = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
-        Gerenciamento WhatsApp
-      </Typography>
-
       {error && (
         <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
           <AlertTitle>Erro</AlertTitle>
@@ -151,10 +165,10 @@ const WhatsAppAdmin = () => {
         </Alert>
       )}
 
-      <Card sx={{ mb: 3 }}>
+      <Card sx={{ mb: 3, backgroundColor: 'var(--cor-card)' }}>
         <CardContent>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h6">Status da Conexão</Typography>
+            <Typography variant="h6">Requisições de Produto</Typography>
             <Button
               startIcon={<RefreshIcon />}
               onClick={handleRefresh}
@@ -162,6 +176,80 @@ const WhatsAppAdmin = () => {
               size="small"
             >
               {refreshing ? <CircularProgress size={20} /> : 'Atualizar'}
+            </Button>
+          </Box>
+
+          {status && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Chip
+                  icon={status.connected ? <CheckCircleIcon /> : <ErrorIcon />}
+                  label={status.connected ? 'Conectado' : 'Desconectado'}
+                  color={status.connected ? 'success' : 'error'}
+                  sx={{ fontWeight: 'bold' }}
+                />
+                <Typography variant="body2" color="text.secondary">
+                  Status: {status.status}
+                </Typography>
+              </Box>
+
+              {status.connected && number && (
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Número Conectado:
+                  </Typography>
+                  <Typography variant="h6">
+                    {number.formatted || number.number || 'N/A'}
+                  </Typography>
+                </Box>
+              )}
+
+              {!status.connected && status.hasQR && (
+                <Box>
+                  <Alert severity="info" sx={{ mb: 2 }}>
+                    QR Code disponível para conexão
+                  </Alert>
+                  <Button
+                    variant="contained"
+                    startIcon={<QrCodeIcon />}
+                    onClick={handleShowQR}
+                    fullWidth
+                  >
+                    Exibir QR Code
+                  </Button>
+                </Box>
+              )}
+
+              {status.connected && (
+                <Box>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    startIcon={<LogoutIcon />}
+                    onClick={handleLogout}
+                    disabled={logoutLoading}
+                    fullWidth
+                  >
+                    {logoutLoading ? <CircularProgress size={20} /> : 'Desconectar WhatsApp'}
+                  </Button>
+                </Box>
+              )}
+            </Box>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card sx={{ mb: 3, backgroundColor: 'var(--cor-card)' }}>
+        <CardContent>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h6">VeloDesk</Typography>
+            <Button
+              startIcon={<RefreshIcon />}
+              onClick={handleRefreshVeloDesk}
+              disabled={refreshingVeloDesk}
+              size="small"
+            >
+              {refreshingVeloDesk ? <CircularProgress size={20} /> : 'Atualizar'}
             </Button>
           </Box>
 
@@ -249,7 +337,7 @@ const WhatsAppAdmin = () => {
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
-                  bgcolor: 'white'
+                  backgroundColor: 'var(--cor-card)'
                 }}
               >
                 <img

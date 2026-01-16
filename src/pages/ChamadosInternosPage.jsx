@@ -1,4 +1,4 @@
-// VERSION: v3.3.6 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// VERSION: v3.3.7 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -49,6 +49,40 @@ const ChamadosInternosPage = () => {
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all');
+  
+  // Detectar tema escuro
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return document.documentElement.classList.contains('dark') || 
+           localStorage.getItem('velohub-theme') === 'dark';
+  });
+  
+  useEffect(() => {
+    const checkDarkMode = () => {
+      const dark = document.documentElement.classList.contains('dark') || 
+                   localStorage.getItem('velohub-theme') === 'dark';
+      setIsDarkMode(dark);
+    };
+    
+    checkDarkMode();
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+    
+    const handleStorageChange = (e) => {
+      if (e.key === 'velohub-theme') {
+        checkDarkMode();
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
 
   useEffect(() => {
@@ -328,7 +362,7 @@ const ChamadosInternosPage = () => {
       </Box>
 
       {/* Dashboard de Tickets */}
-      <Card sx={{ mb: 4 }}>
+      <Card sx={{ mb: 4, backgroundColor: 'var(--cor-card)' }}>
         <CardContent sx={{ fontSize: '0.8em' }}>
           <Box sx={{
             display: 'flex',
@@ -403,7 +437,7 @@ const ChamadosInternosPage = () => {
             </Box>
           </Box>
 
-          <TableContainer component={Paper} sx={{ boxShadow: 'none' }}>
+          <TableContainer component={Paper} className="tickets-internos-table" sx={{ boxShadow: 'none', backgroundColor: 'var(--cor-container)' }}>
             <Table>
               <TableHead>
                 <TableRow sx={{ backgroundColor: 'var(--cor-container)' }}>
@@ -501,7 +535,8 @@ const ChamadosInternosPage = () => {
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
-                      maxWidth: '100px'
+                      maxWidth: '100px',
+                      color: isDarkMode ? 'var(--texto-secundario-escuro)' : 'inherit'
                     }}>
                       {ticket._id}
                     </TableCell>
@@ -512,7 +547,8 @@ const ChamadosInternosPage = () => {
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
-                      maxWidth: '150px'
+                      maxWidth: '150px',
+                      color: isDarkMode ? 'var(--texto-secundario-escuro)' : 'inherit'
                     }}>
                       {limitSolicitanteName(ticket._corpo && ticket._corpo.length > 0 ? ticket._corpo[0].userName : 'Não informado')}
                     </TableCell>
@@ -523,7 +559,8 @@ const ChamadosInternosPage = () => {
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
-                      maxWidth: '100px'
+                      maxWidth: '100px',
+                      color: isDarkMode ? 'var(--texto-secundario-escuro)' : 'inherit'
                     }}>
                       {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString('pt-BR') : 'Não informado'}
                     </TableCell>
@@ -534,7 +571,8 @@ const ChamadosInternosPage = () => {
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
-                      maxWidth: '120px'
+                      maxWidth: '120px',
+                      color: isDarkMode ? 'var(--texto-secundario-escuro)' : 'inherit'
                     }}>
                       {ticket._genero || 'Não informado'}
                     </TableCell>
@@ -545,7 +583,8 @@ const ChamadosInternosPage = () => {
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
-                      maxWidth: '120px'
+                      maxWidth: '120px',
+                      color: isDarkMode ? 'var(--texto-secundario-escuro)' : 'inherit'
                     }}>
                       {ticket._tipo || 'Não informado'}
                     </TableCell>
@@ -556,14 +595,16 @@ const ChamadosInternosPage = () => {
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
-                      maxWidth: '200px'
+                      maxWidth: '200px',
+                      color: isDarkMode ? 'var(--texto-secundario-escuro)' : 'inherit'
                     }}>
                       {ticket._assunto || ticket._direcionamento || 'Não informado'}
                     </TableCell>
                     <TableCell sx={{ 
                       fontFamily: 'Poppins', 
                       textAlign: 'center',
-                      fontSize: '0.75rem'
+                      fontSize: '0.75rem',
+                      color: isDarkMode ? 'var(--texto-secundario-escuro)' : 'inherit'
                     }}>
                       <Chip
                         label={calculateSLA(ticket.createdAt)}
@@ -575,7 +616,8 @@ const ChamadosInternosPage = () => {
                     </TableCell>
                     <TableCell sx={{ 
                       textAlign: 'center',
-                      fontSize: '0.75rem'
+                      fontSize: '0.75rem',
+                      color: isDarkMode ? 'var(--texto-secundario-escuro)' : 'inherit'
                     }}>
                       <Chip
                         label={ticket._statusConsole || ticket._statusHub || 'Não definida'}
@@ -590,7 +632,7 @@ const ChamadosInternosPage = () => {
                         }}
                       />
                     </TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem' }}>
+                    <TableCell sx={{ fontSize: '0.75rem', color: isDarkMode ? 'var(--texto-secundario-escuro)' : 'inherit' }}>
                       {(() => {
                         if (ticket._atribuido) {
                           // Show assigned agent's avatar and name
@@ -601,7 +643,7 @@ const ChamadosInternosPage = () => {
                                 alignItems: 'center',
                                 gap: '8px',
                                 padding: '4px 8px',
-                                backgroundColor: 'white',
+                                backgroundColor: 'var(--cor-card)',
                                 borderRadius: '16px',
                                 border: '1px solid #e0e0e0',
                                 transition: 'all 0.3s ease',
@@ -686,7 +728,7 @@ const ChamadosInternosPage = () => {
       </Card>
 
       {/* Container de Tickets Encerrados */}
-      <Card sx={{ mb: 4 }}>
+      <Card sx={{ mb: 4, backgroundColor: 'var(--cor-card)' }}>
         <CardContent sx={{ fontSize: '0.8em' }}>
           <Box sx={{
             display: 'flex',
@@ -706,14 +748,14 @@ const ChamadosInternosPage = () => {
             </Typography>
           </Box>
 
-          <TableContainer component={Paper} sx={{ boxShadow: 'none' }}>
+          <TableContainer component={Paper} className="tickets-internos-table" sx={{ boxShadow: 'none', backgroundColor: 'var(--cor-container)' }}>
             <Table>
               <TableHead>
                 <TableRow sx={{ backgroundColor: 'var(--cor-container)' }}>
                   <TableCell sx={{
                     fontFamily: 'Poppins',
                     fontWeight: 600,
-                    color: 'var(--blue-dark)',
+                    color: isDarkMode ? 'var(--blue-medium)' : 'var(--blue-dark)',
                     textAlign: 'left'
                   }}>
                     ID
@@ -721,7 +763,7 @@ const ChamadosInternosPage = () => {
                   <TableCell sx={{
                     fontFamily: 'Poppins',
                     fontWeight: 600,
-                    color: 'var(--blue-dark)',
+                    color: isDarkMode ? 'var(--blue-medium)' : 'var(--blue-dark)',
                     textAlign: 'left'
                   }}>
                     Solicitante
@@ -729,7 +771,7 @@ const ChamadosInternosPage = () => {
                   <TableCell sx={{
                     fontFamily: 'Poppins',
                     fontWeight: 600,
-                    color: 'var(--blue-dark)',
+                    color: isDarkMode ? 'var(--blue-medium)' : 'var(--blue-dark)',
                     textAlign: 'left'
                   }}>
                     Data
@@ -737,7 +779,7 @@ const ChamadosInternosPage = () => {
                   <TableCell sx={{
                     fontFamily: 'Poppins',
                     fontWeight: 600,
-                    color: 'var(--blue-dark)',
+                    color: isDarkMode ? 'var(--blue-medium)' : 'var(--blue-dark)',
                     textAlign: 'left'
                   }}>
                     Gênero
@@ -745,7 +787,7 @@ const ChamadosInternosPage = () => {
                   <TableCell sx={{
                     fontFamily: 'Poppins',
                     fontWeight: 600,
-                    color: 'var(--blue-dark)',
+                    color: isDarkMode ? 'var(--blue-medium)' : 'var(--blue-dark)',
                     textAlign: 'left'
                   }}>
                     Tipo
@@ -753,7 +795,7 @@ const ChamadosInternosPage = () => {
                   <TableCell sx={{
                     fontFamily: 'Poppins',
                     fontWeight: 600,
-                    color: 'var(--blue-dark)',
+                    color: isDarkMode ? 'var(--blue-medium)' : 'var(--blue-dark)',
                     textAlign: 'left'
                   }}>
                     Assunto
@@ -761,7 +803,7 @@ const ChamadosInternosPage = () => {
                   <TableCell sx={{
                     fontFamily: 'Poppins',
                     fontWeight: 600,
-                    color: 'var(--blue-dark)',
+                    color: isDarkMode ? 'var(--blue-medium)' : 'var(--blue-dark)',
                     textAlign: 'center'
                   }}>
                     SLA
@@ -769,7 +811,7 @@ const ChamadosInternosPage = () => {
                   <TableCell sx={{
                     fontFamily: 'Poppins',
                     fontWeight: 600,
-                    color: 'var(--blue-dark)',
+                    color: isDarkMode ? 'var(--blue-medium)' : 'var(--blue-dark)',
                     textAlign: 'center'
                   }}>
                     Status
@@ -777,7 +819,7 @@ const ChamadosInternosPage = () => {
                   <TableCell sx={{
                     fontFamily: 'Poppins',
                     fontWeight: 600,
-                    color: 'var(--blue-dark)',
+                    color: isDarkMode ? 'var(--blue-medium)' : 'var(--blue-dark)',
                     textAlign: 'center'
                   }}>
                     Responsável
@@ -803,7 +845,8 @@ const ChamadosInternosPage = () => {
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
-                      maxWidth: '100px'
+                      maxWidth: '100px',
+                      color: isDarkMode ? 'var(--texto-secundario-escuro)' : 'inherit'
                     }}>
                       {ticket._id}
                     </TableCell>
@@ -813,7 +856,8 @@ const ChamadosInternosPage = () => {
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
-                      maxWidth: '150px'
+                      maxWidth: '150px',
+                      color: isDarkMode ? 'var(--texto-secundario-escuro)' : 'inherit'
                     }}>
                       {limitSolicitanteName(ticket._corpo && ticket._corpo.length > 0 ? ticket._corpo[0].userName : ticket._userEmail || 'Não informado')}
                     </TableCell>
@@ -823,7 +867,8 @@ const ChamadosInternosPage = () => {
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
-                      maxWidth: '100px'
+                      maxWidth: '100px',
+                      color: isDarkMode ? 'var(--texto-secundario-escuro)' : 'inherit'
                     }}>
                       {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString('pt-BR') : 'Não informado'}
                     </TableCell>
@@ -833,7 +878,8 @@ const ChamadosInternosPage = () => {
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
-                      maxWidth: '120px'
+                      maxWidth: '120px',
+                      color: isDarkMode ? 'var(--texto-secundario-escuro)' : 'inherit'
                     }}>
                       {ticket._genero || 'Não informado'}
                     </TableCell>
@@ -843,7 +889,8 @@ const ChamadosInternosPage = () => {
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
-                      maxWidth: '120px'
+                      maxWidth: '120px',
+                      color: isDarkMode ? 'var(--texto-secundario-escuro)' : 'inherit'
                     }}>
                       {ticket._tipo || 'Não informado'}
                     </TableCell>
@@ -853,13 +900,15 @@ const ChamadosInternosPage = () => {
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
-                      maxWidth: '200px'
+                      maxWidth: '200px',
+                      color: isDarkMode ? 'var(--texto-secundario-escuro)' : 'inherit'
                     }}>
                       {ticket._assunto || ticket._direcionamento || 'Não informado'}
                     </TableCell>
                     <TableCell sx={{ 
                       fontFamily: 'Poppins',
-                      fontSize: '0.75rem'
+                      fontSize: '0.75rem',
+                      color: isDarkMode ? 'var(--texto-secundario-escuro)' : 'inherit'
                     }}>
                       <Chip
                         label={calculateSLA(ticket.createdAt)}
@@ -869,7 +918,7 @@ const ChamadosInternosPage = () => {
                         sx={{ fontSize: '0.7rem' }}
                       />
                     </TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem' }}>
+                    <TableCell sx={{ fontSize: '0.75rem', color: isDarkMode ? 'var(--texto-secundario-escuro)' : 'inherit' }}>
                       <Chip
                         label={ticket._statusHub || ticket._statusConsole || 'Não definida'}
                         size="small"
@@ -883,7 +932,7 @@ const ChamadosInternosPage = () => {
                         }}
                       />
                     </TableCell>
-                    <TableCell>
+                    <TableCell sx={{ color: isDarkMode ? 'var(--texto-secundario-escuro)' : 'inherit' }}>
                       <Button
                         variant="outlined"
                         size="small"

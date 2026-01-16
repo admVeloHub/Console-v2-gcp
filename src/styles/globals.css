@@ -1,4 +1,4 @@
-/* VERSION: v3.2.1 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team */
+/* VERSION: v3.2.3 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team */
 
 /* Importar fontes VeloHub */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Anton&display=swap');
@@ -50,12 +50,12 @@
 
 /* Aplicar tema escuro em todos os elementos principais */
 .dark .velohub-container {
-  background-color: var(--cor-container-escuro);
+  background-color: var(--cor-container); /* Usa variável que já muda com tema */
   box-shadow: 0 4px 20px var(--sombra-escura);
 }
 
 .dark .velohub-card {
-  background-color: var(--cor-card-escuro);
+  background-color: var(--cor-card) !important; /* Usa variável que já muda com tema */
   border: 1px solid var(--borda-escura);
   box-shadow: 0 8px 32px var(--sombra-escura);
 }
@@ -279,7 +279,7 @@ body {
 }
 
 .dark .container-main {
-  background-color: var(--cor-container-escuro);
+  background-color: var(--cor-container); /* Usa variável que já muda com tema */
   box-shadow: 0 3.2px 16px var(--sombra-escura);
 }
 
@@ -298,13 +298,13 @@ body {
 
 /* Material-UI Components - Tema Escuro */
 .dark .MuiCard-root {
-  background-color: var(--cor-card-escuro) !important;
+  background-color: var(--cor-card) !important; /* Usa variável que já muda com tema */
   border-color: var(--borda-escura) !important;
   color: var(--texto-principal-escuro) !important;
 }
 
 .dark .MuiPaper-root {
-  background-color: var(--cor-container-escuro) !important;
+  background-color: var(--cor-container) !important; /* Usa variável que já muda com tema */
   color: var(--texto-principal-escuro) !important;
 }
 
@@ -328,16 +328,22 @@ body {
 }
 
 .dark .MuiTextField-root .MuiOutlinedInput-root {
-  background-color: var(--cor-container-escuro) !important;
+  background-color: var(--cor-container) !important; /* Usa variável que já muda com tema */
   color: var(--texto-principal-escuro) !important;
-  border-color: var(--borda-escura) !important;
 }
 
-.dark .MuiTextField-root .MuiOutlinedInput-root:hover {
+.dark .MuiTextField-root .MuiOutlinedInput-root fieldset,
+.dark .MuiTextField-root .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
+  border-color: var(--blue-dark) !important;
+}
+
+.dark .MuiTextField-root .MuiOutlinedInput-root:hover fieldset,
+.dark .MuiTextField-root .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
   border-color: var(--blue-light) !important;
 }
 
-.dark .MuiTextField-root .MuiOutlinedInput-root.Mui-focused {
+.dark .MuiTextField-root .MuiOutlinedInput-root.Mui-focused fieldset,
+.dark .MuiTextField-root .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
   border-color: var(--blue-light) !important;
 }
 
@@ -346,8 +352,165 @@ body {
 }
 
 .dark .MuiSelect-select {
-  background-color: var(--cor-container-escuro) !important;
+  background-color: var(--cor-container) !important; /* Usa variável que já muda com tema */
   color: var(--texto-principal-escuro) !important;
+}
+
+.dark .MuiFormControl-root .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
+  border-color: var(--blue-dark) !important;
+}
+
+.dark .MuiFormControl-root .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: var(--blue-light) !important;
+}
+
+.dark .MuiFormControl-root .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: var(--blue-light) !important;
+}
+
+/* Remover hover e animações da barra de filtragem do Academy */
+.academy-filtro-bar {
+  transition: none !important;
+}
+
+.academy-filtro-bar:hover {
+  transform: none !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+.dark .academy-filtro-bar:hover {
+  box-shadow: 0 4px 20px var(--sombra-escura) !important;
+}
+
+.academy-filtro-select .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(0, 0, 0, 0.23) !important;
+}
+
+.dark .academy-filtro-select .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: var(--blue-dark) !important;
+}
+
+/* Estatísticas do Sistema - Números pretos no tema escuro */
+.dark .container-secondary .MuiChip-root {
+  color: #000000 !important;
+}
+
+.dark .container-secondary .MuiChip-label {
+  color: #000000 !important;
+}
+
+/* QA e Monitoria - Tabela tema escuro - Igualar cores das células */
+.dark .qualidade-table .MuiTableCell-root {
+  color: var(--texto-principal-escuro) !important;
+}
+
+/* QA e Monitoria - Badge Status cor preta no tema escuro */
+.dark .qualidade-table .MuiChip-root {
+  color: #000000 !important;
+}
+
+.dark .qualidade-table .MuiChip-label {
+  color: #000000 !important;
+}
+
+/* QA e Monitoria - Remover hover da tabela */
+.qualidade-table .MuiTableRow-root:hover {
+  background-color: transparent !important;
+}
+
+.dark .qualidade-table .MuiTableRow-root:hover {
+  background-color: transparent !important;
+}
+
+/* QA e Monitoria - Cabeçalho da tabela no tema escuro */
+.dark .qualidade-table .MuiTableHead .MuiTableCell-root {
+  color: var(--blue-dark) !important;
+}
+
+/* Modal Avaliação - Cards com menos opacidade no tema escuro */
+.dark .avaliacao-criterio-card {
+  opacity: 0.85 !important;
+}
+
+/* Modal Avaliação - Nome da categoria em preto no tema escuro */
+.dark .avaliacao-criterio-card .MuiTypography-body1 {
+  color: #000000 !important;
+}
+
+/* Modal Avaliação - Pontuação positiva (azul opaco) no tema escuro */
+.dark .pontuacao-positiva {
+  color: #006AB9 !important;
+}
+
+/* Modal Avaliação - Pontuação negativa (vermelho) no tema escuro */
+.dark .pontuacao-negativa {
+  color: #D32F2F !important;
+}
+
+/* Tickets Internos - Cabeçalho da tabela no tema escuro */
+.dark .tickets-internos-table .MuiTableHead .MuiTableRow-root .MuiTableCell-root,
+.dark .tickets-internos-table .MuiTableHead .MuiTableCell-root {
+  color: var(--blue-medium) !important;
+}
+
+/* Tickets Internos - Sobrescrever regras globais para cabeçalho */
+.dark .tickets-internos-table .MuiTableHead .MuiTableRow-root .MuiTableCell-root.MuiTableCell-root,
+.dark .tickets-internos-table .MuiTableHead .MuiTableCell-root.MuiTableCell-root {
+  color: var(--blue-medium) !important;
+}
+
+/* Tickets Internos - Itens da tabela no tema escuro */
+.dark .tickets-internos-table .MuiTableBody .MuiTableRow-root .MuiTableCell-root,
+.dark .tickets-internos-table .MuiTableBody .MuiTableCell-root {
+  color: var(--texto-secundario-escuro) !important;
+}
+
+/* Tickets Internos - Sobrescrever regras globais para itens */
+.dark .tickets-internos-table .MuiTableBody .MuiTableRow-root .MuiTableCell-root.MuiTableCell-root,
+.dark .tickets-internos-table .MuiTableBody .MuiTableCell-root.MuiTableCell-root {
+  color: var(--texto-secundario-escuro) !important;
+}
+
+/* Modal Avaliação - Checkbox positivo no tema escuro */
+.dark .checkbox-positivo {
+  border-color: #006AB9 !important;
+}
+
+/* Modal Avaliação - Checkbox negativo no tema escuro */
+.dark .checkbox-negativo:not(.checkbox-selecionado) {
+  border-color: #FCC200 !important;
+}
+
+.dark .checkbox-negativo.checkbox-selecionado {
+  border-color: #EF4444 !important;
+}
+
+/* Estilos para ReactQuill (MarkdownEditor) no modo escuro */
+.dark .markdown-editor-wrapper .ql-container.ql-snow,
+.dark .MuiBox-root.markdown-editor-wrapper .ql-container.ql-snow,
+.dark .ql-container.ql-snow {
+  border: 1px solid var(--blue-dark) !important;
+  border-top: none !important;
+}
+
+.dark .markdown-editor-wrapper .ql-container.ql-snow:hover,
+.dark .MuiBox-root.markdown-editor-wrapper .ql-container.ql-snow:hover,
+.dark .ql-container.ql-snow:hover {
+  border-color: var(--blue-light) !important;
+}
+
+.dark .markdown-editor-wrapper .ql-container.ql-snow.ql-focused,
+.dark .MuiBox-root.markdown-editor-wrapper .ql-container.ql-snow.ql-focused,
+.dark .ql-container.ql-snow.ql-focused {
+  border-color: var(--blue-light) !important;
+  border-width: 2px !important;
+}
+
+.dark .markdown-editor-wrapper .ql-toolbar.ql-snow,
+.dark .MuiBox-root.markdown-editor-wrapper .ql-toolbar.ql-snow,
+.dark .ql-toolbar.ql-snow {
+  border: 1px solid var(--blue-dark) !important;
+  border-bottom: none !important;
 }
 
 .dark .MuiMenuItem-root {
@@ -371,4 +534,61 @@ body {
 
 .dark .MuiTab-root:not(.Mui-selected) {
   color: rgba(255, 255, 255, 0.35) !important;
+}
+
+/* Estilos específicos para Hub Análises - Tema Escuro */
+.dark .hub-analises-sessao-card {
+  background-color: rgba(21, 162, 55, 0.20) !important;
+}
+
+.dark .hub-analises-sessao-card-offline {
+  background-color: rgba(255, 0, 0, 0.20) !important;
+}
+
+.dark .hub-analises-table-header {
+  color: var(--blue-medium) !important;
+  border-bottom: 1px solid var(--blue-dark) !important;
+}
+
+.dark .hub-analises-table-cell {
+  color: var(--texto-secundario-escuro) !important;
+  border-bottom: 1px solid var(--blue-dark) !important;
+}
+
+.dark .hub-analises-em-andamento {
+  color: var(--blue-light) !important;
+}
+
+/* Serviços Module - Card Hover Border */
+.servico-card {
+  border: 1px solid transparent !important;
+}
+
+.servico-card:hover {
+  border: 1px solid var(--blue-medium) !important;
+}
+
+.dark .servico-card {
+  border: 1px solid transparent !important;
+}
+
+.dark .servico-card:hover {
+  border: 1px solid var(--blue-medium) !important;
+}
+
+/* Academy Module - Card Hover Border */
+.academy-card {
+  border: 1px solid transparent !important;
+}
+
+.academy-card:hover {
+  border: 1px solid var(--blue-medium) !important;
+}
+
+.dark .academy-card {
+  border: 1px solid transparent !important;
+}
+
+.dark .academy-card:hover {
+  border: 1px solid var(--blue-medium) !important;
 }

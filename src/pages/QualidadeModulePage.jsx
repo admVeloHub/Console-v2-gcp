@@ -1,4 +1,4 @@
-// VERSION: v1.30.5 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// VERSION: v1.30.6 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 
@@ -124,11 +124,12 @@ const QualidadeModulePage = () => {
     ano: new Date().getFullYear(),
     saudacaoAdequada: false,
     escutaAtiva: false,
-    clarezaObjetividade: false,        // NOVO critério
+    clarezaObjetividade: false,
     resolucaoQuestao: false,
-    dominioAssunto: false,             // NOVO critério
+    dominioAssunto: false,
     empatiaCordialidade: false,
     direcionouPesquisa: false,
+    naoConsultouBot: false,            // NOVO critério detrator
     procedimentoIncorreto: false,
     encerramentoBrusco: false,
     observacoes: '',
@@ -308,11 +309,12 @@ const QualidadeModulePage = () => {
         ano: avaliacao.ano,
         saudacaoAdequada: avaliacao.saudacaoAdequada,
         escutaAtiva: avaliacao.escutaAtiva,
-        clarezaObjetividade: Boolean(avaliacao.clarezaObjetividade),  // NOVO critério - garantir boolean
+        clarezaObjetividade: Boolean(avaliacao.clarezaObjetividade),
         resolucaoQuestao: avaliacao.resolucaoQuestao,
-        dominioAssunto: Boolean(avaliacao.dominioAssunto),            // NOVO critério - garantir boolean
+        dominioAssunto: Boolean(avaliacao.dominioAssunto),
         empatiaCordialidade: avaliacao.empatiaCordialidade,
         direcionouPesquisa: avaliacao.direcionouPesquisa,
+        naoConsultouBot: Boolean(avaliacao.naoConsultouBot),  // NOVO critério detrator
         procedimentoIncorreto: avaliacao.procedimentoIncorreto,
         encerramentoBrusco: avaliacao.encerramentoBrusco,
         observacoes: avaliacao.observacoes || '',
@@ -337,11 +339,12 @@ const QualidadeModulePage = () => {
         ano: new Date().getFullYear(),
         saudacaoAdequada: false,
         escutaAtiva: false,
-        clarezaObjetividade: false,        // NOVO critério
+        clarezaObjetividade: false,
         resolucaoQuestao: false,
-        dominioAssunto: false,             // NOVO critério
+        dominioAssunto: false,
         empatiaCordialidade: false,
         direcionouPesquisa: false,
+        naoConsultouBot: false,            // NOVO critério detrator
         procedimentoIncorreto: false,
         encerramentoBrusco: false,
         observacoes: '',
@@ -363,9 +366,10 @@ const QualidadeModulePage = () => {
       ano: new Date().getFullYear(),
       saudacaoAdequada: false,
       escutaAtiva: false,
-      clarezaObjetividade: false,        // NOVO critério
+      clarezaObjetividade: false,
       resolucaoQuestao: false,
-      dominioAssunto: false,             // NOVO critério
+      dominioAssunto: false,
+      naoConsultouBot: false,            // NOVO critério detrator
       empatiaCordialidade: false,
       direcionouPesquisa: false,
       procedimentoIncorreto: false,
@@ -803,7 +807,7 @@ const QualidadeModulePage = () => {
       {currentView === 'avaliacoes' && (
         <Box>
           {/* Toolbar */}
-          <Card sx={{ mb: 1.6, mt: 0.8, borderRadius: '12.8px', boxShadow: '0 3.2px 16px rgba(0, 0, 0, 0.1)' }}>
+          <Card sx={{ mb: 1.6, mt: 0.8, borderRadius: '12.8px', boxShadow: '0 3.2px 16px rgba(0, 0, 0, 0.1)', backgroundColor: 'var(--cor-card)' }}>
             <CardContent sx={{ py: 0.6, px: 2, '&:last-child': { pb: 0.6 } }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
                 <Typography variant="h6" sx={{ fontFamily: 'Poppins', color: '#000058', fontWeight: 600, fontSize: '0.96rem' }}>
@@ -893,12 +897,13 @@ const QualidadeModulePage = () => {
           <Card sx={{ 
             borderRadius: '16px', 
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-            mt: 2
+            mt: 2,
+            backgroundColor: 'var(--cor-card)'
           }}>
-            <TableContainer>
-              <Table size="small">
+            <TableContainer className="qualidade-table" sx={{ maxHeight: '800px', overflowY: 'auto' }}>
+              <Table size="small" stickyHeader>
                 <TableHead>
-                  <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
+                  <TableRow sx={{ backgroundColor: 'var(--cor-container)' }}>
                     <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }}>Colaborador</TableCell>
                     <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }}>Avaliador</TableCell>
                     <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }}>Data da Avaliação</TableCell>
@@ -916,7 +921,7 @@ const QualidadeModulePage = () => {
                       const status = getStatusPontuacao(avaliacao.pontuacaoTotal);
                       
                       return (
-                        <TableRow key={avaliacao._id} sx={{ '&:hover': { backgroundColor: '#f8f9fa' } }}>
+                        <TableRow key={avaliacao._id}>
                           <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', py: 0.8 }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
                               <Avatar sx={{ width: 25.6, height: 25.6, backgroundColor: '#1694FF', fontSize: '0.8rem' }}>
@@ -925,17 +930,17 @@ const QualidadeModulePage = () => {
                               {avaliacao.colaboradorNome}
                             </Box>
                           </TableCell>
-                          <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', py: 0.8 }}>{avaliacao.avaliador}</TableCell>
-                          <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', py: 0.8 }}>
+                          <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', py: 0.8, color: 'inherit' }}>{avaliacao.avaliador}</TableCell>
+                          <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', py: 0.8, color: 'inherit' }}>
                             {avaliacao.createdAt ? formatDate(avaliacao.createdAt) : '-'}
                           </TableCell>
-                          <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', py: 0.8 }}>
+                          <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', py: 0.8, color: 'inherit' }}>
                             {avaliacao.dataLigacao ? formatDate(avaliacao.dataLigacao) : '-'}
                           </TableCell>
-                          <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', py: 0.8 }}>
+                          <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', py: 0.8, color: 'inherit' }}>
                             {avaliacao.mes}/{avaliacao.ano}
                           </TableCell>
-                          <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.8rem', py: 0.8 }}>
+                          <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.8rem', py: 0.8, color: 'inherit' }}>
                             {avaliacao.pontuacaoTotal} pts
                           </TableCell>
                           <TableCell sx={{ fontSize: '0.8rem', py: 0.8 }}>
@@ -944,7 +949,7 @@ const QualidadeModulePage = () => {
                               size="small"
                               sx={{
                                 backgroundColor: status.cor || '#666666',
-                                color: '#ffffff',
+                                color: '#000000',
                                 fontFamily: 'Poppins',
                                 fontWeight: 500,
                                 fontSize: '0.64rem',
@@ -997,7 +1002,7 @@ const QualidadeModulePage = () => {
           <Card sx={{ 
             borderRadius: '12px', 
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-            background: '#F3F7FC',
+            backgroundColor: 'var(--cor-card)',
             padding: '24px',
             mt: 1
           }}>
@@ -1264,7 +1269,7 @@ const QualidadeModulePage = () => {
                       <Card sx={{ 
                         textAlign: 'center', 
                         p: 2,
-                        background: 'transparent',
+                        backgroundColor: 'var(--cor-card)',
                         border: '1.5px solid #000058',
                         borderRadius: '8px'
                       }}>
@@ -1340,11 +1345,16 @@ const QualidadeModulePage = () => {
                       <Card sx={{ 
                         textAlign: 'center', 
                         p: 2,
-                        background: relatorioAgente.tendencia === 'melhorando' 
+                        backgroundColor: relatorioAgente.tendencia === 'melhorando' 
+                          ? 'rgba(22, 180, 255, 0.15)'
+                          : relatorioAgente.tendencia === 'piorando'
+                          ? 'rgba(220, 53, 69, 0.15)'
+                          : 'var(--cor-card)',
+                        backgroundImage: relatorioAgente.tendencia === 'melhorando' 
                           ? 'linear-gradient(135deg, rgba(22, 180, 255, 0.15) 0%, rgba(22, 180, 255, 0.05) 100%)'
                           : relatorioAgente.tendencia === 'piorando'
                           ? 'linear-gradient(135deg, rgba(220, 53, 69, 0.15) 0%, rgba(220, 53, 69, 0.05) 100%)'
-                          : 'transparent',
+                          : 'none',
                         border: '1.5px solid #000058',
                         borderRadius: '8px'
                       }}>
@@ -1910,11 +1920,11 @@ const QualidadeModulePage = () => {
             
             {/* Linha 1: Saudação e Escuta Ativa */}
             {[
-              { key: 'saudacaoAdequada', label: 'Saudação Adequada', pontos: 10, isPositive: true },
+              { key: 'saudacaoAdequada', label: 'Saudação Adequada', pontos: 5, isPositive: true },
               { key: 'escutaAtiva', label: 'Escuta Ativa / Sondagem', pontos: 15, isPositive: true }
             ].map((criterio) => (
               <Grid item xs={12} md={6} key={criterio.key}>
-                <Box sx={{ 
+                <Box className="avaliacao-criterio-card" sx={{ 
                   display: 'flex', 
                   alignItems: 'center', 
                   justifyContent: 'space-between', 
@@ -1923,19 +1933,20 @@ const QualidadeModulePage = () => {
                     ? (formData[criterio.key] ? '1px solid rgba(22, 148, 255, 0.75)' : '1px solid rgba(22, 148, 255, 0.5)')
                     : (formData[criterio.key] ? '1px solid #EF4444' : '1px solid rgba(255, 193, 7, 0.6)'),
                   borderRadius: '6.4px',
-                  backgroundColor: '#ffffff'
+                  backgroundColor: 'var(--cor-card)'
                 }}>
                   <Box>
-                    <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500, fontSize: '0.8rem' }}>
+                    <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500, fontSize: '0.8rem', color: '#000000' }}>
                       {criterio.label}
                     </Typography>
-                        <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666', fontSize: '0.8rem' }}>
+                        <Typography variant="body2" className={criterio.pontos > 0 ? 'pontuacao-positiva' : 'pontuacao-negativa'} sx={{ fontFamily: 'Poppins', color: criterio.pontos > 0 ? '#006AB9' : '#D32F2F', fontSize: '0.8rem' }}>
                       {criterio.pontos > 0 ? `+${criterio.pontos} pontos` : `${criterio.pontos} pontos`}
                     </Typography>
                   </Box>
                   <Button
                     variant="outlined"
                     size="small"
+                    className={`${criterio.isPositive ? 'checkbox-positivo' : 'checkbox-negativo'} ${formData[criterio.key] ? 'checkbox-selecionado' : ''}`}
                     onClick={() => setFormData({ ...formData, [criterio.key]: !formData[criterio.key] })}
                     sx={{
                       minWidth: '22.4px',
@@ -1971,11 +1982,11 @@ const QualidadeModulePage = () => {
             
             {/* Linha 2: Clareza e Resolução */}
             {[
-              { key: 'clarezaObjetividade', label: 'Clareza e Objetividade', pontos: 10, isPositive: true },
-              { key: 'resolucaoQuestao', label: 'Boa Resolução / Procedimento', pontos: 25, isPositive: true }
+              { key: 'clarezaObjetividade', label: 'Clareza e Objetividade', pontos: 15, isPositive: true },
+              { key: 'resolucaoQuestao', label: 'Boa Resolução / Procedimento', pontos: 40, isPositive: true }
             ].map((criterio) => (
               <Grid item xs={12} md={6} key={criterio.key}>
-                <Box sx={{ 
+                <Box className="avaliacao-criterio-card" sx={{ 
                   display: 'flex', 
                   alignItems: 'center', 
                   justifyContent: 'space-between', 
@@ -1984,19 +1995,20 @@ const QualidadeModulePage = () => {
                     ? (formData[criterio.key] ? '1px solid rgba(22, 148, 255, 0.75)' : '1px solid rgba(22, 148, 255, 0.5)')
                     : (formData[criterio.key] ? '1px solid #EF4444' : '1px solid rgba(255, 193, 7, 0.6)'),
                   borderRadius: '6.4px',
-                  backgroundColor: '#ffffff'
+                  backgroundColor: 'var(--cor-card)'
                 }}>
                   <Box>
-                    <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500, fontSize: '0.8rem' }}>
+                    <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500, fontSize: '0.8rem', color: '#000000' }}>
                       {criterio.label}
                     </Typography>
-                        <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666', fontSize: '0.8rem' }}>
+                        <Typography variant="body2" className={criterio.pontos > 0 ? 'pontuacao-positiva' : 'pontuacao-negativa'} sx={{ fontFamily: 'Poppins', color: criterio.pontos > 0 ? '#006AB9' : '#D32F2F', fontSize: '0.8rem' }}>
                       {criterio.pontos > 0 ? `+${criterio.pontos} pontos` : `${criterio.pontos} pontos`}
                     </Typography>
                   </Box>
                   <Button
                     variant="outlined"
                     size="small"
+                    className={`${criterio.isPositive ? 'checkbox-positivo' : 'checkbox-negativo'} ${formData[criterio.key] ? 'checkbox-selecionado' : ''}`}
                     onClick={() => setFormData({ ...formData, [criterio.key]: !formData[criterio.key] })}
                     sx={{
                       minWidth: '22.4px',
@@ -2036,7 +2048,7 @@ const QualidadeModulePage = () => {
               { key: 'empatiaCordialidade', label: 'Empatia / Cordialidade', pontos: 15, isPositive: true }
             ].map((criterio) => (
               <Grid item xs={12} md={6} key={criterio.key}>
-                <Box sx={{ 
+                <Box className="avaliacao-criterio-card" sx={{ 
                   display: 'flex', 
                   alignItems: 'center', 
                   justifyContent: 'space-between', 
@@ -2045,19 +2057,20 @@ const QualidadeModulePage = () => {
                     ? (formData[criterio.key] ? '1px solid rgba(22, 148, 255, 0.75)' : '1px solid rgba(22, 148, 255, 0.5)')
                     : (formData[criterio.key] ? '1px solid #EF4444' : '1px solid rgba(255, 193, 7, 0.6)'),
                   borderRadius: '6.4px',
-                  backgroundColor: '#ffffff'
+                  backgroundColor: 'var(--cor-card)'
                 }}>
                   <Box>
-                    <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500, fontSize: '0.8rem' }}>
+                    <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500, fontSize: '0.8rem', color: '#000000' }}>
                       {criterio.label}
                     </Typography>
-                        <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666', fontSize: '0.8rem' }}>
+                        <Typography variant="body2" className={criterio.pontos > 0 ? 'pontuacao-positiva' : 'pontuacao-negativa'} sx={{ fontFamily: 'Poppins', color: criterio.pontos > 0 ? '#006AB9' : '#D32F2F', fontSize: '0.8rem' }}>
                       {criterio.pontos > 0 ? `+${criterio.pontos} pontos` : `${criterio.pontos} pontos`}
                     </Typography>
                   </Box>
                   <Button
                     variant="outlined"
                     size="small"
+                    className={`${criterio.isPositive ? 'checkbox-positivo' : 'checkbox-negativo'} ${formData[criterio.key] ? 'checkbox-selecionado' : ''}`}
                     onClick={() => setFormData({ ...formData, [criterio.key]: !formData[criterio.key] })}
                     sx={{
                       minWidth: '22.4px',
@@ -2093,7 +2106,7 @@ const QualidadeModulePage = () => {
             
             {/* Linha 4: Direcionamento (coluna 1) - coluna 2 vazia */}
             <Grid item xs={12} md={6}>
-              <Box sx={{ 
+              <Box className="avaliacao-criterio-card" sx={{ 
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'space-between', 
@@ -2105,16 +2118,17 @@ const QualidadeModulePage = () => {
                 backgroundColor: '#ffffff'
               }}>
                 <Box>
-                  <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
+                  <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500, color: '#000000' }}>
                     Direcionou para pesquisa de satisfação
                   </Typography>
-                        <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666', fontSize: '0.8rem' }}>
+                        <Typography variant="body2" className="pontuacao-positiva" sx={{ fontFamily: 'Poppins', color: '#006AB9', fontSize: '0.8rem' }}>
                     +10 pontos
                   </Typography>
                 </Box>
                 <Button
                   variant="outlined"
                   size="small"
+                  className={`checkbox-positivo ${formData.direcionouPesquisa ? 'checkbox-selecionado' : ''}`}
                   onClick={() => setFormData({ ...formData, direcionouPesquisa: !formData.direcionouPesquisa })}
                   sx={{
                     minWidth: '28px',
@@ -2155,9 +2169,74 @@ const QualidadeModulePage = () => {
               </Box>
             </Grid>
             
-            {/* Linha 5: Encerramento Brusco (coluna 1) e Procedimento Incorreto (coluna 2) */}
+            {/* Linha 5: Não Consultou Bot (coluna 1) - NOVO critério detrator */}
+            <Grid item xs={12} md={6}>
+              <Box className="avaliacao-criterio-card" sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between', 
+                p: 2, 
+                border: formData.naoConsultouBot 
+                  ? '1px solid #EF4444' 
+                  : '1px solid rgba(255, 193, 7, 0.6)',
+                borderRadius: '8px',
+                backgroundColor: '#ffffff'
+              }}>
+                <Box>
+                  <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500, color: '#000000' }}>
+                    Não consultou o bot
+                  </Typography>
+                  <Typography variant="body2" className="pontuacao-negativa" sx={{ fontFamily: 'Poppins', color: '#D32F2F', fontSize: '0.8rem' }}>
+                    -10 pontos
+                  </Typography>
+                </Box>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  className={`checkbox-negativo ${formData.naoConsultouBot ? 'checkbox-selecionado' : ''}`}
+                  onClick={() => setFormData({ ...formData, naoConsultouBot: !formData.naoConsultouBot })}
+                  sx={{
+                    minWidth: '28px',
+                    width: '28px',
+                    height: '28px',
+                    border: formData.naoConsultouBot 
+                      ? '2px solid #EF4444' 
+                      : '1px solid rgba(255, 193, 7, 0.6)',
+                    backgroundColor: formData.naoConsultouBot ? '#EF4444' : 'transparent',
+                    borderRadius: '4px',
+                    '&:hover': {
+                      backgroundColor: formData.naoConsultouBot 
+                        ? '#DC2626' 
+                        : 'rgba(255, 193, 7, 0.1)',
+                      borderColor: '#EF4444'
+                    }
+                  }}
+                >
+                  {formData.naoConsultouBot && (
+                    <CheckCircle sx={{ 
+                      color: '#ffffff', 
+                      fontSize: '14px' 
+                    }} />
+                  )}
+                </Button>
+              </Box>
+            </Grid>
+            
+            {/* Card invisível para ocupar coluna 2 da linha 5 */}
             <Grid item xs={12} md={6}>
               <Box sx={{ 
+                p: 2, 
+                visibility: 'hidden'
+              }}>
+                <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
+                  Espaço vazio
+                </Typography>
+              </Box>
+            </Grid>
+            
+            {/* Linha 6: Encerramento Brusco (coluna 1) e Procedimento Incorreto (coluna 2) */}
+            <Grid item xs={12} md={6}>
+              <Box className="avaliacao-criterio-card" sx={{ 
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'space-between', 
@@ -2169,16 +2248,17 @@ const QualidadeModulePage = () => {
                 backgroundColor: '#ffffff'
               }}>
                 <Box>
-                  <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
+                  <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500, color: '#000000' }}>
                     Colaborador encerrou o contato de forma brusca / Derrubou a ligação
                   </Typography>
-                        <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666', fontSize: '0.8rem' }}>
+                        <Typography variant="body2" className="pontuacao-negativa" sx={{ fontFamily: 'Poppins', color: '#D32F2F', fontSize: '0.8rem' }}>
                     -100 pontos
                   </Typography>
                 </Box>
                 <Button
                   variant="outlined"
                   size="small"
+                  className={`checkbox-negativo ${formData.encerramentoBrusco ? 'checkbox-selecionado' : ''}`}
                   onClick={() => setFormData({ ...formData, encerramentoBrusco: !formData.encerramentoBrusco })}
                   sx={{
                     minWidth: '28px',
@@ -2209,7 +2289,7 @@ const QualidadeModulePage = () => {
             
             {/* Procedimento Incorreto - Coluna 2, Linha 4 */}
             <Grid item xs={12} md={6}>
-              <Box sx={{ 
+              <Box className="avaliacao-criterio-card" sx={{ 
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'space-between', 
@@ -2219,16 +2299,17 @@ const QualidadeModulePage = () => {
                 backgroundColor: '#ffffff'
               }}>
                 <Box>
-                  <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
+                  <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500, color: '#000000' }}>
                     Colaborador repassou um procedimento incorreto
                   </Typography>
-                        <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666', fontSize: '0.8rem' }}>
+                        <Typography variant="body2" className="pontuacao-negativa" sx={{ fontFamily: 'Poppins', color: '#D32F2F', fontSize: '0.8rem' }}>
                     -60 pontos
                   </Typography>
                 </Box>
                 <Button
                   variant="outlined"
                   size="small"
+                  className={`checkbox-negativo ${formData.procedimentoIncorreto ? 'checkbox-selecionado' : ''}`}
                   onClick={() => setFormData({ ...formData, procedimentoIncorreto: !formData.procedimentoIncorreto })}
                   sx={{
                     minWidth: '28px',
@@ -2246,7 +2327,7 @@ const QualidadeModulePage = () => {
                   {formData.procedimentoIncorreto && (
                     <CheckCircle sx={{ 
                       color: '#ffffff', 
-                      fontSize: '14px' 
+                      fontSize: '14px'
                     }} />
                   )}
                 </Button>
@@ -2324,7 +2405,7 @@ const QualidadeModulePage = () => {
                   <Typography variant="subtitle1" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', mb: 2 }}>
                     Informações da Avaliação
                   </Typography>
-                  <Box sx={{ p: 2, backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+                  <Box sx={{ p: 2, backgroundColor: 'var(--cor-container)', borderRadius: '8px' }}>
                     <Typography variant="body2" sx={{ fontFamily: 'Poppins', mb: 1 }}>
                       <strong>Colaborador:</strong> {avaliacaoSelecionada.colaboradorNome}
                     </Typography>
@@ -2351,7 +2432,7 @@ const QualidadeModulePage = () => {
                       </Typography>
                     </Box>
                   ) : gptResult ? (
-                    <Box sx={{ p: 2, backgroundColor: '#f0f9ff', borderRadius: '8px' }}>
+                    <Box sx={{ p: 2, backgroundColor: 'var(--cor-container)', borderRadius: '8px' }}>
                       <Typography variant="body2" sx={{ fontFamily: 'Poppins', mb: 1 }}>
                         <strong>Pontuação GPT:</strong> {gptResult.pontuacao} pontos
                       </Typography>

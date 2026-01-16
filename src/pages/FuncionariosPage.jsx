@@ -1,4 +1,4 @@
-// VERSION: v1.10.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// VERSION: v1.10.1 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
 // CHANGELOG: v1.10.0 - Adicionado campo Desk ao modal de acessos. Acessos são completamente opcionais - permitido salvar funcionários mesmo com todos os acessos como false.
 import React, { useState, useEffect } from 'react';
 import {
@@ -52,8 +52,7 @@ import {
   Work,
   Schedule,
   BarChart,
-  PersonAdd,
-  Security
+  PersonAdd
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import BackButton from '../components/common/BackButton';
@@ -121,10 +120,11 @@ const FuncionariosPage = () => {
     password: '', // Senha (hash) - opcional para reset
     atuacao: [], // Array de referências para funções
     escala: '',
-    acessos: { // Objeto booleano {Velohub: Boolean, Console: Boolean, Academy: Boolean}
+    acessos: { // Objeto booleano {Velohub: Boolean, Console: Boolean, Academy: Boolean, Desk: Boolean}
       Velohub: false,
       Console: false,
-      Academy: false
+      Academy: false,
+      Desk: false
     },
     desligado: false,
     dataDesligamento: '',
@@ -529,40 +529,22 @@ const FuncionariosPage = () => {
       // Preparar dados para envio
       const dadosParaEnvio = { ...formData };
       
-      // Se funcionário está desligado ou afastado, forçar acessos como objeto com todos false
+      // Sempre enviar objeto completo de acessos com todos os campos
       if (dadosParaEnvio.desligado || dadosParaEnvio.afastado) {
+        // Se funcionário está desligado ou afastado, forçar acessos como objeto com todos false
         dadosParaEnvio.acessos = { Velohub: false, Console: false, Academy: false, Desk: false };
       } else {
-        // Processar acessos: sempre retornar objeto booleano
+        // Normalizar acessos: sempre enviar objeto completo com todos os campos
         if (dadosParaEnvio.acessos && typeof dadosParaEnvio.acessos === 'object' && !Array.isArray(dadosParaEnvio.acessos)) {
-          // Verificar todos os 4 campos de acesso
-          const temAcesso = dadosParaEnvio.acessos?.Velohub === true || 
-                           dadosParaEnvio.acessos?.Console === true ||
-                           dadosParaEnvio.acessos?.Academy === true ||
-                           dadosParaEnvio.acessos?.Desk === true;
-          
-          if (temAcesso) {
-            // Enviar apenas os campos que são true
-            const acessosEnvio = {};
-            if (dadosParaEnvio.acessos?.Velohub === true) {
-              acessosEnvio.Velohub = true;
-            }
-            if (dadosParaEnvio.acessos?.Console === true) {
-              acessosEnvio.Console = true;
-            }
-            if (dadosParaEnvio.acessos?.Academy === true) {
-              acessosEnvio.Academy = true;
-            }
-            if (dadosParaEnvio.acessos?.Desk === true) {
-              acessosEnvio.Desk = true;
-            }
-            dadosParaEnvio.acessos = acessosEnvio;
-          } else {
-            // Se nenhum acesso está marcado, enviar objeto com todos false
-            dadosParaEnvio.acessos = { Velohub: false, Console: false, Academy: false, Desk: false };
-          }
+          // Formato novo: objeto booleano - garantir que tenha todos os campos
+          dadosParaEnvio.acessos = {
+            Velohub: dadosParaEnvio.acessos?.Velohub === true,
+            Console: dadosParaEnvio.acessos?.Console === true,
+            Academy: dadosParaEnvio.acessos?.Academy === true,
+            Desk: dadosParaEnvio.acessos?.Desk === true
+          };
         } else {
-          // Se acessos não é um objeto válido, definir como objeto com todos false
+          // Se acessos não é um objeto válido ou é array, definir como objeto com todos false
           dadosParaEnvio.acessos = { Velohub: false, Console: false, Academy: false, Desk: false };
         }
       }
@@ -678,24 +660,13 @@ const FuncionariosPage = () => {
         return;
       }
       
-      // Preparar objeto de acessos no formato novo
-      const novoAcessos = {};
-      if (acessoData.Velohub === true) {
-        novoAcessos.Velohub = true;
-      }
-      if (acessoData.Console === true) {
-        novoAcessos.Console = true;
-      }
-      if (acessoData.Academy === true) {
-        novoAcessos.Academy = true;
-      }
-      if (acessoData.Desk === true) {
-        novoAcessos.Desk = true;
-      }
-      
-      // Sempre salvar como objeto booleano completo
-      // Se todos forem false, salvar como objeto com todos false
-      const acessosParaSalvar = Object.keys(novoAcessos).length > 0 ? novoAcessos : { Velohub: false, Console: false, Academy: false, Desk: false };
+      // Sempre salvar como objeto booleano completo com todos os campos
+      const acessosParaSalvar = {
+        Velohub: acessoData.Velohub === true,
+        Console: acessoData.Console === true,
+        Academy: acessoData.Academy === true,
+        Desk: acessoData.Desk === true
+      };
       
       // Buscar funcionário atualizado para garantir que temos todos os dados
       const funcionarioAtualizado = {
@@ -909,7 +880,7 @@ const FuncionariosPage = () => {
       </Box>
 
       {/* Toolbar */}
-      <Card sx={{ mb: 2.4, borderRadius: '12.8px', boxShadow: '0 3.2px 16px rgba(0, 0, 0, 0.1)' }}>
+      <Card sx={{ mb: 2.4, borderRadius: '12.8px', boxShadow: '0 3.2px 16px rgba(0, 0, 0, 0.1)', backgroundColor: 'var(--cor-card)' }}>
         <CardContent>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.6 }}>
             <Typography variant="h6" sx={{ fontFamily: 'Poppins', color: '#000058', fontWeight: 600, fontSize: '0.96rem' }}>
@@ -1147,11 +1118,11 @@ const FuncionariosPage = () => {
       </Card>
 
       {/* Lista de Funcionários */}
-      <Card sx={{ borderRadius: '12.8px', boxShadow: '0 3.2px 16px rgba(0, 0, 0, 0.1)' }}>
+      <Card sx={{ borderRadius: '12.8px', boxShadow: '0 3.2px 16px rgba(0, 0, 0, 0.1)', backgroundColor: 'var(--cor-card)' }}>
         <TableContainer>
           <Table size="small">
             <TableHead>
-              <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
+              <TableRow sx={{ backgroundColor: 'var(--cor-container)' }}>
                 <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }}>Nome</TableCell>
                 <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }}>Empresa</TableCell>
                 <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }}>Status</TableCell>
@@ -1167,7 +1138,7 @@ const FuncionariosPage = () => {
                 
                 return (
                   <React.Fragment key={funcionario._id || funcionario.id}>
-                    <TableRow sx={{ '&:hover': { backgroundColor: '#f8f9fa' } }}>
+                    <TableRow sx={{ '&:hover': { backgroundColor: 'var(--cor-container)' } }}>
                       <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', py: 0.8 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
                           <Person sx={{ color: '#666666', fontSize: 12.8 }} />
@@ -1249,7 +1220,7 @@ const FuncionariosPage = () => {
                     <TableRow>
                       <TableCell colSpan={6} sx={{ py: 0 }}>
                         <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                          <Box sx={{ p: 1.6, backgroundColor: '#f8f9fa' }}>
+                          <Box sx={{ p: 1.6, backgroundColor: 'var(--cor-container)' }}>
                             <Grid container spacing={1.6}>
                               <Grid item xs={12} md={6}>
                                 <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', mb: 0.8, fontSize: '0.8rem' }}>
@@ -2010,123 +1981,128 @@ const FuncionariosPage = () => {
 
             return (
               <Grid container spacing={3}>
-                {/* Estatísticas por Empresa */}
-                <Grid item xs={12} lg={5}>
-                  <Card sx={{ backgroundColor: '#E3F2FD', border: '1px solid #BBDEFB' }}>
-                    <CardContent>
-                      <Typography variant="h6" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#1976D2', mb: 2, display: 'flex', alignItems: 'center' }}>
-                        <Business sx={{ mr: 1 }} />
-                        Por Empresa
-                      </Typography>
-                      
-                      {/* Tabela de Empresa por Status */}
-                      <TableContainer component={Paper} sx={{ mb: 2 }}>
-                        <Table size="small">
-                          <TableHead>
-                            <TableRow sx={{ backgroundColor: '#BBDEFB' }}>
-                              <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#1976D2' }}>Empresa</TableCell>
-                              <TableCell align="center" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#1976D2' }}>Ativos</TableCell>
-                              <TableCell align="center" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#1976D2' }}>Afastados</TableCell>
-                              <TableCell align="center" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#1976D2' }}>Desligados</TableCell>
-                              <TableCell align="center" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#1976D2' }}>Total</TableCell>
-                            </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            {/* JOB */}
-                            <TableRow>
-                              <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 500, color: '#1976D2' }}>JOB</TableCell>
-                              <TableCell align="center">
-                                <Chip label={statsPorEmpresaStatus['JOB'].ativos} size="small" sx={{ backgroundColor: '#C8E6C9', color: '#2E7D32', fontFamily: 'Poppins', fontWeight: 600 }} />
-                              </TableCell>
-                              <TableCell align="center">
-                                <Chip label={statsPorEmpresaStatus['JOB'].afastados} size="small" sx={{ backgroundColor: '#FFF3E0', color: '#F57C00', fontFamily: 'Poppins', fontWeight: 600 }} />
-                              </TableCell>
-                              <TableCell align="center">
-                                <Chip label={statsPorEmpresaStatus['JOB'].desligados} size="small" sx={{ backgroundColor: '#FFCDD2', color: '#D32F2F', fontFamily: 'Poppins', fontWeight: 600 }} />
-                              </TableCell>
-                              <TableCell align="center">
-                                <Chip label={statsPorEmpresaStatus['JOB'].ativos + statsPorEmpresaStatus['JOB'].afastados + statsPorEmpresaStatus['JOB'].desligados} size="small" sx={{ backgroundColor: '#BBDEFB', color: '#1976D2', fontFamily: 'Poppins', fontWeight: 600 }} />
-                              </TableCell>
-                            </TableRow>
-                            
-                            {/* Velotax */}
-                            <TableRow>
-                              <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 500, color: '#1976D2' }}>Velotax</TableCell>
-                              <TableCell align="center">
-                                <Chip label={statsPorEmpresaStatus['Velotax'].ativos} size="small" sx={{ backgroundColor: '#C8E6C9', color: '#2E7D32', fontFamily: 'Poppins', fontWeight: 600 }} />
-                              </TableCell>
-                              <TableCell align="center">
-                                <Chip label={statsPorEmpresaStatus['Velotax'].afastados} size="small" sx={{ backgroundColor: '#FFF3E0', color: '#F57C00', fontFamily: 'Poppins', fontWeight: 600 }} />
-                              </TableCell>
-                              <TableCell align="center">
-                                <Chip label={statsPorEmpresaStatus['Velotax'].desligados} size="small" sx={{ backgroundColor: '#FFCDD2', color: '#D32F2F', fontFamily: 'Poppins', fontWeight: 600 }} />
-                              </TableCell>
-                              <TableCell align="center">
-                                <Chip label={statsPorEmpresaStatus['Velotax'].ativos + statsPorEmpresaStatus['Velotax'].afastados + statsPorEmpresaStatus['Velotax'].desligados} size="small" sx={{ backgroundColor: '#BBDEFB', color: '#1976D2', fontFamily: 'Poppins', fontWeight: 600 }} />
-                              </TableCell>
-                            </TableRow>
-                            
-                            {/* Total Geral */}
-                            <TableRow sx={{ backgroundColor: '#E1F5FE' }}>
-                              <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 700, color: '#01579B' }}>TOTAL GERAL</TableCell>
-                              <TableCell align="center">
-                                <Chip label={statsPorEmpresaStatus['JOB'].ativos + statsPorEmpresaStatus['Velotax'].ativos} size="small" sx={{ backgroundColor: '#A5D6A7', color: '#1B5E20', fontFamily: 'Poppins', fontWeight: 700 }} />
-                              </TableCell>
-                              <TableCell align="center">
-                                <Chip label={statsPorEmpresaStatus['JOB'].afastados + statsPorEmpresaStatus['Velotax'].afastados} size="small" sx={{ backgroundColor: '#FFE0B2', color: '#E65100', fontFamily: 'Poppins', fontWeight: 700 }} />
-                              </TableCell>
-                              <TableCell align="center">
-                                <Chip label={statsPorEmpresaStatus['JOB'].desligados + statsPorEmpresaStatus['Velotax'].desligados} size="small" sx={{ backgroundColor: '#FFAB91', color: '#BF360C', fontFamily: 'Poppins', fontWeight: 700 }} />
-                              </TableCell>
-                              <TableCell align="center">
-                                <Chip label={funcionarios.length} size="small" sx={{ backgroundColor: '#90CAF9', color: '#0D47A1', fontFamily: 'Poppins', fontWeight: 700 }} />
-                              </TableCell>
-                            </TableRow>
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
-                    </CardContent>
-                  </Card>
+                {/* Coluna Esquerda: Por Empresa e Por Escala */}
+                <Grid item xs={12} lg={6}>
+                  <Grid container spacing={3} direction="column">
+                    {/* Estatísticas por Empresa */}
+                    <Grid item>
+                      <Card className="container-secondary" sx={{ background: 'transparent', border: '1.5px solid var(--blue-dark)', borderRadius: '8px', padding: '16px', margin: '8px' }}>
+                        <CardContent sx={{ p: 0 }}>
+                          <Typography variant="h6" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: 'var(--blue-dark)', mb: 2, display: 'flex', alignItems: 'center' }}>
+                            <Business sx={{ mr: 1 }} />
+                            Por Empresa
+                          </Typography>
+                          
+                          {/* Tabela de Empresa por Status */}
+                          <TableContainer component={Paper} sx={{ mb: 2, backgroundColor: 'var(--cor-container)' }}>
+                            <Table size="small">
+                              <TableHead>
+                                <TableRow sx={{ backgroundColor: '#BBDEFB' }}>
+                                  <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: 'var(--blue-dark)' }}>Empresa</TableCell>
+                                  <TableCell align="center" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: 'var(--blue-dark)' }}>Ativos</TableCell>
+                                  <TableCell align="center" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: 'var(--blue-dark)' }}>Afastados</TableCell>
+                                  <TableCell align="center" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: 'var(--blue-dark)' }}>Desligados</TableCell>
+                                  <TableCell align="center" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: 'var(--blue-dark)' }}>Total</TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                {/* JOB */}
+                                <TableRow>
+                                  <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 500, color: 'var(--blue-dark)' }}>JOB</TableCell>
+                                  <TableCell align="center">
+                                    <Chip label={statsPorEmpresaStatus['JOB'].ativos} size="small" sx={{ backgroundColor: '#C8E6C9', color: '#000000', fontFamily: 'Poppins', fontWeight: 600 }} />
+                                  </TableCell>
+                                  <TableCell align="center">
+                                    <Chip label={statsPorEmpresaStatus['JOB'].afastados} size="small" sx={{ backgroundColor: '#FFF3E0', color: '#000000', fontFamily: 'Poppins', fontWeight: 600 }} />
+                                  </TableCell>
+                                  <TableCell align="center">
+                                    <Chip label={statsPorEmpresaStatus['JOB'].desligados} size="small" sx={{ backgroundColor: '#FFCDD2', color: '#000000', fontFamily: 'Poppins', fontWeight: 600 }} />
+                                  </TableCell>
+                                  <TableCell align="center">
+                                    <Chip label={statsPorEmpresaStatus['JOB'].ativos + statsPorEmpresaStatus['JOB'].afastados + statsPorEmpresaStatus['JOB'].desligados} size="small" sx={{ backgroundColor: '#BBDEFB', color: '#000000', fontFamily: 'Poppins', fontWeight: 600 }} />
+                                  </TableCell>
+                                </TableRow>
+                                
+                                {/* Velotax */}
+                                <TableRow>
+                                  <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 500, color: 'var(--blue-dark)' }}>Velotax</TableCell>
+                                  <TableCell align="center">
+                                    <Chip label={statsPorEmpresaStatus['Velotax'].ativos} size="small" sx={{ backgroundColor: '#C8E6C9', color: '#000000', fontFamily: 'Poppins', fontWeight: 600 }} />
+                                  </TableCell>
+                                  <TableCell align="center">
+                                    <Chip label={statsPorEmpresaStatus['Velotax'].afastados} size="small" sx={{ backgroundColor: '#FFF3E0', color: '#000000', fontFamily: 'Poppins', fontWeight: 600 }} />
+                                  </TableCell>
+                                  <TableCell align="center">
+                                    <Chip label={statsPorEmpresaStatus['Velotax'].desligados} size="small" sx={{ backgroundColor: '#FFCDD2', color: '#000000', fontFamily: 'Poppins', fontWeight: 600 }} />
+                                  </TableCell>
+                                  <TableCell align="center">
+                                    <Chip label={statsPorEmpresaStatus['Velotax'].ativos + statsPorEmpresaStatus['Velotax'].afastados + statsPorEmpresaStatus['Velotax'].desligados} size="small" sx={{ backgroundColor: '#BBDEFB', color: '#000000', fontFamily: 'Poppins', fontWeight: 600 }} />
+                                  </TableCell>
+                                </TableRow>
+                                
+                                {/* Total Geral */}
+                                <TableRow sx={{ backgroundColor: '#E1F5FE' }}>
+                                  <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 700, color: 'var(--blue-dark)' }}>TOTAL GERAL</TableCell>
+                                  <TableCell align="center">
+                                    <Chip label={statsPorEmpresaStatus['JOB'].ativos + statsPorEmpresaStatus['Velotax'].ativos} size="small" sx={{ backgroundColor: '#A5D6A7', color: '#000000', fontFamily: 'Poppins', fontWeight: 700 }} />
+                                  </TableCell>
+                                  <TableCell align="center">
+                                    <Chip label={statsPorEmpresaStatus['JOB'].afastados + statsPorEmpresaStatus['Velotax'].afastados} size="small" sx={{ backgroundColor: '#FFE0B2', color: '#000000', fontFamily: 'Poppins', fontWeight: 700 }} />
+                                  </TableCell>
+                                  <TableCell align="center">
+                                    <Chip label={statsPorEmpresaStatus['JOB'].desligados + statsPorEmpresaStatus['Velotax'].desligados} size="small" sx={{ backgroundColor: '#FFAB91', color: '#000000', fontFamily: 'Poppins', fontWeight: 700 }} />
+                                  </TableCell>
+                                  <TableCell align="center">
+                                    <Chip label={funcionarios.length} size="small" sx={{ backgroundColor: '#90CAF9', color: '#000000', fontFamily: 'Poppins', fontWeight: 700 }} />
+                                  </TableCell>
+                                </TableRow>
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+
+                    {/* Estatísticas por Escala */}
+                    <Grid item>
+                      <Card className="container-secondary" sx={{ background: 'transparent', border: '1.5px solid var(--blue-dark)', borderRadius: '8px', padding: '16px', margin: '8px' }}>
+                        <CardContent sx={{ p: 0 }}>
+                          <Typography variant="h6" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: 'var(--blue-dark)', mb: 2, display: 'flex', alignItems: 'center' }}>
+                            <Schedule sx={{ mr: 1 }} />
+                            Por Escala
+                          </Typography>
+                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                            {Object.entries(stats.porEscala)
+                              .sort(([,a], [,b]) => b - a)
+                              .map(([escala, count]) => (
+                                <Box key={escala} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: 'var(--blue-dark)', fontWeight: escala.toLowerCase() === 'afastada' ? 600 : 400 }}>
+                                    {escala}
+                                  </Typography>
+                                  <Chip 
+                                    label={count} 
+                                    size="small" 
+                                    sx={{ 
+                                      backgroundColor: escala.toLowerCase() === 'afastada' ? '#FFF3E0' : '#C8E6C9', 
+                                      color: '#000000',
+                                      fontFamily: 'Poppins', 
+                                      fontWeight: 600 
+                                    }} 
+                                  />
+                                </Box>
+                              ))}
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  </Grid>
                 </Grid>
 
-                {/* Estatísticas por Escala */}
-                <Grid item xs={12} lg={2}>
-                  <Card sx={{ backgroundColor: '#E8F5E8', border: '1px solid #C8E6C9' }}>
-                    <CardContent>
-                      <Typography variant="h6" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#2E7D32', mb: 2, display: 'flex', alignItems: 'center' }}>
-                        <Schedule sx={{ mr: 1 }} />
-                        Por Escala
-                      </Typography>
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                        {Object.entries(stats.porEscala)
-                          .sort(([,a], [,b]) => b - a)
-                          .map(([escala, count]) => (
-                            <Box key={escala} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#2E7D32', fontWeight: escala.toLowerCase() === 'afastada' ? 600 : 400 }}>
-                                {escala}
-                              </Typography>
-                              <Chip 
-                                label={count} 
-                                size="small" 
-                                sx={{ 
-                                  backgroundColor: escala.toLowerCase() === 'afastada' ? '#FFF3E0' : '#C8E6C9', 
-                                  color: escala.toLowerCase() === 'afastada' ? '#F57C00' : '#2E7D32',
-                                  fontFamily: 'Poppins', 
-                                  fontWeight: 600 
-                                }} 
-                              />
-                            </Box>
-                          ))}
-                      </Box>
-                    </CardContent>
-                  </Card>
-                </Grid>
-
-                {/* Estatísticas por Atuação */}
-                <Grid item xs={12} lg={5}>
-                  <Card sx={{ backgroundColor: '#F3E5F5', border: '1px solid #E1BEE7' }}>
-                    <CardContent>
-                      <Typography variant="h6" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#7B1FA2', mb: 2, display: 'flex', alignItems: 'center' }}>
+                {/* Coluna Direita: Por Atuação */}
+                <Grid item xs={12} lg={6}>
+                  <Card className="container-secondary" sx={{ background: 'transparent', border: '1.5px solid var(--blue-dark)', borderRadius: '8px', padding: '16px', margin: '8px', height: '100%' }}>
+                    <CardContent sx={{ p: 0 }}>
+                      <Typography variant="h6" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: 'var(--blue-dark)', mb: 2, display: 'flex', alignItems: 'center' }}>
                         <Work sx={{ mr: 1 }} />
                         Por Atuação
                       </Typography>
@@ -2154,7 +2130,7 @@ const FuncionariosPage = () => {
                                       size="small" 
                                       sx={{ 
                                         backgroundColor: dados.Velotax > 0 ? '#BBDEFB' : '#F5F5F5', 
-                                        color: dados.Velotax > 0 ? '#1976D2' : '#9E9E9E',
+                                        color: '#000000',
                                         fontFamily: 'Poppins', 
                                         fontWeight: 600 
                                       }} 
@@ -2166,7 +2142,7 @@ const FuncionariosPage = () => {
                                       size="small" 
                                       sx={{ 
                                         backgroundColor: dados.Job > 0 ? '#C8E6C9' : '#F5F5F5', 
-                                        color: dados.Job > 0 ? '#2E7D32' : '#9E9E9E',
+                                        color: '#000000',
                                         fontFamily: 'Poppins', 
                                         fontWeight: 600 
                                       }} 
@@ -2178,7 +2154,7 @@ const FuncionariosPage = () => {
                                       size="small" 
                                       sx={{ 
                                         backgroundColor: '#E1BEE7', 
-                                        color: '#7B1FA2',
+                                        color: '#000000',
                                         fontFamily: 'Poppins', 
                                         fontWeight: 600 
                                       }} 
@@ -2193,9 +2169,10 @@ const FuncionariosPage = () => {
                   </Card>
                 </Grid>
 
+
                 {/* Resumo Geral */}
                 <Grid item xs={12}>
-                  <Card sx={{ backgroundColor: '#FAFAFA', border: '1px solid #E0E0E0' }}>
+                  <Card sx={{ backgroundColor: 'var(--cor-card)', border: '1px solid rgba(22, 52, 255, 0.1)' }}>
                     <CardContent>
                       <Typography variant="h6" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#424242', mb: 3 }}>
                         Resumo Geral
@@ -2307,19 +2284,6 @@ const FuncionariosPage = () => {
             >
               Função
             </Button>
-            <Button
-              variant="contained"
-              startIcon={<Security />}
-              disabled
-              sx={{
-                backgroundColor: '#CCCCCC',
-                fontFamily: 'Poppins',
-                py: 1.5,
-                opacity: 0.5
-              }}
-            >
-              Acesso
-            </Button>
           </Box>
         </DialogContent>
         <DialogActions sx={{ justifyContent: 'center', pb: 3 }}>
@@ -2424,7 +2388,7 @@ const FuncionariosPage = () => {
                 </Typography>
               </Box>
             ) : (
-              <TableContainer component={Paper} sx={{ maxHeight: 400 }}>
+              <TableContainer component={Paper} sx={{ maxHeight: 400, backgroundColor: 'var(--cor-container)' }}>
                 <Table size="small">
                   <TableHead>
                     <TableRow sx={{ backgroundColor: '#F5F5F5' }}>
@@ -2437,7 +2401,7 @@ const FuncionariosPage = () => {
                   <TableBody>
                     {funcoes && funcoes.length > 0 && funcoes.map((funcao) => (
                       <TableRow key={funcao._id}>
-                        <TableCell sx={{ fontFamily: 'Poppins' }}>{funcao.funcao}</TableCell>
+                        <TableCell sx={{ fontFamily: 'Poppins', color: '#CCCCCC' }}>{funcao.funcao}</TableCell>
                         <TableCell sx={{ fontFamily: 'Poppins', color: '#666666' }}>
                           {funcao.descricao || '-'}
                         </TableCell>

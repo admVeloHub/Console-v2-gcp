@@ -1,4 +1,4 @@
-// VERSION: v4.1.4 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// VERSION: v4.2.0 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
 import React from 'react';
 import { Container, Grid, Typography, Box, Card, CardContent } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
@@ -14,7 +14,7 @@ import {
   EngineeringOutlined,
   AnalyticsOutlined,
   SchoolOutlined,
-  ChatOutlined
+  PowerOutlined
 } from '@mui/icons-material';
 import DashboardCard from '../components/Dashboard/DashboardCard';
 import { useAuth } from '../contexts/AuthContext';
@@ -101,7 +101,7 @@ const DashboardPage = () => {
       permission: 'capacity'
     },
     {
-      title: 'Qualidade',
+      title: 'Gestão e Qualidade',
       description: 'Controle de qualidade e auditoria',
       icon: <CheckCircleOutlined sx={{ fontSize: '2.24rem' }} />,
       path: '/qualidade',
@@ -121,10 +121,10 @@ const DashboardPage = () => {
       permission: 'chamadosInternos'
     },
     {
-      title: 'WhatsApp',
-      description: 'Gerenciar conexão WhatsApp do sistema',
-      icon: <ChatOutlined sx={{ fontSize: '2.24rem' }} />,
-      path: '/whatsapp',
+      title: 'Conexões',
+      description: 'Gerenciar conexões do sistema',
+      icon: <PowerOutlined sx={{ fontSize: '2.24rem' }} />,
+      path: '/conexoes',
       color: 'secondary',
       permission: 'whatsapp'
     }

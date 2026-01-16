@@ -40,7 +40,7 @@ const VelonewsPage = () => {
   });
   const [attachedVideos, setAttachedVideos] = useState([]);
 
-  // Estados para a aba "Localizar Notícias"
+  // Estados para a aba "Gerenciar Notícias"
   const [newsList, setNewsList] = useState([]);
   const [filteredNews, setFilteredNews] = useState([]);
   const [selectedNews, setSelectedNews] = useState(null);
@@ -161,7 +161,7 @@ const VelonewsPage = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  // Funções para a aba "Localizar Notícias"
+  // Funções para a aba "Gerenciar Notícias"
   
   // 1. Carregar Lista de Notícias
   const loadNewsList = useCallback(async () => {
@@ -347,10 +347,6 @@ const VelonewsPage = () => {
       return;
     }
     
-    // #region agent log
-    fetch('http://127.0.0.1:7247/ingest/cf1cdc1f-7532-4c86-b17c-d3762bee33ea',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VelonewsPage.jsx:352',message:'handleDeleteVelonews - ID antes de chamar API',data:{id:editFormData.id,idType:typeof editFormData.id,idLength:editFormData.id?.length,selectedNewsId:selectedNews?._id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-    
     try {
       setLoading(true);
       await velonewsAPI.delete(editFormData.id);
@@ -438,7 +434,7 @@ const VelonewsPage = () => {
             }}
           >
             <Tab label="Publicar Notícia" />
-            <Tab label="Localizar Notícias" />
+            <Tab label="Gerenciar Notícias" />
           </Tabs>
         </Box>
       </Box>
@@ -618,7 +614,7 @@ const VelonewsPage = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Tab 1: Localizar Notícias */}
+      {/* Tab 1: Gerenciar Notícias */}
       {activeTab === 1 && (
         <Box sx={{ display: 'flex', gap: 0 }}>
           {/* Área Principal 70% - Esquerda */}

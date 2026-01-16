@@ -18,10 +18,6 @@
 
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
-// #region agent log
-fetch('http://127.0.0.1:7247/ingest/cf1cdc1f-7532-4c86-b17c-d3762bee33ea',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'google.js:19',message:'Verificando REACT_APP_GOOGLE_CLIENT_ID',data:{hasClientId:!!GOOGLE_CLIENT_ID,clientIdLength:GOOGLE_CLIENT_ID?.length,clientIdPreview:GOOGLE_CLIENT_ID?.substring(0,50),allEnvKeys:Object.keys(process.env).filter(k=>k.includes('GOOGLE')||k.includes('REACT_APP')).join(',')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-// #endregion
-
 if (!GOOGLE_CLIENT_ID) {
   console.error('❌ REACT_APP_GOOGLE_CLIENT_ID não configurada. Google OAuth não funcionará.');
   console.error('📍 SOLUÇÃO: Crie um arquivo .env na raiz do projeto React (Dev - Console/.env)');

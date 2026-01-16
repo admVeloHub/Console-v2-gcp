@@ -213,6 +213,8 @@ const DetalhesAnaliseModal = ({
     if (criterios.dominioAssunto) total += PONTUACAO.DOMINIO_ASSUNTO;
     if (criterios.empatiaCordialidade) total += PONTUACAO.EMPATIA_CORDIALIDADE;
     if (criterios.direcionouPesquisa) total += PONTUACAO.DIRECIONOU_PESQUISA;
+    // naoConsultouBot será copiado da avaliação manual (IA não pode determinar isso)
+    if (criterios.naoConsultouBot) total += PONTUACAO.NAO_CONSULTOU_BOT;
     if (criterios.procedimentoIncorreto) total += PONTUACAO.PROCEDIMENTO_INCORRETO;
     if (criterios.encerramentoBrusco) total += PONTUACAO.ENCERRAMENTO_BRUSCO;
     
@@ -221,7 +223,7 @@ const DetalhesAnaliseModal = ({
 
   // Verificar se é critério detrator
   const isCriterioDetrator = (criterio) => {
-    return criterio === 'procedimentoIncorreto' || criterio === 'encerramentoBrusco';
+    return criterio === 'naoConsultouBot' || criterio === 'procedimentoIncorreto' || criterio === 'encerramentoBrusco';
   };
 
   // Obter ícone e cor para critério
@@ -428,7 +430,7 @@ const DetalhesAnaliseModal = ({
                       key={criterio}
                       sx={{ 
                         backgroundColor: divergencia ? '#fff3cd' : 'transparent',
-                        '&:hover': { backgroundColor: divergencia ? '#ffeaa7' : '#f8f9fa' }
+                        '&:hover': { backgroundColor: divergencia ? '#ffeaa7' : 'var(--cor-container)' }
                       }}
                     >
                       <TableCell sx={{ fontFamily: 'Poppins' }}>
@@ -801,7 +803,7 @@ const DetalhesAnaliseModal = ({
 
             <Collapse in={transcricaoExpandida}>
               <Box sx={{ 
-                backgroundColor: '#f8f9fa', 
+                backgroundColor: 'var(--cor-container)', 
                 padding: 2, 
                 borderRadius: '8px',
                 maxHeight: '400px',

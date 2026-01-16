@@ -1,4 +1,4 @@
-// VERSION: v1.2.3 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// VERSION: v1.2.4 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -1595,14 +1595,15 @@ const AcademyPage = () => {
         <Box>
             {/* Barra de Controle - Container Padrão Primário */}
             <Card 
-              className="velohub-container"
+              className="velohub-container academy-filtro-bar"
               sx={{ 
                 backgroundColor: 'var(--cor-container)',
                 borderRadius: '12px',
                 boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
                 padding: '12px 24px',
                 marginBottom: '24px',
-                mx: 0
+                mx: 0,
+                transition: 'none !important'
               }}
             >
               <Box sx={{ 
@@ -1612,7 +1613,7 @@ const AcademyPage = () => {
                 flexWrap: 'wrap',
                 gap: 2
               }}>
-                <FormControl sx={{ minWidth: 200 }}>
+                <FormControl className="academy-filtro-select" sx={{ minWidth: 200 }}>
                   <InputLabel sx={{ fontSize: '0.875rem' }}>Classe</InputLabel>
                   <Select
                     value={filtroClasse}
@@ -1765,12 +1766,14 @@ const AcademyPage = () => {
                       }}
                     >
                       <Card 
+                        className="academy-card"
                         sx={{ 
                           cursor: isExpanded ? 'default' : 'pointer',
+                          backgroundColor: 'var(--cor-card)', /* Usa variável CSS que muda com tema */
                           transition: isExpanded 
                             ? 'opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
                             : 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                          border: cursoSelecionado?._id === curso._id && isExpanded ? '1px solid var(--blue-medium)' : cursoSelecionado?._id === curso._id ? '2px solid var(--blue-medium)' : '1px solid rgba(0, 0, 0, 0.12)',
+                          border: cursoSelecionado?._id === curso._id && isExpanded ? '1px solid var(--blue-medium) !important' : cursoSelecionado?._id === curso._id ? '2px solid var(--blue-medium) !important' : '1px solid transparent !important',
                           borderRadius: '12px',
                           display: 'flex',
                           flexDirection: 'column',
@@ -1790,7 +1793,7 @@ const AcademyPage = () => {
                           pointerEvents: 'auto',
                           '&:hover': {
                             boxShadow: isExpanded ? 8 : 4,
-                            border: cursoSelecionado?._id === curso._id && isExpanded ? '1px solid var(--blue-medium)' : cursoSelecionado?._id === curso._id ? '2px solid var(--blue-medium)' : '2px solid var(--blue-light)',
+                            border: cursoSelecionado?._id === curso._id && isExpanded ? '1px solid var(--blue-medium) !important' : cursoSelecionado?._id === curso._id ? '2px solid var(--blue-medium) !important' : '1px solid var(--blue-medium) !important',
                             transform: isExpanded ? 'translate(-50%, -50%) !important' : 'none'
                           }
                         }}
@@ -1938,9 +1941,9 @@ const AcademyPage = () => {
                                       onChange={() => {}} // Removido toggle automático
                                       sx={{ 
                                         mb: 1,
-                                        border: isSelecionado || modulosExpandidos[modulo.moduleId] ? '1.4px solid var(--blue-dark)' : 'none',
+                                        border: '1px solid var(--blue-dark) !important',
                                         '&:hover': {
-                                          border: isSelecionado || modulosExpandidos[modulo.moduleId] ? '1.4px solid var(--blue-dark)' : '1px solid rgba(0, 0, 0, 0.12)'
+                                          border: '1px solid var(--blue-dark) !important'
                                         }
                                       }}
                                     >

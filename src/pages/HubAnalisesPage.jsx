@@ -1,4 +1,4 @@
-// VERSION: v3.0.1 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// VERSION: v3.0.2 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,
@@ -541,7 +541,7 @@ const HubAnalisesPage = () => {
       {activeTab === 0 && (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           {/* Quadro 1: Sessões Abertas */}
-          <Card sx={{ backgroundColor: 'var(--cor-container)' }}>
+          <Card sx={{ backgroundColor: 'var(--cor-card)' }}>
             <CardContent>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.6 }}>
                 <Typography variant="h6" sx={{ fontSize: '0.7rem', color: 'var(--blue-dark)', fontFamily: 'Poppins', fontWeight: 600 }}>
@@ -582,11 +582,12 @@ const HubAnalisesPage = () => {
                   {todosUsuarios.map((usuario, index) => (
                     <Grid item xs={12} sm={6} md={4} key={usuario.colaboradorNome || index}>
                       <Box
+                        className={usuario.isActive ? 'hub-analises-sessao-card' : 'hub-analises-sessao-card-offline'}
                         sx={{
                           p: 1.2,
                           border: '1px solid rgba(22, 52, 255, 0.1)',
                           borderRadius: '6px',
-                          backgroundColor: usuario.isActive ? 'rgba(21, 162, 55, 0.05)' : 'rgba(255, 0, 0, 0.05)',
+                          backgroundColor: usuario.isActive ? 'rgba(21, 162, 55, 0.20)' : 'rgba(255, 0, 0, 0.20)',
                           display: 'flex',
                           flexDirection: 'column',
                           gap: 0.4
@@ -634,7 +635,7 @@ const HubAnalisesPage = () => {
           </Card>
 
           {/* Quadro 2: Histórico de Sessões */}
-          <Card sx={{ backgroundColor: 'var(--cor-container)' }}>
+          <Card sx={{ backgroundColor: 'var(--cor-card)' }}>
             <CardContent>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.6 }}>
                 <Typography variant="h6" sx={{ fontSize: '0.7rem', color: 'var(--blue-dark)', fontFamily: 'Poppins', fontWeight: 600 }}>
@@ -695,7 +696,8 @@ const HubAnalisesPage = () => {
               ) : (
                 <TableContainer 
                   component={Paper} 
-                  sx={{ 
+                  sx={{
+                    backgroundColor: 'var(--cor-container)', 
                     boxShadow: 'none',
                     maxHeight: '400px',
                     overflow: 'auto'
@@ -704,19 +706,44 @@ const HubAnalisesPage = () => {
                   <Table size="small">
                     <TableHead>
                       <TableRow sx={{ backgroundColor: 'var(--cor-container)' }}>
-                        <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: 'var(--blue-dark)', fontSize: '0.65rem' }}>
+                        <TableCell className="hub-analises-table-header" sx={{ 
+                          fontFamily: 'Poppins', 
+                          fontWeight: 600, 
+                          color: 'var(--blue-dark)', 
+                          fontSize: '0.65rem'
+                        }}>
                           Nome
                         </TableCell>
-                        <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: 'var(--blue-dark)', fontSize: '0.65rem' }}>
+                        <TableCell className="hub-analises-table-header" sx={{ 
+                          fontFamily: 'Poppins', 
+                          fontWeight: 600, 
+                          color: 'var(--blue-dark)', 
+                          fontSize: '0.65rem'
+                        }}>
                           Início
                         </TableCell>
-                        <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: 'var(--blue-dark)', fontSize: '0.65rem' }}>
+                        <TableCell className="hub-analises-table-header" sx={{ 
+                          fontFamily: 'Poppins', 
+                          fontWeight: 600, 
+                          color: 'var(--blue-dark)', 
+                          fontSize: '0.65rem'
+                        }}>
                           Fim
                         </TableCell>
-                        <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: 'var(--blue-dark)', fontSize: '0.65rem' }}>
+                        <TableCell className="hub-analises-table-header" sx={{ 
+                          fontFamily: 'Poppins', 
+                          fontWeight: 600, 
+                          color: 'var(--blue-dark)', 
+                          fontSize: '0.65rem'
+                        }}>
                           Tempo de Sessão
                         </TableCell>
-                        <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: 'var(--blue-dark)', fontSize: '0.65rem' }}>
+                        <TableCell className="hub-analises-table-header" sx={{ 
+                          fontFamily: 'Poppins', 
+                          fontWeight: 600, 
+                          color: 'var(--blue-dark)', 
+                          fontSize: '0.65rem'
+                        }}>
                           IP
                         </TableCell>
                       </TableRow>
@@ -737,20 +764,44 @@ const HubAnalisesPage = () => {
                           const duration = calculateSessionDuration(session.loginTimestamp, session.logoutTimestamp);
                           
                           return (
-                            <TableRow key={session._id || session.sessionId} hover>
-                              <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.65rem', fontWeight: 500 }}>
+                            <TableRow 
+                              key={session._id || session.sessionId} 
+                              hover
+                            >
+                              <TableCell className="hub-analises-table-cell" sx={{ 
+                                fontFamily: 'Poppins', 
+                                fontSize: '0.65rem', 
+                                fontWeight: 500
+                              }}>
                                 {session.colaboradorNome || 'N/A'}
                               </TableCell>
-                              <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.65rem' }}>
+                              <TableCell className="hub-analises-table-cell" sx={{ 
+                                fontFamily: 'Poppins', 
+                                fontSize: '0.65rem'
+                              }}>
                                 {loginTime}
                               </TableCell>
-                              <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.65rem' }}>
-                                {logoutTime || <Typography component="span" sx={{ color: 'var(--blue-medium)', fontWeight: 500, fontSize: '0.65rem' }}>Em andamento</Typography>}
+                              <TableCell className="hub-analises-table-cell" sx={{ 
+                                fontFamily: 'Poppins', 
+                                fontSize: '0.65rem'
+                              }}>
+                                {logoutTime || <Typography component="span" className="hub-analises-em-andamento" sx={{ 
+                                  color: 'var(--blue-medium)', 
+                                  fontWeight: 500, 
+                                  fontSize: '0.65rem'
+                                }}>Em andamento</Typography>}
                               </TableCell>
-                              <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.65rem', fontWeight: session.logoutTimestamp ? 400 : 600 }}>
+                              <TableCell className="hub-analises-table-cell" sx={{ 
+                                fontFamily: 'Poppins', 
+                                fontSize: '0.65rem', 
+                                fontWeight: session.logoutTimestamp ? 400 : 600
+                              }}>
                                 {duration}
                               </TableCell>
-                              <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.65rem' }}>
+                              <TableCell className="hub-analises-table-cell" sx={{ 
+                                fontFamily: 'Poppins', 
+                                fontSize: '0.65rem'
+                              }}>
                                 {session.ipAddress || 'N/A'}
                               </TableCell>
                             </TableRow>
@@ -767,7 +818,7 @@ const HubAnalisesPage = () => {
 
       {/* Aba Velonews - Declarações de Ciência */}
       {activeTab === 1 && (
-        <Card sx={{ backgroundColor: 'var(--cor-container)' }}>
+        <Card sx={{ backgroundColor: 'var(--cor-card)' }}>
           <CardContent>
             <Typography variant="h6" sx={{ mb: 2.4, fontSize: '0.7rem', color: 'var(--blue-dark)', fontFamily: 'Poppins', fontWeight: 600 }}>
               Declarações de Ciência

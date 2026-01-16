@@ -1,4 +1,4 @@
-// VERSION: v3.8.5 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
+// VERSION: v3.9.0 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
@@ -33,7 +33,7 @@ import BotAnalisesPage from './pages/BotAnalisesPage';
 import CapacityPage from './pages/CapacityPage';
 import HubAnalisesPage from './pages/HubAnalisesPage';
 import AcademyPage from './pages/AcademyPage';
-import WhatsAppAdmin from './components/whatsapp/WhatsAppAdmin';
+import ConexoesPage from './pages/ConexoesPage';
 
 // Componente para rotas protegidas
 const ProtectedRoute = ({ children, requiredPermission }) => {
@@ -164,9 +164,9 @@ const AppContent = () => {
                 <AcademyPage />
               </ProtectedRoute>
             } />
-            <Route path="/whatsapp" element={
+            <Route path="/conexoes" element={
               <ProtectedRoute requiredPermission="whatsapp">
-                <WhatsAppAdmin />
+                <ConexoesPage />
               </ProtectedRoute>
             } />
         <Route path="/login" element={<Navigate to="/" replace />} />
@@ -177,17 +177,6 @@ const AppContent = () => {
 };
 
 function App() {
-  // #region agent log
-  const debugInfo = {
-    hasClientId: !!GOOGLE_CLIENT_ID,
-    clientIdType: typeof GOOGLE_CLIENT_ID,
-    clientIdLength: GOOGLE_CLIENT_ID?.length,
-    clientIdPreview: GOOGLE_CLIENT_ID?.substring(0, 50),
-    envKeys: Object.keys(process.env).filter(k => k.includes('GOOGLE') || k.includes('REACT_APP')).join(', ')
-  };
-  fetch('http://127.0.0.1:7247/ingest/cf1cdc1f-7532-4c86-b17c-d3762bee33ea',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'App.jsx:179',message:'App - Verificando GOOGLE_CLIENT_ID antes de GoogleOAuthProvider',data:debugInfo,timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-  // #endregion
-
   // Validar que o clientId está presente antes de renderizar
   if (!GOOGLE_CLIENT_ID) {
     console.error('❌ ERRO CRÍTICO: GOOGLE_CLIENT_ID está undefined!');

@@ -1,4 +1,4 @@
-// VERSION: v3.9.5 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
+// VERSION: v3.9.6 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -726,7 +726,7 @@ const ConfigPage = () => {
             </Button>
           </Box>
 
-          <TableContainer component={Paper} sx={{ boxShadow: 'none' }}>
+          <TableContainer component={Paper} sx={{ boxShadow: 'none', backgroundColor: 'var(--cor-container)' }}>
             <Table>
               <TableHead>
                 <TableRow sx={{ backgroundColor: 'var(--cor-container)' }}>
@@ -1169,7 +1169,7 @@ const ConfigPage = () => {
                       : '1px solid var(--gray-light)',
                     backgroundColor: selectedUser?._userClearance[permission.key] 
                       ? 'var(--cor-container)' 
-                      : 'white',
+                      : 'var(--cor-card)', /* Usa variável CSS que muda com tema */
                     transition: 'all 0.2s ease',
                     '&:hover': {
                       borderColor: 'var(--blue-medium)',

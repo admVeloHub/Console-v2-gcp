@@ -1,23 +1,5 @@
-// VERSION: v1.6.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
-
-/**
- * @typedef {Object} Funcionario
- * @property {string} id
- * @property {string} nomeCompleto
- * @property {string} dataAniversario
- * @property {string} empresa
- * @property {string} dataContratado
- * @property {string} [telefone]
- * @property {string} [atuacao]
- * @property {string} [escala]
- * @property {Acesso[]} acessos
- * @property {boolean} desligado
- * @property {string} [dataDesligamento]
- * @property {boolean} afastado
- * @property {string} [dataAfastamento]
- * @property {string} createdAt
- * @property {string} updatedAt
- */
+// VERSION: v1.7.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.7.0 - Atualização de pontuações: Saudação 5pts, Clareza 15pts, Resolução 40pts, adicionado NAO_CONSULTOU_BOT -10pts
 
 /**
  * @typedef {Object} Acesso
@@ -165,13 +147,14 @@ export const ANOS = [2025, 2026, 2027, 2028];
 
 // Constantes de pontuação
 export const PONTUACAO = {
-  SAUDACAO_ADEQUADA: 10,
-  ESCUTA_ATIVA: 15,                // Reduzido de 25 para 15
-  CLAREZA_OBJETIVIDADE: 10,        // NOVO critério
-  RESOLUCAO_QUESTAO: 25,           // Reduzido de 40 para 25
-  DOMINIO_ASSUNTO: 15,             // NOVO critério
+  SAUDACAO_ADEQUADA: 5,            // Reduzido de 10 para 5
+  ESCUTA_ATIVA: 15,
+  CLAREZA_OBJETIVIDADE: 15,        // Aumentado de 10 para 15
+  RESOLUCAO_QUESTAO: 40,           // Aumentado de 25 para 40
+  DOMINIO_ASSUNTO: 15,
   EMPATIA_CORDIALIDADE: 15,
   DIRECIONOU_PESQUISA: 10,
+  NAO_CONSULTOU_BOT: -10,         // NOVO critério detrator
   PROCEDIMENTO_INCORRETO: -60,
   ENCERRAMENTO_BRUSCO: -100
 };
@@ -185,20 +168,22 @@ export const generateId = () => {
 export const calcularPontuacaoTotal = (avaliacao) => {
   let total = 0;
   
-  // Critérios existentes (compatibilidade retroativa)
+  // Critérios positivos
   if (avaliacao.saudacaoAdequada) total += PONTUACAO.SAUDACAO_ADEQUADA;
   if (avaliacao.escutaAtiva) total += PONTUACAO.ESCUTA_ATIVA;
+  if (avaliacao.clarezaObjetividade) total += PONTUACAO.CLAREZA_OBJETIVIDADE;
   if (avaliacao.resolucaoQuestao) total += PONTUACAO.RESOLUCAO_QUESTAO;
+  if (avaliacao.dominioAssunto) total += PONTUACAO.DOMINIO_ASSUNTO;
   if (avaliacao.empatiaCordialidade) total += PONTUACAO.EMPATIA_CORDIALIDADE;
   if (avaliacao.direcionouPesquisa) total += PONTUACAO.DIRECIONOU_PESQUISA;
+  
+  // Critérios negativos
+  if (avaliacao.naoConsultouBot) total += PONTUACAO.NAO_CONSULTOU_BOT;
   if (avaliacao.procedimentoIncorreto) total += PONTUACAO.PROCEDIMENTO_INCORRETO;
   if (avaliacao.encerramentoBrusco) total += PONTUACAO.ENCERRAMENTO_BRUSCO;
   
-  // Novos critérios (compatibilidade com avaliações antigas)
-  if (avaliacao.clarezaObjetividade) total += PONTUACAO.CLAREZA_OBJETIVIDADE;
-  if (avaliacao.dominioAssunto) total += PONTUACAO.DOMINIO_ASSUNTO;
-  
-  return total;
+  // Garantir que a pontuação não seja negativa
+  return Math.max(0, total);
 };
 
 // Função para obter status da pontuação

@@ -1,4 +1,4 @@
-// VERSION: v1.4.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// VERSION: v1.4.1 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
 import React, { useState } from 'react';
 import { Container, Box, Typography, Button, Card, CardContent } from '@mui/material';
 import { ArrowBack, People, Assessment } from '@mui/icons-material';
@@ -113,7 +113,7 @@ const QualidadePage = () => {
                   lineHeight: 1.5,
                   fontSize: '0.8rem'
                 }}>
-                  Gestão de colaboradores e acessos
+                  Registros, Status e Acessos
                 </Typography>
               </Box>
             </Box>
@@ -176,7 +176,7 @@ const QualidadePage = () => {
                   mb: 0.8,
                   fontSize: '1.28rem'
                 }}>
-                  Módulo de Qualidade
+                  QA e Monitoria
                 </Typography>
                 <Typography variant="body1" sx={{ 
                   fontFamily: 'Poppins', 
@@ -184,7 +184,7 @@ const QualidadePage = () => {
                   lineHeight: 1.5,
                   fontSize: '0.8rem'
                 }}>
-                  Monitoramento e avaliação de atendimentos
+                  Avaliações de Atendimento
                 </Typography>
               </Box>
             </Box>

@@ -1,4 +1,4 @@
-// VERSION: v3.9.1 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.9.2 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
 import React from 'react';
 import { Card, CardContent, Typography, Box, IconButton } from '@mui/material';
 import { ArrowForward } from '@mui/icons-material';
@@ -37,6 +37,7 @@ const DashboardCard = ({ title, description, icon, color, onClick }) => {
         overflow: 'hidden',
         p: 0, // Removido padding
         m: 0, // Removido margin
+        backgroundColor: 'var(--cor-card)', // Usa variável CSS que muda automaticamente com o tema
         '&::before': {
           content: '""',
           position: 'absolute',
