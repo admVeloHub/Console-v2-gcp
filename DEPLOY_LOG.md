@@ -1,5 +1,65 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.41.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.42.0 | DATE: 2025-02-09 | AUTHOR: VeloHub Development Team -->
+
+## Push GitHub - Correções Tema Claro, Paginação Hub Análises e Melhorias API - 2025-02-09
+
+### **Tipo:** Push GitHub
+### **Data/Hora:** 2025-02-09
+### **Branch:** main
+### **Commit:** 44ca235
+### **Repositório:** https://github.com/admVeloHub/Console-v2-gcp.git
+
+### **Arquivos Modificados:**
+- `src/components/common/MarkdownEditor.jsx` (v3.4.1 → v3.4.2) - Ajuste opacidade bordas tema claro
+- `src/pages/AcademyPage.jsx` (v1.2.4 → v1.3.0) - Correções cores tema claro, scroll accordion, tamanho cards uniforme
+- `src/pages/ArtigosPage.jsx` (v3.8.1 → v3.8.4) - Correções cores tema claro, bordas inputs, modais
+- `src/pages/BotPerguntasPage.jsx` (v4.4.1 → v4.4.3) - Correções cores tema claro, scrollbar
+- `src/pages/HubAnalisesPage.jsx` (v3.0.2 → v3.1.1) - Correções cores tema claro, paginação sessões (50/página), paginação declarações (20/página), filtros data
+- `src/pages/VelonewsPage.jsx` (v4.8.1 → v4.8.4) - Correções cores tema claro, checkbox alerta crítico
+- `src/services/api.js` (v3.14.0 → v3.14.5) - Melhorias tratamento erros, timeout aumentado hub-analises (30s), logs otimizados
+
+### **Descrição:**
+Correções visuais do tema claro em todos os módulos e implementação de paginação no Hub Análises:
+
+**Mudanças Principais:**
+
+**Correções Tema Claro:**
+- Aumento de opacidade de bordas de inputs em 25% (rgba(0, 0, 0, 0.12) → rgba(0, 0, 0, 0.15))
+- Correção cores de checkboxes, modais de confirmação e componentes diversos
+- Ajustes de cores de texto, backgrounds e bordas para tema claro
+- Correção scrollbar do container "Pesquisar perguntas" (verde → azul)
+- Correção cores de accordions, cards e tabelas no tema claro
+
+**Hub Análises - Paginação e Filtros:**
+- Paginação implementada no histórico de sessões (50 itens por página)
+- Paginação implementada em declarações de ciência (20 itens por página)
+- Filtros de data (data início e data fim) adicionados ao histórico de sessões
+- Ordenação automática da mais recente para a mais antiga
+- Controles de paginação com navegação anterior/próximo e números de página
+- Reset automático de página ao mudar filtros ou abas
+
+**Melhorias API:**
+- Timeout aumentado para endpoints hub-analises (10s → 30s)
+- Melhorias no tratamento de erros com mensagens mais específicas
+- Logs de debug otimizados (redução de logs repetidos)
+- Validação melhorada de dados da API
+- Mensagens de erro mais informativas com timeout correto
+
+**Academy - Correções Funcionais:**
+- Correção scroll do accordion de módulos quando expandido
+- Limitação de títulos de cards a 2 linhas com ellipsis
+- Tamanho uniforme de cards independente do tamanho do título
+
+**Impacto:**
+- ✅ Tema claro totalmente corrigido em todos os módulos
+- ✅ Melhor experiência visual com bordas mais visíveis
+- ✅ Paginação implementada reduzindo carga de renderização
+- ✅ Filtros de data facilitam busca de sessões específicas
+- ✅ Timeout aumentado resolve problemas de conexão com grandes volumes
+- ✅ Logs mais limpos e informativos
+- ✅ Validação robusta de dados da API
+
+---
 
 ## Push GitHub - Correção Cabeçalho COOP para Google OAuth - 2024-12-19
 
