@@ -1,4 +1,4 @@
-// VERSION: v4.8.1 | DATE: 2025-01-31 | AUTHOR: VeloHub Development Team
+// VERSION: v4.8.4 | DATE: 2025-02-09 | AUTHOR: VeloHub Development Team
 import React, { useState, useCallback, useEffect } from 'react';
 import { 
   Container, 
@@ -469,7 +469,16 @@ const VelonewsPage = () => {
                       fontSize: '0.8rem',
                     },
                     '& .MuiOutlinedInput-root': {
-                      fontFamily: 'Poppins'
+                      fontFamily: 'Poppins',
+                      '& fieldset': {
+                        borderColor: 'rgba(0, 0, 0, 0.15)',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: 'var(--blue-medium)',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: 'var(--blue-medium)',
+                      },
                     },
                     '& .MuiOutlinedInput-input': {
                       fontSize: '0.8rem',
@@ -516,15 +525,19 @@ const VelonewsPage = () => {
                       checked={formData.isCritical}
                       onChange={handleInputChange('isCritical')}
                       sx={{
-                        color: 'var(--yellow)',
+                        color: '#d32f2f',
                         '&.Mui-checked': {
-                          color: 'var(--yellow)',
+                          color: '#d32f2f',
                         },
                       }}
                     />
                   }
                   label={
-                    <Typography sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
+                    <Typography sx={{ 
+                      fontFamily: 'Poppins', 
+                      fontWeight: 500,
+                      color: 'var(--gray)',
+                    }}>
                       Marcar como Alerta Crítico
                     </Typography>
                   }
@@ -586,19 +599,49 @@ const VelonewsPage = () => {
         onClose={() => setDeleteDialogOpen(false)}
         aria-labelledby="delete-dialog-title"
         aria-describedby="delete-dialog-description"
+        PaperProps={{
+          sx: {
+            backgroundColor: 'var(--cor-container)',
+            color: 'var(--gray)',
+            borderRadius: '12px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+          }
+        }}
       >
-        <DialogTitle id="delete-dialog-title" sx={{ fontFamily: 'Poppins', fontSize: '0.96rem' }}>
+        <DialogTitle 
+          id="delete-dialog-title" 
+          sx={{ 
+            fontFamily: 'Poppins', 
+            fontSize: '0.96rem',
+            color: 'var(--gray)',
+            backgroundColor: 'var(--cor-container)',
+          }}
+        >
           Confirmar Exclusão
         </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-dialog-description" sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
+        <DialogContent sx={{ backgroundColor: 'var(--cor-container)' }}>
+          <DialogContentText 
+            id="delete-dialog-description" 
+            sx={{ 
+              fontFamily: 'Poppins', 
+              fontSize: '0.8rem',
+              color: 'rgba(0, 0, 0, 0.6)',
+            }}
+          >
             Tem certeza que deseja deletar a notícia "{editFormData.titulo}"? Esta ação não pode ser desfeita.
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ backgroundColor: 'var(--cor-container)', px: 2.4, pb: 2.4 }}>
           <Button 
             onClick={() => setDeleteDialogOpen(false)} 
-            sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}
+            sx={{ 
+              fontFamily: 'Poppins', 
+              fontSize: '0.8rem',
+              color: 'var(--gray)',
+              '&:hover': {
+                backgroundColor: 'rgba(0, 0, 0, 0.05)',
+              },
+            }}
           >
             Cancelar
           </Button>
@@ -607,7 +650,18 @@ const VelonewsPage = () => {
             color="error" 
             variant="contained"
             disabled={loading}
-            sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}
+            sx={{ 
+              fontFamily: 'Poppins', 
+              fontSize: '0.8rem',
+              backgroundColor: '#d32f2f',
+              '&:hover': {
+                backgroundColor: '#b71c1c',
+              },
+              '&.Mui-disabled': {
+                backgroundColor: 'rgba(0, 0, 0, 0.12)',
+                color: 'rgba(0, 0, 0, 0.26)',
+              },
+            }}
           >
             {loading ? 'Deletando...' : 'Deletar'}
           </Button>
@@ -643,10 +697,37 @@ const VelonewsPage = () => {
                         sx={{
                           '& .MuiOutlinedInput-root': {
                             fontFamily: 'Poppins',
-                            fontSize: '0.8rem'
+                            fontSize: '0.8rem',
+                            backgroundColor: 'var(--cor-container)',
+                            color: 'var(--gray)',
+                            '& fieldset': {
+                              borderColor: 'rgba(0, 0, 0, 0.15)',
+                            },
+                            '&:hover fieldset': {
+                              borderColor: 'var(--blue-medium)',
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: 'var(--blue-medium)',
+                            },
+                            '& input': {
+                              color: 'var(--gray)',
+                            },
+                            '&.Mui-disabled': {
+                              backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                              '& input': {
+                                color: 'rgba(0, 0, 0, 0.38)',
+                              },
+                            },
                           },
                           '& .MuiInputLabel-root': {
-                            fontSize: '0.8rem'
+                            fontSize: '0.8rem',
+                            color: 'rgba(0, 0, 0, 0.6)',
+                            '&.Mui-focused': {
+                              color: 'var(--blue-medium)',
+                            },
+                            '&.Mui-disabled': {
+                              color: 'rgba(0, 0, 0, 0.38)',
+                            },
                           }
                         }}
                       />
@@ -694,15 +775,23 @@ const VelonewsPage = () => {
                               onChange={(e) => setEditFormData({...editFormData, isCritical: e.target.checked})}
                               disabled={!selectedNews}
                               sx={{
-                                color: 'var(--yellow)',
+                                color: '#d32f2f',
                                 '&.Mui-checked': {
-                                  color: 'var(--yellow)',
+                                  color: '#d32f2f',
+                                },
+                                '&.Mui-disabled': {
+                                  color: 'rgba(0, 0, 0, 0.26)',
                                 },
                               }}
                             />
                           }
                           label={
-                            <Typography sx={{ fontFamily: 'Poppins', fontWeight: 500, fontSize: '0.8rem' }}>
+                            <Typography sx={{ 
+                              fontFamily: 'Poppins', 
+                              fontWeight: 500, 
+                              fontSize: '0.8rem',
+                              color: 'var(--gray)',
+                            }}>
                               Alerta Crítico
                             </Typography>
                           }
@@ -723,7 +812,12 @@ const VelonewsPage = () => {
                             />
                           }
                           label={
-                            <Typography sx={{ fontFamily: 'Poppins', fontWeight: 500, fontSize: '0.8rem' }}>
+                            <Typography sx={{ 
+                              fontFamily: 'Poppins', 
+                              fontWeight: 500, 
+                              fontSize: '0.8rem',
+                              color: 'var(--gray)',
+                            }}>
                               Resolvido
                             </Typography>
                           }
@@ -801,10 +895,29 @@ const VelonewsPage = () => {
                     mb: 1.6,
                     '& .MuiOutlinedInput-root': {
                       fontFamily: 'Poppins',
-                      fontSize: '0.8rem'
+                      fontSize: '0.8rem',
+                      backgroundColor: 'var(--cor-container)',
+                      color: 'var(--gray)',
+                      '& fieldset': {
+                        borderColor: 'rgba(0, 0, 0, 0.15)',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: 'var(--blue-medium)',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: 'var(--blue-medium)',
+                      },
+                      '& input': {
+                        color: 'var(--gray)',
+                        '&::placeholder': {
+                          color: 'rgba(0, 0, 0, 0.5)',
+                          opacity: 1,
+                        },
+                      },
                     },
                     '& .MuiInputLabel-root': {
-                      fontSize: '0.8rem'
+                      fontSize: '0.8rem',
+                      color: 'rgba(0, 0, 0, 0.6)',
                     }
                   }}
                   InputProps={{

@@ -1,4 +1,4 @@
-// VERSION: v3.8.1 | DATE: 2025-01-31 | AUTHOR: VeloHub Development Team
+// VERSION: v3.8.4 | DATE: 2025-02-09 | AUTHOR: VeloHub Development Team
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { 
   Container, 
@@ -510,7 +510,7 @@ const ArtigosPage = () => {
                         },
                         '& .MuiOutlinedInput-root': {
                           '& fieldset': {
-                            borderColor: 'rgba(0, 0, 0, 0.12)',
+                            borderColor: 'rgba(0, 0, 0, 0.15)',
                           },
                           '&:hover fieldset': {
                             borderColor: 'var(--blue-medium)',
@@ -535,7 +535,7 @@ const ArtigosPage = () => {
                         label="Categoria"
                         sx={{
                           '& .MuiOutlinedInput-notchedOutline': {
-                            borderColor: 'rgba(0, 0, 0, 0.12)',
+                            borderColor: 'rgba(0, 0, 0, 0.15)',
                           },
                           '&:hover .MuiOutlinedInput-notchedOutline': {
                             borderColor: 'var(--blue-medium)',
@@ -645,10 +645,37 @@ const ArtigosPage = () => {
                         sx={{
                           '& .MuiOutlinedInput-root': {
                             fontFamily: 'Poppins',
-                            fontSize: '0.8rem'
+                            fontSize: '0.8rem',
+                            backgroundColor: 'var(--cor-container)',
+                            color: 'var(--gray)',
+                            '& fieldset': {
+                              borderColor: 'rgba(0, 0, 0, 0.15)',
+                            },
+                            '&:hover fieldset': {
+                              borderColor: 'var(--blue-medium)',
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: 'var(--blue-medium)',
+                            },
+                            '& input': {
+                              color: 'var(--gray)',
+                            },
+                            '&.Mui-disabled': {
+                              backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                              '& input': {
+                                color: 'rgba(0, 0, 0, 0.38)',
+                              },
+                            },
                           },
                           '& .MuiInputLabel-root': {
-                            fontSize: '0.8rem'
+                            fontSize: '0.8rem',
+                            color: 'rgba(0, 0, 0, 0.6)',
+                            '&.Mui-focused': {
+                              color: 'var(--blue-medium)',
+                            },
+                            '&.Mui-disabled': {
+                              color: 'rgba(0, 0, 0, 0.38)',
+                            },
                           }
                         }}
                       />
@@ -667,10 +694,37 @@ const ArtigosPage = () => {
                         sx={{
                           '& .MuiOutlinedInput-root': {
                             fontFamily: 'Poppins',
-                            fontSize: '0.8rem'
+                            fontSize: '0.8rem',
+                            backgroundColor: 'var(--cor-container)',
+                            color: 'var(--gray)',
+                            '& fieldset': {
+                              borderColor: 'rgba(0, 0, 0, 0.15)',
+                            },
+                            '&:hover fieldset': {
+                              borderColor: 'var(--blue-medium)',
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: 'var(--blue-medium)',
+                            },
+                            '& input': {
+                              color: 'var(--gray)',
+                            },
+                            '&.Mui-disabled': {
+                              backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                              '& input': {
+                                color: 'rgba(0, 0, 0, 0.38)',
+                              },
+                            },
                           },
                           '& .MuiInputLabel-root': {
-                            fontSize: '0.8rem'
+                            fontSize: '0.8rem',
+                            color: 'rgba(0, 0, 0, 0.6)',
+                            '&.Mui-focused': {
+                              color: 'var(--blue-medium)',
+                            },
+                            '&.Mui-disabled': {
+                              color: 'rgba(0, 0, 0, 0.38)',
+                            },
                           }
                         }}
                       />
@@ -679,7 +733,16 @@ const ArtigosPage = () => {
                     {/* Campo Categoria */}
                     <Grid item xs={12} md={6}>
                       <FormControl fullWidth disabled={!selectedArtigo} required size="small">
-                        <InputLabel sx={{ fontSize: '0.8rem' }}>Categoria</InputLabel>
+                        <InputLabel sx={{ 
+                          fontSize: '0.8rem',
+                          color: 'rgba(0, 0, 0, 0.6)',
+                          '&.Mui-focused': {
+                            color: 'var(--blue-medium)',
+                          },
+                          '&.Mui-disabled': {
+                            color: 'rgba(0, 0, 0, 0.38)',
+                          },
+                        }}>Categoria</InputLabel>
                         <Select
                           value={editFormData.categoria_id}
                           label="Categoria"
@@ -691,7 +754,29 @@ const ArtigosPage = () => {
                               categoria_titulo: selectedCategory ? selectedCategory.categoria_titulo : ''
                             });
                           }}
-                          sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}
+                          sx={{ 
+                            fontFamily: 'Poppins', 
+                            fontSize: '0.8rem',
+                            backgroundColor: 'var(--cor-container)',
+                            '& .MuiOutlinedInput-notchedOutline': {
+                              borderColor: 'rgba(0, 0, 0, 0.15)',
+                            },
+                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                              borderColor: 'var(--blue-medium)',
+                            },
+                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                              borderColor: 'var(--blue-medium)',
+                            },
+                            '& .MuiSelect-select': {
+                              color: 'var(--gray)',
+                            },
+                            '&.Mui-disabled': {
+                              backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                              '& .MuiSelect-select': {
+                                color: 'rgba(0, 0, 0, 0.38)',
+                              },
+                            },
+                          }}
                         >
                           {categories.map((category) => (
                             <MenuItem key={category.categoria_id} value={category.categoria_id}>
@@ -804,10 +889,29 @@ const ArtigosPage = () => {
                     mb: 1.6,
                     '& .MuiOutlinedInput-root': {
                       fontFamily: 'Poppins',
-                      fontSize: '0.8rem'
+                      fontSize: '0.8rem',
+                      backgroundColor: 'var(--cor-container)',
+                      color: 'var(--gray)',
+                      '& fieldset': {
+                        borderColor: 'rgba(0, 0, 0, 0.15)',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: 'var(--blue-medium)',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: 'var(--blue-medium)',
+                      },
+                      '& input': {
+                        color: 'var(--gray)',
+                        '&::placeholder': {
+                          color: 'rgba(0, 0, 0, 0.5)',
+                          opacity: 1,
+                        },
+                      },
                     },
                     '& .MuiInputLabel-root': {
-                      fontSize: '0.8rem'
+                      fontSize: '0.8rem',
+                      color: 'rgba(0, 0, 0, 0.6)',
                     }
                   }}
                   InputProps={{
@@ -912,19 +1016,49 @@ const ArtigosPage = () => {
         onClose={() => setDeleteDialogOpen(false)}
         aria-labelledby="delete-dialog-title"
         aria-describedby="delete-dialog-description"
+        PaperProps={{
+          sx: {
+            backgroundColor: 'var(--cor-container)',
+            color: 'var(--gray)',
+            borderRadius: '12px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+          }
+        }}
       >
-        <DialogTitle id="delete-dialog-title" sx={{ fontFamily: 'Poppins', fontSize: '0.96rem' }}>
+        <DialogTitle 
+          id="delete-dialog-title" 
+          sx={{ 
+            fontFamily: 'Poppins', 
+            fontSize: '0.96rem',
+            color: 'var(--gray)',
+            backgroundColor: 'var(--cor-container)',
+          }}
+        >
           Confirmar Exclusão
         </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-dialog-description" sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
+        <DialogContent sx={{ backgroundColor: 'var(--cor-container)' }}>
+          <DialogContentText 
+            id="delete-dialog-description" 
+            sx={{ 
+              fontFamily: 'Poppins', 
+              fontSize: '0.8rem',
+              color: 'rgba(0, 0, 0, 0.6)',
+            }}
+          >
             Tem certeza que deseja deletar o artigo "{editFormData.artigo_titulo}"? Esta ação não pode ser desfeita.
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ backgroundColor: 'var(--cor-container)', px: 2.4, pb: 2.4 }}>
           <Button 
             onClick={() => setDeleteDialogOpen(false)} 
-            sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}
+            sx={{ 
+              fontFamily: 'Poppins', 
+              fontSize: '0.8rem',
+              color: 'var(--gray)',
+              '&:hover': {
+                backgroundColor: 'rgba(0, 0, 0, 0.05)',
+              },
+            }}
           >
             Cancelar
           </Button>
@@ -933,7 +1067,18 @@ const ArtigosPage = () => {
             color="error" 
             variant="contained"
             disabled={loading}
-            sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}
+            sx={{ 
+              fontFamily: 'Poppins', 
+              fontSize: '0.8rem',
+              backgroundColor: '#d32f2f',
+              '&:hover': {
+                backgroundColor: '#b71c1c',
+              },
+              '&.Mui-disabled': {
+                backgroundColor: 'rgba(0, 0, 0, 0.12)',
+                color: 'rgba(0, 0, 0, 0.26)',
+              },
+            }}
           >
             {loading ? 'Deletando...' : 'Deletar'}
           </Button>

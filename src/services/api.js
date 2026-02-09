@@ -1,4 +1,4 @@
-// VERSION: v3.14.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.14.5 | DATE: 2025-02-09 | AUTHOR: VeloHub Development Team
 import axios from 'axios';
 
 // Função auxiliar para normalizar URL base (remove /api do final se existir)
@@ -9,6 +9,12 @@ const normalizeBaseUrl = (url) => {
 // Configuração base da API - garantir que sempre termine com /api
 const API_BASE_URL = normalizeBaseUrl(process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app') + '/api';
 
+// Log da URL configurada (apenas em desenvolvimento)
+if (process.env.NODE_ENV === 'development') {
+  console.log('🔗 API Base URL configurada:', API_BASE_URL);
+  console.log('🔗 REACT_APP_API_URL:', process.env.REACT_APP_API_URL || 'não definido');
+}
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -17,48 +23,95 @@ const api = axios.create({
   timeout: 10000, // 10 segundos
 });
 
+// Interceptor de request para logs detalhados (apenas em desenvolvimento)
+api.interceptors.request.use(
+  (config) => {
+    if (process.env.NODE_ENV === 'development') {
+      const fullUrl = `${config.baseURL}${config.url}`;
+      console.log(`🌐 [API Request] ${config.method?.toUpperCase()} ${fullUrl}`, {
+        timeout: config.timeout,
+        headers: config.headers
+      });
+    }
+    return config;
+  },
+  (error) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('❌ [API Request Error]', error);
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Interceptors para tratamento de erros
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error('API Error:', error);
-    
-    if (error.response) {
-      // Erro do servidor - preservar detalhes para debug
+    // Log apenas em modo de desenvolvimento ou para erros do servidor
+    if (process.env.NODE_ENV === 'development' && error.response) {
+      console.error('API Error:', error);
       console.error('❌ Erro detalhado da API:', {
         status: error.response.status,
         data: error.response.data,
-        headers: error.response.headers,
-        config: {
-          url: error.config?.url,
-          method: error.config?.method,
-          data: error.config?.data
-        }
+        url: error.config?.url,
+        method: error.config?.method
       });
-      
+    }
+    
+    if (error.response) {
+      // Erro do servidor - preservar detalhes para debug
       // Para erros 400, preservar o erro original
       if (error.response.status === 400) {
         throw error; // Não mascarar erro 400
       }
       
-      const message = error.response.data?.error || 'Erro do servidor';
+      const message = error.response.data?.error || error.response.data?.message || 'Erro do servidor';
       throw new Error(message);
     } else if (error.request) {
-      // Erro de rede
+      // Erro de rede - diagnóstico detalhado
       const baseURL = error.config?.baseURL || API_BASE_URL;
-      const url = error.config?.url || '';
-      const fullUrl = `${baseURL}${url}`;
-      console.error('❌ Erro de conexão:', {
-        fullUrl,
-        baseURL,
-        url,
-        message: error.message,
-        code: error.code
-      });
-      throw new Error(`Erro de conexão com ${baseURL}. Verifique se o servidor está rodando.`);
+      const attemptedUrl = error.config?.url ? `${baseURL}${error.config.url}` : baseURL;
+      
+      // Determinar tipo de erro
+      let errorType = 'Erro de conexão';
+      let errorDetails = '';
+      
+      // Obter timeout configurado (pode ser específico da requisição ou padrão)
+      const timeoutMs = error.config?.timeout || 10000;
+      const timeoutSeconds = timeoutMs / 1000;
+      
+      if (error.code === 'ECONNABORTED') {
+        errorType = 'Timeout';
+        errorDetails = `A requisição excedeu o tempo limite (${timeoutSeconds}s). O servidor pode estar lento ou processando muitos dados.`;
+      } else if (error.code === 'ERR_NETWORK') {
+        errorType = 'Erro de rede';
+        errorDetails = 'Não foi possível estabelecer conexão. Verifique sua conexão com a internet.';
+      } else if (error.code === 'ERR_CANCELED') {
+        errorType = 'Requisição cancelada';
+        errorDetails = 'A requisição foi cancelada antes de completar.';
+      } else if (error.message?.includes('CORS')) {
+        errorType = 'Erro de CORS';
+        errorDetails = 'O servidor não permite requisições deste domínio. Verifique as configurações de CORS no backend.';
+      } else {
+        errorDetails = `Código: ${error.code || 'desconhecido'}. Mensagem: ${error.message || 'sem detalhes'}`;
+      }
+      
+      // Log detalhado em desenvolvimento
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`❌ [${errorType}]`, {
+          attemptedUrl,
+          baseURL,
+          errorCode: error.code,
+          errorMessage: error.message,
+          errorDetails,
+          request: error.request
+        });
+      }
+      
+      throw new Error(`${errorType} com ${baseURL.replace('/api', '')}. ${errorDetails} URL tentada: ${attemptedUrl}`);
     } else {
       // Outros erros
-      throw new Error('Erro inesperado');
+      throw new Error(error.message || 'Erro inesperado');
     }
   }
 );
@@ -251,12 +304,16 @@ export const velonewsAcknowledgmentsAPI = {
 // API para Hub Análises
 export const hubAnalisesAPI = {
   // GET /api/hub-analises/usuarios-online-offline - funcionários online/offline
+  // Timeout aumentado para 30s devido ao processamento de grandes volumes de dados
   getUsuariosOnlineOffline: async () => {
-    const response = await api.get('/hub-analises/usuarios-online-offline');
+    const response = await api.get('/hub-analises/usuarios-online-offline', {
+      timeout: 30000 // 30 segundos
+    });
     return response.data;
   },
   
   // GET /api/hub-analises/hub-sessions - todas as sessões (suporta filtros ?isActive=true/false, ?userEmail=email)
+  // Timeout aumentado para 30s devido ao processamento de grandes volumes de dados
   getHubSessions: async (filters = {}) => {
     const params = new URLSearchParams();
     if (filters.isActive !== undefined) {
@@ -267,13 +324,18 @@ export const hubAnalisesAPI = {
     }
     const queryString = params.toString();
     const url = `/hub-analises/hub-sessions${queryString ? `?${queryString}` : ''}`;
-    const response = await api.get(url);
+    const response = await api.get(url, {
+      timeout: 30000 // 30 segundos
+    });
     return response.data;
   },
   
   // GET /api/hub-analises/ciencia-por-noticia - confirmações agrupadas por notícia
+  // Timeout aumentado para 30s devido ao processamento de grandes volumes de dados
   getCienciaPorNoticia: async () => {
-    const response = await api.get('/hub-analises/ciencia-por-noticia');
+    const response = await api.get('/hub-analises/ciencia-por-noticia', {
+      timeout: 30000 // 30 segundos
+    });
     return response.data;
   }
 };

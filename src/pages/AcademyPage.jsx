@@ -1,4 +1,4 @@
-// VERSION: v1.2.4 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
+// VERSION: v1.3.0 | DATE: 2025-02-09 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -1614,15 +1614,39 @@ const AcademyPage = () => {
                 gap: 2
               }}>
                 <FormControl className="academy-filtro-select" sx={{ minWidth: 200 }}>
-                  <InputLabel sx={{ fontSize: '0.875rem' }}>Classe</InputLabel>
+                  <InputLabel sx={{ 
+                    fontSize: '0.875rem',
+                    color: 'rgba(0, 0, 0, 0.6)',
+                    '&.Mui-focused': {
+                      color: 'var(--blue-medium)',
+                    },
+                  }}>Classe</InputLabel>
                   <Select
                     value={filtroClasse}
                     onChange={(e) => setFiltroClasse(e.target.value)}
                     label="Classe"
-                    sx={{ fontSize: '0.875rem' }}
+                    sx={{ 
+                      fontSize: '0.875rem',
+                      backgroundColor: 'var(--cor-container)',
+                      '& .MuiSelect-select': {
+                        color: 'var(--gray)',
+                      },
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'rgba(0, 0, 0, 0.15)',
+                      },
+                      '&:hover .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'var(--blue-medium)',
+                      },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'var(--blue-medium)',
+                      },
+                    }}
                   >
                     {classes.map(classe => (
-                      <MenuItem key={classe} value={classe} sx={{ fontSize: '0.875rem' }}>{classe}</MenuItem>
+                      <MenuItem key={classe} value={classe} sx={{ 
+                        fontSize: '0.875rem',
+                        color: 'var(--gray)',
+                      }}>{classe}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
@@ -1788,8 +1812,9 @@ const AcademyPage = () => {
                           transform: isExpanded ? 'translate(-50%, -50%) !important' : 'none',
                           boxShadow: isExpanded ? 8 : 1,
                           zIndex: isExpanded ? 1001 : 1,
-                          maxHeight: isExpanded ? '90vh' : 'none',
+                          maxHeight: isExpanded ? 'calc(100vh - 40px)' : 'none',
                           overflowY: isExpanded ? 'auto' : 'hidden',
+                          overflowX: isExpanded ? 'hidden' : 'hidden',
                           pointerEvents: 'auto',
                           '&:hover': {
                             boxShadow: isExpanded ? 8 : 4,
@@ -1801,10 +1826,30 @@ const AcademyPage = () => {
                           setCursoSelecionado(curso);
                         }}
                       >
-                        <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', p: 2 }}>
+                        <CardContent sx={{ 
+                          flexGrow: 1, 
+                          display: 'flex', 
+                          flexDirection: 'column', 
+                          p: 2,
+                          overflow: isExpanded ? 'visible' : 'visible',
+                        }}>
                           <Box>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
-                              <Typography variant="h6" sx={{ fontFamily: 'Poppins', fontWeight: 600, flex: 1, fontSize: '0.95rem' }}>
+                              <Typography variant="h6" sx={{ 
+                                fontFamily: 'Poppins', 
+                                fontWeight: 600, 
+                                flex: 1, 
+                                fontSize: '0.95rem',
+                                color: 'var(--gray)',
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                lineHeight: '1.4',
+                                minHeight: '2.8em',
+                                maxHeight: '2.8em',
+                              }}>
                                 {curso.cursoNome}
                               </Typography>
                               <IconButton 
@@ -1861,21 +1906,22 @@ const AcademyPage = () => {
                         {/* Módulos Expandidos - DENTRO do Card */}
                         <Box
                           sx={{
-                            maxHeight: isExpanded ? '2000px' : '0',
-                            overflow: 'hidden',
+                            maxHeight: isExpanded ? 'none' : '0',
+                            overflow: isExpanded ? 'visible' : 'hidden',
                             transition: isExpanded 
-                              ? 'max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease 0.1s, border-top 0.3s ease'
+                              ? 'opacity 0.4s ease 0.1s, border-top 0.3s ease'
                               : 'max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease, border-top 0.3s ease',
                             opacity: isExpanded ? 1 : 0,
                             borderTop: isExpanded ? '1px solid rgba(0, 0, 0, 0.12)' : '1px solid transparent',
                             transform: 'translateZ(0)', // Aceleração de hardware
-                            willChange: 'max-height, opacity' // Otimização de performance
+                            willChange: isExpanded ? 'opacity' : 'max-height, opacity' // Otimização de performance
                           }}
                         >
                           {isExpanded && (
                             <CardContent sx={{ 
                               pt: 2, 
                               pb: 2,
+                              overflow: 'visible',
                               animation: 'fadeIn 0.3s ease-in-out',
                               '@keyframes fadeIn': {
                                 from: {
@@ -1941,10 +1987,14 @@ const AcademyPage = () => {
                                       onChange={() => {}} // Removido toggle automático
                                       sx={{ 
                                         mb: 1,
-                                        border: '1px solid var(--blue-dark) !important',
+                                        backgroundColor: 'var(--cor-container)',
+                                        border: '1px solid rgba(0, 0, 0, 0.15) !important',
                                         '&:hover': {
-                                          border: '1px solid var(--blue-dark) !important'
-                                        }
+                                          border: '1px solid var(--blue-medium) !important'
+                                        },
+                                        '&:before': {
+                                          display: 'none',
+                                        },
                                       }}
                                     >
                                       <AccordionSummary 
@@ -1955,7 +2005,10 @@ const AcademyPage = () => {
                                               e.stopPropagation();
                                               toggleModulo(modulo.moduleId);
                                             }}
-                                            sx={{ mr: 1 }}
+                                            sx={{ 
+                                              mr: 1,
+                                              color: 'var(--gray)',
+                                            }}
                                           >
                                             <ExpandMore />
                                           </IconButton>
@@ -1969,13 +2022,14 @@ const AcademyPage = () => {
                                         }}
                                         sx={{ 
                                           cursor: 'pointer',
+                                          backgroundColor: 'var(--cor-container)',
                                           '&:hover': {
-                                            backgroundColor: isSelecionado ? 'rgba(25, 118, 210, 0.08)' : 'rgba(0, 0, 0, 0.04)'
+                                            backgroundColor: isSelecionado ? 'rgba(22, 52, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)'
                                           }
                                         }}
                                       >
                                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', pr: 2 }}>
-                                          <Typography>{modulo.moduleNome}</Typography>
+                                          <Typography sx={{ color: 'var(--gray)' }}>{modulo.moduleNome}</Typography>
                                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={(e) => e.stopPropagation()}>
                                             {/* Botões de reordenação - só aparecem quando selecionado */}
                                             {isSelecionado && (
@@ -2031,9 +2085,9 @@ const AcademyPage = () => {
                                           </Box>
                                         </Box>
                                       </AccordionSummary>
-                                      <AccordionDetails>
+                                      <AccordionDetails sx={{ backgroundColor: 'var(--cor-container)' }}>
                                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                                          <Typography variant="subtitle2">Temas</Typography>
+                                          <Typography variant="subtitle2" sx={{ color: 'var(--gray)' }}>Temas</Typography>
                                           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                                             {temasReordenados[`${curso._id}-${modulo.moduleId}`] && (
                                               <Button
@@ -2083,15 +2137,17 @@ const AcademyPage = () => {
                                                   onClick={() => selecionarTema(curso._id, modulo.moduleId, tema.temaNome)}
                                                   sx={{
                                                     cursor: 'pointer',
-                                                    border: isSelecionado ? '1.4px solid var(--blue-dark)' : '1px solid rgba(0, 0, 0, 0.12)',
+                                                    backgroundColor: 'var(--cor-container)',
+                                                    border: isSelecionado ? '1.4px solid var(--blue-medium)' : '1px solid rgba(0, 0, 0, 0.15)',
                                                     '&:hover': {
-                                                      border: isSelecionado ? '1.4px solid var(--blue-dark)' : '1px solid rgba(0, 0, 0, 0.3)'
+                                                      border: isSelecionado ? '1.4px solid var(--blue-medium)' : '1px solid var(--blue-medium)',
+                                                      backgroundColor: 'var(--cor-container)',
                                                     }
                                                   }}
                                                 >
-                                                  <CardContent>
+                                                  <CardContent sx={{ backgroundColor: 'var(--cor-container)' }}>
                                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                      <Typography variant="body1">{tema.temaNome}</Typography>
+                                                      <Typography variant="body1" sx={{ color: 'var(--gray)' }}>{tema.temaNome}</Typography>
                                                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={(e) => e.stopPropagation()}>
                                                         {/* Botões de reordenação - só aparecem quando selecionado */}
                                                         {isSelecionado && (
@@ -2152,7 +2208,7 @@ const AcademyPage = () => {
                                             );
                                           })
                                         ) : (
-                                          <Typography variant="body2" color="text.secondary">
+                                          <Typography variant="body2" sx={{ color: 'rgba(0, 0, 0, 0.6)' }}>
                                             Nenhum tema cadastrado
                                           </Typography>
                                         )}
@@ -2161,7 +2217,7 @@ const AcademyPage = () => {
                                   );
                                 })
                               ) : (
-                                <Typography variant="body2" color="text.secondary">
+                                <Typography variant="body2" sx={{ color: 'rgba(0, 0, 0, 0.6)' }}>
                                   Nenhum módulo cadastrado
                                 </Typography>
                               )}
@@ -2197,14 +2253,34 @@ const AcademyPage = () => {
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
             <FormControl fullWidth>
-              <InputLabel>Classe</InputLabel>
+              <InputLabel sx={{
+                color: 'rgba(0, 0, 0, 0.6)',
+                '&.Mui-focused': {
+                  color: 'var(--blue-medium)',
+                },
+              }}>Classe</InputLabel>
               <Select
                 value={formCurso.cursoClasse}
                 onChange={(e) => setFormCurso({ ...formCurso, cursoClasse: e.target.value })}
                 label="Classe"
+                sx={{
+                  backgroundColor: 'var(--cor-container)',
+                  '& .MuiSelect-select': {
+                    color: 'var(--gray)',
+                  },
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(0, 0, 0, 0.15)',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'var(--blue-medium)',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'var(--blue-medium)',
+                  },
+                }}
               >
                 {classes.filter(c => c !== 'Todas').map(classe => (
-                  <MenuItem key={classe} value={classe}>{classe}</MenuItem>
+                  <MenuItem key={classe} value={classe} sx={{ color: 'var(--gray)' }}>{classe}</MenuItem>
                 ))}
               </Select>
             </FormControl>
@@ -2324,17 +2400,58 @@ const AcademyPage = () => {
       </Dialog>
       
       {/* Modal de Tema */}
-      <Dialog open={modalTemaAberto} onClose={fecharModalTema} maxWidth="md" fullWidth>
-        <DialogTitle>
+      <Dialog 
+        open={modalTemaAberto} 
+        onClose={fecharModalTema} 
+        maxWidth="md" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            backgroundColor: 'var(--cor-container)',
+            color: 'var(--gray)',
+            borderRadius: '12px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          color: 'var(--gray)',
+          backgroundColor: 'var(--cor-container)',
+          fontFamily: 'Poppins',
+        }}>
           {temaEditando ? 'Editar Tema' : 'Novo Tema'}
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ backgroundColor: 'var(--cor-container)' }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
             <TextField
               label="Nome do Tema"
               value={formTema.temaNome}
               onChange={(e) => setFormTema({ ...formTema, temaNome: e.target.value })}
               fullWidth
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: 'var(--cor-container)',
+                  color: 'var(--gray)',
+                  '& fieldset': {
+                    borderColor: 'rgba(0, 0, 0, 0.15)',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: 'var(--blue-medium)',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: 'var(--blue-medium)',
+                  },
+                  '& input': {
+                    color: 'var(--gray)',
+                  },
+                },
+                '& .MuiInputLabel-root': {
+                  color: 'rgba(0, 0, 0, 0.6)',
+                  '&.Mui-focused': {
+                    color: 'var(--blue-medium)',
+                  },
+                },
+              }}
             />
             <TextField
               label="Ordem"
@@ -2342,15 +2459,49 @@ const AcademyPage = () => {
               value={formTema.temaOrder}
               onChange={(e) => setFormTema({ ...formTema, temaOrder: parseInt(e.target.value) })}
               fullWidth
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: 'var(--cor-container)',
+                  color: 'var(--gray)',
+                  '& fieldset': {
+                    borderColor: 'rgba(0, 0, 0, 0.15)',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: 'var(--blue-medium)',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: 'var(--blue-medium)',
+                  },
+                  '& input': {
+                    color: 'var(--gray)',
+                  },
+                },
+                '& .MuiInputLabel-root': {
+                  color: 'rgba(0, 0, 0, 0.6)',
+                  '&.Mui-focused': {
+                    color: 'var(--blue-medium)',
+                  },
+                },
+              }}
             />
             <FormControlLabel
               control={
                 <Checkbox
                   checked={formTema.hasQuiz}
                   onChange={(e) => setFormTema({ ...formTema, hasQuiz: e.target.checked })}
+                  sx={{
+                    color: 'var(--blue-medium)',
+                    '&.Mui-checked': {
+                      color: 'var(--blue-medium)',
+                    },
+                  }}
                 />
               }
-              label="Tem Quiz"
+              label={
+                <Typography sx={{ color: 'var(--gray)', fontFamily: 'Poppins' }}>
+                  Tem Quiz
+                </Typography>
+              }
             />
             {formTema.hasQuiz && (
               <TextField
@@ -2358,25 +2509,76 @@ const AcademyPage = () => {
                 value={formTema.quizId}
                 onChange={(e) => setFormTema({ ...formTema, quizId: e.target.value })}
                 fullWidth
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: 'var(--cor-container)',
+                    color: 'var(--gray)',
+                    '& fieldset': {
+                      borderColor: 'rgba(0, 0, 0, 0.15)',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: 'var(--blue-medium)',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: 'var(--blue-medium)',
+                    },
+                    '& input': {
+                      color: 'var(--gray)',
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: 'rgba(0, 0, 0, 0.6)',
+                    '&.Mui-focused': {
+                      color: 'var(--blue-medium)',
+                    },
+                  },
+                }}
               />
             )}
           </Box>
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ backgroundColor: 'var(--cor-container)', px: 2.4, pb: 2.4 }}>
           {cursoTemporario && (
             <Button 
               onClick={voltarParaModulo}
               startIcon={<ArrowBack />}
+              sx={{
+                color: 'var(--gray)',
+                fontFamily: 'Poppins',
+                '&:hover': {
+                  backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                },
+              }}
             >
               Voltar
             </Button>
           )}
-          <Button onClick={fecharModalTema}>Cancelar</Button>
+          <Button 
+            onClick={fecharModalTema}
+            sx={{
+              color: 'var(--gray)',
+              fontFamily: 'Poppins',
+              '&:hover': {
+                backgroundColor: 'rgba(0, 0, 0, 0.05)',
+              },
+            }}
+          >
+            Cancelar
+          </Button>
           {cursoTemporario && (
             <Button 
               onClick={salvarTemaTemporario} 
               variant="outlined"
-              sx={{ mr: 1 }}
+              sx={{ 
+                mr: 1,
+                fontFamily: 'Poppins',
+                borderColor: 'rgba(0, 0, 0, 0.15)',
+                color: 'var(--gray)',
+                '&:hover': {
+                  borderColor: 'var(--blue-medium)',
+                  backgroundColor: 'rgba(22, 52, 255, 0.08)',
+                },
+              }}
             >
               Salvar
             </Button>
@@ -2384,6 +2586,13 @@ const AcademyPage = () => {
           <Button 
             onClick={cursoTemporario ? proximoPassoTema : salvarTema} 
             variant="contained"
+            sx={{
+              fontFamily: 'Poppins',
+              backgroundColor: 'var(--blue-medium)',
+              '&:hover': {
+                backgroundColor: 'var(--blue-dark)',
+              },
+            }}
           >
             {cursoTemporario ? 'Próximo' : 'Salvar'}
           </Button>
@@ -2391,27 +2600,88 @@ const AcademyPage = () => {
       </Dialog>
       
       {/* Modal de Aulas */}
-      <Dialog open={modalAulaAberto} onClose={fecharModalAula} maxWidth="lg" fullWidth>
-        <DialogTitle>
+      <Dialog 
+        open={modalAulaAberto} 
+        onClose={fecharModalAula} 
+        maxWidth="lg" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            backgroundColor: 'var(--cor-container)',
+            color: 'var(--gray)',
+            borderRadius: '12px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          color: 'var(--gray)',
+          backgroundColor: 'var(--cor-container)',
+          fontFamily: 'Poppins',
+        }}>
           {aulaEditando ? 'Editar Aula' : 'Nova Aula'} - {temaContexto?.temaNome}
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ backgroundColor: 'var(--cor-container)' }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
             <TextField
               label="ID da Aula"
               value={formAula.lessonId}
               onChange={(e) => setFormAula({ ...formAula, lessonId: e.target.value })}
               fullWidth
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: 'var(--cor-container)',
+                  color: 'var(--gray)',
+                  '& fieldset': {
+                    borderColor: 'rgba(0, 0, 0, 0.15)',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: 'var(--blue-medium)',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: 'var(--blue-medium)',
+                  },
+                  '& input': {
+                    color: 'var(--gray)',
+                  },
+                },
+                '& .MuiInputLabel-root': {
+                  color: 'rgba(0, 0, 0, 0.6)',
+                  '&.Mui-focused': {
+                    color: 'var(--blue-medium)',
+                  },
+                },
+              }}
             />
             <FormControl fullWidth>
-              <InputLabel>Tipo de Aula</InputLabel>
+              <InputLabel sx={{
+                color: 'rgba(0, 0, 0, 0.6)',
+                '&.Mui-focused': {
+                  color: 'var(--blue-medium)',
+                },
+              }}>Tipo de Aula</InputLabel>
               <Select
                 value={formAula.lessonTipo}
                 onChange={(e) => setFormAula({ ...formAula, lessonTipo: e.target.value })}
                 label="Tipo de Aula"
+                sx={{
+                  backgroundColor: 'var(--cor-container)',
+                  '& .MuiSelect-select': {
+                    color: 'var(--gray)',
+                  },
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(0, 0, 0, 0.15)',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'var(--blue-medium)',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'var(--blue-medium)',
+                  },
+                }}
               >
                 {tiposAula.map(tipo => (
-                  <MenuItem key={tipo} value={tipo}>{tipo}</MenuItem>
+                  <MenuItem key={tipo} value={tipo} sx={{ color: 'var(--gray)' }}>{tipo}</MenuItem>
                 ))}
               </Select>
             </FormControl>
@@ -2420,6 +2690,30 @@ const AcademyPage = () => {
               value={formAula.lessonTitulo}
               onChange={(e) => setFormAula({ ...formAula, lessonTitulo: e.target.value })}
               fullWidth
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: 'var(--cor-container)',
+                  color: 'var(--gray)',
+                  '& fieldset': {
+                    borderColor: 'rgba(0, 0, 0, 0.15)',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: 'var(--blue-medium)',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: 'var(--blue-medium)',
+                  },
+                  '& input': {
+                    color: 'var(--gray)',
+                  },
+                },
+                '& .MuiInputLabel-root': {
+                  color: 'rgba(0, 0, 0, 0.6)',
+                  '&.Mui-focused': {
+                    color: 'var(--blue-medium)',
+                  },
+                },
+              }}
             />
             <TextField
               label="Ordem"
@@ -2427,12 +2721,36 @@ const AcademyPage = () => {
               value={formAula.lessonOrdem}
               onChange={(e) => setFormAula({ ...formAula, lessonOrdem: parseInt(e.target.value) })}
               fullWidth
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: 'var(--cor-container)',
+                  color: 'var(--gray)',
+                  '& fieldset': {
+                    borderColor: 'rgba(0, 0, 0, 0.15)',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: 'var(--blue-medium)',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: 'var(--blue-medium)',
+                  },
+                  '& input': {
+                    color: 'var(--gray)',
+                  },
+                },
+                '& .MuiInputLabel-root': {
+                  color: 'rgba(0, 0, 0, 0.6)',
+                  '&.Mui-focused': {
+                    color: 'var(--blue-medium)',
+                  },
+                },
+              }}
             />
             
             {/* Seção de Conteúdos/Vídeos */}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
+                <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 500, color: 'var(--gray)' }}>
                   URLs de Conteúdo
                 </Typography>
                 <Button
@@ -2444,7 +2762,17 @@ const AcademyPage = () => {
                       lessonContent: [...formAula.lessonContent, { url: '' }]
                     });
                   }}
-                  sx={{ fontSize: '0.875rem' }}
+                  sx={{ 
+                    fontSize: '0.875rem',
+                    fontFamily: 'Poppins',
+                    color: 'var(--blue-medium)',
+                    borderColor: 'var(--blue-medium)',
+                    '&:hover': {
+                      borderColor: 'var(--blue-medium)',
+                      backgroundColor: 'rgba(22, 52, 255, 0.08)',
+                    },
+                  }}
+                  variant="outlined"
                 >
                   Adicionar Vídeo
                 </Button>
@@ -2465,6 +2793,34 @@ const AcademyPage = () => {
                     }}
                     fullWidth
                     placeholder="https://youtu.be/..."
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        backgroundColor: 'var(--cor-container)',
+                        color: 'var(--gray)',
+                        '& fieldset': {
+                          borderColor: 'rgba(0, 0, 0, 0.15)',
+                        },
+                        '&:hover fieldset': {
+                          borderColor: 'var(--blue-medium)',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: 'var(--blue-medium)',
+                        },
+                        '& input': {
+                          color: 'var(--gray)',
+                          '&::placeholder': {
+                            color: 'rgba(0, 0, 0, 0.5)',
+                            opacity: 1,
+                          },
+                        },
+                      },
+                      '& .MuiInputLabel-root': {
+                        color: 'rgba(0, 0, 0, 0.6)',
+                        '&.Mui-focused': {
+                          color: 'var(--blue-medium)',
+                        },
+                      },
+                    }}
                   />
                   {formAula.lessonContent.length > 1 && (
                     <IconButton
@@ -2490,25 +2846,73 @@ const AcademyPage = () => {
               value={formAula.driveId}
               onChange={(e) => setFormAula({ ...formAula, driveId: e.target.value })}
               fullWidth
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: 'var(--cor-container)',
+                  color: 'var(--gray)',
+                  '& fieldset': {
+                    borderColor: 'rgba(0, 0, 0, 0.15)',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: 'var(--blue-medium)',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: 'var(--blue-medium)',
+                  },
+                  '& input': {
+                    color: 'var(--gray)',
+                  },
+                },
+                '& .MuiInputLabel-root': {
+                  color: 'rgba(0, 0, 0, 0.6)',
+                  '&.Mui-focused': {
+                    color: 'var(--blue-medium)',
+                  },
+                },
+              }}
             />
             <TextField
               label="YouTube ID (opcional)"
               value={formAula.youtubeId}
               onChange={(e) => setFormAula({ ...formAula, youtubeId: e.target.value })}
               fullWidth
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: 'var(--cor-container)',
+                  color: 'var(--gray)',
+                  '& fieldset': {
+                    borderColor: 'rgba(0, 0, 0, 0.15)',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: 'var(--blue-medium)',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: 'var(--blue-medium)',
+                  },
+                  '& input': {
+                    color: 'var(--gray)',
+                  },
+                },
+                '& .MuiInputLabel-root': {
+                  color: 'rgba(0, 0, 0, 0.6)',
+                  '&.Mui-focused': {
+                    color: 'var(--blue-medium)',
+                  },
+                },
+              }}
             />
             
             {/* Lista de Aulas Existentes */}
             {temaContexto?.lessons && temaContexto.lessons.length > 0 && (
               <Box sx={{ mt: 2 }}>
-                <Typography variant="subtitle2" sx={{ mb: 1 }}>Aulas Existentes</Typography>
-                <List>
+                <Typography variant="subtitle2" sx={{ mb: 1, color: 'var(--gray)' }}>Aulas Existentes</Typography>
+                <List sx={{ backgroundColor: 'var(--cor-container)' }}>
                   {temaContexto.lessons.map((aula, index) => (
                     <React.Fragment key={aula.lessonId || index}>
-                      <ListItem>
+                      <ListItem sx={{ backgroundColor: 'var(--cor-container)' }}>
                         <ListItemText
-                          primary={aula.lessonTitulo}
-                          secondary={`${aula.lessonTipo} - Ordem: ${aula.lessonOrdem}`}
+                          primary={<Typography sx={{ color: 'var(--gray)' }}>{aula.lessonTitulo}</Typography>}
+                          secondary={<Typography sx={{ color: 'rgba(0, 0, 0, 0.6)' }}>{`${aula.lessonTipo} - Ordem: ${aula.lessonOrdem}`}</Typography>}
                         />
                         <ListItemSecondaryAction>
                           <IconButton 
@@ -2527,7 +2931,7 @@ const AcademyPage = () => {
                           </IconButton>
                         </ListItemSecondaryAction>
                       </ListItem>
-                      {index < temaContexto.lessons.length - 1 && <Divider />}
+                      {index < temaContexto.lessons.length - 1 && <Divider sx={{ borderColor: 'rgba(0, 0, 0, 0.12)' }} />}
                     </React.Fragment>
                   ))}
                 </List>
@@ -2535,17 +2939,47 @@ const AcademyPage = () => {
             )}
           </Box>
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ backgroundColor: 'var(--cor-container)', px: 2.4, pb: 2.4 }}>
           {cursoTemporario && (
             <Button 
               onClick={voltarParaTema}
               startIcon={<ArrowBack />}
+              sx={{
+                color: 'var(--gray)',
+                fontFamily: 'Poppins',
+                '&:hover': {
+                  backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                },
+              }}
             >
               Voltar
             </Button>
           )}
-          <Button onClick={fecharModalAula}>Cancelar</Button>
-          <Button onClick={salvarAula} variant="contained">Salvar</Button>
+          <Button 
+            onClick={fecharModalAula}
+            sx={{
+              color: 'var(--gray)',
+              fontFamily: 'Poppins',
+              '&:hover': {
+                backgroundColor: 'rgba(0, 0, 0, 0.05)',
+              },
+            }}
+          >
+            Cancelar
+          </Button>
+          <Button 
+            onClick={salvarAula} 
+            variant="contained"
+            sx={{
+              fontFamily: 'Poppins',
+              backgroundColor: 'var(--blue-medium)',
+              '&:hover': {
+                backgroundColor: 'var(--blue-dark)',
+              },
+            }}
+          >
+            Salvar
+          </Button>
         </DialogActions>
       </Dialog>
       

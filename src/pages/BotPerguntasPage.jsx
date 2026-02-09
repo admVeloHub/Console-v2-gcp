@@ -1,4 +1,4 @@
-// VERSION: v4.4.1 | DATE: 2025-01-31 | AUTHOR: VeloHub Development Team
+// VERSION: v4.4.3 | DATE: 2025-02-09 | AUTHOR: VeloHub Development Team
 import React, { useState, useCallback, useEffect } from 'react';
 import { 
   Container, 
@@ -473,7 +473,16 @@ const BotPerguntasPage = () => {
                       fontSize: '0.8rem',
                     },
                     '& .MuiOutlinedInput-root': {
-                      fontFamily: 'Poppins'
+                      fontFamily: 'Poppins',
+                      '& fieldset': {
+                        borderColor: 'rgba(0, 0, 0, 0.15)',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: 'var(--blue-medium)',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: 'var(--blue-medium)',
+                      },
                     },
                     '& .MuiOutlinedInput-input': {
                       fontSize: '0.8rem',
@@ -528,7 +537,16 @@ const BotPerguntasPage = () => {
                       fontSize: '0.8rem',
                     },
                     '& .MuiOutlinedInput-root': {
-                      fontFamily: 'Poppins'
+                      fontFamily: 'Poppins',
+                      '& fieldset': {
+                        borderColor: 'rgba(0, 0, 0, 0.15)',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: 'var(--blue-medium)',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: 'var(--blue-medium)',
+                      },
                     },
                     '& .MuiOutlinedInput-input': {
                       fontSize: '0.8rem',
@@ -550,7 +568,16 @@ const BotPerguntasPage = () => {
                       fontSize: '0.8rem',
                     },
                     '& .MuiOutlinedInput-root': {
-                      fontFamily: 'Poppins'
+                      fontFamily: 'Poppins',
+                      '& fieldset': {
+                        borderColor: 'rgba(0, 0, 0, 0.15)',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: 'var(--blue-medium)',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: 'var(--blue-medium)',
+                      },
                     },
                     '& .MuiOutlinedInput-input': {
                       fontSize: '0.8rem',
@@ -572,7 +599,16 @@ const BotPerguntasPage = () => {
                       fontSize: '0.8rem',
                     },
                     '& .MuiOutlinedInput-root': {
-                      fontFamily: 'Poppins'
+                      fontFamily: 'Poppins',
+                      '& fieldset': {
+                        borderColor: 'rgba(0, 0, 0, 0.15)',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: 'var(--blue-medium)',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: 'var(--blue-medium)',
+                      },
                     },
                     '& .MuiOutlinedInput-input': {
                       fontSize: '0.8rem',
@@ -643,10 +679,43 @@ const BotPerguntasPage = () => {
                         sx={{
                           '& .MuiOutlinedInput-root': {
                             fontFamily: 'Poppins',
-                            fontSize: '0.8rem'
+                            fontSize: '0.8rem',
+                            backgroundColor: 'var(--cor-container)',
+                            color: 'var(--gray)',
+                            '& fieldset': {
+                              borderColor: 'rgba(0, 0, 0, 0.15)',
+                            },
+                            '&:hover fieldset': {
+                              borderColor: 'var(--blue-medium)',
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: 'var(--blue-medium)',
+                            },
+                            '& input': {
+                              color: 'var(--gray)',
+                            },
+                            '& textarea': {
+                              color: 'var(--gray)',
+                            },
+                            '&.Mui-disabled': {
+                              backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                              '& input': {
+                                color: 'rgba(0, 0, 0, 0.38)',
+                              },
+                              '& textarea': {
+                                color: 'rgba(0, 0, 0, 0.38)',
+                              },
+                            },
                           },
                           '& .MuiInputLabel-root': {
-                            fontSize: '0.8rem'
+                            fontSize: '0.8rem',
+                            color: 'rgba(0, 0, 0, 0.6)',
+                            '&.Mui-focused': {
+                              color: 'var(--blue-medium)',
+                            },
+                            '&.Mui-disabled': {
+                              color: 'rgba(0, 0, 0, 0.38)',
+                            },
                           }
                         }}
                       />
@@ -697,10 +766,43 @@ const BotPerguntasPage = () => {
                         sx={{
                           '& .MuiOutlinedInput-root': {
                             fontFamily: 'Poppins',
-                            fontSize: '0.8rem'
+                            fontSize: '0.8rem',
+                            backgroundColor: 'var(--cor-container)',
+                            color: 'var(--gray)',
+                            '& fieldset': {
+                              borderColor: 'rgba(0, 0, 0, 0.15)',
+                            },
+                            '&:hover fieldset': {
+                              borderColor: 'var(--blue-medium)',
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: 'var(--blue-medium)',
+                            },
+                            '& input': {
+                              color: 'var(--gray)',
+                            },
+                            '& textarea': {
+                              color: 'var(--gray)',
+                            },
+                            '&.Mui-disabled': {
+                              backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                              '& input': {
+                                color: 'rgba(0, 0, 0, 0.38)',
+                              },
+                              '& textarea': {
+                                color: 'rgba(0, 0, 0, 0.38)',
+                              },
+                            },
                           },
                           '& .MuiInputLabel-root': {
-                            fontSize: '0.8rem'
+                            fontSize: '0.8rem',
+                            color: 'rgba(0, 0, 0, 0.6)',
+                            '&.Mui-focused': {
+                              color: 'var(--blue-medium)',
+                            },
+                            '&.Mui-disabled': {
+                              color: 'rgba(0, 0, 0, 0.38)',
+                            },
                           }
                         }}
                       />
@@ -718,10 +820,43 @@ const BotPerguntasPage = () => {
                         sx={{
                           '& .MuiOutlinedInput-root': {
                             fontFamily: 'Poppins',
-                            fontSize: '0.8rem'
+                            fontSize: '0.8rem',
+                            backgroundColor: 'var(--cor-container)',
+                            color: 'var(--gray)',
+                            '& fieldset': {
+                              borderColor: 'rgba(0, 0, 0, 0.15)',
+                            },
+                            '&:hover fieldset': {
+                              borderColor: 'var(--blue-medium)',
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: 'var(--blue-medium)',
+                            },
+                            '& input': {
+                              color: 'var(--gray)',
+                            },
+                            '& textarea': {
+                              color: 'var(--gray)',
+                            },
+                            '&.Mui-disabled': {
+                              backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                              '& input': {
+                                color: 'rgba(0, 0, 0, 0.38)',
+                              },
+                              '& textarea': {
+                                color: 'rgba(0, 0, 0, 0.38)',
+                              },
+                            },
                           },
                           '& .MuiInputLabel-root': {
-                            fontSize: '0.8rem'
+                            fontSize: '0.8rem',
+                            color: 'rgba(0, 0, 0, 0.6)',
+                            '&.Mui-focused': {
+                              color: 'var(--blue-medium)',
+                            },
+                            '&.Mui-disabled': {
+                              color: 'rgba(0, 0, 0, 0.38)',
+                            },
                           }
                         }}
                       />
@@ -739,10 +874,43 @@ const BotPerguntasPage = () => {
                         sx={{
                           '& .MuiOutlinedInput-root': {
                             fontFamily: 'Poppins',
-                            fontSize: '0.8rem'
+                            fontSize: '0.8rem',
+                            backgroundColor: 'var(--cor-container)',
+                            color: 'var(--gray)',
+                            '& fieldset': {
+                              borderColor: 'rgba(0, 0, 0, 0.15)',
+                            },
+                            '&:hover fieldset': {
+                              borderColor: 'var(--blue-medium)',
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: 'var(--blue-medium)',
+                            },
+                            '& input': {
+                              color: 'var(--gray)',
+                            },
+                            '& textarea': {
+                              color: 'var(--gray)',
+                            },
+                            '&.Mui-disabled': {
+                              backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                              '& input': {
+                                color: 'rgba(0, 0, 0, 0.38)',
+                              },
+                              '& textarea': {
+                                color: 'rgba(0, 0, 0, 0.38)',
+                              },
+                            },
                           },
                           '& .MuiInputLabel-root': {
-                            fontSize: '0.8rem'
+                            fontSize: '0.8rem',
+                            color: 'rgba(0, 0, 0, 0.6)',
+                            '&.Mui-focused': {
+                              color: 'var(--blue-medium)',
+                            },
+                            '&.Mui-disabled': {
+                              color: 'rgba(0, 0, 0, 0.38)',
+                            },
                           }
                         }}
                       />
@@ -823,15 +991,28 @@ const BotPerguntasPage = () => {
                     '& .MuiOutlinedInput-root': {
                       fontFamily: 'Poppins',
                       fontSize: '0.8rem',
+                      backgroundColor: 'var(--cor-container)',
+                      color: 'var(--gray)',
+                      '& fieldset': {
+                        borderColor: 'rgba(0, 0, 0, 0.15)',
+                      },
                       '&:hover fieldset': {
-                        borderColor: 'var(--blue-medium)'
+                        borderColor: 'var(--blue-medium)',
                       },
                       '&.Mui-focused fieldset': {
-                        borderColor: 'var(--blue-medium)'
-                      }
+                        borderColor: 'var(--blue-medium)',
+                      },
+                      '& input': {
+                        color: 'var(--gray)',
+                        '&::placeholder': {
+                          color: 'rgba(0, 0, 0, 0.5)',
+                          opacity: 1,
+                        },
+                      },
                     },
                     '& .MuiInputLabel-root': {
-                      fontSize: '0.8rem'
+                      fontSize: '0.8rem',
+                      color: 'rgba(0, 0, 0, 0.6)',
                     }
                   }}
                 />
@@ -848,7 +1029,7 @@ const BotPerguntasPage = () => {
                     width: '8px'
                   },
                   '&::-webkit-scrollbar-thumb': {
-                    backgroundColor: 'var(--green)',
+                    backgroundColor: 'var(--blue-medium)',
                     borderRadius: '4px'
                   }
                 }}>
@@ -911,19 +1092,49 @@ const BotPerguntasPage = () => {
         onClose={() => setDeleteDialogOpen(false)}
         aria-labelledby="delete-dialog-title"
         aria-describedby="delete-dialog-description"
+        PaperProps={{
+          sx: {
+            backgroundColor: 'var(--cor-container)',
+            color: 'var(--gray)',
+            borderRadius: '12px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+          }
+        }}
       >
-        <DialogTitle id="delete-dialog-title" sx={{ fontFamily: 'Poppins', fontSize: '0.96rem' }}>
+        <DialogTitle 
+          id="delete-dialog-title" 
+          sx={{ 
+            fontFamily: 'Poppins', 
+            fontSize: '0.96rem',
+            color: 'var(--gray)',
+            backgroundColor: 'var(--cor-container)',
+          }}
+        >
           Confirmar Exclusão
         </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-dialog-description" sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
+        <DialogContent sx={{ backgroundColor: 'var(--cor-container)' }}>
+          <DialogContentText 
+            id="delete-dialog-description" 
+            sx={{ 
+              fontFamily: 'Poppins', 
+              fontSize: '0.8rem',
+              color: 'rgba(0, 0, 0, 0.6)',
+            }}
+          >
             Tem certeza que deseja deletar a pergunta "{editFormData.pergunta}"? Esta ação não pode ser desfeita.
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ backgroundColor: 'var(--cor-container)', px: 2.4, pb: 2.4 }}>
           <Button 
             onClick={() => setDeleteDialogOpen(false)} 
-            sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}
+            sx={{ 
+              fontFamily: 'Poppins', 
+              fontSize: '0.8rem',
+              color: 'var(--gray)',
+              '&:hover': {
+                backgroundColor: 'rgba(0, 0, 0, 0.05)',
+              },
+            }}
           >
             Cancelar
           </Button>
@@ -932,7 +1143,18 @@ const BotPerguntasPage = () => {
             color="error" 
             variant="contained"
             disabled={loading}
-            sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}
+            sx={{ 
+              fontFamily: 'Poppins', 
+              fontSize: '0.8rem',
+              backgroundColor: '#d32f2f',
+              '&:hover': {
+                backgroundColor: '#b71c1c',
+              },
+              '&.Mui-disabled': {
+                backgroundColor: 'rgba(0, 0, 0, 0.12)',
+                color: 'rgba(0, 0, 0, 0.26)',
+              },
+            }}
           >
             {loading ? 'Deletando...' : 'Deletar'}
           </Button>

@@ -1,4 +1,4 @@
-// VERSION: v3.0.2 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
+// VERSION: v3.1.1 | DATE: 2025-02-09 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,
@@ -27,9 +27,12 @@ import {
   Alert,
   Grid,
   Button,
-  Snackbar
+  Snackbar,
+  TextField,
+  IconButton,
+  Pagination
 } from '@mui/material';
-import { ExpandMore, Refresh, Download } from '@mui/icons-material';
+import { ExpandMore, Refresh, Download, ChevronLeft, ChevronRight } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
 import BackButton from '../components/common/BackButton';
 import { hubAnalisesAPI } from '../services/api';
@@ -45,6 +48,16 @@ const HubAnalisesPage = () => {
   const [loadingUsuarios, setLoadingUsuarios] = useState(false);
   const [loadingSessions, setLoadingSessions] = useState(false);
   const [colaboradoresList, setColaboradoresList] = useState([]);
+  
+  // Estados para filtro de data e paginação (aba Hub)
+  const [filtroDataInicio, setFiltroDataInicio] = useState('');
+  const [filtroDataFim, setFiltroDataFim] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
+  
+  // Estados para paginação (aba Velonews)
+  const [currentPageVelonews, setCurrentPageVelonews] = useState(1);
+  const itemsPerPageVelonews = 20;
   
   // Estados para aba Velonews
   const [cienciaPorNoticia, setCienciaPorNoticia] = useState([]);
@@ -84,11 +97,14 @@ const HubAnalisesPage = () => {
            typeof data.totalOnline === 'number' && typeof data.totalOffline === 'number';
   }, []);
 
-  // Validar sessão
+  // Validar sessão - mais flexível para aceitar diferentes estruturas
   const validateSession = useCallback((session) => {
     if (!session || typeof session !== 'object') return false;
-    if (!session.sessionId && !session._id) return false;
-    return true;
+    // Aceitar sessão se tiver pelo menos um identificador ou dados básicos
+    if (session.sessionId || session._id || session.userEmail || session.colaboradorNome) {
+      return true;
+    }
+    return false;
   }, []);
 
   // Validar notícia
@@ -103,33 +119,69 @@ const HubAnalisesPage = () => {
     try {
       setLoadingUsuarios(true);
       const response = await hubAnalisesAPI.getUsuariosOnlineOffline();
+      
       const normalizedData = normalizeAPIResponse(response);
       
+      // Validação mais flexível - aceitar diferentes estruturas
+      let dataToProcess = null;
+      
       if (normalizedData && validateUsuariosOnlineOffline(normalizedData)) {
+        dataToProcess = normalizedData;
+      } else if (normalizedData && typeof normalizedData === 'object') {
+        // Tentar estruturas alternativas
+        if (Array.isArray(normalizedData.online) || Array.isArray(normalizedData.offline)) {
+          dataToProcess = {
+            online: normalizedData.online || [],
+            offline: normalizedData.offline || [],
+            totalOnline: normalizedData.totalOnline ?? (normalizedData.online?.length || 0),
+            totalOffline: normalizedData.totalOffline ?? (normalizedData.offline?.length || 0),
+            totalFuncionarios: normalizedData.totalFuncionarios ?? ((normalizedData.online?.length || 0) + (normalizedData.offline?.length || 0))
+          };
+        } else if (response && typeof response === 'object') {
+          // Tentar acessar diretamente a resposta
+          if (Array.isArray(response.online) || Array.isArray(response.offline)) {
+            dataToProcess = {
+              online: response.online || [],
+              offline: response.offline || [],
+              totalOnline: response.totalOnline ?? (response.online?.length || 0),
+              totalOffline: response.totalOffline ?? (response.offline?.length || 0),
+              totalFuncionarios: response.totalFuncionarios ?? ((response.online?.length || 0) + (response.offline?.length || 0))
+            };
+          }
+        }
+      }
+      
+      if (dataToProcess && (Array.isArray(dataToProcess.online) || Array.isArray(dataToProcess.offline))) {
         // Validar e processar cada usuário
         const processedData = {
-          online: (normalizedData.online || []).map(user => ({
+          online: (dataToProcess.online || []).map(user => ({
             ...user,
             colaboradorNome: user.colaboradorNome || user.nome || user.userEmail || 'N/A',
             loginTimestamp: user.loginTimestamp || user.createdAt || null,
             lastActivity: user.lastActivity || user.updatedAt || null
           })),
-          offline: (normalizedData.offline || []).map(user => ({
+          offline: (dataToProcess.offline || []).map(user => ({
             ...user,
             colaboradorNome: user.colaboradorNome || user.nome || user.userEmail || 'N/A',
             logoutTimestamp: user.logoutTimestamp || user.updatedAt || null
           })),
-          totalOnline: normalizedData.totalOnline || 0,
-          totalOffline: normalizedData.totalOffline || 0,
-          totalFuncionarios: normalizedData.totalFuncionarios || (normalizedData.totalOnline || 0) + (normalizedData.totalOffline || 0)
+          totalOnline: dataToProcess.totalOnline || 0,
+          totalOffline: dataToProcess.totalOffline || 0,
+          totalFuncionarios: dataToProcess.totalFuncionarios || (dataToProcess.totalOnline || 0) + (dataToProcess.totalOffline || 0)
         };
         
         setUsuariosOnlineOffline(processedData);
       } else {
+        if (process.env.NODE_ENV === 'development') {
+          console.error('❌ Estrutura de dados inválida. Resposta:', response, 'Normalizada:', normalizedData);
+        }
         throw new Error('Estrutura de dados inválida recebida do servidor');
       }
     } catch (error) {
-      console.error('Erro ao carregar usuários online/offline:', error);
+      // Log apenas se não for erro de conexão (erro esperado quando servidor está offline)
+      if (!error.message?.includes('Erro de conexão')) {
+        console.error('Erro ao carregar usuários online/offline:', error);
+      }
       setSnackbar({
         open: true,
         message: error.message || 'Erro ao carregar usuários online/offline. Tente novamente.',
@@ -146,14 +198,31 @@ const HubAnalisesPage = () => {
     try {
       setLoadingSessions(true);
       const response = await hubAnalisesAPI.getHubSessions();
+      
       const rawSessions = normalizeAPIResponse(response);
       
-      if (!rawSessions || !Array.isArray(rawSessions)) {
+      // Validação mais flexível
+      let sessionsArray = null;
+      
+      if (Array.isArray(rawSessions)) {
+        sessionsArray = rawSessions;
+      } else if (rawSessions && Array.isArray(rawSessions.data)) {
+        sessionsArray = rawSessions.data;
+      } else if (Array.isArray(response)) {
+        sessionsArray = response;
+      } else if (response && Array.isArray(response.data)) {
+        sessionsArray = response.data;
+      }
+      
+      if (!sessionsArray || !Array.isArray(sessionsArray)) {
+        if (process.env.NODE_ENV === 'development') {
+          console.error('❌ Resposta inválida. Esperado array de sessões. Resposta:', response, 'Normalizada:', rawSessions);
+        }
         throw new Error('Resposta inválida: esperado array de sessões');
       }
       
       // Validar e processar cada sessão
-      const validSessions = rawSessions
+      const validSessions = sessionsArray
         .filter(session => validateSession(session))
         .map(session => {
           // Garantir campos obrigatórios e validar datas
@@ -185,9 +254,17 @@ const HubAnalisesPage = () => {
       
       // Agrupar por sessionId único (evitar duplicatas) - melhorado
       const uniqueSessions = new Map();
+      let sessionsWithoutId = 0;
       validSessions.forEach(session => {
         const sessionId = session.sessionId;
-        if (!sessionId) return; // Ignorar sessões sem ID
+        if (!sessionId) {
+          sessionsWithoutId++;
+          // Em vez de ignorar, usar um ID temporário baseado em dados únicos
+          const tempId = `${session.colaboradorNome || 'unknown'}-${session.loginTimestamp || Date.now()}-${Math.random()}`;
+          session.sessionId = tempId;
+          uniqueSessions.set(tempId, session);
+          return;
+        }
         
         const existingSession = uniqueSessions.get(sessionId);
         if (!existingSession) {
@@ -206,6 +283,18 @@ const HubAnalisesPage = () => {
       });
       
       const uniqueSessionsArray = Array.from(uniqueSessions.values());
+      
+      // Debug: verificar processamento
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔍 [loadAllSessions] Processamento:', {
+          totalRecebidas: sessionsArray.length,
+          validas: validSessions.length,
+          semSessionIdOriginal: sessionsWithoutId,
+          unicas: uniqueSessionsArray.length,
+          amostra: uniqueSessionsArray.slice(0, 3)
+        });
+      }
+      
       setAllSessions(uniqueSessionsArray);
       setFilteredSessions(uniqueSessionsArray);
       
@@ -217,7 +306,10 @@ const HubAnalisesPage = () => {
       )];
       setColaboradoresList(colaboradores.sort());
     } catch (error) {
-      console.error('Erro ao carregar histórico de sessões:', error);
+      // Log apenas se não for erro de conexão (erro esperado quando servidor está offline)
+      if (!error.message?.includes('Erro de conexão')) {
+        console.error('Erro ao carregar histórico de sessões:', error);
+      }
       setSnackbar({
         open: true,
         message: error.message || 'Erro ao carregar histórico de sessões. Tente novamente.',
@@ -231,16 +323,80 @@ const HubAnalisesPage = () => {
     }
   }, [normalizeAPIResponse, validateSession, isValidDate]);
 
-  // Filtrar sessões por colaborador
+  // Filtrar e ordenar sessões por colaborador e data
   useEffect(() => {
-    if (!selectedColaborador) {
-      setFilteredSessions(allSessions);
-    } else {
-      setFilteredSessions(
-        allSessions.filter(s => s.colaboradorNome === selectedColaborador)
-      );
+    let filtered = [...allSessions];
+    
+    // Filtrar por colaborador
+    if (selectedColaborador) {
+      filtered = filtered.filter(s => s.colaboradorNome === selectedColaborador);
     }
-  }, [selectedColaborador, allSessions]);
+    
+    // Filtrar por data
+    if (filtroDataInicio) {
+      const dataInicio = new Date(filtroDataInicio);
+      dataInicio.setHours(0, 0, 0, 0);
+      filtered = filtered.filter(s => {
+        const sessionDate = s.loginTimestamp ? new Date(s.loginTimestamp) : (s.createdAt ? new Date(s.createdAt) : null);
+        if (!sessionDate) return false;
+        sessionDate.setHours(0, 0, 0, 0);
+        return sessionDate >= dataInicio;
+      });
+    }
+    
+    if (filtroDataFim) {
+      const dataFim = new Date(filtroDataFim);
+      dataFim.setHours(23, 59, 59, 999);
+      filtered = filtered.filter(s => {
+        const sessionDate = s.loginTimestamp ? new Date(s.loginTimestamp) : (s.createdAt ? new Date(s.createdAt) : null);
+        if (!sessionDate) return false;
+        return sessionDate <= dataFim;
+      });
+    }
+    
+    // Ordenar da mais recente para a mais antiga
+    filtered.sort((a, b) => {
+      const dateA = a.loginTimestamp ? new Date(a.loginTimestamp) : (a.createdAt ? new Date(a.createdAt) : new Date(0));
+      const dateB = b.loginTimestamp ? new Date(b.loginTimestamp) : (b.createdAt ? new Date(b.createdAt) : new Date(0));
+      return dateB - dateA; // Mais recente primeiro
+    });
+    
+    // Resetar página quando filtros mudarem
+    setCurrentPage(1);
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 [Filtro] Aplicando filtros:', {
+        selectedColaborador,
+        filtroDataInicio,
+        filtroDataFim,
+        totalSessions: allSessions.length,
+        filteredCount: filtered.length
+      });
+    }
+    
+    setFilteredSessions(filtered);
+  }, [selectedColaborador, filtroDataInicio, filtroDataFim, allSessions]);
+  
+  // Calcular dados de paginação
+  const totalPages = Math.ceil(filteredSessions.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedSessions = filteredSessions.slice(startIndex, endIndex);
+  
+  // Resetar página quando mudar de aba
+  useEffect(() => {
+    setCurrentPage(1);
+    setCurrentPageVelonews(1);
+    setFiltroDataInicio('');
+    setFiltroDataFim('');
+    setSelectedColaborador('');
+  }, [activeTab]);
+  
+  // Calcular dados de paginação para Velonews
+  const totalPagesVelonews = Math.ceil(cienciaPorNoticia.length / itemsPerPageVelonews);
+  const startIndexVelonews = (currentPageVelonews - 1) * itemsPerPageVelonews;
+  const endIndexVelonews = startIndexVelonews + itemsPerPageVelonews;
+  const paginatedCienciaPorNoticia = cienciaPorNoticia.slice(startIndexVelonews, endIndexVelonews);
 
   // Carregar declarações de ciência
   const loadAcknowledgments = useCallback(async () => {
@@ -271,7 +427,10 @@ const HubAnalisesPage = () => {
       
       setCienciaPorNoticia(validNoticias);
     } catch (error) {
-      console.error('Erro ao carregar declarações de ciência:', error);
+      // Log apenas se não for erro de conexão (erro esperado quando servidor está offline)
+      if (!error.message?.includes('Erro de conexão')) {
+        console.error('Erro ao carregar declarações de ciência:', error);
+      }
       setSnackbar({
         open: true,
         message: error.message || 'Erro ao carregar declarações de ciência. Tente novamente.',
@@ -353,21 +512,37 @@ const HubAnalisesPage = () => {
 
   // Combinar online e offline em um único array - COM INFORMAÇÕES DE HORÁRIO
   const todosUsuarios = React.useMemo(() => {
+    // Debug: verificar estado atual
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 [todosUsuarios] Estado atual:', {
+        online: usuariosOnlineOffline.online?.length || 0,
+        offline: usuariosOnlineOffline.offline?.length || 0,
+        totalOnline: usuariosOnlineOffline.totalOnline,
+        totalOffline: usuariosOnlineOffline.totalOffline,
+        usuariosOnlineOffline
+      });
+    }
+    
+    if (!usuariosOnlineOffline || (!usuariosOnlineOffline.online && !usuariosOnlineOffline.offline)) {
+      return [];
+    }
+    
     const combined = [
-      ...usuariosOnlineOffline.online.map(u => ({ 
+      ...(usuariosOnlineOffline.online || []).map(u => ({ 
         ...u, 
         isActive: true,
         loginTimestamp: u.loginTimestamp || u.createdAt || null,
         lastActivity: u.lastActivity || u.updatedAt || null,
         tempoOnline: u.loginTimestamp ? calculateSessionDuration(u.loginTimestamp, null) : 'N/A'
       })),
-      ...usuariosOnlineOffline.offline.map(u => ({ 
+      ...(usuariosOnlineOffline.offline || []).map(u => ({ 
         ...u, 
         isActive: false,
         logoutTimestamp: u.logoutTimestamp || u.updatedAt || null
       }))
     ];
-    return combined.sort((a, b) => {
+    
+    const sorted = combined.sort((a, b) => {
       // Online primeiro, depois offline
       if (a.isActive !== b.isActive) {
         return b.isActive ? 1 : -1;
@@ -375,6 +550,12 @@ const HubAnalisesPage = () => {
       // Depois ordenar por nome
       return (a.colaboradorNome || '').localeCompare(b.colaboradorNome || '');
     });
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('✅ [todosUsuarios] Array combinado:', sorted.length, 'usuários');
+    }
+    
+    return sorted;
   }, [usuariosOnlineOffline, calculateSessionDuration]);
 
   // Formatar data - COM VALIDAÇÃO E PRECISÃO
@@ -542,7 +723,7 @@ const HubAnalisesPage = () => {
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           {/* Quadro 1: Sessões Abertas */}
           <Card sx={{ backgroundColor: 'var(--cor-card)' }}>
-            <CardContent>
+            <CardContent sx={{ backgroundColor: 'var(--cor-card)' }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.6 }}>
                 <Typography variant="h6" sx={{ fontSize: '0.7rem', color: 'var(--blue-dark)', fontFamily: 'Poppins', fontWeight: 600 }}>
                   Sessões Abertas
@@ -636,28 +817,12 @@ const HubAnalisesPage = () => {
 
           {/* Quadro 2: Histórico de Sessões */}
           <Card sx={{ backgroundColor: 'var(--cor-card)' }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.6 }}>
-                <Typography variant="h6" sx={{ fontSize: '0.7rem', color: 'var(--blue-dark)', fontFamily: 'Poppins', fontWeight: 600 }}>
-                  Histórico de Sessões
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                  <FormControl size="small" sx={{ minWidth: 160 }}>
-                    <InputLabel sx={{ fontFamily: 'Poppins', fontSize: '0.6rem' }}>Filtrar por Colaborador</InputLabel>
-                    <Select
-                      value={selectedColaborador}
-                      label="Filtrar por Colaborador"
-                      onChange={(e) => setSelectedColaborador(e.target.value)}
-                      sx={{ fontFamily: 'Poppins', fontSize: '0.65rem' }}
-                    >
-                      <MenuItem value="" sx={{ fontFamily: 'Poppins', fontSize: '0.65rem' }}>Todos</MenuItem>
-                      {colaboradoresList.map((colab) => (
-                        <MenuItem key={colab} value={colab} sx={{ fontFamily: 'Poppins', fontSize: '0.65rem' }}>
-                          {colab}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+            <CardContent sx={{ backgroundColor: 'var(--cor-card)' }}>
+              <Box sx={{ mb: 1.6 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.6 }}>
+                  <Typography variant="h6" sx={{ fontSize: '0.7rem', color: 'var(--blue-dark)', fontFamily: 'Poppins', fontWeight: 600 }}>
+                    Histórico de Sessões
+                  </Typography>
                   <Button
                     variant="outlined"
                     size="small"
@@ -683,6 +848,155 @@ const HubAnalisesPage = () => {
                     Exportar XLSX
                   </Button>
                 </Box>
+                
+                {/* Filtros */}
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <FormControl size="small" sx={{ minWidth: 160 }}>
+                    <InputLabel sx={{ 
+                      fontFamily: 'Poppins', 
+                      fontSize: '0.6rem',
+                      color: 'rgba(0, 0, 0, 0.6)',
+                      '&.Mui-focused': {
+                        color: 'var(--blue-medium)',
+                      },
+                    }}>Filtrar por Colaborador</InputLabel>
+                    <Select
+                      value={selectedColaborador}
+                      label="Filtrar por Colaborador"
+                      onChange={(e) => setSelectedColaborador(e.target.value)}
+                      sx={{ 
+                        fontFamily: 'Poppins', 
+                        fontSize: '0.65rem',
+                        backgroundColor: 'var(--cor-container)',
+                        '& .MuiSelect-select': {
+                          color: 'var(--gray)',
+                        },
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(0, 0, 0, 0.15)',
+                        },
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'var(--blue-medium)',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'var(--blue-medium)',
+                        },
+                      }}
+                    >
+                      <MenuItem value="" sx={{ fontFamily: 'Poppins', fontSize: '0.65rem', color: 'var(--gray)' }}>Todos</MenuItem>
+                      {colaboradoresList.map((colab) => (
+                        <MenuItem key={colab} value={colab} sx={{ fontFamily: 'Poppins', fontSize: '0.65rem', color: 'var(--gray)' }}>
+                          {colab}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  
+                  {/* Filtro de Data Início */}
+                  <TextField
+                    type="date"
+                    label="Data Início"
+                    size="small"
+                    value={filtroDataInicio}
+                    onChange={(e) => setFiltroDataInicio(e.target.value)}
+                    InputLabelProps={{ shrink: true }}
+                    sx={{
+                      minWidth: 140,
+                      '& .MuiOutlinedInput-root': {
+                        fontFamily: 'Poppins',
+                        fontSize: '0.65rem',
+                        backgroundColor: 'var(--cor-container)',
+                        '& fieldset': {
+                          borderColor: 'rgba(0, 0, 0, 0.15)',
+                        },
+                        '&:hover fieldset': {
+                          borderColor: 'var(--blue-medium)',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: 'var(--blue-medium)',
+                        },
+                      },
+                      '& .MuiInputLabel-root': {
+                        fontFamily: 'Poppins',
+                        fontSize: '0.6rem',
+                        color: 'rgba(0, 0, 0, 0.6)',
+                        '&.Mui-focused': {
+                          color: 'var(--blue-medium)',
+                        },
+                      },
+                      '& .MuiInputBase-input': {
+                        fontSize: '0.65rem',
+                        color: 'var(--gray)',
+                        padding: '8px 12px',
+                      },
+                    }}
+                  />
+                  
+                  {/* Filtro de Data Fim */}
+                  <TextField
+                    type="date"
+                    label="Data Fim"
+                    size="small"
+                    value={filtroDataFim}
+                    onChange={(e) => setFiltroDataFim(e.target.value)}
+                    InputLabelProps={{ shrink: true }}
+                    sx={{
+                      minWidth: 140,
+                      '& .MuiOutlinedInput-root': {
+                        fontFamily: 'Poppins',
+                        fontSize: '0.65rem',
+                        backgroundColor: 'var(--cor-container)',
+                        '& fieldset': {
+                          borderColor: 'rgba(0, 0, 0, 0.15)',
+                        },
+                        '&:hover fieldset': {
+                          borderColor: 'var(--blue-medium)',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: 'var(--blue-medium)',
+                        },
+                      },
+                      '& .MuiInputLabel-root': {
+                        fontFamily: 'Poppins',
+                        fontSize: '0.6rem',
+                        color: 'rgba(0, 0, 0, 0.6)',
+                        '&.Mui-focused': {
+                          color: 'var(--blue-medium)',
+                        },
+                      },
+                      '& .MuiInputBase-input': {
+                        fontSize: '0.65rem',
+                        color: 'var(--gray)',
+                        padding: '8px 12px',
+                      },
+                    }}
+                  />
+                  
+                  {/* Botão Limpar Filtros */}
+                  {(filtroDataInicio || filtroDataFim || selectedColaborador) && (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => {
+                        setFiltroDataInicio('');
+                        setFiltroDataFim('');
+                        setSelectedColaborador('');
+                      }}
+                      sx={{
+                        fontFamily: 'Poppins',
+                        fontSize: '0.65rem',
+                        textTransform: 'none',
+                        borderColor: 'rgba(0, 0, 0, 0.15)',
+                        color: 'var(--gray)',
+                        '&:hover': {
+                          borderColor: 'var(--blue-medium)',
+                          backgroundColor: 'rgba(22, 52, 255, 0.05)',
+                        },
+                      }}
+                    >
+                      Limpar
+                    </Button>
+                  )}
+                </Box>
               </Box>
 
               {loadingSessions ? (
@@ -694,122 +1008,220 @@ const HubAnalisesPage = () => {
                   Nenhuma sessão encontrada no histórico.
                 </Alert>
               ) : (
-                <TableContainer 
-                  component={Paper} 
-                  sx={{
-                    backgroundColor: 'var(--cor-container)', 
-                    boxShadow: 'none',
-                    maxHeight: '400px',
-                    overflow: 'auto'
-                  }}
-                >
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow sx={{ backgroundColor: 'var(--cor-container)' }}>
-                        <TableCell className="hub-analises-table-header" sx={{ 
-                          fontFamily: 'Poppins', 
-                          fontWeight: 600, 
-                          color: 'var(--blue-dark)', 
-                          fontSize: '0.65rem'
-                        }}>
-                          Nome
-                        </TableCell>
-                        <TableCell className="hub-analises-table-header" sx={{ 
-                          fontFamily: 'Poppins', 
-                          fontWeight: 600, 
-                          color: 'var(--blue-dark)', 
-                          fontSize: '0.65rem'
-                        }}>
-                          Início
-                        </TableCell>
-                        <TableCell className="hub-analises-table-header" sx={{ 
-                          fontFamily: 'Poppins', 
-                          fontWeight: 600, 
-                          color: 'var(--blue-dark)', 
-                          fontSize: '0.65rem'
-                        }}>
-                          Fim
-                        </TableCell>
-                        <TableCell className="hub-analises-table-header" sx={{ 
-                          fontFamily: 'Poppins', 
-                          fontWeight: 600, 
-                          color: 'var(--blue-dark)', 
-                          fontSize: '0.65rem'
-                        }}>
-                          Tempo de Sessão
-                        </TableCell>
-                        <TableCell className="hub-analises-table-header" sx={{ 
-                          fontFamily: 'Poppins', 
-                          fontWeight: 600, 
-                          color: 'var(--blue-dark)', 
-                          fontSize: '0.65rem'
-                        }}>
-                          IP
-                        </TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {filteredSessions
-                        .sort((a, b) => {
-                          // Ordenar por loginTimestamp (mais recente primeiro), fallback para createdAt
-                          const dateA = isValidDate(a.loginTimestamp) ? new Date(a.loginTimestamp) : 
-                                        (isValidDate(a.createdAt) ? new Date(a.createdAt) : new Date(0));
-                          const dateB = isValidDate(b.loginTimestamp) ? new Date(b.loginTimestamp) : 
-                                        (isValidDate(b.createdAt) ? new Date(b.createdAt) : new Date(0));
-                          return dateB - dateA; // Mais recente primeiro
-                        })
-                        .map((session) => {
-                          const loginTime = session.loginTimestamp ? formatDatePrecise(session.loginTimestamp) : 'N/A';
-                          const logoutTime = session.logoutTimestamp ? formatDatePrecise(session.logoutTimestamp) : null;
-                          const duration = calculateSessionDuration(session.loginTimestamp, session.logoutTimestamp);
-                          
-                          return (
-                            <TableRow 
-                              key={session._id || session.sessionId} 
-                              hover
-                            >
-                              <TableCell className="hub-analises-table-cell" sx={{ 
-                                fontFamily: 'Poppins', 
-                                fontSize: '0.65rem', 
-                                fontWeight: 500
-                              }}>
-                                {session.colaboradorNome || 'N/A'}
-                              </TableCell>
-                              <TableCell className="hub-analises-table-cell" sx={{ 
-                                fontFamily: 'Poppins', 
-                                fontSize: '0.65rem'
-                              }}>
-                                {loginTime}
-                              </TableCell>
-                              <TableCell className="hub-analises-table-cell" sx={{ 
-                                fontFamily: 'Poppins', 
-                                fontSize: '0.65rem'
-                              }}>
-                                {logoutTime || <Typography component="span" className="hub-analises-em-andamento" sx={{ 
-                                  color: 'var(--blue-medium)', 
-                                  fontWeight: 500, 
-                                  fontSize: '0.65rem'
-                                }}>Em andamento</Typography>}
-                              </TableCell>
-                              <TableCell className="hub-analises-table-cell" sx={{ 
-                                fontFamily: 'Poppins', 
-                                fontSize: '0.65rem', 
-                                fontWeight: session.logoutTimestamp ? 400 : 600
-                              }}>
-                                {duration}
-                              </TableCell>
-                              <TableCell className="hub-analises-table-cell" sx={{ 
-                                fontFamily: 'Poppins', 
-                                fontSize: '0.65rem'
-                              }}>
-                                {session.ipAddress || 'N/A'}
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
+                <>
+                  <TableContainer 
+                    component={Paper} 
+                    sx={{
+                      backgroundColor: 'var(--cor-container)', 
+                      boxShadow: 'none',
+                      maxHeight: '400px',
+                      overflow: 'auto'
+                    }}
+                  >
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow sx={{ backgroundColor: 'var(--cor-container)' }}>
+                          <TableCell className="hub-analises-table-header" sx={{ 
+                            fontFamily: 'Poppins', 
+                            fontWeight: 600, 
+                            color: 'var(--blue-dark)', 
+                            fontSize: '0.65rem',
+                            borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+                          }}>
+                            Nome
+                          </TableCell>
+                          <TableCell className="hub-analises-table-header" sx={{ 
+                            fontFamily: 'Poppins', 
+                            fontWeight: 600, 
+                            color: 'var(--blue-dark)', 
+                            fontSize: '0.65rem',
+                            borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+                          }}>
+                            Início
+                          </TableCell>
+                          <TableCell className="hub-analises-table-header" sx={{ 
+                            fontFamily: 'Poppins', 
+                            fontWeight: 600, 
+                            color: 'var(--blue-dark)', 
+                            fontSize: '0.65rem',
+                            borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+                          }}>
+                            Fim
+                          </TableCell>
+                          <TableCell className="hub-analises-table-header" sx={{ 
+                            fontFamily: 'Poppins', 
+                            fontWeight: 600, 
+                            color: 'var(--blue-dark)', 
+                            fontSize: '0.65rem',
+                            borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+                          }}>
+                            Tempo de Sessão
+                          </TableCell>
+                          <TableCell className="hub-analises-table-header" sx={{ 
+                            fontFamily: 'Poppins', 
+                            fontWeight: 600, 
+                            color: 'var(--blue-dark)', 
+                            fontSize: '0.65rem',
+                            borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+                          }}>
+                            IP
+                          </TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {paginatedSessions.map((session) => {
+                            const loginTime = session.loginTimestamp ? formatDatePrecise(session.loginTimestamp) : 'N/A';
+                            const logoutTime = session.logoutTimestamp ? formatDatePrecise(session.logoutTimestamp) : null;
+                            const duration = calculateSessionDuration(session.loginTimestamp, session.logoutTimestamp);
+                            
+                            return (
+                              <TableRow 
+                                key={session._id || session.sessionId} 
+                                hover
+                                sx={{
+                                  backgroundColor: 'var(--cor-container)',
+                                  '&:hover': {
+                                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                                  },
+                                }}
+                              >
+                                <TableCell className="hub-analises-table-cell" sx={{ 
+                                  fontFamily: 'Poppins', 
+                                  fontSize: '0.65rem', 
+                                  fontWeight: 500,
+                                  color: 'var(--gray)',
+                                  borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+                                }}>
+                                  {session.colaboradorNome || 'N/A'}
+                                </TableCell>
+                                <TableCell className="hub-analises-table-cell" sx={{ 
+                                  fontFamily: 'Poppins', 
+                                  fontSize: '0.65rem',
+                                  color: 'var(--gray)',
+                                  borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+                                }}>
+                                  {loginTime}
+                                </TableCell>
+                                <TableCell className="hub-analises-table-cell" sx={{ 
+                                  fontFamily: 'Poppins', 
+                                  fontSize: '0.65rem',
+                                  color: 'var(--gray)',
+                                  borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+                                }}>
+                                  {logoutTime || <Typography component="span" className="hub-analises-em-andamento" sx={{ 
+                                    color: 'var(--blue-medium)', 
+                                    fontWeight: 500, 
+                                    fontSize: '0.65rem'
+                                  }}>Em andamento</Typography>}
+                                </TableCell>
+                                <TableCell className="hub-analises-table-cell" sx={{ 
+                                  fontFamily: 'Poppins', 
+                                  fontSize: '0.65rem', 
+                                  fontWeight: session.logoutTimestamp ? 400 : 600,
+                                  color: 'var(--gray)',
+                                  borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+                                }}>
+                                  {duration}
+                                </TableCell>
+                                <TableCell className="hub-analises-table-cell" sx={{ 
+                                  fontFamily: 'Poppins', 
+                                  fontSize: '0.65rem',
+                                  color: 'var(--gray)',
+                                  borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+                                }}>
+                                  {session.ipAddress || 'N/A'}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                  
+                  {/* Controles de Paginação */}
+                  {totalPages > 1 && (
+                  <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    mt: 2,
+                    pt: 2,
+                    borderTop: '1px solid rgba(0, 0, 0, 0.12)'
+                  }}>
+                    <Typography sx={{ 
+                      fontFamily: 'Poppins', 
+                      fontSize: '0.65rem', 
+                      color: 'var(--gray)' 
+                    }}>
+                      Mostrando {startIndex + 1} - {Math.min(endIndex, filteredSessions.length)} de {filteredSessions.length} sessões
+                    </Typography>
+                    
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <IconButton
+                        size="small"
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        disabled={currentPage === 1}
+                        sx={{
+                          color: 'var(--blue-medium)',
+                          '&:disabled': {
+                            color: 'rgba(0, 0, 0, 0.26)',
+                          },
+                          '&:hover': {
+                            backgroundColor: 'rgba(22, 52, 255, 0.08)',
+                          },
+                        }}
+                      >
+                        <ChevronLeft fontSize="small" />
+                      </IconButton>
+                      
+                      <Pagination
+                        count={totalPages}
+                        page={currentPage}
+                        onChange={(event, value) => setCurrentPage(value)}
+                        size="small"
+                        siblingCount={1}
+                        boundaryCount={1}
+                        sx={{
+                          '& .MuiPaginationItem-root': {
+                            fontFamily: 'Poppins',
+                            fontSize: '0.65rem',
+                            minWidth: '28px',
+                            height: '28px',
+                            color: 'var(--gray)',
+                            '&.Mui-selected': {
+                              backgroundColor: 'var(--blue-medium)',
+                              color: '#fff',
+                              '&:hover': {
+                                backgroundColor: 'var(--blue-light)',
+                              },
+                            },
+                            '&:hover': {
+                              backgroundColor: 'rgba(22, 52, 255, 0.08)',
+                            },
+                          },
+                        }}
+                      />
+                      
+                      <IconButton
+                        size="small"
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                        disabled={currentPage === totalPages}
+                        sx={{
+                          color: 'var(--blue-medium)',
+                          '&:disabled': {
+                            color: 'rgba(0, 0, 0, 0.26)',
+                          },
+                          '&:hover': {
+                            backgroundColor: 'rgba(22, 52, 255, 0.08)',
+                          },
+                        }}
+                      >
+                        <ChevronRight fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  </Box>
+                )}
+                </>
               )}
             </CardContent>
           </Card>
@@ -833,16 +1245,19 @@ const HubAnalisesPage = () => {
                 Nenhuma declaração de ciência encontrada.
               </Alert>
             ) : (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.6 }}>
-                {cienciaPorNoticia.map((noticia) => (
+              <>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.6 }}>
+                  {paginatedCienciaPorNoticia.map((noticia) => (
                   <Accordion
                     key={noticia.newsId}
                     expanded={expandedNews === noticia.newsId}
                     onChange={() => setExpandedNews(expandedNews === noticia.newsId ? null : noticia.newsId)}
                     sx={{
                       '&:before': { display: 'none' },
+                      backgroundColor: 'var(--cor-container)',
                       boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                       borderRadius: '8px !important',
+                      border: '1px solid rgba(0, 0, 0, 0.12)',
                       '&.Mui-expanded': {
                         margin: '0 !important'
                       }
@@ -851,7 +1266,7 @@ const HubAnalisesPage = () => {
                     <AccordionSummary
                       expandIcon={<ExpandMore sx={{ color: 'var(--blue-medium)', fontSize: '0.7rem' }} />}
                       sx={{
-                        backgroundColor: expandedNews === noticia.newsId ? 'rgba(22, 148, 255, 0.05)' : 'transparent',
+                        backgroundColor: expandedNews === noticia.newsId ? 'rgba(22, 148, 255, 0.05)' : 'var(--cor-container)',
                         '&:hover': {
                           backgroundColor: 'rgba(22, 148, 255, 0.05)'
                         }
@@ -883,7 +1298,7 @@ const HubAnalisesPage = () => {
                         />
                       </Box>
                     </AccordionSummary>
-                    <AccordionDetails>
+                    <AccordionDetails sx={{ backgroundColor: 'var(--cor-container)' }}>
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.8 }}>
                         {noticia.agentes.map((agente, index) => (
                           <Box
@@ -893,15 +1308,24 @@ const HubAnalisesPage = () => {
                               justifyContent: 'space-between',
                               alignItems: 'center',
                               p: 1.2,
-                              backgroundColor: 'var(--cor-container)',
+                              backgroundColor: 'var(--cor-card)',
                               borderRadius: '4px',
-                              border: '1px solid var(--gray-light)'
+                              border: '1px solid rgba(0, 0, 0, 0.12)'
                             }}
                           >
-                            <Typography sx={{ fontSize: '0.65rem', fontFamily: 'Poppins', fontWeight: 500 }}>
+                            <Typography sx={{ 
+                              fontSize: '0.65rem', 
+                              fontFamily: 'Poppins', 
+                              fontWeight: 500,
+                              color: 'var(--gray)',
+                            }}>
                               {agente.colaboradorNome || agente.userEmail || 'Usuário desconhecido'}
                             </Typography>
-                          <Typography variant="caption" sx={{ fontSize: '0.6rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
+                          <Typography variant="caption" sx={{ 
+                            fontSize: '0.6rem', 
+                            fontFamily: 'Poppins', 
+                            color: 'rgba(0, 0, 0, 0.6)' 
+                          }}>
                             {agente.acknowledgedAt ? formatDatePrecise(agente.acknowledgedAt) : 'N/A'}
                           </Typography>
                           </Box>
@@ -909,8 +1333,93 @@ const HubAnalisesPage = () => {
                       </Box>
                     </AccordionDetails>
                   </Accordion>
-                ))}
-              </Box>
+                  ))}
+                </Box>
+                
+                {/* Controles de Paginação */}
+                {totalPagesVelonews > 1 && (
+                  <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    mt: 2,
+                    pt: 2,
+                    borderTop: '1px solid rgba(0, 0, 0, 0.12)'
+                  }}>
+                    <Typography sx={{ 
+                      fontFamily: 'Poppins', 
+                      fontSize: '0.65rem', 
+                      color: 'var(--gray)' 
+                    }}>
+                      Mostrando {startIndexVelonews + 1} - {Math.min(endIndexVelonews, cienciaPorNoticia.length)} de {cienciaPorNoticia.length} declarações
+                    </Typography>
+                    
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <IconButton
+                        size="small"
+                        onClick={() => setCurrentPageVelonews(prev => Math.max(1, prev - 1))}
+                        disabled={currentPageVelonews === 1}
+                        sx={{
+                          color: 'var(--blue-medium)',
+                          '&:disabled': {
+                            color: 'rgba(0, 0, 0, 0.26)',
+                          },
+                          '&:hover': {
+                            backgroundColor: 'rgba(22, 52, 255, 0.08)',
+                          },
+                        }}
+                      >
+                        <ChevronLeft fontSize="small" />
+                      </IconButton>
+                      
+                      <Pagination
+                        count={totalPagesVelonews}
+                        page={currentPageVelonews}
+                        onChange={(event, value) => setCurrentPageVelonews(value)}
+                        size="small"
+                        siblingCount={1}
+                        boundaryCount={1}
+                        sx={{
+                          '& .MuiPaginationItem-root': {
+                            fontFamily: 'Poppins',
+                            fontSize: '0.65rem',
+                            minWidth: '28px',
+                            height: '28px',
+                            color: 'var(--gray)',
+                            '&.Mui-selected': {
+                              backgroundColor: 'var(--blue-medium)',
+                              color: '#fff',
+                              '&:hover': {
+                                backgroundColor: 'var(--blue-light)',
+                              },
+                            },
+                            '&:hover': {
+                              backgroundColor: 'rgba(22, 52, 255, 0.08)',
+                            },
+                          },
+                        }}
+                      />
+                      
+                      <IconButton
+                        size="small"
+                        onClick={() => setCurrentPageVelonews(prev => Math.min(totalPagesVelonews, prev + 1))}
+                        disabled={currentPageVelonews === totalPagesVelonews}
+                        sx={{
+                          color: 'var(--blue-medium)',
+                          '&:disabled': {
+                            color: 'rgba(0, 0, 0, 0.26)',
+                          },
+                          '&:hover': {
+                            backgroundColor: 'rgba(22, 52, 255, 0.08)',
+                          },
+                        }}
+                      >
+                        <ChevronRight fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  </Box>
+                )}
+              </>
             )}
           </CardContent>
         </Card>

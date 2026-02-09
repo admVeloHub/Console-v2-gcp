@@ -1,4 +1,4 @@
-// VERSION: v3.4.1 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// VERSION: v3.4.2 | DATE: 2025-02-09 | AUTHOR: VeloHub Development Team
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
@@ -892,7 +892,7 @@ const MarkdownEditor = ({
           '& .ql-toolbar': {
             borderTopLeftRadius: '8px',
             borderTopRightRadius: '8px',
-            borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+            borderBottom: '1px solid rgba(0, 0, 0, 0.15)',
             backgroundColor: 'var(--cor-container)',
             '& .ql-stroke': {
               stroke: 'rgba(0, 0, 0, 0.54)',
@@ -942,7 +942,7 @@ const MarkdownEditor = ({
             }
           },
           '& .ql-container.ql-snow': {
-            border: isDarkMode ? '1px solid var(--blue-dark)' : '1px solid rgba(0, 0, 0, 0.12)',
+            border: isDarkMode ? '1px solid var(--blue-dark)' : '1px solid rgba(0, 0, 0, 0.15)',
             borderTop: 'none',
             '&:hover': {
               borderColor: isDarkMode ? 'var(--blue-light)' : 'var(--blue-medium)',
@@ -953,7 +953,7 @@ const MarkdownEditor = ({
             }
           },
           '& .ql-toolbar.ql-snow': {
-            border: isDarkMode ? '1px solid var(--blue-dark)' : '1px solid rgba(0, 0, 0, 0.12)',
+            border: isDarkMode ? '1px solid var(--blue-dark)' : '1px solid rgba(0, 0, 0, 0.15)',
             borderBottom: 'none',
           }
         }}
