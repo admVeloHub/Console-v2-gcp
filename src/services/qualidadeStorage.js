@@ -229,9 +229,11 @@ export const addAvaliacao = async (avaliacaoData) => {
       escutaAtiva: avaliacaoData.escutaAtiva || false,
       clarezaObjetividade: avaliacaoData.clarezaObjetividade || false,
       resolucaoQuestao: avaliacaoData.resolucaoQuestao || false,
-      dominioAssunto: avaliacaoData.dominioAssunto || false,
+      registroAtendimento: avaliacaoData.registroAtendimento || avaliacaoData.dominioAssunto || false, // Compatibilidade retroativa
       empatiaCordialidade: avaliacaoData.empatiaCordialidade || false,
       direcionouPesquisa: avaliacaoData.direcionouPesquisa || false,
+      naoConsultouBot: avaliacaoData.naoConsultouBot || false,
+      conformidadeTicket: avaliacaoData.conformidadeTicket || false,
       procedimentoIncorreto: avaliacaoData.procedimentoIncorreto || false,
       encerramentoBrusco: avaliacaoData.encerramentoBrusco || false,
       pontuacaoTotal: 0, // Será calculado

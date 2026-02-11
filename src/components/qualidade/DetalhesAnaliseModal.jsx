@@ -2,9 +2,10 @@
  * DetalhesAnaliseModal.jsx
  * Modal para exibir detalhes completos da análise GPT
  * 
- * VERSION: v1.3.0
- * DATE: 2024-12-19
+ * VERSION: v1.4.0
+ * DATE: 2025-02-11
  * AUTHOR: VeloHub Development Team
+ * CHANGELOG: v1.4.0 - Atualização de métricas: substituído dominioAssunto por registroAtendimento, adicionado conformidadeTicket, atualizadas pontuações
  */
 
 import React, { useState, useEffect } from 'react';
@@ -122,9 +123,11 @@ const DetalhesAnaliseModal = ({
           escutaAtiva: analiseCompleta.avaliacaoMonitorId.escutaAtiva,
           clarezaObjetividade: analiseCompleta.avaliacaoMonitorId.clarezaObjetividade,
           resolucaoQuestao: analiseCompleta.avaliacaoMonitorId.resolucaoQuestao,
-          dominioAssunto: analiseCompleta.avaliacaoMonitorId.dominioAssunto,
+          registroAtendimento: analiseCompleta.avaliacaoMonitorId.registroAtendimento || analiseCompleta.avaliacaoMonitorId.dominioAssunto, // Compatibilidade retroativa
           empatiaCordialidade: analiseCompleta.avaliacaoMonitorId.empatiaCordialidade,
           direcionouPesquisa: analiseCompleta.avaliacaoMonitorId.direcionouPesquisa,
+          naoConsultouBot: analiseCompleta.avaliacaoMonitorId.naoConsultouBot,
+          conformidadeTicket: analiseCompleta.avaliacaoMonitorId.conformidadeTicket,
           procedimentoIncorreto: analiseCompleta.avaliacaoMonitorId.procedimentoIncorreto,
           encerramentoBrusco: analiseCompleta.avaliacaoMonitorId.encerramentoBrusco
         } : null
@@ -155,11 +158,14 @@ const DetalhesAnaliseModal = ({
       escutaAtiva: 'Escuta Ativa',
       clarezaObjetividade: 'Clareza e Objetividade',
       resolucaoQuestao: 'Resolução da Questão',
-      dominioAssunto: 'Domínio do Assunto',
+      registroAtendimento: 'Registro do Atendimento',
+      dominioAssunto: 'Registro do Atendimento', // Compatibilidade retroativa
       empatiaCordialidade: 'Empatia e Cordialidade',
       direcionouPesquisa: 'Direcionamento de Pesquisa',
+      naoConsultouBot: 'Não Consultou Bot',
+      conformidadeTicket: 'Inconformidade no Ticket',
       procedimentoIncorreto: 'Procedimento Incorreto',
-      encerramentoBrusco: 'Encerramento Brusco'
+      encerramentoBrusco: 'Encerramento Brusco / Ligação Derrubada'
     };
     return labels[criterio] || criterio;
   };
@@ -170,9 +176,12 @@ const DetalhesAnaliseModal = ({
       escutaAtiva: valor ? PONTUACAO.ESCUTA_ATIVA : 0,
       clarezaObjetividade: valor ? PONTUACAO.CLAREZA_OBJETIVIDADE : 0,
       resolucaoQuestao: valor ? PONTUACAO.RESOLUCAO_QUESTAO : 0,
-      dominioAssunto: valor ? PONTUACAO.DOMINIO_ASSUNTO : 0,
+      registroAtendimento: valor ? PONTUACAO.REGISTRO_ATENDIMENTO : 0,
+      dominioAssunto: valor ? PONTUACAO.REGISTRO_ATENDIMENTO : 0, // Compatibilidade retroativa
       empatiaCordialidade: valor ? PONTUACAO.EMPATIA_CORDIALIDADE : 0,
       direcionouPesquisa: valor ? PONTUACAO.DIRECIONOU_PESQUISA : 0,
+      naoConsultouBot: valor ? PONTUACAO.NAO_CONSULTOU_BOT : 0,
+      conformidadeTicket: valor ? PONTUACAO.CONFORMIDADE_TICKET : 0,
       procedimentoIncorreto: valor ? PONTUACAO.PROCEDIMENTO_INCORRETO : 0,
       encerramentoBrusco: valor ? PONTUACAO.ENCERRAMENTO_BRUSCO : 0
     };
@@ -204,19 +213,35 @@ const DetalhesAnaliseModal = ({
     
     // Se não houver pontuação direta, calcular a partir dos critérios
     const criterios = analiseExibida?.gptAnalysis?.criterios || analiseExibida?.qualityAnalysis?.criterios || {};
+    const avaliacaoMonitor = analiseExibida?.avaliacaoMonitorId || analiseExibida?.avaliacaoOriginal || {};
+    
     let total = 0;
     
+    // Critérios avaliados pela IA
     if (criterios.saudacaoAdequada) total += PONTUACAO.SAUDACAO_ADEQUADA;
     if (criterios.escutaAtiva) total += PONTUACAO.ESCUTA_ATIVA;
     if (criterios.clarezaObjetividade) total += PONTUACAO.CLAREZA_OBJETIVIDADE;
     if (criterios.resolucaoQuestao) total += PONTUACAO.RESOLUCAO_QUESTAO;
-    if (criterios.dominioAssunto) total += PONTUACAO.DOMINIO_ASSUNTO;
     if (criterios.empatiaCordialidade) total += PONTUACAO.EMPATIA_CORDIALIDADE;
     if (criterios.direcionouPesquisa) total += PONTUACAO.DIRECIONOU_PESQUISA;
-    // naoConsultouBot será copiado da avaliação manual (IA não pode determinar isso)
-    if (criterios.naoConsultouBot) total += PONTUACAO.NAO_CONSULTOU_BOT;
     if (criterios.procedimentoIncorreto) total += PONTUACAO.PROCEDIMENTO_INCORRETO;
     if (criterios.encerramentoBrusco) total += PONTUACAO.ENCERRAMENTO_BRUSCO;
+    
+    // Critérios copiados da avaliação manual (não verificáveis pela IA)
+    // registroAtendimento e naoConsultouBot devem ser copiados da avaliação manual
+    const registroAtendimento = criterios.registroAtendimento !== undefined 
+      ? criterios.registroAtendimento 
+      : (criterios.dominioAssunto !== undefined ? criterios.dominioAssunto : (avaliacaoMonitor.registroAtendimento || avaliacaoMonitor.dominioAssunto || false));
+    const naoConsultouBot = criterios.naoConsultouBot !== undefined 
+      ? criterios.naoConsultouBot 
+      : (avaliacaoMonitor.naoConsultouBot || false);
+    const conformidadeTicket = criterios.conformidadeTicket !== undefined 
+      ? criterios.conformidadeTicket 
+      : (avaliacaoMonitor.conformidadeTicket || false);
+    
+    if (registroAtendimento) total += PONTUACAO.REGISTRO_ATENDIMENTO;
+    if (naoConsultouBot) total += PONTUACAO.NAO_CONSULTOU_BOT;
+    if (conformidadeTicket) total += PONTUACAO.CONFORMIDADE_TICKET;
     
     return Math.max(0, total);
   };
@@ -401,9 +426,11 @@ const DetalhesAnaliseModal = ({
                     'escutaAtiva',
                     'clarezaObjetividade',
                     'resolucaoQuestao',
-                    'dominioAssunto',
+                    'registroAtendimento',
                     'empatiaCordialidade',
                     'direcionouPesquisa',
+                    'naoConsultouBot',
+                    'conformidadeTicket',
                     'procedimentoIncorreto',
                     'encerramentoBrusco'
                   ];
@@ -415,8 +442,27 @@ const DetalhesAnaliseModal = ({
                   const avaliacaoMonitor = analiseExibida.avaliacaoMonitorId || analiseExibida.avaliacaoOriginal;
                   
                   return todosCriterios.map((criterio) => {
-                    // Buscar valor da IA (GPT) - se não existir, considerar false
-                    const valorGPT = criterios[criterio] ?? false;
+                    // Para critérios não verificáveis pela IA, copiar da avaliação manual
+                    let valorGPT = criterios[criterio];
+                    if (criterio === 'registroAtendimento' || criterio === 'dominioAssunto') {
+                      // Se não estiver nos critérios da IA, copiar da avaliação manual
+                      if (valorGPT === undefined) {
+                        valorGPT = avaliacaoMonitor?.registroAtendimento || avaliacaoMonitor?.dominioAssunto || false;
+                      }
+                    } else if (criterio === 'naoConsultouBot') {
+                      // Se não estiver nos critérios da IA, copiar da avaliação manual
+                      if (valorGPT === undefined) {
+                        valorGPT = avaliacaoMonitor?.naoConsultouBot || false;
+                      }
+                    } else if (criterio === 'conformidadeTicket') {
+                      // Se não estiver nos critérios da IA, copiar da avaliação manual
+                      if (valorGPT === undefined) {
+                        valorGPT = avaliacaoMonitor?.conformidadeTicket || false;
+                      }
+                    } else {
+                      // Para outros critérios, usar valor da IA ou false
+                      valorGPT = valorGPT ?? false;
+                    }
                     // Buscar critério humano diretamente do avaliacaoMonitorId populado
                     // Os critérios estão diretamente no objeto QualidadeAvaliacao
                     const valorHumano = avaliacaoMonitor?.[criterio] !== undefined 

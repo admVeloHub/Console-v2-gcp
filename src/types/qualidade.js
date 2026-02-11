@@ -1,5 +1,5 @@
-// VERSION: v1.7.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
-// CHANGELOG: v1.7.0 - Atualização de pontuações: Saudação 5pts, Clareza 15pts, Resolução 40pts, adicionado NAO_CONSULTOU_BOT -10pts
+// VERSION: v1.8.0 | DATE: 2025-02-11 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.8.0 - Atualização de métricas: Escuta 15→10pts, Clareza 15→10pts, Empatia 15→10pts, Procedimento -60→-100pts, substituído dominioAssunto por registroAtendimento, adicionado conformidadeTicket -15pts
 
 /**
  * @typedef {Object} Acesso
@@ -47,9 +47,13 @@
  * @property {string} [nomeArquivo]
  * @property {boolean} saudacaoAdequada
  * @property {boolean} escutaAtiva
+ * @property {boolean} clarezaObjetividade
  * @property {boolean} resolucaoQuestao
+ * @property {boolean} registroAtendimento
  * @property {boolean} empatiaCordialidade
  * @property {boolean} direcionouPesquisa
+ * @property {boolean} naoConsultouBot
+ * @property {boolean} conformidadeTicket
  * @property {boolean} procedimentoIncorreto
  * @property {boolean} encerramentoBrusco
  * @property {boolean} moderado
@@ -69,9 +73,13 @@
  * @property {Object} criteriosGPT
  * @property {boolean} criteriosGPT.saudacaoAdequada
  * @property {boolean} criteriosGPT.escutaAtiva
+ * @property {boolean} criteriosGPT.clarezaObjetividade
  * @property {boolean} criteriosGPT.resolucaoQuestao
+ * @property {boolean} criteriosGPT.registroAtendimento
  * @property {boolean} criteriosGPT.empatiaCordialidade
  * @property {boolean} criteriosGPT.direcionouPesquisa
+ * @property {boolean} criteriosGPT.naoConsultouBot
+ * @property {boolean} criteriosGPT.conformidadeTicket
  * @property {boolean} criteriosGPT.procedimentoIncorreto
  * @property {boolean} criteriosGPT.encerramentoBrusco
  * @property {number} confianca - 0-100
@@ -88,9 +96,13 @@
  * @property {number} ano
  * @property {boolean} saudacaoAdequada
  * @property {boolean} escutaAtiva
+ * @property {boolean} clarezaObjetividade
  * @property {boolean} resolucaoQuestao
+ * @property {boolean} registroAtendimento
  * @property {boolean} empatiaCordialidade
  * @property {boolean} direcionouPesquisa
+ * @property {boolean} naoConsultouBot
+ * @property {boolean} conformidadeTicket
  * @property {boolean} procedimentoIncorreto
  * @property {boolean} encerramentoBrusco
  * @property {File} [arquivoLigacao]
@@ -147,16 +159,17 @@ export const ANOS = [2025, 2026, 2027, 2028];
 
 // Constantes de pontuação
 export const PONTUACAO = {
-  SAUDACAO_ADEQUADA: 5,            // Reduzido de 10 para 5
-  ESCUTA_ATIVA: 15,
-  CLAREZA_OBJETIVIDADE: 15,        // Aumentado de 10 para 15
-  RESOLUCAO_QUESTAO: 40,           // Aumentado de 25 para 40
-  DOMINIO_ASSUNTO: 15,
-  EMPATIA_CORDIALIDADE: 15,
-  DIRECIONOU_PESQUISA: 10,
-  NAO_CONSULTOU_BOT: -10,         // NOVO critério detrator
-  PROCEDIMENTO_INCORRETO: -60,
-  ENCERRAMENTO_BRUSCO: -100
+  SAUDACAO_ADEQUADA: 5,            // Mantém 5 pontos
+  ESCUTA_ATIVA: 10,                // Reduzido de 15 para 10
+  CLAREZA_OBJETIVIDADE: 10,        // Reduzido de 15 para 10
+  RESOLUCAO_QUESTAO: 40,           // Mantém 40 pontos
+  REGISTRO_ATENDIMENTO: 15,       // Novo - substitui DOMINIO_ASSUNTO
+  EMPATIA_CORDIALIDADE: 10,        // Reduzido de 15 para 10
+  DIRECIONOU_PESQUISA: 10,         // Mantém 10 pontos
+  NAO_CONSULTOU_BOT: -10,          // Mantém -10 pontos
+  CONFORMIDADE_TICKET: -15,        // Novo critério detrator
+  PROCEDIMENTO_INCORRETO: -100,    // Aumentado de -60 para -100
+  ENCERRAMENTO_BRUSCO: -100        // Mantém -100 pontos
 };
 
 // Função para gerar ID único
@@ -173,12 +186,14 @@ export const calcularPontuacaoTotal = (avaliacao) => {
   if (avaliacao.escutaAtiva) total += PONTUACAO.ESCUTA_ATIVA;
   if (avaliacao.clarezaObjetividade) total += PONTUACAO.CLAREZA_OBJETIVIDADE;
   if (avaliacao.resolucaoQuestao) total += PONTUACAO.RESOLUCAO_QUESTAO;
-  if (avaliacao.dominioAssunto) total += PONTUACAO.DOMINIO_ASSUNTO;
+  // Suporte para compatibilidade: aceitar dominioAssunto ou registroAtendimento
+  if (avaliacao.registroAtendimento || avaliacao.dominioAssunto) total += PONTUACAO.REGISTRO_ATENDIMENTO;
   if (avaliacao.empatiaCordialidade) total += PONTUACAO.EMPATIA_CORDIALIDADE;
   if (avaliacao.direcionouPesquisa) total += PONTUACAO.DIRECIONOU_PESQUISA;
   
   // Critérios negativos
   if (avaliacao.naoConsultouBot) total += PONTUACAO.NAO_CONSULTOU_BOT;
+  if (avaliacao.conformidadeTicket) total += PONTUACAO.CONFORMIDADE_TICKET;
   if (avaliacao.procedimentoIncorreto) total += PONTUACAO.PROCEDIMENTO_INCORRETO;
   if (avaliacao.encerramentoBrusco) total += PONTUACAO.ENCERRAMENTO_BRUSCO;
   

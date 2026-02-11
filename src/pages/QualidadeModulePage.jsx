@@ -1,4 +1,5 @@
-// VERSION: v1.30.6 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
+// VERSION: v1.31.0 | DATE: 2025-02-11 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.31.0 - Atualização de métricas: Escuta 15→10pts, Clareza 15→10pts, Empatia 15→10pts, Procedimento -60→-100pts, substituído dominioAssunto por registroAtendimento, adicionado conformidadeTicket -15pts
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 
@@ -126,10 +127,11 @@ const QualidadeModulePage = () => {
     escutaAtiva: false,
     clarezaObjetividade: false,
     resolucaoQuestao: false,
-    dominioAssunto: false,
+    registroAtendimento: false,        // Substitui dominioAssunto
     empatiaCordialidade: false,
     direcionouPesquisa: false,
-    naoConsultouBot: false,            // NOVO critério detrator
+    naoConsultouBot: false,            // Critério detrator
+    conformidadeTicket: false,         // NOVO critério detrator
     procedimentoIncorreto: false,
     encerramentoBrusco: false,
     observacoes: '',
@@ -311,10 +313,11 @@ const QualidadeModulePage = () => {
         escutaAtiva: avaliacao.escutaAtiva,
         clarezaObjetividade: Boolean(avaliacao.clarezaObjetividade),
         resolucaoQuestao: avaliacao.resolucaoQuestao,
-        dominioAssunto: Boolean(avaliacao.dominioAssunto),
+        registroAtendimento: Boolean(avaliacao.registroAtendimento || avaliacao.dominioAssunto), // Compatibilidade retroativa
         empatiaCordialidade: avaliacao.empatiaCordialidade,
         direcionouPesquisa: avaliacao.direcionouPesquisa,
-        naoConsultouBot: Boolean(avaliacao.naoConsultouBot),  // NOVO critério detrator
+        naoConsultouBot: Boolean(avaliacao.naoConsultouBot),
+        conformidadeTicket: Boolean(avaliacao.conformidadeTicket),
         procedimentoIncorreto: avaliacao.procedimentoIncorreto,
         encerramentoBrusco: avaliacao.encerramentoBrusco,
         observacoes: avaliacao.observacoes || '',
@@ -341,10 +344,11 @@ const QualidadeModulePage = () => {
         escutaAtiva: false,
         clarezaObjetividade: false,
         resolucaoQuestao: false,
-        dominioAssunto: false,
+        registroAtendimento: false,
         empatiaCordialidade: false,
         direcionouPesquisa: false,
-        naoConsultouBot: false,            // NOVO critério detrator
+        naoConsultouBot: false,
+        conformidadeTicket: false,
         procedimentoIncorreto: false,
         encerramentoBrusco: false,
         observacoes: '',
@@ -368,8 +372,9 @@ const QualidadeModulePage = () => {
       escutaAtiva: false,
       clarezaObjetividade: false,
       resolucaoQuestao: false,
-      dominioAssunto: false,
-      naoConsultouBot: false,            // NOVO critério detrator
+      registroAtendimento: false,
+      naoConsultouBot: false,
+      conformidadeTicket: false,
       empatiaCordialidade: false,
       direcionouPesquisa: false,
       procedimentoIncorreto: false,
@@ -1921,7 +1926,7 @@ const QualidadeModulePage = () => {
             {/* Linha 1: Saudação e Escuta Ativa */}
             {[
               { key: 'saudacaoAdequada', label: 'Saudação Adequada', pontos: 5, isPositive: true },
-              { key: 'escutaAtiva', label: 'Escuta Ativa / Sondagem', pontos: 15, isPositive: true }
+              { key: 'escutaAtiva', label: 'Escuta Ativa / Sondagem', pontos: 10, isPositive: true }
             ].map((criterio) => (
               <Grid item xs={12} md={6} key={criterio.key}>
                 <Box className="avaliacao-criterio-card" sx={{ 
@@ -1982,7 +1987,7 @@ const QualidadeModulePage = () => {
             
             {/* Linha 2: Clareza e Resolução */}
             {[
-              { key: 'clarezaObjetividade', label: 'Clareza e Objetividade', pontos: 15, isPositive: true },
+              { key: 'clarezaObjetividade', label: 'Clareza e Objetividade', pontos: 10, isPositive: true },
               { key: 'resolucaoQuestao', label: 'Boa Resolução / Procedimento', pontos: 40, isPositive: true }
             ].map((criterio) => (
               <Grid item xs={12} md={6} key={criterio.key}>
@@ -2042,10 +2047,10 @@ const QualidadeModulePage = () => {
               </Grid>
             ))}
             
-            {/* Linha 3: Domínio e Empatia */}
+            {/* Linha 3: Registro do Atendimento e Empatia */}
             {[
-              { key: 'dominioAssunto', label: 'Domínio no assunto abordado', pontos: 15, isPositive: true },
-              { key: 'empatiaCordialidade', label: 'Empatia / Cordialidade', pontos: 15, isPositive: true }
+              { key: 'registroAtendimento', label: 'Registro do Atendimento (anotação interna)', pontos: 15, isPositive: true },
+              { key: 'empatiaCordialidade', label: 'Empatia / Cordialidade', pontos: 10, isPositive: true }
             ].map((criterio) => (
               <Grid item xs={12} md={6} key={criterio.key}>
                 <Box className="avaliacao-criterio-card" sx={{ 
@@ -2110,15 +2115,15 @@ const QualidadeModulePage = () => {
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'space-between', 
-                p: 2, 
+                p: 1.6, 
                 border: formData.direcionouPesquisa 
                   ? '1px solid rgba(22, 148, 255, 0.75)' 
                   : '1px solid rgba(22, 148, 255, 0.5)',
-                borderRadius: '8px',
-                backgroundColor: '#ffffff'
+                borderRadius: '6.4px',
+                backgroundColor: 'var(--cor-card)'
               }}>
                 <Box>
-                  <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500, color: '#000000' }}>
+                  <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500, fontSize: '0.8rem', color: '#000000' }}>
                     Direcionou para pesquisa de satisfação
                   </Typography>
                         <Typography variant="body2" className="pontuacao-positiva" sx={{ fontFamily: 'Poppins', color: '#006AB9', fontSize: '0.8rem' }}>
@@ -2131,9 +2136,9 @@ const QualidadeModulePage = () => {
                   className={`checkbox-positivo ${formData.direcionouPesquisa ? 'checkbox-selecionado' : ''}`}
                   onClick={() => setFormData({ ...formData, direcionouPesquisa: !formData.direcionouPesquisa })}
                   sx={{
-                    minWidth: '28px',
-                    width: '28px',
-                    height: '28px',
+                    minWidth: '22.4px',
+                    width: '22.4px',
+                    height: '22.4px',
                     border: formData.direcionouPesquisa 
                       ? '2px solid rgba(22, 148, 255, 0.75)' 
                       : '1px solid rgba(22, 148, 255, 0.5)',
@@ -2150,7 +2155,7 @@ const QualidadeModulePage = () => {
                   {formData.direcionouPesquisa && (
                     <CheckCircle sx={{ 
                       color: '#ffffff', 
-                      fontSize: '14px' 
+                      fontSize: '11.2px' 
                     }} />
                   )}
                 </Button>
@@ -2169,70 +2174,67 @@ const QualidadeModulePage = () => {
               </Box>
             </Grid>
             
-            {/* Linha 5: Não Consultou Bot (coluna 1) - NOVO critério detrator */}
-            <Grid item xs={12} md={6}>
-              <Box className="avaliacao-criterio-card" sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'space-between', 
-                p: 2, 
-                border: formData.naoConsultouBot 
-                  ? '1px solid #EF4444' 
-                  : '1px solid rgba(255, 193, 7, 0.6)',
-                borderRadius: '8px',
-                backgroundColor: '#ffffff'
-              }}>
-                <Box>
-                  <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500, color: '#000000' }}>
-                    Não consultou o bot
-                  </Typography>
-                  <Typography variant="body2" className="pontuacao-negativa" sx={{ fontFamily: 'Poppins', color: '#D32F2F', fontSize: '0.8rem' }}>
-                    -10 pontos
-                  </Typography>
+            {/* Linha 5: Não Consultou Bot e Inconformidade no Ticket */}
+            {[
+              { key: 'naoConsultouBot', label: 'Não consultou o bot', pontos: -10, isPositive: false },
+              { key: 'conformidadeTicket', label: 'Inconformidade no Ticket', pontos: -15, isPositive: false }
+            ].map((criterio) => (
+              <Grid item xs={12} md={6} key={criterio.key}>
+                <Box className="avaliacao-criterio-card" sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between', 
+                  p: 1.6, 
+                  border: criterio.isPositive 
+                    ? (formData[criterio.key] ? '1px solid rgba(22, 148, 255, 0.75)' : '1px solid rgba(22, 148, 255, 0.5)')
+                    : (formData[criterio.key] ? '1px solid #EF4444' : '1px solid rgba(255, 193, 7, 0.6)'),
+                  borderRadius: '6.4px',
+                  backgroundColor: 'var(--cor-card)'
+                }}>
+                  <Box>
+                    <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500, fontSize: '0.8rem', color: '#000000' }}>
+                      {criterio.label}
+                    </Typography>
+                    <Typography variant="body2" className={criterio.pontos > 0 ? 'pontuacao-positiva' : 'pontuacao-negativa'} sx={{ fontFamily: 'Poppins', color: criterio.pontos > 0 ? '#006AB9' : '#D32F2F', fontSize: '0.8rem' }}>
+                      {criterio.pontos > 0 ? `+${criterio.pontos} pontos` : `${criterio.pontos} pontos`}
+                    </Typography>
+                  </Box>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    className={`${criterio.isPositive ? 'checkbox-positivo' : 'checkbox-negativo'} ${formData[criterio.key] ? 'checkbox-selecionado' : ''}`}
+                    onClick={() => setFormData({ ...formData, [criterio.key]: !formData[criterio.key] })}
+                    sx={{
+                      minWidth: '22.4px',
+                      width: '22.4px',
+                      height: '22.4px',
+                      border: criterio.isPositive 
+                        ? (formData[criterio.key] ? '2px solid rgba(22, 148, 255, 0.75)' : '1px solid rgba(22, 148, 255, 0.5)')
+                        : (formData[criterio.key] ? '2px solid #EF4444' : '1px solid rgba(255, 193, 7, 0.6)'),
+                      backgroundColor: criterio.isPositive 
+                        ? (formData[criterio.key] ? '#000058' : 'transparent')
+                        : (formData[criterio.key] ? '#EF4444' : 'transparent'),
+                      borderRadius: '4px',
+                      '&:hover': {
+                        backgroundColor: criterio.isPositive 
+                          ? (formData[criterio.key] ? '#000040' : 'rgba(22, 148, 255, 0.1)')
+                          : (formData[criterio.key] ? '#DC2626' : 'rgba(255, 193, 7, 0.1)'),
+                        borderColor: criterio.isPositive 
+                          ? 'rgba(22, 148, 255, 0.75)'
+                          : '#EF4444'
+                      }
+                    }}
+                  >
+                    {formData[criterio.key] && (
+                      <CheckCircle sx={{ 
+                        color: '#ffffff', 
+                        fontSize: '11.2px' 
+                      }} />
+                    )}
+                  </Button>
                 </Box>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  className={`checkbox-negativo ${formData.naoConsultouBot ? 'checkbox-selecionado' : ''}`}
-                  onClick={() => setFormData({ ...formData, naoConsultouBot: !formData.naoConsultouBot })}
-                  sx={{
-                    minWidth: '28px',
-                    width: '28px',
-                    height: '28px',
-                    border: formData.naoConsultouBot 
-                      ? '2px solid #EF4444' 
-                      : '1px solid rgba(255, 193, 7, 0.6)',
-                    backgroundColor: formData.naoConsultouBot ? '#EF4444' : 'transparent',
-                    borderRadius: '4px',
-                    '&:hover': {
-                      backgroundColor: formData.naoConsultouBot 
-                        ? '#DC2626' 
-                        : 'rgba(255, 193, 7, 0.1)',
-                      borderColor: '#EF4444'
-                    }
-                  }}
-                >
-                  {formData.naoConsultouBot && (
-                    <CheckCircle sx={{ 
-                      color: '#ffffff', 
-                      fontSize: '14px' 
-                    }} />
-                  )}
-                </Button>
-              </Box>
-            </Grid>
-            
-            {/* Card invisível para ocupar coluna 2 da linha 5 */}
-            <Grid item xs={12} md={6}>
-              <Box sx={{ 
-                p: 2, 
-                visibility: 'hidden'
-              }}>
-                <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
-                  Espaço vazio
-                </Typography>
-              </Box>
-            </Grid>
+              </Grid>
+            ))}
             
             {/* Linha 6: Encerramento Brusco (coluna 1) e Procedimento Incorreto (coluna 2) */}
             <Grid item xs={12} md={6}>
@@ -2240,16 +2242,16 @@ const QualidadeModulePage = () => {
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'space-between', 
-                p: 2, 
+                p: 1.6, 
                 border: formData.encerramentoBrusco 
                   ? '1px solid #EF4444' 
                   : '1px solid rgba(255, 193, 7, 0.6)',
-                borderRadius: '8px',
-                backgroundColor: '#ffffff'
+                borderRadius: '6.4px',
+                backgroundColor: 'var(--cor-card)'
               }}>
                 <Box>
-                  <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500, color: '#000000' }}>
-                    Colaborador encerrou o contato de forma brusca / Derrubou a ligação
+                  <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500, fontSize: '0.8rem', color: '#000000' }}>
+                    Encerramento Brusco / Ligação Derrubada
                   </Typography>
                         <Typography variant="body2" className="pontuacao-negativa" sx={{ fontFamily: 'Poppins', color: '#D32F2F', fontSize: '0.8rem' }}>
                     -100 pontos
@@ -2261,9 +2263,9 @@ const QualidadeModulePage = () => {
                   className={`checkbox-negativo ${formData.encerramentoBrusco ? 'checkbox-selecionado' : ''}`}
                   onClick={() => setFormData({ ...formData, encerramentoBrusco: !formData.encerramentoBrusco })}
                   sx={{
-                    minWidth: '28px',
-                    width: '28px',
-                    height: '28px',
+                    minWidth: '22.4px',
+                    width: '22.4px',
+                    height: '22.4px',
                     border: formData.encerramentoBrusco 
                       ? '2px solid #EF4444' 
                       : '1px solid rgba(255, 193, 7, 0.6)',
@@ -2280,30 +2282,30 @@ const QualidadeModulePage = () => {
                   {formData.encerramentoBrusco && (
                     <CheckCircle sx={{ 
                       color: '#ffffff', 
-                      fontSize: '14px' 
+                      fontSize: '11.2px' 
                     }} />
                   )}
                 </Button>
               </Box>
             </Grid>
             
-            {/* Procedimento Incorreto - Coluna 2, Linha 4 */}
+            {/* Procedimento Incorreto - Coluna 2, Linha 6 */}
             <Grid item xs={12} md={6}>
               <Box className="avaliacao-criterio-card" sx={{ 
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'space-between', 
-                p: 2, 
+                p: 1.6, 
                 border: formData.procedimentoIncorreto ? '1px solid #EF4444' : '1px solid rgba(255, 193, 7, 0.6)',
-                borderRadius: '8px',
-                backgroundColor: '#ffffff'
+                borderRadius: '6.4px',
+                backgroundColor: 'var(--cor-card)'
               }}>
                 <Box>
-                  <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500, color: '#000000' }}>
+                  <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500, fontSize: '0.8rem', color: '#000000' }}>
                     Colaborador repassou um procedimento incorreto
                   </Typography>
                         <Typography variant="body2" className="pontuacao-negativa" sx={{ fontFamily: 'Poppins', color: '#D32F2F', fontSize: '0.8rem' }}>
-                    -60 pontos
+                    -100 pontos
                   </Typography>
                 </Box>
                 <Button
@@ -2312,9 +2314,9 @@ const QualidadeModulePage = () => {
                   className={`checkbox-negativo ${formData.procedimentoIncorreto ? 'checkbox-selecionado' : ''}`}
                   onClick={() => setFormData({ ...formData, procedimentoIncorreto: !formData.procedimentoIncorreto })}
                   sx={{
-                    minWidth: '28px',
-                    width: '28px',
-                    height: '28px',
+                    minWidth: '22.4px',
+                    width: '22.4px',
+                    height: '22.4px',
                     border: formData.procedimentoIncorreto ? '2px solid #EF4444' : '1px solid rgba(255, 193, 7, 0.6)',
                     backgroundColor: formData.procedimentoIncorreto ? '#EF4444' : 'transparent',
                     borderRadius: '4px',
@@ -2327,7 +2329,7 @@ const QualidadeModulePage = () => {
                   {formData.procedimentoIncorreto && (
                     <CheckCircle sx={{ 
                       color: '#ffffff', 
-                      fontSize: '14px'
+                      fontSize: '11.2px' 
                     }} />
                   )}
                 </Button>

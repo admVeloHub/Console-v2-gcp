@@ -1,19 +1,26 @@
 /**
  * VeloHub Console - WhatsApp API Service
- * VERSION: v1.2.1 | DATE: 2025-01-31 | AUTHOR: VeloHub Development Team
+ * VERSION: v2.0.0 | DATE: 2025-02-11 | AUTHOR: VeloHub Development Team
  * 
  * Serviço para comunicação com API WhatsApp do SKYNET
+ * Suporta múltiplas conexões (requisicoes-produto e velodesk)
  * Requer permissão 'whatsapp' no sistema de permissionamento
  * 
- * Mudanças v1.2.1:
- * - Adicionados logs informativos sobre requisições WhatsApp
+ * Mudanças v2.0.0:
+ * - Suporte para múltiplas conexões WhatsApp
+ * - Funções específicas para cada conexão
+ * - Novas funcionalidades: react, grupos, replies, health checks
  */
 
 import axios from 'axios';
 
-// URL base do SKYNET em produção
-// Pode ser sobrescrita via variável de ambiente REACT_APP_SKYNET_API_URL
-const SKYNET_API_URL = process.env.REACT_APP_SKYNET_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app';
+// URL base do SKYNET
+// Em desenvolvimento: usa localhost:3001 se REACT_APP_SKYNET_API_URL não estiver definida
+// Em produção: usa variável de ambiente ou fallback para produção
+const SKYNET_API_URL = process.env.REACT_APP_SKYNET_API_URL || 
+  (process.env.NODE_ENV === 'development' 
+    ? 'http://localhost:3001' 
+    : 'https://backend-gcp-hfsqj6konq-ue.a.run.app');
 
 const whatsappApi = axios.create({
   baseURL: SKYNET_API_URL,
@@ -68,65 +75,194 @@ whatsappApi.interceptors.response.use(
 );
 
 /**
- * Obter status da conexão WhatsApp
- * @returns {Promise<Object>} { connected, status, number, numberFormatted, hasQR }
+ * Funções genéricas que aceitam connectionId
  */
-export const getStatus = async () => {
+const getStatusByConnection = async (connectionId) => {
   try {
-    const response = await whatsappApi.get('/api/whatsapp/status');
-    console.log('[WhatsApp API] Status recebido:', response.data);
+    const response = await whatsappApi.get(`/api/whatsapp/${connectionId}/status`);
     return response.data;
   } catch (error) {
-    throw new Error(error.response?.data?.error || 'Erro ao obter status do WhatsApp');
+    throw new Error(error.response?.data?.error || `Erro ao obter status do WhatsApp (${connectionId})`);
+  }
+};
+
+const getQRByConnection = async (connectionId) => {
+  try {
+    const response = await whatsappApi.get(`/api/whatsapp/${connectionId}/qr`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || `Erro ao obter QR code (${connectionId})`);
+  }
+};
+
+const logoutByConnection = async (connectionId) => {
+  try {
+    const response = await whatsappApi.post(`/api/whatsapp/${connectionId}/logout`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || `Erro ao fazer logout (${connectionId})`);
+  }
+};
+
+const getNumberByConnection = async (connectionId) => {
+  try {
+    const response = await whatsappApi.get(`/api/whatsapp/${connectionId}/number`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || `Erro ao obter número conectado (${connectionId})`);
+  }
+};
+
+const reactByConnection = async (connectionId, messageId, jid, participant = null) => {
+  try {
+    const response = await whatsappApi.post(`/api/whatsapp/${connectionId}/react`, {
+      messageId,
+      jid,
+      participant
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || `Erro ao enviar reação (${connectionId})`);
+  }
+};
+
+const getGruposByConnection = async (connectionId) => {
+  try {
+    const response = await whatsappApi.get(`/api/whatsapp/${connectionId}/grupos`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || `Erro ao listar grupos (${connectionId})`);
+  }
+};
+
+const getRecentRepliesByConnection = async (connectionId, agent = null) => {
+  try {
+    const url = agent 
+      ? `/api/whatsapp/${connectionId}/replies/recent?agent=${encodeURIComponent(agent)}`
+      : `/api/whatsapp/${connectionId}/replies/recent`;
+    const response = await whatsappApi.get(url);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || `Erro ao obter replies (${connectionId})`);
+  }
+};
+
+const connectRepliesStreamByConnection = (connectionId, agent = null, onMessage, onError) => {
+  const url = agent
+    ? `${SKYNET_API_URL}/api/whatsapp/${connectionId}/stream/replies?agent=${encodeURIComponent(agent)}`
+    : `${SKYNET_API_URL}/api/whatsapp/${connectionId}/stream/replies`;
+  
+  const eventSource = new EventSource(url);
+  
+  eventSource.addEventListener('init', (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      if (onMessage) onMessage({ type: 'init', data });
+    } catch (e) {
+      console.error('[WhatsApp API] Erro ao processar evento init:', e);
+    }
+  });
+  
+  eventSource.addEventListener('reply', (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      if (onMessage) onMessage({ type: 'reply', data });
+    } catch (e) {
+      console.error('[WhatsApp API] Erro ao processar evento reply:', e);
+    }
+  });
+  
+  eventSource.onerror = (error) => {
+    console.error('[WhatsApp API] Erro no EventSource:', error);
+    if (onError) onError(error);
+  };
+  
+  return eventSource;
+};
+
+const pingByConnection = async (connectionId) => {
+  try {
+    const response = await whatsappApi.get(`/api/whatsapp/${connectionId}/ping`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || `Erro ao fazer ping (${connectionId})`);
+  }
+};
+
+const healthByConnection = async (connectionId) => {
+  try {
+    const response = await whatsappApi.get(`/api/whatsapp/${connectionId}/health`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || `Erro ao obter health (${connectionId})`);
   }
 };
 
 /**
- * Obter QR code atual
- * @returns {Promise<Object>} { hasQR, qr?, expiresIn?, message? }
+ * Funções específicas para Requisições de Produto
  */
-export const getQR = async () => {
-  try {
-    const response = await whatsappApi.get('/api/whatsapp/qr');
-    console.log('[WhatsApp API] QR recebido:', { hasQR: response.data.hasQR, expiresIn: response.data.expiresIn });
-    return response.data;
-  } catch (error) {
-    throw new Error(error.response?.data?.error || 'Erro ao obter QR code');
-  }
-};
+export const getStatusRequisicoesProduto = () => getStatusByConnection('requisicoes-produto');
+export const getQRRequisicoesProduto = () => getQRByConnection('requisicoes-produto');
+export const logoutRequisicoesProduto = () => logoutByConnection('requisicoes-produto');
+export const getNumberRequisicoesProduto = () => getNumberByConnection('requisicoes-produto');
+export const reactRequisicoesProduto = (messageId, jid, participant) => reactByConnection('requisicoes-produto', messageId, jid, participant);
+export const getGruposRequisicoesProduto = () => getGruposByConnection('requisicoes-produto');
+export const getRecentRepliesRequisicoesProduto = (agent) => getRecentRepliesByConnection('requisicoes-produto', agent);
+export const connectRepliesStreamRequisicoesProduto = (agent, onMessage, onError) => connectRepliesStreamByConnection('requisicoes-produto', agent, onMessage, onError);
+export const pingRequisicoesProduto = () => pingByConnection('requisicoes-produto');
+export const healthRequisicoesProduto = () => healthByConnection('requisicoes-produto');
 
 /**
- * Fazer logout e gerar novo QR code
- * @returns {Promise<Object>} { success, message?, error? }
+ * Funções específicas para VeloDesk
  */
-export const logout = async () => {
-  try {
-    const response = await whatsappApi.post('/api/whatsapp/logout');
-    console.log('[WhatsApp API] Logout realizado:', response.data);
-    return response.data;
-  } catch (error) {
-    throw new Error(error.response?.data?.error || 'Erro ao fazer logout');
-  }
-};
+export const getStatusVelodesk = () => getStatusByConnection('velodesk');
+export const getQRVelodesk = () => getQRByConnection('velodesk');
+export const logoutVelodesk = () => logoutByConnection('velodesk');
+export const getNumberVelodesk = () => getNumberByConnection('velodesk');
+export const reactVelodesk = (messageId, jid, participant) => reactByConnection('velodesk', messageId, jid, participant);
+export const getGruposVelodesk = () => getGruposByConnection('velodesk');
+export const getRecentRepliesVelodesk = (agent) => getRecentRepliesByConnection('velodesk', agent);
+export const connectRepliesStreamVelodesk = (agent, onMessage, onError) => connectRepliesStreamByConnection('velodesk', agent, onMessage, onError);
+export const pingVelodesk = () => pingByConnection('velodesk');
+export const healthVelodesk = () => healthByConnection('velodesk');
 
 /**
- * Obter número conectado
- * @returns {Promise<Object>} { number, formatted, connected }
+ * Funções genéricas (mantidas para compatibilidade - usam requisicoes-produto)
+ * @deprecated Use as funções específicas por conexão
  */
-export const getNumber = async () => {
-  try {
-    const response = await whatsappApi.get('/api/whatsapp/number');
-    console.log('[WhatsApp API] Número recebido:', response.data);
-    return response.data;
-  } catch (error) {
-    throw new Error(error.response?.data?.error || 'Erro ao obter número conectado');
-  }
-};
+export const getStatus = getStatusRequisicoesProduto;
+export const getQR = getQRRequisicoesProduto;
+export const logout = logoutRequisicoesProduto;
+export const getNumber = getNumberRequisicoesProduto;
 
 export default {
+  // Funções genéricas (deprecated)
   getStatus,
   getQR,
   logout,
-  getNumber
+  getNumber,
+  
+  // Requisições de Produto
+  getStatusRequisicoesProduto,
+  getQRRequisicoesProduto,
+  logoutRequisicoesProduto,
+  getNumberRequisicoesProduto,
+  reactRequisicoesProduto,
+  getGruposRequisicoesProduto,
+  getRecentRepliesRequisicoesProduto,
+  connectRepliesStreamRequisicoesProduto,
+  pingRequisicoesProduto,
+  healthRequisicoesProduto,
+  
+  // VeloDesk
+  getStatusVelodesk,
+  getQRVelodesk,
+  logoutVelodesk,
+  getNumberVelodesk,
+  reactVelodesk,
+  getGruposVelodesk,
+  getRecentRepliesVelodesk,
+  connectRepliesStreamVelodesk,
+  pingVelodesk,
+  healthVelodesk
 };
-

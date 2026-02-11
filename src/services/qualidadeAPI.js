@@ -1,4 +1,5 @@
-// VERSION: v1.34.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// VERSION: v1.35.0 | DATE: 2025-02-11 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.35.0 - Atualização de métricas: substituído dominioAssunto por registroAtendimento, adicionado conformidadeTicket e naoConsultouBot
 // CHANGELOG: v1.34.0 - Adicionado campo Desk ao objeto acessos {Velohub: Boolean, Console: Boolean, Academy: Boolean, Desk: Boolean}. Acessos são completamente opcionais.
 // v1.33.0 - Adicionada normalização de formato de acessos (array vazio/null -> objeto {Velohub: Boolean, Console: Boolean}) para compatibilidade com novo schema
 
@@ -545,11 +546,13 @@ export const addAvaliacao = async (avaliacaoData) => {
       ano: Number(avaliacaoData.ano) || new Date().getFullYear(), // Number
       saudacaoAdequada: Boolean(avaliacaoData.saudacaoAdequada), // Boolean
       escutaAtiva: Boolean(avaliacaoData.escutaAtiva), // Boolean
-      clarezaObjetividade: Boolean(avaliacaoData.clarezaObjetividade), // Boolean - NOVO
+      clarezaObjetividade: Boolean(avaliacaoData.clarezaObjetividade), // Boolean
       resolucaoQuestao: Boolean(avaliacaoData.resolucaoQuestao), // Boolean
-      dominioAssunto: Boolean(avaliacaoData.dominioAssunto), // Boolean - NOVO
+      registroAtendimento: Boolean(avaliacaoData.registroAtendimento || avaliacaoData.dominioAssunto), // Boolean - substitui dominioAssunto (compatibilidade retroativa)
       empatiaCordialidade: Boolean(avaliacaoData.empatiaCordialidade), // Boolean
       direcionouPesquisa: Boolean(avaliacaoData.direcionouPesquisa), // Boolean
+      naoConsultouBot: Boolean(avaliacaoData.naoConsultouBot), // Boolean
+      conformidadeTicket: Boolean(avaliacaoData.conformidadeTicket), // Boolean - NOVO
       procedimentoIncorreto: Boolean(avaliacaoData.procedimentoIncorreto), // Boolean
       encerramentoBrusco: Boolean(avaliacaoData.encerramentoBrusco), // Boolean
       pontuacaoTotal: 0, // Será calculado
@@ -619,9 +622,11 @@ export const updateAvaliacao = async (id, avaliacaoData) => {
       escutaAtiva: Boolean(avaliacaoData.escutaAtiva), // Boolean
       clarezaObjetividade: Boolean(avaliacaoData.clarezaObjetividade), // Boolean
       resolucaoQuestao: Boolean(avaliacaoData.resolucaoQuestao), // Boolean
-      dominioAssunto: Boolean(avaliacaoData.dominioAssunto), // Boolean
+      registroAtendimento: Boolean(avaliacaoData.registroAtendimento || avaliacaoData.dominioAssunto), // Boolean - substitui dominioAssunto (compatibilidade retroativa)
       empatiaCordialidade: Boolean(avaliacaoData.empatiaCordialidade), // Boolean
       direcionouPesquisa: Boolean(avaliacaoData.direcionouPesquisa), // Boolean
+      naoConsultouBot: Boolean(avaliacaoData.naoConsultouBot), // Boolean
+      conformidadeTicket: Boolean(avaliacaoData.conformidadeTicket), // Boolean
       procedimentoIncorreto: Boolean(avaliacaoData.procedimentoIncorreto), // Boolean
       encerramentoBrusco: Boolean(avaliacaoData.encerramentoBrusco), // Boolean
       pontuacaoTotal: 0, // Será calculado

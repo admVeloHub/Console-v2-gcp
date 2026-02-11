@@ -1,4 +1,5 @@
-// VERSION: v1.5.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// VERSION: v1.6.0 | DATE: 2025-02-11 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.6.0 - Atualização de métricas: substituído dominioAssunto por registroAtendimento, adicionado conformidadeTicket e naoConsultouBot
 
 import * as XLSX from 'xlsx';
 import { getAvaliacoes } from './qualidadeAPI';
@@ -21,8 +22,8 @@ export const exportAvaliacoesToExcel = async () => {
     const headers = [
       'ID', 'Colaborador', 'Avaliador', 'Mês', 'Ano', 'Data Ligação',
       'Saudação Adequada', 'Escuta Ativa', 'Clareza/Objetividade', 'Resolução Questão',
-      'Domínio do Assunto', 'Empatia/Cordialidade', 'Direcionou Pesquisa',
-      'Procedimento Incorreto', 'Encerramento Brusco', 'Pontuação Total',
+      'Registro do Atendimento', 'Empatia/Cordialidade', 'Direcionou Pesquisa',
+      'Não Consultou Bot', 'Inconformidade no Ticket', 'Procedimento Incorreto', 'Encerramento Brusco', 'Pontuação Total',
       'Observações', 'Nome Arquivo Áudio', 'Áudio Enviado', 'Áudio Processado',
       'Data Criação Áudio', 'Data Atualização Áudio', 'Data Criação', 'Data Atualização'
     ];
@@ -40,9 +41,11 @@ export const exportAvaliacoesToExcel = async () => {
         avaliacao.escutaAtiva ? 'Sim' : 'Não',
         avaliacao.clarezaObjetividade !== undefined ? (avaliacao.clarezaObjetividade ? 'Sim' : 'Não') : '',
         avaliacao.resolucaoQuestao ? 'Sim' : 'Não',
-        avaliacao.dominioAssunto !== undefined ? (avaliacao.dominioAssunto ? 'Sim' : 'Não') : '',
+        (avaliacao.registroAtendimento !== undefined ? avaliacao.registroAtendimento : (avaliacao.dominioAssunto !== undefined ? avaliacao.dominioAssunto : false)) ? 'Sim' : 'Não',
         avaliacao.empatiaCordialidade ? 'Sim' : 'Não',
         avaliacao.direcionouPesquisa ? 'Sim' : 'Não',
+        avaliacao.naoConsultouBot !== undefined ? (avaliacao.naoConsultouBot ? 'Sim' : 'Não') : '',
+        avaliacao.conformidadeTicket !== undefined ? (avaliacao.conformidadeTicket ? 'Sim' : 'Não') : '',
         avaliacao.procedimentoIncorreto ? 'Sim' : 'Não',
         avaliacao.encerramentoBrusco ? 'Sim' : 'Não',
         avaliacao.pontuacaoTotal || 0,
@@ -72,9 +75,11 @@ export const exportAvaliacoesToExcel = async () => {
       { wch: 12 }, // Escuta Ativa
       { wch: 20 }, // Clareza/Objetividade
       { wch: 18 }, // Resolução Questão
-      { wch: 18 }, // Domínio do Assunto
+      { wch: 25 }, // Registro do Atendimento
       { wch: 20 }, // Empatia/Cordialidade
       { wch: 18 }, // Direcionou Pesquisa
+      { wch: 18 }, // Não Consultou Bot
+      { wch: 22 }, // Inconformidade no Ticket
       { wch: 20 }, // Procedimento Incorreto
       { wch: 18 }, // Encerramento Brusco
       { wch: 15 }, // Pontuação Total
@@ -122,8 +127,8 @@ export const exportAnaliseIAToXLSX = async (analisesGPT, colaboradorNome, mes, a
       'ID', 'Colaborador', 'Data Ligação', 'Data Análise', 'Status',
       'Pontuação Total', 'Confiança (%)', 'Duração (min)', 'Resolvido',
       'Saudação Adequada', 'Escuta Ativa', 'Clareza/Objetividade', 
-      'Resolução Questão', 'Domínio Assunto', 'Empatia/Cordialidade',
-      'Direcionou Pesquisa', 'Procedimento Incorreto', 'Encerramento Brusco'
+      'Resolução Questão', 'Registro do Atendimento', 'Empatia/Cordialidade',
+      'Direcionou Pesquisa', 'Não Consultou Bot', 'Inconformidade no Ticket', 'Procedimento Incorreto', 'Encerramento Brusco'
     ];
 
     const dadosPrincipais = [
@@ -162,9 +167,11 @@ export const exportAnaliseIAToXLSX = async (analisesGPT, colaboradorNome, mes, a
           criterios.escutaAtiva === true ? 'Sim' : (criterios.escutaAtiva === false ? 'Não' : 'N/A'),
           criterios.clarezaObjetividade === true ? 'Sim' : (criterios.clarezaObjetividade === false ? 'Não' : 'N/A'),
           criterios.resolucaoQuestao === true ? 'Sim' : (criterios.resolucaoQuestao === false ? 'Não' : 'N/A'),
-          criterios.dominioAssunto === true ? 'Sim' : (criterios.dominioAssunto === false ? 'Não' : 'N/A'),
+          (criterios.registroAtendimento !== undefined ? criterios.registroAtendimento : (criterios.dominioAssunto !== undefined ? criterios.dominioAssunto : false)) === true ? 'Sim' : ((criterios.registroAtendimento !== undefined ? criterios.registroAtendimento : (criterios.dominioAssunto !== undefined ? criterios.dominioAssunto : false)) === false ? 'Não' : 'N/A'),
           criterios.empatiaCordialidade === true ? 'Sim' : (criterios.empatiaCordialidade === false ? 'Não' : 'N/A'),
           criterios.direcionouPesquisa === true ? 'Sim' : (criterios.direcionouPesquisa === false ? 'Não' : 'N/A'),
+          criterios.naoConsultouBot === true ? 'Sim' : (criterios.naoConsultouBot === false ? 'Não' : 'N/A'),
+          criterios.conformidadeTicket === true ? 'Sim' : (criterios.conformidadeTicket === false ? 'Não' : 'N/A'),
           criterios.procedimentoIncorreto === true ? 'Sim' : (criterios.procedimentoIncorreto === false ? 'Não' : 'N/A'),
           criterios.encerramentoBrusco === true ? 'Sim' : (criterios.encerramentoBrusco === false ? 'Não' : 'N/A')
         ];
@@ -175,8 +182,8 @@ export const exportAnaliseIAToXLSX = async (analisesGPT, colaboradorNome, mes, a
     const colWidthsPrincipais = [
       { wch: 25 }, { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 12 },
       { wch: 15 }, { wch: 12 }, { wch: 12 }, { wch: 10 },
-      { wch: 18 }, { wch: 12 }, { wch: 18 }, { wch: 18 }, { wch: 15 },
-      { wch: 20 }, { wch: 18 }, { wch: 20 }, { wch: 18 }
+      { wch: 18 }, { wch: 12 }, { wch: 18 }, { wch: 18 }, { wch: 25 },
+      { wch: 20 }, { wch: 18 }, { wch: 18 }, { wch: 22 }, { wch: 20 }, { wch: 18 }
     ];
     worksheetPrincipais['!cols'] = colWidthsPrincipais;
     XLSX.utils.book_append_sheet(workbook, worksheetPrincipais, 'Dados Principais');
