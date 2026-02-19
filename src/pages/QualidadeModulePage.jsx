@@ -313,7 +313,7 @@ const QualidadeModulePage = () => {
         escutaAtiva: avaliacao.escutaAtiva,
         clarezaObjetividade: Boolean(avaliacao.clarezaObjetividade),
         resolucaoQuestao: avaliacao.resolucaoQuestao,
-        registroAtendimento: Boolean(avaliacao.registroAtendimento || avaliacao.dominioAssunto), // Compatibilidade retroativa
+        registroAtendimento: Boolean(avaliacao.registroAtendimento),
         empatiaCordialidade: avaliacao.empatiaCordialidade,
         direcionouPesquisa: avaliacao.direcionouPesquisa,
         naoConsultouBot: Boolean(avaliacao.naoConsultouBot),

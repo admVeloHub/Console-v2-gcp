@@ -1,4 +1,5 @@
-// VERSION: v1.8.0 | DATE: 2025-02-11 | AUTHOR: VeloHub Development Team
+// VERSION: v1.9.0 | DATE: 2025-02-11 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.9.0 - Removida compatibilidade retroativa com dominioAssunto
 // CHANGELOG: v1.8.0 - Atualização de métricas: Escuta 15→10pts, Clareza 15→10pts, Empatia 15→10pts, Procedimento -60→-100pts, substituído dominioAssunto por registroAtendimento, adicionado conformidadeTicket -15pts
 
 /**
@@ -186,8 +187,7 @@ export const calcularPontuacaoTotal = (avaliacao) => {
   if (avaliacao.escutaAtiva) total += PONTUACAO.ESCUTA_ATIVA;
   if (avaliacao.clarezaObjetividade) total += PONTUACAO.CLAREZA_OBJETIVIDADE;
   if (avaliacao.resolucaoQuestao) total += PONTUACAO.RESOLUCAO_QUESTAO;
-  // Suporte para compatibilidade: aceitar dominioAssunto ou registroAtendimento
-  if (avaliacao.registroAtendimento || avaliacao.dominioAssunto) total += PONTUACAO.REGISTRO_ATENDIMENTO;
+  if (avaliacao.registroAtendimento) total += PONTUACAO.REGISTRO_ATENDIMENTO;
   if (avaliacao.empatiaCordialidade) total += PONTUACAO.EMPATIA_CORDIALIDADE;
   if (avaliacao.direcionouPesquisa) total += PONTUACAO.DIRECIONOU_PESQUISA;
   

@@ -548,7 +548,7 @@ export const addAvaliacao = async (avaliacaoData) => {
       escutaAtiva: Boolean(avaliacaoData.escutaAtiva), // Boolean
       clarezaObjetividade: Boolean(avaliacaoData.clarezaObjetividade), // Boolean
       resolucaoQuestao: Boolean(avaliacaoData.resolucaoQuestao), // Boolean
-      registroAtendimento: Boolean(avaliacaoData.registroAtendimento || avaliacaoData.dominioAssunto), // Boolean - substitui dominioAssunto (compatibilidade retroativa)
+      registroAtendimento: Boolean(avaliacaoData.registroAtendimento), // Boolean
       empatiaCordialidade: Boolean(avaliacaoData.empatiaCordialidade), // Boolean
       direcionouPesquisa: Boolean(avaliacaoData.direcionouPesquisa), // Boolean
       naoConsultouBot: Boolean(avaliacaoData.naoConsultouBot), // Boolean
@@ -622,7 +622,7 @@ export const updateAvaliacao = async (id, avaliacaoData) => {
       escutaAtiva: Boolean(avaliacaoData.escutaAtiva), // Boolean
       clarezaObjetividade: Boolean(avaliacaoData.clarezaObjetividade), // Boolean
       resolucaoQuestao: Boolean(avaliacaoData.resolucaoQuestao), // Boolean
-      registroAtendimento: Boolean(avaliacaoData.registroAtendimento || avaliacaoData.dominioAssunto), // Boolean - substitui dominioAssunto (compatibilidade retroativa)
+      registroAtendimento: Boolean(avaliacaoData.registroAtendimento), // Boolean
       empatiaCordialidade: Boolean(avaliacaoData.empatiaCordialidade), // Boolean
       direcionouPesquisa: Boolean(avaliacaoData.direcionouPesquisa), // Boolean
       naoConsultouBot: Boolean(avaliacaoData.naoConsultouBot), // Boolean

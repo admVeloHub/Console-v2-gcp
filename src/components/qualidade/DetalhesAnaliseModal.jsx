@@ -123,7 +123,7 @@ const DetalhesAnaliseModal = ({
           escutaAtiva: analiseCompleta.avaliacaoMonitorId.escutaAtiva,
           clarezaObjetividade: analiseCompleta.avaliacaoMonitorId.clarezaObjetividade,
           resolucaoQuestao: analiseCompleta.avaliacaoMonitorId.resolucaoQuestao,
-          registroAtendimento: analiseCompleta.avaliacaoMonitorId.registroAtendimento || analiseCompleta.avaliacaoMonitorId.dominioAssunto, // Compatibilidade retroativa
+          registroAtendimento: analiseCompleta.avaliacaoMonitorId.registroAtendimento,
           empatiaCordialidade: analiseCompleta.avaliacaoMonitorId.empatiaCordialidade,
           direcionouPesquisa: analiseCompleta.avaliacaoMonitorId.direcionouPesquisa,
           naoConsultouBot: analiseCompleta.avaliacaoMonitorId.naoConsultouBot,
@@ -159,7 +159,6 @@ const DetalhesAnaliseModal = ({
       clarezaObjetividade: 'Clareza e Objetividade',
       resolucaoQuestao: 'Resolução da Questão',
       registroAtendimento: 'Registro do Atendimento',
-      dominioAssunto: 'Registro do Atendimento', // Compatibilidade retroativa
       empatiaCordialidade: 'Empatia e Cordialidade',
       direcionouPesquisa: 'Direcionamento de Pesquisa',
       naoConsultouBot: 'Não Consultou Bot',
@@ -177,7 +176,6 @@ const DetalhesAnaliseModal = ({
       clarezaObjetividade: valor ? PONTUACAO.CLAREZA_OBJETIVIDADE : 0,
       resolucaoQuestao: valor ? PONTUACAO.RESOLUCAO_QUESTAO : 0,
       registroAtendimento: valor ? PONTUACAO.REGISTRO_ATENDIMENTO : 0,
-      dominioAssunto: valor ? PONTUACAO.REGISTRO_ATENDIMENTO : 0, // Compatibilidade retroativa
       empatiaCordialidade: valor ? PONTUACAO.EMPATIA_CORDIALIDADE : 0,
       direcionouPesquisa: valor ? PONTUACAO.DIRECIONOU_PESQUISA : 0,
       naoConsultouBot: valor ? PONTUACAO.NAO_CONSULTOU_BOT : 0,
@@ -231,7 +229,7 @@ const DetalhesAnaliseModal = ({
     // registroAtendimento e naoConsultouBot devem ser copiados da avaliação manual
     const registroAtendimento = criterios.registroAtendimento !== undefined 
       ? criterios.registroAtendimento 
-      : (criterios.dominioAssunto !== undefined ? criterios.dominioAssunto : (avaliacaoMonitor.registroAtendimento || avaliacaoMonitor.dominioAssunto || false));
+      : (avaliacaoMonitor.registroAtendimento || false);
     const naoConsultouBot = criterios.naoConsultouBot !== undefined 
       ? criterios.naoConsultouBot 
       : (avaliacaoMonitor.naoConsultouBot || false);
@@ -248,7 +246,7 @@ const DetalhesAnaliseModal = ({
 
   // Verificar se é critério detrator
   const isCriterioDetrator = (criterio) => {
-    return criterio === 'naoConsultouBot' || criterio === 'procedimentoIncorreto' || criterio === 'encerramentoBrusco';
+    return criterio === 'naoConsultouBot' || criterio === 'conformidadeTicket' || criterio === 'procedimentoIncorreto' || criterio === 'encerramentoBrusco';
   };
 
   // Obter ícone e cor para critério
@@ -444,10 +442,10 @@ const DetalhesAnaliseModal = ({
                   return todosCriterios.map((criterio) => {
                     // Para critérios não verificáveis pela IA, copiar da avaliação manual
                     let valorGPT = criterios[criterio];
-                    if (criterio === 'registroAtendimento' || criterio === 'dominioAssunto') {
+                    if (criterio === 'registroAtendimento') {
                       // Se não estiver nos critérios da IA, copiar da avaliação manual
                       if (valorGPT === undefined) {
-                        valorGPT = avaliacaoMonitor?.registroAtendimento || avaliacaoMonitor?.dominioAssunto || false;
+                        valorGPT = avaliacaoMonitor?.registroAtendimento || false;
                       }
                     } else if (criterio === 'naoConsultouBot') {
                       // Se não estiver nos critérios da IA, copiar da avaliação manual
