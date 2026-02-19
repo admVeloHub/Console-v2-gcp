@@ -15,12 +15,20 @@
 import axios from 'axios';
 
 // URL base do SKYNET
-// Em desenvolvimento: usa localhost:3001 se REACT_APP_SKYNET_API_URL não estiver definida
-// Em produção: usa variável de ambiente ou fallback para produção
+// Prioridade: REACT_APP_SKYNET_API_URL > NODE_ENV check > fallback produção
 const SKYNET_API_URL = process.env.REACT_APP_SKYNET_API_URL || 
-  (process.env.NODE_ENV === 'development' 
+  (process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:3001' 
     : 'https://backend-gcp-hfsqj6konq-ue.a.run.app');
+
+// Log para debug - FORÇAR LOCALHOST EM DESENVOLVIMENTO
+console.log('🔧 [WhatsApp API] ════════════════════════════════════════');
+console.log('🔧 [WhatsApp API] Configuração de URL:');
+console.log('🔧 [WhatsApp API] REACT_APP_SKYNET_API_URL:', process.env.REACT_APP_SKYNET_API_URL);
+console.log('🔧 [WhatsApp API] NODE_ENV:', process.env.NODE_ENV);
+console.log('🔧 [WhatsApp API] hostname:', window.location.hostname);
+console.log('🔧 [WhatsApp API] SKYNET_API_URL FINAL:', SKYNET_API_URL);
+console.log('🔧 [WhatsApp API] ════════════════════════════════════════');
 
 const whatsappApi = axios.create({
   baseURL: SKYNET_API_URL,
@@ -46,8 +54,9 @@ whatsappApi.interceptors.request.use((config) => {
     console.warn('[WhatsApp API] Erro ao obter email do usuário:', error);
   }
   
-  // Log da requisição
-  console.log(`[WhatsApp API] ${config.method?.toUpperCase()} ${config.url}`, {
+  // Log da requisição com URL completa
+  const fullUrl = config.baseURL ? `${config.baseURL}${config.url}` : config.url;
+  console.log(`[WhatsApp API] ${config.method?.toUpperCase()} ${fullUrl}`, {
     baseURL: config.baseURL,
     timeout: config.timeout
   });
@@ -101,6 +110,15 @@ const logoutByConnection = async (connectionId) => {
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.error || `Erro ao fazer logout (${connectionId})`);
+  }
+};
+
+const connectByConnection = async (connectionId) => {
+  try {
+    const response = await whatsappApi.post(`/api/whatsapp/${connectionId}/connect`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || `Erro ao conectar (${connectionId})`);
   }
 };
 
@@ -204,6 +222,7 @@ const healthByConnection = async (connectionId) => {
 export const getStatusRequisicoesProduto = () => getStatusByConnection('requisicoes-produto');
 export const getQRRequisicoesProduto = () => getQRByConnection('requisicoes-produto');
 export const logoutRequisicoesProduto = () => logoutByConnection('requisicoes-produto');
+export const connectRequisicoesProduto = () => connectByConnection('requisicoes-produto');
 export const getNumberRequisicoesProduto = () => getNumberByConnection('requisicoes-produto');
 export const reactRequisicoesProduto = (messageId, jid, participant) => reactByConnection('requisicoes-produto', messageId, jid, participant);
 export const getGruposRequisicoesProduto = () => getGruposByConnection('requisicoes-produto');
@@ -218,6 +237,7 @@ export const healthRequisicoesProduto = () => healthByConnection('requisicoes-pr
 export const getStatusVelodesk = () => getStatusByConnection('velodesk');
 export const getQRVelodesk = () => getQRByConnection('velodesk');
 export const logoutVelodesk = () => logoutByConnection('velodesk');
+export const connectVelodesk = () => connectByConnection('velodesk');
 export const getNumberVelodesk = () => getNumberByConnection('velodesk');
 export const reactVelodesk = (messageId, jid, participant) => reactByConnection('velodesk', messageId, jid, participant);
 export const getGruposVelodesk = () => getGruposByConnection('velodesk');

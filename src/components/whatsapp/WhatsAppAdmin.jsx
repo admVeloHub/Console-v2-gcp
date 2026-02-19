@@ -41,10 +41,12 @@ import {
   getStatusRequisicoesProduto,
   getQRRequisicoesProduto,
   logoutRequisicoesProduto,
+  connectRequisicoesProduto,
   getNumberRequisicoesProduto,
   getStatusVelodesk,
   getQRVelodesk,
   logoutVelodesk,
+  connectVelodesk,
   getNumberVelodesk
 } from '../../services/whatsappApi';
 
@@ -88,13 +90,19 @@ const WhatsAppAdmin = () => {
       setStatusRequisicoesProduto(statusData);
       setNumberRequisicoesProduto(numberData);
       
-      // Se tem QR disponível, carregar também
+      // Apenas carregar QR se o status indicar que há QR disponível
+      // NÃO forçar geração automática
       if (statusData.hasQR) {
         try {
           const qr = await getQRRequisicoesProduto();
-          setQrDataRequisicoesProduto(qr);
+          if (qr.hasQR) {
+            setQrDataRequisicoesProduto(qr);
+          } else {
+            setQrDataRequisicoesProduto(null);
+          }
         } catch (err) {
-          console.error('Erro ao carregar QR Requisições de Produto:', err);
+          console.error('[Requisições de Produto] Erro ao carregar QR:', err);
+          setQrDataRequisicoesProduto(null);
         }
       } else {
         setQrDataRequisicoesProduto(null);
@@ -139,7 +147,13 @@ const WhatsAppAdmin = () => {
     setQrDialogConnection('requisicoes-produto');
     setQrDialogOpen(true);
     try {
-      const qr = await getQRRequisicoesProduto();
+      let qr = await getQRRequisicoesProduto();
+      // Se QR não disponível, tentar conectar primeiro
+      if (!qr.hasQR) {
+        await connectRequisicoesProduto();
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        qr = await getQRRequisicoesProduto();
+      }
       setQrDataRequisicoesProduto(qr);
     } catch (err) {
       console.error('Erro ao carregar QR Requisições de Produto:', err);
@@ -159,13 +173,19 @@ const WhatsAppAdmin = () => {
       setStatusVelodesk(statusData);
       setNumberVelodesk(numberData);
       
-      // Se tem QR disponível, carregar também
+      // Apenas carregar QR se o status indicar que há QR disponível
+      // NÃO forçar geração automática
       if (statusData.hasQR) {
         try {
           const qr = await getQRVelodesk();
-          setQrDataVelodesk(qr);
+          if (qr.hasQR) {
+            setQrDataVelodesk(qr);
+          } else {
+            setQrDataVelodesk(null);
+          }
         } catch (err) {
           console.error('Erro ao carregar QR VeloDesk:', err);
+          setQrDataVelodesk(null);
         }
       } else {
         setQrDataVelodesk(null);
@@ -210,7 +230,13 @@ const WhatsAppAdmin = () => {
     setQrDialogConnection('velodesk');
     setQrDialogOpen(true);
     try {
-      const qr = await getQRVelodesk();
+      let qr = await getQRVelodesk();
+      // Se QR não disponível, tentar conectar primeiro
+      if (!qr.hasQR) {
+        await connectVelodesk();
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        qr = await getQRVelodesk();
+      }
       setQrDataVelodesk(qr);
     } catch (err) {
       console.error('Erro ao carregar QR VeloDesk:', err);
@@ -230,22 +256,91 @@ const WhatsAppAdmin = () => {
 
   // Helper para atualizar QR do dialog
   const handleRefreshQRDialog = async () => {
-    if (qrDialogConnection === 'requisicoes-produto') {
-      await handleRefreshRequisicoesProduto();
-      try {
-        const qr = await getQRRequisicoesProduto();
-        setQrDataRequisicoesProduto(qr);
-      } catch (err) {
-        console.error('Erro ao atualizar QR:', err);
+    try {
+      if (qrDialogConnection === 'requisicoes-produto') {
+        console.log('[Requisições de Produto] Forçando conexão para gerar novo QR...');
+        
+        // Limpar QR atual
+        setQrDataRequisicoesProduto(null);
+        
+        // Forçar conexão para gerar novo QR
+        try {
+          await connectRequisicoesProduto();
+        } catch (connectErr) {
+          console.error('Erro ao conectar:', connectErr);
+          setError('Erro ao iniciar conexão: ' + (connectErr.message || 'Erro desconhecido'));
+          return;
+        }
+        
+        // Aguardar e tentar obter QR várias vezes (máximo 10 segundos)
+        let attempts = 0;
+        let qr = null;
+        while (attempts < 20 && (!qr || !qr.hasQR)) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+          try {
+            qr = await getQRRequisicoesProduto();
+            console.log(`[Requisições de Produto] Tentativa ${attempts + 1}: QR disponível?`, qr.hasQR);
+          } catch (qrErr) {
+            console.error('Erro ao obter QR:', qrErr);
+          }
+          attempts++;
+        }
+        
+        if (qr?.hasQR) {
+          console.log('[Requisições de Produto] QR gerado com sucesso!');
+          setQrDataRequisicoesProduto(qr);
+          setError(null);
+        } else {
+          console.warn('[Requisições de Produto] QR não foi gerado após', attempts, 'tentativas');
+          setError('QR code não foi gerado após várias tentativas. Tente novamente ou use o botão "Desconectar" para forçar novo QR.');
+        }
+        
+        // Recarregar status
+        await handleRefreshRequisicoesProduto();
+      } else if (qrDialogConnection === 'velodesk') {
+        console.log('[VeloDesk] Forçando conexão para gerar novo QR...');
+        
+        // Limpar QR atual
+        setQrDataVelodesk(null);
+        
+        // Forçar conexão para gerar novo QR
+        try {
+          await connectVelodesk();
+        } catch (connectErr) {
+          console.error('Erro ao conectar:', connectErr);
+          setError('Erro ao iniciar conexão: ' + (connectErr.message || 'Erro desconhecido'));
+          return;
+        }
+        
+        // Aguardar e tentar obter QR várias vezes (máximo 10 segundos)
+        let attempts = 0;
+        let qr = null;
+        while (attempts < 20 && (!qr || !qr.hasQR)) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+          try {
+            qr = await getQRVelodesk();
+            console.log(`[VeloDesk] Tentativa ${attempts + 1}: QR disponível?`, qr.hasQR);
+          } catch (qrErr) {
+            console.error('Erro ao obter QR:', qrErr);
+          }
+          attempts++;
+        }
+        
+        if (qr?.hasQR) {
+          console.log('[VeloDesk] QR gerado com sucesso!');
+          setQrDataVelodesk(qr);
+          setError(null);
+        } else {
+          console.warn('[VeloDesk] QR não foi gerado após', attempts, 'tentativas');
+          setError('QR code não foi gerado após várias tentativas. Tente novamente ou use o botão "Desconectar" para forçar novo QR.');
+        }
+        
+        // Recarregar status
+        await handleRefreshVelodesk();
       }
-    } else if (qrDialogConnection === 'velodesk') {
-      await handleRefreshVelodesk();
-      try {
-        const qr = await getQRVelodesk();
-        setQrDataVelodesk(qr);
-      } catch (err) {
-        console.error('Erro ao atualizar QR:', err);
-      }
+    } catch (err) {
+      console.error('Erro ao atualizar QR:', err);
+      setError(err.message || 'Erro ao atualizar QR code');
     }
   };
 
