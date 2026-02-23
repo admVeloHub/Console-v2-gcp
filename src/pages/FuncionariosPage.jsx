@@ -120,7 +120,7 @@ const FuncionariosPage = () => {
     password: '', // Senha (hash) - opcional para reset
     atuacao: [], // Array de referências para funções
     escala: '',
-    acessos: { // Objeto booleano {Velohub: Boolean, Console: Boolean, Academy: Boolean, Desk: Boolean}
+    acessos: { // Objeto booleano {Velohub: Boolean, Console: Boolean, Academy: Boolean, Desk: Boolean, Ouvidoria: Boolean}
       Velohub: false,
       Console: false,
       Academy: false,
@@ -136,7 +136,8 @@ const FuncionariosPage = () => {
     Velohub: false,
     Console: false,
     Academy: false,
-    Desk: false
+    Desk: false,
+    Ouvidoria: false
   });
   
   // Estados de UI
@@ -381,7 +382,7 @@ const FuncionariosPage = () => {
       }
       
       // Normalizar formato de acessos (suporta formato antigo array e novo objeto)
-      let acessosNormalizados = { Velohub: false, Console: false, Academy: false, Desk: false };
+      let acessosNormalizados = { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false };
       if (funcionario.acessos && typeof funcionario.acessos === 'object') {
         if (Array.isArray(funcionario.acessos)) {
           // Formato antigo: array de objetos
@@ -396,6 +397,8 @@ const FuncionariosPage = () => {
                 acessosNormalizados.Academy = true;
               } else if (sistema === 'desk') {
                 acessosNormalizados.Desk = true;
+              } else if (sistema === 'ouvidoria') {
+                acessosNormalizados.Ouvidoria = true;
               }
             }
           });
@@ -405,6 +408,7 @@ const FuncionariosPage = () => {
           acessosNormalizados.Console = funcionario.acessos?.Console === true;
           acessosNormalizados.Academy = funcionario.acessos?.Academy === true;
           acessosNormalizados.Desk = funcionario.acessos?.Desk === true;
+          acessosNormalizados.Ouvidoria = funcionario.acessos?.Ouvidoria === true;
         }
       }
       
@@ -440,7 +444,7 @@ const FuncionariosPage = () => {
         password: '',
         atuacao: [],
         escala: '',
-        acessos: { Velohub: false, Console: false, Academy: false, Desk: false },
+        acessos: { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false },
         desligado: false,
         dataDesligamento: '',
         afastado: false,
@@ -465,7 +469,7 @@ const FuncionariosPage = () => {
       password: '',
         atuacao: [],
         escala: '',
-        acessos: { Velohub: false, Console: false, Academy: false, Desk: false },
+        acessos: { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false },
         desligado: false,
       dataDesligamento: '',
       afastado: false,
@@ -532,7 +536,7 @@ const FuncionariosPage = () => {
       // Sempre enviar objeto completo de acessos com todos os campos
       if (dadosParaEnvio.desligado || dadosParaEnvio.afastado) {
         // Se funcionário está desligado ou afastado, forçar acessos como objeto com todos false
-        dadosParaEnvio.acessos = { Velohub: false, Console: false, Academy: false, Desk: false };
+        dadosParaEnvio.acessos = { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false };
       } else {
         // Normalizar acessos: sempre enviar objeto completo com todos os campos
         if (dadosParaEnvio.acessos && typeof dadosParaEnvio.acessos === 'object' && !Array.isArray(dadosParaEnvio.acessos)) {
@@ -541,11 +545,12 @@ const FuncionariosPage = () => {
             Velohub: dadosParaEnvio.acessos?.Velohub === true,
             Console: dadosParaEnvio.acessos?.Console === true,
             Academy: dadosParaEnvio.acessos?.Academy === true,
-            Desk: dadosParaEnvio.acessos?.Desk === true
+            Desk: dadosParaEnvio.acessos?.Desk === true,
+            Ouvidoria: dadosParaEnvio.acessos?.Ouvidoria === true
           };
         } else {
           // Se acessos não é um objeto válido ou é array, definir como objeto com todos false
-          dadosParaEnvio.acessos = { Velohub: false, Console: false, Academy: false, Desk: false };
+          dadosParaEnvio.acessos = { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false };
         }
       }
       
@@ -596,7 +601,7 @@ const FuncionariosPage = () => {
     setFuncionarioSelecionado(funcionario);
     
     // Normalizar acessos do funcionário para o formato objeto booleano
-    let acessosNormalizados = { Velohub: false, Console: false, Academy: false, Desk: false };
+    let acessosNormalizados = { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false };
     if (funcionario.acessos && typeof funcionario.acessos === 'object') {
       if (!Array.isArray(funcionario.acessos)) {
         // Formato novo: objeto booleano
@@ -604,7 +609,8 @@ const FuncionariosPage = () => {
           Velohub: funcionario.acessos?.Velohub === true,
           Console: funcionario.acessos?.Console === true,
           Academy: funcionario.acessos?.Academy === true,
-          Desk: funcionario.acessos?.Desk === true
+          Desk: funcionario.acessos?.Desk === true,
+          Ouvidoria: funcionario.acessos?.Ouvidoria === true
         };
       } else {
         // Formato antigo: array de objetos
@@ -619,6 +625,8 @@ const FuncionariosPage = () => {
               acessosNormalizados.Academy = true;
             } else if (sistema === 'desk') {
               acessosNormalizados.Desk = true;
+            } else if (sistema === 'ouvidoria') {
+              acessosNormalizados.Ouvidoria = true;
             }
           }
         });
@@ -636,7 +644,8 @@ const FuncionariosPage = () => {
       Velohub: false,
       Console: false,
       Academy: false,
-      Desk: false
+      Desk: false,
+      Ouvidoria: false
     });
   };
 
@@ -651,7 +660,7 @@ const FuncionariosPage = () => {
       if (funcionarioSelecionado.desligado || funcionarioSelecionado.afastado) {
         const funcionarioAtualizado = {
           ...funcionarioSelecionado,
-          acessos: { Velohub: false, Console: false, Academy: false, Desk: false }
+          acessos: { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false }
         };
         await updateFuncionario(funcionarioSelecionado._id || funcionarioSelecionado.id, funcionarioAtualizado);
         mostrarSnackbar('Acessos removidos (funcionário desligado/afastado)', 'success');
@@ -665,7 +674,8 @@ const FuncionariosPage = () => {
         Velohub: acessoData.Velohub === true,
         Console: acessoData.Console === true,
         Academy: acessoData.Academy === true,
-        Desk: acessoData.Desk === true
+        Desk: acessoData.Desk === true,
+        Ouvidoria: acessoData.Ouvidoria === true
       };
       
       // Buscar funcionário atualizado para garantir que temos todos os dados
@@ -1176,6 +1186,9 @@ const FuncionariosPage = () => {
                               const acessos = [];
                               if (funcionario.acessos.Velohub === true) acessos.push('VeloHub');
                               if (funcionario.acessos.Console === true) acessos.push('Console');
+                              if (funcionario.acessos.Academy === true) acessos.push('Academy');
+                              if (funcionario.acessos.Desk === true) acessos.push('Desk');
+                              if (funcionario.acessos.Ouvidoria === true) acessos.push('Ouvidoria');
                               return acessos.length > 0 ? acessos.join(', ') : 'Nenhum';
                             }
                             return 'Nenhum';
@@ -1341,6 +1354,12 @@ const FuncionariosPage = () => {
                                     }
                                     if (funcionario.acessos.Academy === true) {
                                       acessosList.push({ label: 'Academy', id: 'academy' });
+                                    }
+                                    if (funcionario.acessos.Desk === true) {
+                                      acessosList.push({ label: 'Desk', id: 'desk' });
+                                    }
+                                    if (funcionario.acessos.Ouvidoria === true) {
+                                      acessosList.push({ label: 'Ouvidoria', id: 'ouvidoria' });
                                     }
                                   }
                                   
@@ -1676,7 +1695,7 @@ const FuncionariosPage = () => {
                         // Se desmarcar desligado, limpar data de desligamento
                         dataDesligamento: isDesligado ? formData.dataDesligamento : '',
                         // Se marcar como desligado, remover todos os acessos (todos false)
-                        acessos: isDesligado ? { Velohub: false, Console: false, Academy: false, Desk: false } : formData.acessos
+                        acessos: isDesligado ? { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false } : formData.acessos
                       });
                     }}
                     sx={{
@@ -1707,7 +1726,7 @@ const FuncionariosPage = () => {
                         // Se desmarcar afastado, limpar data de afastamento
                         dataAfastamento: isAfastado ? formData.dataAfastamento : '',
                         // Se marcar como afastado, remover todos os acessos (todos false)
-                        acessos: isAfastado ? { Velohub: false, Console: false, Academy: false, Desk: false } : formData.acessos
+                        acessos: isAfastado ? { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false } : formData.acessos
                       });
                     }}
                     sx={{
@@ -1934,6 +1953,31 @@ const FuncionariosPage = () => {
                 label={
                   <Typography sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
                     Desk
+                  </Typography>
+                }
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={acessoData.Ouvidoria === true}
+                    disabled={funcionarioSelecionado?.desligado || funcionarioSelecionado?.afastado}
+                    onChange={(e) => setAcessoData({ 
+                      ...acessoData, 
+                      Ouvidoria: e.target.checked 
+                    })}
+                    sx={{
+                      color: '#1694FF',
+                      '&.Mui-checked': {
+                        color: '#1694FF'
+                      }
+                    }}
+                  />
+                }
+                label={
+                  <Typography sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
+                    Ouvidoria
                   </Typography>
                 }
               />
