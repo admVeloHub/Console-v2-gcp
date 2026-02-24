@@ -1,4 +1,5 @@
-// VERSION: v1.10.1 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
+// VERSION: v1.11.0 | DATE: 2026-02-23 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.11.0 - Adicionado campo Ouvidoria ao modal de acessos. Acessos agora incluem: Velohub, Console, Academy, Desk e Ouvidoria.
 // CHANGELOG: v1.10.0 - Adicionado campo Desk ao modal de acessos. Acessos são completamente opcionais - permitido salvar funcionários mesmo com todos os acessos como false.
 import React, { useState, useEffect } from 'react';
 import {
