@@ -2,9 +2,10 @@
  * UploadAudioModal.jsx
  * Modal para upload de arquivos de áudio para análise GPT
  * 
- * VERSION: v2.1.0
- * DATE: 2025-01-30
+ * VERSION: v2.2.0
+ * DATE: 2025-03-03
  * AUTHOR: VeloHub Development Team
+ * CHANGELOG: v2.2.0 - Botão "Enviar para Análise" é ocultado após upload concluído para evitar reenvios acidentais
  */
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
@@ -267,6 +268,9 @@ const UploadAudioModal = ({
       // Usar avaliacaoId em vez de audioId
       const avaliacaoIdParaMonitorar = result.avaliacaoId || avaliacaoId;
       setStatusMessage('Upload concluído! Iniciando processamento...');
+      
+      // Marcar áudio como enviado para ocultar botão e evitar reenvios acidentais
+      setAudioJaEnviado(true);
       
       // Chamar callback do componente pai se fornecido
       if (onUpload && typeof onUpload === 'function') {
@@ -716,6 +720,7 @@ const UploadAudioModal = ({
             Fechar
           </Button>
           
+          {/* Ocultar botão quando upload estiver em andamento OU quando áudio já foi enviado */}
           {!uploading && !audioJaEnviado && (
             <Button
               onClick={handleUpload}
@@ -736,6 +741,18 @@ const UploadAudioModal = ({
             >
               Enviar para Análise
             </Button>
+          )}
+          
+          {/* Mostrar mensagem quando upload foi concluído */}
+          {audioJaEnviado && uploading && (
+            <Typography variant="body2" sx={{ 
+              fontFamily: 'Poppins',
+              color: 'var(--green)',
+              fontWeight: 500,
+              mr: 2
+            }}>
+              Áudio enviado com sucesso!
+            </Typography>
           )}
         </DialogActions>
       </Dialog>

@@ -661,10 +661,19 @@ export const updateAvaliacao = async (id, avaliacaoData) => {
 // Deletar avaliação
 export const deleteAvaliacao = async (id) => {
   try {
+    // #region agent log
+    fetch('http://127.0.0.1:7621/ingest/8e27b4c3-0140-42a6-b4bc-2e9c16a86c7a',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'17a57b'},body:JSON.stringify({sessionId:'17a57b',location:'qualidadeAPI.js:664',message:'deleteAvaliacao entry',data:{id,idType:typeof id},timestamp:Date.now(),runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     const response = await qualidadeAvaliacoesAPI.delete(id);
+    // #region agent log
+    fetch('http://127.0.0.1:7621/ingest/8e27b4c3-0140-42a6-b4bc-2e9c16a86c7a',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'17a57b'},body:JSON.stringify({sessionId:'17a57b',location:'qualidadeAPI.js:665',message:'deleteAvaliacao success',data:{id,responseSuccess:response?.success},timestamp:Date.now(),runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     console.log(`✅ Avaliação deletada via API: ${id}`);
     return response;
   } catch (error) {
+    // #region agent log
+    fetch('http://127.0.0.1:7621/ingest/8e27b4c3-0140-42a6-b4bc-2e9c16a86c7a',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'17a57b'},body:JSON.stringify({sessionId:'17a57b',location:'qualidadeAPI.js:668',message:'deleteAvaliacao error',data:{id,errorMessage:error?.message,errorStatus:error?.response?.status},timestamp:Date.now(),runId:'run1',hypothesisId:'A,B'})}).catch(()=>{});
+    // #endregion
     console.error('❌ Erro ao deletar avaliação via API:', error);
     // Não fazer fallback - apenas propagar erro da API
     throw error;

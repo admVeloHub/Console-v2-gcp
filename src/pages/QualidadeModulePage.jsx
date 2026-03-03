@@ -445,12 +445,18 @@ const QualidadeModulePage = () => {
   };
 
   const excluirAvaliacao = async (id) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7621/ingest/8e27b4c3-0140-42a6-b4bc-2e9c16a86c7a',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'17a57b'},body:JSON.stringify({sessionId:'17a57b',location:'QualidadeModulePage.jsx:447',message:'excluirAvaliacao entry',data:{id,idType:typeof id},timestamp:Date.now(),runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     if (window.confirm('Tem certeza que deseja excluir esta avaliação?')) {
       try {
         await deleteAvaliacao(id);
         mostrarSnackbar('Avaliação excluída com sucesso!', 'success');
         await carregarDados();
       } catch (error) {
+        // #region agent log
+        fetch('http://127.0.0.1:7621/ingest/8e27b4c3-0140-42a6-b4bc-2e9c16a86c7a',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'17a57b'},body:JSON.stringify({sessionId:'17a57b',location:'QualidadeModulePage.jsx:454',message:'excluirAvaliacao error',data:{id,errorMessage:error?.message},timestamp:Date.now(),runId:'run1',hypothesisId:'A,B'})}).catch(()=>{});
+        // #endregion
         console.error('Erro ao excluir avaliação:', error);
         mostrarSnackbar('Erro ao excluir avaliação', 'error');
       }
@@ -976,7 +982,12 @@ const QualidadeModulePage = () => {
                             </IconButton>
                             <IconButton
                               size="medium"
-                              onClick={() => excluirAvaliacao(avaliacao._id)}
+                              onClick={() => {
+                                // #region agent log
+                                fetch('http://127.0.0.1:7621/ingest/8e27b4c3-0140-42a6-b4bc-2e9c16a86c7a',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'17a57b'},body:JSON.stringify({sessionId:'17a57b',location:'QualidadeModulePage.jsx:979',message:'onClick excluirAvaliacao',data:{avaliacaoId:avaliacao?._id,avaliacaoIdType:typeof avaliacao?._id,hasId:!!avaliacao?._id,avaliacaoKeys:Object.keys(avaliacao||{})},timestamp:Date.now(),runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                                // #endregion
+                                excluirAvaliacao(avaliacao._id);
+                              }}
                               sx={{ color: '#EF4444', padding: '0.6rem' }}
                             >
                               <Delete sx={{ fontSize: '1.1rem' }} />

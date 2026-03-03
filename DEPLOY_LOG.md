@@ -1,5 +1,31 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.42.0 | DATE: 2025-02-09 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.43.0 | DATE: 2025-03-03 | AUTHOR: VeloHub Development Team -->
+
+## Push GitHub - Correção Upload Áudio: Ocultar Botão Após Envio - 2025-03-03
+
+### **Tipo:** Push GitHub
+### **Data/Hora:** 2025-03-03
+### **Branch:** main
+### **Repositório:** https://github.com/admVeloHub/Console-v2-gcp.git
+
+### **Arquivos Modificados:**
+- `src/components/qualidade/UploadAudioModal.jsx` (v2.1.0 → v2.2.0) - Botão "Enviar para Análise" ocultado após upload concluído para evitar reenvios acidentais
+
+### **Descrição:**
+Correção no modal de upload de áudio para melhorar UX e evitar reenvios acidentais:
+
+**Mudanças Principais:**
+- Botão "Enviar para Análise" é ocultado automaticamente após upload concluído com sucesso
+- Estado `audioJaEnviado` é setado como `true` quando upload é concluído
+- Mensagem de confirmação verde exibida quando áudio foi enviado
+- Botão permanece oculto durante todo o processo (upload + processamento)
+
+**Impacto:**
+- ✅ Previne reenvios acidentais de áudio
+- ✅ Melhor feedback visual para o usuário
+- ✅ UX mais clara sobre o status do upload
+
+---
 
 ## Push GitHub - Correções Tema Claro, Paginação Hub Análises e Melhorias API - 2025-02-09
 

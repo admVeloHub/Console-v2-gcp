@@ -1,8 +1,12 @@
 /**
  * VeloHub Console - WhatsApp Admin Component
- * VERSION: v2.0.0 | DATE: 2025-02-11 | AUTHOR: VeloHub Development Team
+ * VERSION: v2.0.1 | DATE: 2025-02-24 | AUTHOR: VeloHub Development Team
  * 
  * Componente para gerenciamento de múltiplas conexões WhatsApp via SKYNET
+ * 
+ * Mudanças v2.0.1:
+ * - Adicionado botão "Conectar / Gerar QR Code" quando desconectado e sem QR disponível
+ * - Botão agora aparece mesmo quando hasQR é false, permitindo gerar novo QR manualmente
  * 
  * Mudanças v2.0.0:
  * - Estado separado para cada conexão (requisicoes-produto e velodesk)
@@ -292,7 +296,9 @@ const WhatsAppAdmin = () => {
           setError(null);
         } else {
           console.warn('[Requisições de Produto] QR não foi gerado após', attempts, 'tentativas');
-          setError('QR code não foi gerado após várias tentativas. Tente novamente ou use o botão "Desconectar" para forçar novo QR.');
+          const errorMsg = qr?.message || 'QR code não foi gerado após várias tentativas.';
+          const additionalInfo = 'Isso pode ocorrer devido ao erro 405 (WhatsApp rejeitando Platform.WEB). O PR #2365 do Baileys corrige isso, mas ainda não foi mergeado na versão oficial.';
+          setError(`${errorMsg} ${additionalInfo} Tente novamente mais tarde ou aguarde atualização do Baileys.`);
         }
         
         // Recarregar status
@@ -332,7 +338,9 @@ const WhatsAppAdmin = () => {
           setError(null);
         } else {
           console.warn('[VeloDesk] QR não foi gerado após', attempts, 'tentativas');
-          setError('QR code não foi gerado após várias tentativas. Tente novamente ou use o botão "Desconectar" para forçar novo QR.');
+          const errorMsg = qr?.message || 'QR code não foi gerado após várias tentativas.';
+          const additionalInfo = 'Isso pode ocorrer devido ao erro 405 (WhatsApp rejeitando Platform.WEB). O PR #2365 do Baileys corrige isso, mas ainda não foi mergeado na versão oficial.';
+          setError(`${errorMsg} ${additionalInfo} Tente novamente mais tarde ou aguarde atualização do Baileys.`);
         }
         
         // Recarregar status
@@ -419,6 +427,23 @@ const WhatsAppAdmin = () => {
                 </Box>
               )}
 
+              {!statusRequisicoesProduto.connected && !statusRequisicoesProduto.hasQR && (
+                <Box>
+                  <Alert severity="warning" sx={{ mb: 2 }}>
+                    WhatsApp desconectado. Clique em "Conectar" para gerar um novo QR code.
+                  </Alert>
+                  <Button
+                    variant="contained"
+                    startIcon={<QrCodeIcon />}
+                    onClick={handleShowQRRequisicoesProduto}
+                    fullWidth
+                    color="primary"
+                  >
+                    Conectar / Gerar QR Code
+                  </Button>
+                </Box>
+              )}
+
               {statusRequisicoesProduto.connected && (
                 <Box>
                   <Button
@@ -490,6 +515,23 @@ const WhatsAppAdmin = () => {
                     fullWidth
                   >
                     Exibir QR Code
+                  </Button>
+                </Box>
+              )}
+
+              {!statusVelodesk.connected && !statusVelodesk.hasQR && (
+                <Box>
+                  <Alert severity="warning" sx={{ mb: 2 }}>
+                    WhatsApp desconectado. Clique em "Conectar" para gerar um novo QR code.
+                  </Alert>
+                  <Button
+                    variant="contained"
+                    startIcon={<QrCodeIcon />}
+                    onClick={handleShowQRVelodesk}
+                    fullWidth
+                    color="primary"
+                  >
+                    Conectar / Gerar QR Code
                   </Button>
                 </Box>
               )}

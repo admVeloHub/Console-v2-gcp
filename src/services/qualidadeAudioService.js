@@ -2,9 +2,10 @@
  * qualidadeAudioService.js
  * Serviço para upload e análise de áudios com GPT
  * 
- * VERSION: v2.1.0
- * DATE: 2025-01-30
+ * VERSION: v2.2.0
+ * DATE: 2025-03-03
  * AUTHOR: VeloHub Development Team
+ * CHANGELOG: v2.2.0 - Melhorado tratamento de erro SSE, otimizado handlers para performance, melhorada mensagem de erro de upload bloqueado
  */
 
 // Função auxiliar para normalizar URL base (remove /api do final se existir)
@@ -60,8 +61,20 @@ export const generateUploadUrl = async (nomeArquivo, mimeType, fileSize, avaliac
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Erro ao gerar URL de upload');
+      const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
+      const errorMessage = errorData.error || 'Erro ao gerar URL de upload';
+      
+      // Mensagem mais amigável para erro de upload bloqueado
+      if (errorMessage.includes('upload concluído pendente de processamento')) {
+        throw new Error('Um áudio já foi enviado para esta avaliação e está aguardando processamento. Aguarde a conclusão antes de enviar um novo arquivo, ou use a opção de reenvio se o processamento estiver travado.');
+      }
+      
+      // Mensagem mais amigável para erro de credenciais GCP
+      if (errorMessage.includes('GCP_SERVICE_ACCOUNT_KEY') || errorMessage.includes('client_email')) {
+        throw new Error('Configuração de credenciais GCP necessária. Entre em contato com o administrador do sistema para configurar as credenciais do Google Cloud Storage.');
+      }
+      
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();
@@ -352,41 +365,88 @@ export const createSSEConnection = (avaliacaoId, callbacks = {}) => {
     if (isDisconnected) return;
 
     try {
+      // Verificar se URL está disponível antes de conectar
+      if (!SSE_URL || SSE_URL === '/events') {
+        console.warn('SSE URL não configurada corretamente, usando polling diretamente');
+        if (callbacks.onError) {
+          callbacks.onError(new Error('SSE não disponível. Usando polling como alternativa.'));
+        }
+        disconnect();
+        return;
+      }
+      
       eventSource = new EventSource(SSE_URL);
+      
+      // Timeout para detectar se SSE não conecta em 5 segundos
+      const connectionTimeout = setTimeout(() => {
+        if (eventSource && eventSource.readyState === EventSource.CONNECTING) {
+          console.warn('SSE não conectou em 5 segundos, usando polling');
+          if (eventSource) {
+            try {
+              eventSource.close();
+            } catch (e) {
+              // Ignorar erro ao fechar
+            }
+          }
+          if (callbacks.onError && !isDisconnected) {
+            callbacks.onError(new Error('SSE não conectou. Usando polling como alternativa.'));
+          }
+          disconnect();
+        }
+      }, 5000);
+      
+      // Limpar timeout quando conectar
+      eventSource.addEventListener('open', () => {
+        clearTimeout(connectionTimeout);
+      });
 
+      // Usar debounce para evitar processamento excessivo
+      let lastProcessTime = 0;
+      const DEBOUNCE_MS = 100; // Processar no máximo a cada 100ms
+      
       eventSource.addEventListener('audio-analysis', (event) => {
         try {
+          const now = Date.now();
+          // Debounce: ignorar eventos muito frequentes
+          if (now - lastProcessTime < DEBOUNCE_MS) {
+            return;
+          }
+          lastProcessTime = now;
+          
           const data = JSON.parse(event.data);
           
           // Filtrar eventos apenas para este avaliacaoId
           if (data.avaliacaoId === avaliacaoId || data.avaliacaoId === avaliacaoId.toString()) {
             const status = data.status;
 
-            if (callbacks.onStatusChange) {
-              callbacks.onStatusChange({
-                status,
-                avaliacaoId: data.avaliacaoId,
-                nomeArquivoAudio: data.nomeArquivoAudio,
-                timestamp: data.timestamp
-              });
-            }
-
-            if (status === 'concluido') {
-              if (callbacks.onComplete) {
-                callbacks.onComplete({
+            // Usar requestAnimationFrame para não bloquear UI thread
+            requestAnimationFrame(() => {
+              if (callbacks.onStatusChange) {
+                callbacks.onStatusChange({
                   status,
                   avaliacaoId: data.avaliacaoId,
                   nomeArquivoAudio: data.nomeArquivoAudio,
                   timestamp: data.timestamp
                 });
               }
-              disconnect();
-            } else if (status === 'erro') {
-              if (callbacks.onError) {
-                callbacks.onError(new Error(data.error || 'Erro no processamento'));
+
+              if (status === 'concluido') {
+                if (callbacks.onComplete) {
+                  callbacks.onComplete({
+                    status,
+                    avaliacaoId: data.avaliacaoId,
+                    nomeArquivoAudio: data.nomeArquivoAudio,
+                    timestamp: data.timestamp
+                  });
+                }
+                disconnect();
+              } else if (status === 'erro') {
+                if (callbacks.onError) {
+                  callbacks.onError(new Error(data.error || 'Erro no processamento'));
+                }
+                disconnect();
               }
-              disconnect();
-            }
+            });
           }
         } catch (error) {
           console.error('Erro ao processar evento SSE:', error);
@@ -395,10 +455,16 @@ export const createSSEConnection = (avaliacaoId, callbacks = {}) => {
       });
 
       eventSource.addEventListener('error', (error) => {
-        console.error('Erro na conexão SSE:', error);
+        // Verificar se é erro de conexão (readyState 2 = CLOSED)
+        const isConnectionError = eventSource.readyState === EventSource.CLOSED;
         
-        // Tentar reconectar se não foi desconexão manual
-        if (!isDisconnected && reconnectAttempts < maxReconnectAttempts) {
+        // Não logar erro se foi desconexão manual
+        if (!isDisconnected && isConnectionError) {
+          console.warn('Erro na conexão SSE:', eventSource.readyState === EventSource.CONNECTING ? 'Conectando...' : 'Conexão fechada');
+        }
+        
+        // Se readyState é CLOSED e não foi desconexão manual, tentar reconectar
+        if (!isDisconnected && isConnectionError && reconnectAttempts < maxReconnectAttempts) {
           reconnectAttempts++;
           const delay = Math.min(1000 * Math.pow(2, reconnectAttempts - 1), 30000); // Exponential backoff, max 30s
           
@@ -410,17 +476,25 @@ export const createSSEConnection = (avaliacaoId, callbacks = {}) => {
           }
 
           reconnectTimeout = setTimeout(() => {
-            if (eventSource) {
-              eventSource.close();
+            if (eventSource && !isDisconnected) {
+              try {
+                eventSource.close();
+              } catch (e) {
+                // Ignorar erro ao fechar
+              }
             }
-            connect();
+            if (!isDisconnected) {
+              connect();
+            }
           }, delay);
-        } else if (reconnectAttempts >= maxReconnectAttempts) {
-          // Fallback para polling após muitas tentativas
-          if (callbacks.onError) {
+        } else if (reconnectAttempts >= maxReconnectAttempts || (isConnectionError && isDisconnected)) {
+          // Fallback para polling após muitas tentativas ou se foi desconexão manual
+          if (!isDisconnected && callbacks.onError) {
             callbacks.onError(new Error('Falha ao conectar ao SSE. Usando polling como alternativa.'));
           }
-          disconnect();
+          if (!isDisconnected) {
+            disconnect();
+          }
         }
       });
 
