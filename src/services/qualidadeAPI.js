@@ -1,4 +1,5 @@
-// VERSION: v1.36.0 | DATE: 2026-02-23 | AUTHOR: VeloHub Development Team
+// VERSION: v1.36.1 | DATE: 2026-03-09 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.36.1 - Corrigido acesso aos dados do funcionário criado em addFuncionario: API retorna {success, data, message}, então dados estão em response.data
 // CHANGELOG: v1.36.0 - Adicionado campo Ouvidoria ao objeto acessos {Velohub: Boolean, Console: Boolean, Academy: Boolean, Desk: Boolean, Ouvidoria: Boolean}
 // CHANGELOG: v1.35.0 - Atualização de métricas: substituído dominioAssunto por registroAtendimento, adicionado conformidadeTicket e naoConsultouBot
 // CHANGELOG: v1.34.0 - Adicionado campo Desk ao objeto acessos {Velohub: Boolean, Console: Boolean, Academy: Boolean, Desk: Boolean}. Acessos são completamente opcionais.
@@ -192,12 +193,12 @@ export const addFuncionario = async (funcionarioData) => {
     console.log('🔍 Debug - Dados validados para POST funcionário:', novoFuncionario);
     
     const response = await qualidadeFuncionariosAPI.create(novoFuncionario);
-    console.log(`✅ Funcionário adicionado via API: ${response.colaboradorNome}`);
+    console.log(`✅ Funcionário adicionado via API: ${response.data?.colaboradorNome}`);
     
     // Normalizar resposta também
     return {
-      ...response,
-      acessos: normalizarAcessos(response.acessos)
+      ...response.data,
+      acessos: normalizarAcessos(response.data?.acessos)
     };
   } catch (error) {
     console.error('❌ Erro ao adicionar funcionário via API:', error);
