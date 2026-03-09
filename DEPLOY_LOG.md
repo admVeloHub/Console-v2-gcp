@@ -1,5 +1,35 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.43.0 | DATE: 2025-03-03 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.44.0 | DATE: 2026-03-04 | AUTHOR: VeloHub Development Team -->
+
+## Push GitHub - Adição Campo Tempo Real (realTime) ao Controle de Acessos - 2026-03-04
+
+### **Tipo:** Push GitHub
+### **Data/Hora:** 2026-03-04
+### **Branch:** main
+### **Repositório:** https://github.com/admVeloHub/Console-v2-gcp.git
+
+### **Arquivos Modificados:**
+- `src/pages/FuncionariosPage.jsx` (v1.11.0) - Adicionado campo realTime ao estado inicial e normalização de acessos, incluído checkbox no modal de controle de acessos
+- `src/services/qualidadeAPI.js` (v1.37.0) - Adicionado campo realTime nas funções de normalização e nos métodos addFuncionario e updateFuncionario
+
+### **Descrição:**
+Implementação do campo "Tempo Real" (realTime) no sistema de controle de acessos de funcionários:
+
+**Mudanças Principais:**
+- Adicionado campo `realTime: false` ao estado inicial de `formData.acessos` e `acessoData`
+- Campo incluído na normalização de acessos (suporta formato antigo array e novo objeto)
+- Checkbox "Tempo Real" adicionado ao modal de controle de acessos
+- Campo incluído na lógica de reset de acessos para funcionários desligados/afastados
+- Campo incluído na exibição de chips de acessos ativos
+- Funções de normalização atualizadas para incluir realTime em todos os cenários
+
+**Impacto:**
+- ✅ Novo tipo de acesso disponível para funcionários
+- ✅ Compatibilidade mantida com dados antigos (formato array)
+- ✅ Campo tratado como booleano consistente com outros acessos
+- ✅ Interface atualizada com novo checkbox no modal
+
+---
 
 ## Push GitHub - Correção Upload Áudio: Ocultar Botão Após Envio - 2025-03-03
 
