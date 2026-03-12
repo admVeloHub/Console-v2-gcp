@@ -1,4 +1,4 @@
-// VERSION: v1.3.0 | DATE: 2025-02-09 | AUTHOR: VeloHub Development Team
+// VERSION: v1.10.0 | DATE: 2026-03-11 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -34,7 +34,14 @@ import {
   Divider,
   Switch,
   FormControlLabel,
-  Checkbox
+  Checkbox,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper
 } from '@mui/material';
 import {
   Add,
@@ -51,6 +58,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import BackButton from '../components/common/BackButton';
 import { academyAPI } from '../services/academyAPI';
+import { qualidadeFuncionariosAPI, qualidadeFuncoesAPI } from '../services/api';
 
 const AcademyPage = () => {
   const navigate = useNavigate();
@@ -62,6 +70,15 @@ const AcademyPage = () => {
   const [filteredCursos, setFilteredCursos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filtroClasse, setFiltroClasse] = useState('Todas');
+  
+  // Estados para aba Progresso
+  const [progressoSubTab, setProgressoSubTab] = useState(0); // 0 = Aprovações, 1 = Reprovações
+  const [aprovacoes, setAprovacoes] = useState([]);
+  const [reprovacoes, setReprovacoes] = useState([]);
+  const [loadingProgresso, setLoadingProgresso] = useState(false);
+  const [funcionariosAtendimento, setFuncionariosAtendimento] = useState([]);
+  const [funcoes, setFuncoes] = useState([]);
+  const [loadingFuncionarios, setLoadingFuncionarios] = useState(false);
   
   // Estados de expansão
   const [cursoExpandido, setCursoExpandido] = useState(null);
@@ -192,9 +209,428 @@ const AcademyPage = () => {
     setSnackbar({ ...snackbar, open: false });
   };
   
+  // Carregar funções e funcionários quando aba Progresso for selecionada
+  useEffect(() => {
+    if (activeTab === 1 && progressoSubTab === 0) {
+      carregarFuncoesEFuncionarios();
+      // Identificar registros problemáticos ao carregar
+      identificarRegistrosProblemas();
+    }
+  }, [activeTab, progressoSubTab]);
+  
+  // Carregar dados quando aba Progresso for selecionada ou subcategoria mudar
+  useEffect(() => {
+    if (activeTab === 1) {
+      if (progressoSubTab === 0) {
+        carregarAprovacoes();
+      } else {
+        carregarReprovacoes();
+      }
+    }
+  }, [activeTab, progressoSubTab]);
+  
+  const carregarFuncoesEFuncionarios = async () => {
+    try {
+      setLoadingFuncionarios(true);
+      
+      // Buscar funções para encontrar ObjectId de "atendimento"
+      const funcoesResponse = await qualidadeFuncoesAPI.getAll();
+      const funcoesData = funcoesResponse?.data || funcoesResponse || [];
+      setFuncoes(funcoesData);
+      
+      // Encontrar função "atendimento" (case-insensitive)
+      const funcaoAtendimento = funcoesData.find(f => 
+        f.funcao && f.funcao.toLowerCase().includes('atendimento')
+      );
+      
+      if (!funcaoAtendimento) {
+        console.warn('⚠️ Função "atendimento" não encontrada');
+        setFuncionariosAtendimento([]);
+        return;
+      }
+      
+      // Buscar todos os funcionários
+      const funcionariosResponse = await qualidadeFuncionariosAPI.getAll();
+      const funcionariosData = funcionariosResponse?.data || funcionariosResponse || [];
+      
+      // Filtrar funcionários com atuacao contendo ObjectId de "atendimento" e desligado = false
+      const funcionariosFiltrados = funcionariosData.filter(func => {
+        if (func.desligado === true) return false;
+        
+        // Verificar se atuacao contém o ObjectId de "atendimento"
+        if (Array.isArray(func.atuacao)) {
+          return func.atuacao.some(atuacaoId => 
+            atuacaoId === funcaoAtendimento._id || 
+            atuacaoId?.toString() === funcaoAtendimento._id?.toString()
+          );
+        }
+        
+        // Formato antigo: string
+        if (typeof func.atuacao === 'string') {
+          return func.atuacao.toLowerCase().includes('atendimento');
+        }
+        
+        return false;
+      });
+      
+      setFuncionariosAtendimento(funcionariosFiltrados);
+    } catch (error) {
+      console.error('❌ Erro ao carregar funções e funcionários:', error);
+      setFuncionariosAtendimento([]);
+    } finally {
+      setLoadingFuncionarios(false);
+    }
+  };
+  
+  const getApiBaseUrl = () => {
+    const baseUrl = process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app';
+    return baseUrl.replace(/\/api\/?$/, '') + '/api';
+  };
+  
+  const carregarAprovacoes = async () => {
+    try {
+      setLoadingProgresso(true);
+      const apiUrl = getApiBaseUrl();
+      const response = await fetch(`${apiUrl}/mongodb/certificados`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      if (data.success) {
+        const aprovacoesData = data.data || [];
+        // Log para debug: encontrar registros com courseName inválido
+        const registrosInvalidos = aprovacoesData.filter(a => {
+          const courseName = a.courseName;
+          return !courseName || typeof courseName !== 'string' || courseName.trim() === '' || courseName.toLowerCase() === 'curso';
+        });
+        if (registrosInvalidos.length > 0) {
+          console.warn('⚠️ Registros com courseName inválido encontrados:', registrosInvalidos.map(r => ({
+            _id: r._id,
+            courseName: r.courseName,
+            courseId: r.courseId,
+            name: r.name,
+            email: r.email
+          })));
+        }
+        setAprovacoes(aprovacoesData);
+      } else {
+        console.error('Erro ao carregar aprovações:', data.error);
+        setAprovacoes([]);
+      }
+    } catch (error) {
+      console.error('❌ Erro ao carregar aprovações:', error);
+      mostrarSnackbar(`Erro ao carregar aprovações: ${error.message}`, 'error');
+      setAprovacoes([]);
+    } finally {
+      setLoadingProgresso(false);
+    }
+  };
+  
+  const carregarReprovacoes = async () => {
+    try {
+      setLoadingProgresso(true);
+      const apiUrl = getApiBaseUrl();
+      const response = await fetch(`${apiUrl}/mongodb/reprovas`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      if (data.success) {
+        const reprovacoesData = data.data || [];
+        // Log para debug: encontrar registros com courseName inválido
+        const registrosInvalidos = reprovacoesData.filter(r => {
+          const courseName = r.courseName;
+          return !courseName || typeof courseName !== 'string' || courseName.trim() === '' || courseName.toLowerCase() === 'curso';
+        });
+        if (registrosInvalidos.length > 0) {
+          console.warn('⚠️ Registros com courseName inválido encontrados:', registrosInvalidos.map(r => ({
+            _id: r._id,
+            courseName: r.courseName,
+            courseId: r.courseId,
+            name: r.name,
+            email: r.email
+          })));
+        }
+        setReprovacoes(reprovacoesData);
+      } else {
+        console.error('Erro ao carregar reprovações:', data.error);
+        setReprovacoes([]);
+      }
+    } catch (error) {
+      console.error('❌ Erro ao carregar reprovações:', error);
+      mostrarSnackbar(`Erro ao carregar reprovações: ${error.message}`, 'error');
+      setReprovacoes([]);
+    } finally {
+      setLoadingProgresso(false);
+    }
+  };
+  
   // Handlers de Tab
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
+  };
+  
+  const handleProgressoSubTabChange = (event, newValue) => {
+    setProgressoSubTab(newValue);
+  };
+  
+  // Normalizar nome do curso - usar courseName, mas buscar por courseId se courseName for inválido
+  const normalizarNomeCurso = (courseName, courseId = null) => {
+    // Função auxiliar para buscar curso pelo courseId
+    const buscarCursoPorId = (id) => {
+      if (!id) return null;
+      
+      const idStr = id.toString().toLowerCase().trim();
+      
+      // Tentar múltiplas correspondências
+      const cursoEncontrado = cursos.find(c => {
+        // 1. Comparar com _id convertido para string
+        if (c._id?.toString().toLowerCase() === idStr) return true;
+        
+        // 2. Comparar com courseId do curso (se existir)
+        if (c.courseId?.toString().toLowerCase() === idStr) return true;
+        
+        // 3. Comparar com cursoNome (case-insensitive)
+        if (c.cursoNome?.toLowerCase() === idStr) return true;
+        
+        // 4. Comparar com cursoNome parcialmente (para casos como "Exc Atendimento" vs "Excelência do Atendimento")
+        if (c.cursoNome && idStr) {
+          const nomeCursoLower = c.cursoNome.toLowerCase();
+          // Verificar se o courseId está contido no nome do curso ou vice-versa
+          if (nomeCursoLower.includes(idStr) || idStr.includes(nomeCursoLower)) {
+            return true;
+          }
+        }
+        
+        return false;
+      });
+      
+      return cursoEncontrado;
+    };
+    
+    // Se courseName não for válido, tentar buscar pelo courseId
+    if (!courseName || typeof courseName !== 'string') {
+      if (courseId) {
+        const cursoEncontrado = buscarCursoPorId(courseId);
+        if (cursoEncontrado?.cursoNome) {
+          return cursoEncontrado.cursoNome;
+        }
+      }
+      return 'Sem Nome de Curso';
+    }
+    
+    const nomeLimpo = courseName.trim();
+    
+    // Se courseName for "Curso" (genérico), tentar buscar pelo courseId
+    if (nomeLimpo === '' || nomeLimpo.toLowerCase() === 'curso' || nomeLimpo.toLowerCase() === 'courseid') {
+      if (courseId) {
+        const cursoEncontrado = buscarCursoPorId(courseId);
+        if (cursoEncontrado?.cursoNome) {
+          return cursoEncontrado.cursoNome;
+        }
+      }
+      return 'Sem Nome de Curso';
+    }
+    
+    return nomeLimpo;
+  };
+  
+  // Função para identificar registros problemáticos e buscar courseName pelo courseId
+  const identificarRegistrosProblemas = async () => {
+    try {
+      const apiUrl = getApiBaseUrl();
+      
+      // Buscar aprovações
+      const responseAprovacoes = await fetch(`${apiUrl}/mongodb/certificados`);
+      const dataAprovacoes = await responseAprovacoes.json();
+      
+      if (dataAprovacoes.success) {
+        const todosRegistros = dataAprovacoes.data || [];
+        
+        // Filtrar registros que serão normalizados para "Sem Nome de Curso"
+        const problemasAprovacoes = todosRegistros.filter(a => {
+          const courseName = a.courseName;
+          const courseId = a.courseId;
+          const nomeNormalizado = normalizarNomeCurso(courseName, courseId);
+          
+          // Capturar TODOS os casos que resultam em "Sem Nome de Curso"
+          return nomeNormalizado === 'Sem Nome de Curso';
+        });
+        
+        if (problemasAprovacoes.length > 0) {
+          console.group('🔍 APROVAÇÕES que serão exibidas como "Sem Nome de Curso":');
+          problemasAprovacoes.forEach((r, index) => {
+            console.log(`\n📋 Registro ${index + 1}:`);
+            console.log('  _id:', r._id);
+            console.log('  courseName:', r.courseName, `(${typeof r.courseName})`);
+            console.log('  courseId:', r.courseId, `(${typeof r.courseId})`);
+            console.log('  name:', r.name);
+            console.log('  email:', r.email);
+            console.log('  date:', r.date);
+            console.log('  nomeNormalizado:', normalizarNomeCurso(r.courseName, r.courseId));
+            console.log('  Dados completos:', JSON.stringify(r, null, 2));
+          });
+          console.groupEnd();
+        }
+        
+        // Buscar especificamente registros com courseId ausente/null/undefined
+        const registrosSemCourseId = todosRegistros.filter(a => {
+          const courseId = a.courseId;
+          return !courseId || courseId === null || courseId === undefined || courseId === '';
+        });
+        
+        if (registrosSemCourseId.length > 0) {
+          console.group('🚨 APROVAÇÕES COM courseId AUSENTE/NULL/UNDEFINED:');
+          registrosSemCourseId.forEach((r, index) => {
+            console.log(`\n📋 Registro ${index + 1}:`);
+            console.log('  _id:', r._id);
+            console.log('  courseName:', r.courseName, `(${typeof r.courseName})`);
+            console.log('  courseId:', r.courseId, `(${typeof r.courseId})`);
+            console.log('  name:', r.name);
+            console.log('  email:', r.email);
+            console.log('  date:', r.date);
+            console.log('  Dados completos:', JSON.stringify(r, null, 2));
+          });
+          console.groupEnd();
+        }
+      }
+      
+      // Buscar reprovações
+      const responseReprovacoes = await fetch(`${apiUrl}/mongodb/reprovas`);
+      const dataReprovacoes = await responseReprovacoes.json();
+      
+      if (dataReprovacoes.success) {
+        const todosRegistros = dataReprovacoes.data || [];
+        
+        // Filtrar registros que serão normalizados para "Sem Nome de Curso"
+        const problemasReprovacoes = todosRegistros.filter(r => {
+          const courseName = r.courseName;
+          const courseId = r.courseId;
+          const nomeNormalizado = normalizarNomeCurso(courseName, courseId);
+          
+          // Capturar TODOS os casos que resultam em "Sem Nome de Curso"
+          return nomeNormalizado === 'Sem Nome de Curso';
+        });
+        
+        if (problemasReprovacoes.length > 0) {
+          console.group('🔍 REPROVAÇÕES que serão exibidas como "Sem Nome de Curso":');
+          problemasReprovacoes.forEach((r, index) => {
+            console.log(`\n📋 Registro ${index + 1}:`);
+            console.log('  _id:', r._id);
+            console.log('  courseName:', r.courseName, `(${typeof r.courseName})`);
+            console.log('  courseId:', r.courseId, `(${typeof r.courseId})`);
+            console.log('  name:', r.name);
+            console.log('  email:', r.email);
+            console.log('  date:', r.date);
+            console.log('  nomeNormalizado:', normalizarNomeCurso(r.courseName, r.courseId));
+            console.log('  Dados completos:', JSON.stringify(r, null, 2));
+          });
+          console.groupEnd();
+        }
+        
+        // Buscar especificamente registros com courseId ausente/null/undefined
+        const registrosSemCourseId = todosRegistros.filter(r => {
+          const courseId = r.courseId;
+          return !courseId || courseId === null || courseId === undefined || courseId === '';
+        });
+        
+        if (registrosSemCourseId.length > 0) {
+          console.group('🚨 REPROVAÇÕES COM courseId AUSENTE/NULL/UNDEFINED:');
+          registrosSemCourseId.forEach((r, index) => {
+            console.log(`\n📋 Registro ${index + 1}:`);
+            console.log('  _id:', r._id);
+            console.log('  courseName:', r.courseName, `(${typeof r.courseName})`);
+            console.log('  courseId:', r.courseId, `(${typeof r.courseId})`);
+            console.log('  name:', r.name);
+            console.log('  email:', r.email);
+            console.log('  date:', r.date);
+            console.log('  Dados completos:', JSON.stringify(r, null, 2));
+          });
+          console.groupEnd();
+        }
+      }
+    } catch (error) {
+      console.error('❌ Erro ao identificar registros problemáticos:', error);
+    }
+  };
+  
+  // Agrupar aprovações por curso - usar courseName, buscar por courseId se necessário
+  const agruparAprovacoesPorCurso = () => {
+    const agrupado = {};
+    aprovacoes.forEach((aprovacao) => {
+      const courseName = aprovacao.courseName;
+      const courseId = aprovacao.courseId;
+      if (!courseName || typeof courseName !== 'string') {
+        console.warn('⚠️ Aprovação sem courseName válido:', aprovacao._id, 'courseName:', courseName, 'courseId:', courseId);
+      }
+      const cursoNome = normalizarNomeCurso(courseName, courseId);
+      if (!agrupado[cursoNome]) {
+        agrupado[cursoNome] = [];
+      }
+      agrupado[cursoNome].push(aprovacao);
+    });
+    // Ordenar por nome do curso
+    return Object.keys(agrupado)
+      .sort()
+      .reduce((acc, curso) => {
+        acc[curso] = agrupado[curso];
+        return acc;
+      }, {});
+  };
+  
+  // Cruzar funcionários com aprovações por curso - usar courseName, buscar por courseId se necessário
+  const cruzarFuncionariosComAprovacoes = (cursoNome) => {
+    // Filtrar por courseName normalizado (que pode ter sido buscado via courseId)
+    const aprovacoesCurso = aprovacoes.filter(a => {
+      const courseName = a.courseName;
+      const courseId = a.courseId;
+      return normalizarNomeCurso(courseName, courseId) === cursoNome;
+    });
+    
+    return funcionariosAtendimento.map(funcionario => {
+      // Tentar encontrar aprovação por email (mais confiável)
+      let aprovacao = aprovacoesCurso.find(a => 
+        a.email && funcionario.userMail && 
+        a.email.toLowerCase() === funcionario.userMail.toLowerCase()
+      );
+      
+      // Se não encontrar por email, tentar por nome
+      if (!aprovacao) {
+        aprovacao = aprovacoesCurso.find(a => 
+          a.name && funcionario.colaboradorNome &&
+          a.name.toLowerCase().trim() === funcionario.colaboradorNome.toLowerCase().trim()
+        );
+      }
+      
+      return {
+        funcionario,
+        aprovacao
+      };
+    });
+  };
+  
+  // Agrupar reprovações por curso - usar courseName, buscar por courseId se necessário
+  const agruparReprovacoesPorCurso = () => {
+    const agrupado = {};
+    reprovacoes.forEach((reprovacao) => {
+      const courseName = reprovacao.courseName;
+      const courseId = reprovacao.courseId;
+      if (!courseName || typeof courseName !== 'string') {
+        console.warn('⚠️ Reprovação sem courseName válido:', reprovacao._id, 'courseName:', courseName, 'courseId:', courseId);
+      }
+      const cursoNome = normalizarNomeCurso(courseName, courseId);
+      if (!agrupado[cursoNome]) {
+        agrupado[cursoNome] = [];
+      }
+      agrupado[cursoNome].push(reprovacao);
+    });
+    // Ordenar por nome do curso
+    return Object.keys(agrupado)
+      .sort()
+      .reduce((acc, curso) => {
+        acc[curso] = agrupado[curso];
+        return acc;
+      }, {});
   };
   
   // Função para limpar estados temporários
@@ -2236,12 +2672,321 @@ const AcademyPage = () => {
         
         {activeTab === 1 && (
           <Box>
-            <Typography variant="h6" sx={{ fontFamily: 'Poppins', fontWeight: 600, mb: 2 }}>
-              Progresso dos Usuários
-            </Typography>
-            <Alert severity="info">
-              Funcionalidade de progresso em desenvolvimento
-            </Alert>
+            {/* Subcategorias: Aprovações e Reprovações */}
+            <Box sx={{ mb: 3 }}>
+              <Tabs 
+                value={progressoSubTab} 
+                onChange={handleProgressoSubTabChange}
+                aria-label="progresso sub tabs"
+                sx={{
+                  borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
+                  mb: 2,
+                  '& .MuiTab-root': {
+                    fontSize: '0.95rem',
+                    fontFamily: 'Poppins',
+                    fontWeight: 500,
+                    textTransform: 'none',
+                    minHeight: 40,
+                    '&.Mui-selected': {
+                      color: 'var(--blue-light)',
+                    },
+                    '&:not(.Mui-selected)': {
+                      color: 'rgba(0, 0, 0, 0.35)',
+                    }
+                  },
+                  '& .MuiTabs-indicator': {
+                    backgroundColor: 'var(--blue-light)',
+                    height: 2,
+                  }
+                }}
+              >
+                <Tab label="Aprovações" />
+                <Tab label="Reprovações" />
+              </Tabs>
+            </Box>
+            
+            {/* Conteúdo das subcategorias */}
+            {loadingProgresso ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
+                <CircularProgress />
+              </Box>
+            ) : progressoSubTab === 0 ? (
+              <Box>
+                <Typography variant="subtitle1" sx={{ fontFamily: 'Poppins', fontWeight: 500, mb: 2 }}>
+                  Aprovações ({aprovacoes.length})
+                </Typography>
+                {aprovacoes.length === 0 ? (
+                  <Alert severity="info">Nenhuma aprovação encontrada</Alert>
+                ) : (
+                  <Box>
+                    {Object.entries(agruparAprovacoesPorCurso()).map(([cursoNome, aprovacoesCurso]) => (
+                      <Accordion 
+                        key={cursoNome}
+                        sx={{ 
+                          mb: 1,
+                          boxShadow: 'none',
+                          border: '1px solid rgba(0, 0, 0, 0.08)',
+                          '&:before': { display: 'none' }
+                        }}
+                      >
+                        <AccordionSummary
+                          expandIcon={<ExpandMore />}
+                          sx={{
+                            backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                            '&:hover': {
+                              backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                            }
+                          }}
+                        >
+                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', pr: 2 }}>
+                            <Typography sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>
+                              {cursoNome}
+                            </Typography>
+                            <Chip 
+                              label={`${aprovacoesCurso.length} ${aprovacoesCurso.length === 1 ? 'aprovado' : 'aprovados'}`}
+                              size="small"
+                              sx={{ 
+                                backgroundColor: 'var(--blue-light)',
+                                color: 'white',
+                                fontFamily: 'Poppins',
+                                fontWeight: 500
+                              }}
+                            />
+                          </Box>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                          {loadingFuncionarios ? (
+                            <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                              <CircularProgress size={24} />
+                            </Box>
+                          ) : (
+                            <List sx={{ width: '100%' }}>
+                              {cruzarFuncionariosComAprovacoes(cursoNome).map(({ funcionario, aprovacao }, index) => (
+                                <React.Fragment key={funcionario._id}>
+                                  <ListItem
+                                    sx={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: 2,
+                                      py: 1,
+                                      px: 2,
+                                      backgroundColor: aprovacao ? 'rgba(76, 175, 80, 0.05)' : 'transparent',
+                                      borderRadius: 1,
+                                      mb: 0.5
+                                    }}
+                                  >
+                                    <Box sx={{ width: '350px', flexShrink: 0 }}>
+                                      <Typography 
+                                        variant="body2" 
+                                        sx={{ 
+                                          fontFamily: 'Poppins', 
+                                          fontWeight: 500,
+                                          whiteSpace: 'nowrap',
+                                          overflow: 'hidden',
+                                          textOverflow: 'ellipsis'
+                                        }}
+                                      >
+                                        {funcionario.colaboradorNome || '-'}
+                                      </Typography>
+                                    </Box>
+                                    
+                                    <Box sx={{ width: '120px', flexShrink: 0 }}>
+                                      {aprovacao ? (
+                                        <Chip
+                                          label="Aprovado"
+                                          size="small"
+                                          sx={{
+                                            backgroundColor: '#4caf50',
+                                            color: 'white',
+                                            fontFamily: 'Poppins',
+                                            fontWeight: 500,
+                                            fontSize: '0.75rem'
+                                          }}
+                                        />
+                                      ) : (
+                                        <Chip
+                                          label="Sem aprovação"
+                                          size="small"
+                                          sx={{
+                                            backgroundColor: '#e0e0e0',
+                                            color: 'rgba(0, 0, 0, 0.6)',
+                                            fontFamily: 'Poppins',
+                                            fontWeight: 400,
+                                            fontSize: '0.75rem'
+                                          }}
+                                        />
+                                      )}
+                                    </Box>
+                                    
+                                    <Box sx={{ width: '80px', flexShrink: 0 }}>
+                                      {aprovacao && aprovacao.finalGrade !== null && aprovacao.finalGrade !== undefined ? (
+                                        <Typography 
+                                          variant="body2" 
+                                          sx={{ 
+                                            fontFamily: 'Poppins', 
+                                            color: 'rgba(0, 0, 0, 0.7)'
+                                          }}
+                                        >
+                                          {aprovacao.finalGrade.toFixed(1)}%
+                                        </Typography>
+                                      ) : (
+                                        <Typography 
+                                          variant="body2" 
+                                          sx={{ 
+                                            fontFamily: 'Poppins', 
+                                            color: 'rgba(0, 0, 0, 0.4)'
+                                          }}
+                                        >
+                                          -
+                                        </Typography>
+                                      )}
+                                    </Box>
+                                    
+                                    <Box sx={{ width: '120px', flexShrink: 0 }}>
+                                      {aprovacao ? (
+                                        <Typography 
+                                          variant="body2" 
+                                          sx={{ 
+                                            fontFamily: 'Poppins', 
+                                            color: 'rgba(0, 0, 0, 0.7)'
+                                          }}
+                                        >
+                                          {aprovacao.date 
+                                            ? new Date(aprovacao.date).toLocaleDateString('pt-BR')
+                                            : aprovacao.createdAt 
+                                              ? new Date(aprovacao.createdAt).toLocaleDateString('pt-BR')
+                                              : '-'}
+                                        </Typography>
+                                      ) : (
+                                        <Typography 
+                                          variant="body2" 
+                                          sx={{ 
+                                            fontFamily: 'Poppins', 
+                                            color: 'rgba(0, 0, 0, 0.4)'
+                                          }}
+                                        >
+                                          -
+                                        </Typography>
+                                      )}
+                                    </Box>
+                                    
+                                    {aprovacao && aprovacao.certificateUrl && (
+                                      <Box sx={{ ml: 'auto', flexShrink: 0 }}>
+                                        <Button
+                                          size="small"
+                                          href={aprovacao.certificateUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          sx={{ 
+                                            textTransform: 'none',
+                                            fontFamily: 'Poppins',
+                                            fontSize: '0.75rem'
+                                          }}
+                                        >
+                                          Certificado
+                                        </Button>
+                                      </Box>
+                                    )}
+                                  </ListItem>
+                                  {index < cruzarFuncionariosComAprovacoes(cursoNome).length - 1 && <Divider />}
+                                </React.Fragment>
+                              ))}
+                            </List>
+                          )}
+                        </AccordionDetails>
+                      </Accordion>
+                    ))}
+                  </Box>
+                )}
+              </Box>
+            ) : (
+              <Box>
+                <Typography variant="subtitle1" sx={{ fontFamily: 'Poppins', fontWeight: 500, mb: 2 }}>
+                  Reprovações ({reprovacoes.length})
+                </Typography>
+                {reprovacoes.length === 0 ? (
+                  <Alert severity="info">Nenhuma reprovação encontrada</Alert>
+                ) : (
+                  <Box>
+                    {Object.entries(agruparReprovacoesPorCurso()).map(([cursoNome, reprovacoesCurso]) => (
+                      <Accordion 
+                        key={cursoNome}
+                        sx={{ 
+                          mb: 1,
+                          boxShadow: 'none',
+                          border: '1px solid rgba(0, 0, 0, 0.08)',
+                          '&:before': { display: 'none' }
+                        }}
+                      >
+                        <AccordionSummary
+                          expandIcon={<ExpandMore />}
+                          sx={{
+                            backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                            '&:hover': {
+                              backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                            }
+                          }}
+                        >
+                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', pr: 2 }}>
+                            <Typography sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>
+                              {cursoNome}
+                            </Typography>
+                            <Chip 
+                              label={`${reprovacoesCurso.length} ${reprovacoesCurso.length === 1 ? 'reprovado' : 'reprovados'}`}
+                              size="small"
+                              sx={{ 
+                                backgroundColor: '#f44336',
+                                color: 'white',
+                                fontFamily: 'Poppins',
+                                fontWeight: 500
+                              }}
+                            />
+                          </Box>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                          <TableContainer component={Paper} sx={{ boxShadow: 'none' }}>
+                            <Table size="small">
+                              <TableHead>
+                                <TableRow sx={{ backgroundColor: 'rgba(0, 0, 0, 0.02)' }}>
+                                  <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>Nome</TableCell>
+                                  <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>Email</TableCell>
+                                  <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>Nota Final</TableCell>
+                                  <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>Data</TableCell>
+                                  <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>Questões Erradas</TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                {reprovacoesCurso.map((reprovacao) => (
+                                  <TableRow key={reprovacao._id} hover>
+                                    <TableCell>{reprovacao.name || '-'}</TableCell>
+                                    <TableCell>{reprovacao.email || '-'}</TableCell>
+                                    <TableCell>
+                                      {reprovacao.finalGrade !== null && reprovacao.finalGrade !== undefined 
+                                        ? `${reprovacao.finalGrade.toFixed(1)}%` 
+                                        : '-'}
+                                    </TableCell>
+                                    <TableCell>
+                                      {reprovacao.date 
+                                        ? new Date(reprovacao.date).toLocaleDateString('pt-BR')
+                                        : reprovacao.createdAt 
+                                          ? new Date(reprovacao.createdAt).toLocaleDateString('pt-BR')
+                                          : '-'}
+                                    </TableCell>
+                                    <TableCell>
+                                      {reprovacao.wrongQuestions || '-'}
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                        </AccordionDetails>
+                      </Accordion>
+                    ))}
+                  </Box>
+                )}
+              </Box>
+            )}
           </Box>
         )}
       

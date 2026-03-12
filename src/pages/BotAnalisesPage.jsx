@@ -1,6 +1,6 @@
-// VERSION: v2.12.2 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
+// VERSION: v2.13.0 | DATE: 2026-03-11 | AUTHOR: VeloHub Development Team
 import React, { useState, useCallback, useEffect } from 'react';
-import { Typography, Box, Tabs, Tab, Container, Grid, Card, CardContent, FormControl, InputLabel, Select, MenuItem, Button, Accordion, AccordionSummary, AccordionDetails, Chip, Alert, CircularProgress, Checkbox, FormControlLabel } from '@mui/material';
+import { Typography, Box, Tabs, Tab, Container, Grid, Card, CardContent, FormControl, InputLabel, Select, MenuItem, Button, Accordion, AccordionSummary, AccordionDetails, Chip, Alert, CircularProgress, Checkbox, FormControlLabel, TextField, InputAdornment } from '@mui/material';
 import { QuestionAnswer, People, Schedule, TrendingUp, TrendingDown, DateRange, Timeline, PieChart as PieChartIcon, ShowChart, Person, FileDownload, PictureAsPdf, ListAlt, EmojiEvents, Analytics, Psychology, Refresh, Search, ExpandMore } from '@mui/icons-material';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 import * as XLSX from 'xlsx';
@@ -34,6 +34,7 @@ const BotAnalisesPage = () => {
   const [listaAtividades, setListaAtividades] = useState([]);
   const [analisesEspecificas, setAnalisesEspecificas] = useState({});
   const [filtroUsuario, setFiltroUsuario] = useState('todos');
+  const [pesquisaNome, setPesquisaNome] = useState('');
   
   // Estados para aba Bot Feedback
   const [feedbacks, setFeedbacks] = useState([]);
@@ -702,6 +703,12 @@ const BotAnalisesPage = () => {
     { value: '1ano', label: 'Último ano' },
     { value: 'todos', label: 'Todos os períodos' }
   ];
+
+  // Função para obter o label formatado do período
+  const obterLabelPeriodo = (periodo) => {
+    const opcao = opcoesPeriodo.find(op => op.value === periodo);
+    return opcao ? opcao.label : periodo;
+  };
 
   const opcoesExibicao = [
     { value: 'dia', label: 'Por Dia' },
@@ -1606,6 +1613,7 @@ const BotAnalisesPage = () => {
                     <Box sx={{ 
                       display: 'flex', 
                       alignItems: 'center', 
+                      justifyContent: 'space-between',
                       gap: 2,
                       mb: 3
                     }}>
@@ -1622,6 +1630,36 @@ const BotAnalisesPage = () => {
                           Lista de Atividades
                         </Typography>
                       </Box>
+                      
+                      <TextField
+                        placeholder="Pesquisar por nome ou pergunta..."
+                        value={pesquisaNome}
+                        onChange={(e) => setPesquisaNome(e.target.value)}
+                        size="small"
+                        sx={{
+                          minWidth: '300px',
+                          '& .MuiOutlinedInput-root': {
+                            fontFamily: 'Poppins',
+                            fontSize: '0.875rem',
+                            '& fieldset': {
+                              borderColor: 'rgba(0, 0, 0, 0.23)',
+                            },
+                            '&:hover fieldset': {
+                              borderColor: 'var(--blue-medium)',
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: 'var(--blue-medium)',
+                            },
+                          },
+                        }}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <Search sx={{ color: 'var(--gray)', fontSize: '1.2rem' }} />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
                     </Box>
                     
                     <Box sx={{ 
@@ -1636,14 +1674,20 @@ const BotAnalisesPage = () => {
                         color: 'var(--gray)',
                         fontSize: '0.875rem'
                       }}>
-                        Últimas {listaAtividades.length} atividades
+                        {pesquisaNome 
+                          ? `${listaAtividades.filter(a => 
+                              a.usuario?.toLowerCase().includes(pesquisaNome.toLowerCase()) ||
+                              a.perguntaCompleta?.toLowerCase().includes(pesquisaNome.toLowerCase())
+                            ).length} atividade(s) encontrada(s)`
+                          : `${listaAtividades.length} atividade(s)`
+                        }
                       </Typography>
                       <Typography variant="body2" sx={{ 
                         fontFamily: 'Poppins',
                         color: 'var(--blue-medium)',
                         fontSize: '0.875rem'
                       }}>
-                        Período: {periodoFiltroGrafico}
+                        Período: {obterLabelPeriodo(periodoFiltroGrafico)}
                       </Typography>
                     </Box>
                     
@@ -1653,10 +1697,18 @@ const BotAnalisesPage = () => {
                       border: '1px solid rgba(0, 0, 0, 0.12)',
                       borderRadius: '4px'
                     }}>
-                      {listaAtividades.map((atividade, index) => (
+                      {listaAtividades
+                        .filter(atividade => {
+                          if (!pesquisaNome) return true;
+                          const pesquisaLower = pesquisaNome.toLowerCase();
+                          return atividade.usuario?.toLowerCase().includes(pesquisaLower) ||
+                                 atividade.perguntaCompleta?.toLowerCase().includes(pesquisaLower) ||
+                                 atividade.pergunta?.toLowerCase().includes(pesquisaLower);
+                        })
+                        .map((atividade, index, arrayFiltrado) => (
                         <Box key={index} sx={{ 
                           p: 2, 
-                          borderBottom: index < listaAtividades.length - 1 ? '1px solid #f0f0f0' : 'none',
+                          borderBottom: index < arrayFiltrado.length - 1 ? '1px solid #f0f0f0' : 'none',
                           '&:hover': {
                             backgroundColor: 'rgba(22, 52, 255, 0.05)'
                           }
@@ -1709,14 +1761,23 @@ const BotAnalisesPage = () => {
                         </Box>
                       ))}
                       
-                      {listaAtividades.length === 0 && (
+                      {listaAtividades.filter(atividade => {
+                        if (!pesquisaNome) return true;
+                        const pesquisaLower = pesquisaNome.toLowerCase();
+                        return atividade.usuario?.toLowerCase().includes(pesquisaLower) ||
+                               atividade.perguntaCompleta?.toLowerCase().includes(pesquisaLower) ||
+                               atividade.pergunta?.toLowerCase().includes(pesquisaLower);
+                      }).length === 0 && (
                         <Box sx={{ 
                           p: 4,
                           textAlign: 'center',
                           color: 'var(--gray)'
                         }}>
                           <Typography variant="body2" sx={{ fontFamily: 'Poppins' }}>
-                            Nenhuma atividade encontrada para o período selecionado
+                            {pesquisaNome 
+                              ? 'Nenhuma atividade encontrada com o termo pesquisado'
+                              : 'Nenhuma atividade encontrada para o período selecionado'
+                            }
                           </Typography>
                         </Box>
                       )}
@@ -1774,7 +1835,7 @@ const BotAnalisesPage = () => {
                         color: 'var(--blue-medium)',
                         fontSize: '0.875rem'
                       }}>
-                        Período: {periodoFiltroGrafico}
+                        Período: {obterLabelPeriodo(periodoFiltroGrafico)}
                       </Typography>
                     </Box>
                     

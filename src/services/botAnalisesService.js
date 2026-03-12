@@ -166,7 +166,7 @@ class BotAnalisesService {
         dadosGrafico: this.calcularDadosGrafico(atividades, exibicao, periodo),
         perguntasFrequentes: this.calcularPerguntasFrequentes(atividades),
         rankingAgentes: this.calcularRankingAgentes(atividades),
-        listaAtividades: this.calcularListaAtividades(atividades),
+        listaAtividades: this.calcularListaAtividades(atividades, periodo),
         analisesEspecificas: this.calcularAnalisesEspecificas(atividades)
       };
 
@@ -393,9 +393,9 @@ class BotAnalisesService {
   }
 
   // Calcular lista de atividades a partir das atividades
-  calcularListaAtividades(atividades) {
+  calcularListaAtividades(atividades, periodoFiltro = null) {
     // Processar atividades recentes
-    const lista = atividades
+    let lista = atividades
       .filter(item => 
         item.action === 'question_asked' && 
         item.details?.question && 
@@ -406,19 +406,27 @@ class BotAnalisesService {
         pergunta: item.details.question.length > 60 
           ? item.details.question.substring(0, 60) + '...' 
           : item.details.question,
+        perguntaCompleta: item.details.question, // Manter pergunta completa para pesquisa
         data: new Date(item.createdAt).toLocaleDateString('pt-BR'),
         horario: new Date(item.createdAt).toLocaleTimeString('pt-BR', { 
           hour: '2-digit', 
           minute: '2-digit' 
         }),
-        acao: 'question_asked'
+        acao: 'question_asked',
+        createdAt: item.createdAt // Manter data original para ordenação precisa
       }))
       .sort((a, b) => {
-        const dataA = new Date(a.data.split('/').reverse().join('-') + ' ' + a.horario);
-        const dataB = new Date(b.data.split('/').reverse().join('-') + ' ' + b.horario);
+        // Ordenar por data/hora original (mais preciso)
+        const dataA = new Date(a.createdAt);
+        const dataB = new Date(b.createdAt);
         return dataB - dataA;
-      })
-      .slice(0, 20); // Top 20 mais recentes
+      });
+
+    // Se há filtro de período, retornar TODAS as atividades do período
+    // Caso contrário, limitar a 20 mais recentes (comportamento padrão)
+    if (!periodoFiltro) {
+      lista = lista.slice(0, 20);
+    }
 
     return lista;
   }

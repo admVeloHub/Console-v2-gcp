@@ -1,4 +1,4 @@
-// VERSION: v3.1.1 | DATE: 2025-02-09 | AUTHOR: VeloHub Development Team
+// VERSION: v3.2.0 | DATE: 2026-03-11 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,
@@ -35,7 +35,7 @@ import {
 import { ExpandMore, Refresh, Download, ChevronLeft, ChevronRight } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
 import BackButton from '../components/common/BackButton';
-import { hubAnalisesAPI } from '../services/api';
+import { hubAnalisesAPI, qualidadeFuncionariosAPI, qualidadeFuncoesAPI } from '../services/api';
 
 const HubAnalisesPage = () => {
   const [activeTab, setActiveTab] = useState(0);
@@ -63,6 +63,9 @@ const HubAnalisesPage = () => {
   const [cienciaPorNoticia, setCienciaPorNoticia] = useState([]);
   const [loadingAcknowledgment, setLoadingAcknowledgment] = useState(false);
   const [expandedNews, setExpandedNews] = useState(null);
+  const [funcionariosVelonews, setFuncionariosVelonews] = useState([]);
+  const [funcoesVelonews, setFuncoesVelonews] = useState([]);
+  const [loadingFuncionariosVelonews, setLoadingFuncionariosVelonews] = useState(false);
   
   // Estado para feedback ao usuário
   const [snackbar, setSnackbar] = useState({
@@ -398,6 +401,73 @@ const HubAnalisesPage = () => {
   const endIndexVelonews = startIndexVelonews + itemsPerPageVelonews;
   const paginatedCienciaPorNoticia = cienciaPorNoticia.slice(startIndexVelonews, endIndexVelonews);
 
+  // Carregar funcionários para Velonews (atuacao: atendimento, redes sociais, reclame aqui, N2 e desligado = false)
+  const carregarFuncionariosVelonews = useCallback(async () => {
+    try {
+      setLoadingFuncionariosVelonews(true);
+      
+      // Buscar funções
+      const funcoesResponse = await qualidadeFuncoesAPI.getAll();
+      const funcoesData = funcoesResponse?.data || funcoesResponse || [];
+      setFuncoesVelonews(funcoesData);
+      
+      // Encontrar funções relevantes (case-insensitive)
+      const funcoesRelevantes = funcoesData.filter(f => {
+        if (!f.funcao) return false;
+        const funcaoLower = f.funcao.toLowerCase().trim();
+        return funcaoLower.includes('atendimento') ||
+               funcaoLower.includes('redes sociais') ||
+               funcaoLower.includes('reclame aqui') ||
+               funcaoLower === 'n2' ||
+               funcaoLower === 'n 2';
+      });
+      
+      if (funcoesRelevantes.length === 0) {
+        console.warn('⚠️ Nenhuma função relevante encontrada para Velonews');
+        setFuncionariosVelonews([]);
+        return;
+      }
+      
+      // Buscar todos os funcionários
+      const funcionariosResponse = await qualidadeFuncionariosAPI.getAll();
+      const funcionariosData = funcionariosResponse?.data || funcionariosResponse || [];
+      
+      // Filtrar funcionários com atuacao contendo uma das funções relevantes e desligado = false
+      const funcionariosFiltrados = funcionariosData.filter(func => {
+        // Filtrar desligados
+        if (func.desligado === true) return false;
+        
+        // Verificar se atuacao contém alguma das funções relevantes
+        if (Array.isArray(func.atuacao)) {
+          return func.atuacao.some(atuacaoId => 
+            funcoesRelevantes.some(funcao => 
+              atuacaoId === funcao._id || 
+              atuacaoId?.toString() === funcao._id?.toString()
+            )
+          );
+        }
+        
+        // Formato antigo: string
+        if (typeof func.atuacao === 'string') {
+          const atuacaoLower = func.atuacao.toLowerCase();
+          return atuacaoLower.includes('atendimento') ||
+                 atuacaoLower.includes('redes sociais') ||
+                 atuacaoLower.includes('reclame aqui') ||
+                 atuacaoLower.includes('n2');
+        }
+        
+        return false;
+      });
+      
+      setFuncionariosVelonews(funcionariosFiltrados);
+    } catch (error) {
+      console.error('❌ Erro ao carregar funcionários para Velonews:', error);
+      setFuncionariosVelonews([]);
+    } finally {
+      setLoadingFuncionariosVelonews(false);
+    }
+  }, []);
+
   // Carregar declarações de ciência
   const loadAcknowledgments = useCallback(async () => {
     try {
@@ -451,8 +521,9 @@ const HubAnalisesPage = () => {
     } else if (activeTab === 1) {
       // Aba Velonews
       loadAcknowledgments();
+      carregarFuncionariosVelonews();
     }
-  }, [activeTab, loadUsuariosOnlineOffline, loadAllSessions, loadAcknowledgments]);
+  }, [activeTab, loadUsuariosOnlineOffline, loadAllSessions, loadAcknowledgments, carregarFuncionariosVelonews]);
 
   // Calcular duração da sessão - COM VALIDAÇÃO PRECISA
   const calculateSessionDuration = useCallback((loginTimestamp, logoutTimestamp) => {
@@ -1282,7 +1353,10 @@ const HubAnalisesPage = () => {
                           </Typography>
                         </Box>
                         <Chip
-                          label={`${noticia.totalAgentes} declaração(ões)`}
+                          label={loadingFuncionariosVelonews 
+                            ? `${noticia.totalAgentes} declaração(ões)`
+                            : `${noticia.totalAgentes}/${funcionariosVelonews.length} confirmado(s)`
+                          }
                           size="small"
                           sx={{
                             backgroundColor: 'var(--blue-medium)',
@@ -1299,38 +1373,56 @@ const HubAnalisesPage = () => {
                       </Box>
                     </AccordionSummary>
                     <AccordionDetails sx={{ backgroundColor: 'var(--cor-container)' }}>
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.8 }}>
-                        {noticia.agentes.map((agente, index) => (
-                          <Box
-                            key={index}
-                            sx={{
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                              p: 1.2,
-                              backgroundColor: 'var(--cor-card)',
-                              borderRadius: '4px',
-                              border: '1px solid rgba(0, 0, 0, 0.12)'
-                            }}
-                          >
-                            <Typography sx={{ 
-                              fontSize: '0.65rem', 
-                              fontFamily: 'Poppins', 
-                              fontWeight: 500,
-                              color: 'var(--gray)',
-                            }}>
-                              {agente.colaboradorNome || agente.userEmail || 'Usuário desconhecido'}
-                            </Typography>
-                          <Typography variant="caption" sx={{ 
-                            fontSize: '0.6rem', 
-                            fontFamily: 'Poppins', 
-                            color: 'rgba(0, 0, 0, 0.6)' 
-                          }}>
-                            {agente.acknowledgedAt ? formatDatePrecise(agente.acknowledgedAt) : 'N/A'}
-                          </Typography>
-                          </Box>
-                        ))}
-                      </Box>
+                      {loadingFuncionariosVelonews ? (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+                          <CircularProgress size={20} sx={{ color: 'var(--blue-medium)' }} />
+                        </Box>
+                      ) : funcionariosVelonews.length === 0 ? (
+                        <Alert severity="info" sx={{ fontFamily: 'Poppins', fontSize: '0.65rem' }}>
+                          Nenhum funcionário elegível encontrado.
+                        </Alert>
+                      ) : (
+                        <Box sx={{ 
+                          display: 'flex', 
+                          flexWrap: 'wrap', 
+                          gap: 1,
+                          p: 1
+                        }}>
+                          {funcionariosVelonews.map((funcionario) => {
+                            // Verificar se o funcionário já deu ciência
+                            const agenteComCiencia = noticia.agentes.find(agente => {
+                              const emailFuncionario = funcionario.userMail?.toLowerCase();
+                              const emailAgente = agente.userEmail?.toLowerCase() || agente.email?.toLowerCase();
+                              const nomeFuncionario = funcionario.colaboradorNome?.toLowerCase();
+                              const nomeAgente = agente.colaboradorNome?.toLowerCase() || agente.name?.toLowerCase();
+                              
+                              return (emailFuncionario && emailAgente && emailFuncionario === emailAgente) ||
+                                     (nomeFuncionario && nomeAgente && nomeFuncionario === nomeAgente);
+                            });
+                            
+                            const temCiencia = !!agenteComCiencia;
+                            
+                            return (
+                              <Chip
+                                key={funcionario._id || funcionario.userMail}
+                                label={funcionario.colaboradorNome || funcionario.userMail || 'Nome não disponível'}
+                                sx={{
+                                  fontSize: '0.65rem',
+                                  fontFamily: 'Poppins',
+                                  fontWeight: temCiencia ? 600 : 400,
+                                  backgroundColor: temCiencia ? '#4caf50' : 'rgba(0, 0, 0, 0.08)',
+                                  color: temCiencia ? 'white' : 'var(--gray)',
+                                  height: '28px',
+                                  '& .MuiChip-label': {
+                                    px: 1.2,
+                                    py: 0.4
+                                  }
+                                }}
+                              />
+                            );
+                          })}
+                        </Box>
+                      )}
                     </AccordionDetails>
                   </Accordion>
                   ))}
