@@ -1,4 +1,5 @@
-// VERSION: v1.12.0 | DATE: 2026-03-17 | AUTHOR: VeloHub Development Team
+// VERSION: v1.13.0 | DATE: 2026-03-17 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.13.0 - Correção checkboxes acessos: lista fixa, merge com padrão, TransitionProps timeout 0, acessoData garantido antes de abrir modal.
 // CHANGELOG: v1.12.0 - Adicionado campo Sociais ao modal de acessos. Correções de cache: useLayoutEffect para checkboxes, useLocation para recarregar dados ao abrir aba, key no Dialog, normalização no localStorage.
 // CHANGELOG: v1.11.0 - Adicionado campo Ouvidoria ao modal de acessos. Acessos agora incluem: Velohub, Console, Academy, Desk e Ouvidoria.
 // CHANGELOG: v1.10.0 - Adicionado campo Desk ao modal de acessos. Acessos são completamente opcionais - permitido salvar funcionários mesmo com todos os acessos como false.
@@ -75,6 +76,17 @@ import { generateId } from '../types/qualidade';
 const normalizeBaseUrl = (url) => {
   return url.replace(/\/api\/?$/, '');
 };
+
+// Lista fixa de acessos - garante que todos os checkboxes sejam sempre renderizados (evita bug de exibição parcial)
+const LISTA_ACESSOS_MODAL = [
+  { key: 'Velohub', label: 'VeloHub' },
+  { key: 'Console', label: 'Console' },
+  { key: 'Academy', label: 'Academy' },
+  { key: 'Desk', label: 'Desk' },
+  { key: 'Ouvidoria', label: 'Ouvidoria' },
+  { key: 'Sociais', label: 'Sociais' },
+  { key: 'realTime', label: 'Tempo Real' }
+];
 
 // ✅ CORREÇÃO 1: Importar API_BASE_URL do arquivo de configuração - garantir que sempre termine com /api
 const API_BASE_URL = normalizeBaseUrl(process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app') + '/api';
@@ -643,15 +655,18 @@ const FuncionariosPage = () => {
   }, []);
 
   const abrirModalAcesso = (funcionario) => {
+    const acessosNormalizados = normalizarAcessosFuncionario(funcionario?.acessos);
     setFuncionarioSelecionado(funcionario);
-    setAcessoData(normalizarAcessosFuncionario(funcionario.acessos));
+    setAcessoData(acessosNormalizados);
     setModalAcessoAberto(true);
   };
 
-  // Sincronizar acessoData quando modal abre (corrige checkboxes não exibidos na primeira abertura)
+  // Garantir acessoData completo quando modal abre (corrige checkboxes não exibidos na primeira abertura)
   useLayoutEffect(() => {
     if (modalAcessoAberto && funcionarioSelecionado) {
-      setAcessoData(normalizarAcessosFuncionario(funcionarioSelecionado.acessos));
+      const padrao = { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false };
+      const normalizado = normalizarAcessosFuncionario(funcionarioSelecionado.acessos);
+      setAcessoData(prev => ({ ...padrao, ...prev, ...normalizado }));
     }
   }, [modalAcessoAberto, funcionarioSelecionado, normalizarAcessosFuncionario]);
 
@@ -1211,6 +1226,7 @@ const FuncionariosPage = () => {
                               if (funcionario.acessos.Academy === true) acessos.push('Academy');
                               if (funcionario.acessos.Desk === true) acessos.push('Desk');
                               if (funcionario.acessos.Ouvidoria === true) acessos.push('Ouvidoria');
+                              if (funcionario.acessos.Sociais === true) acessos.push('Sociais');
                               if (funcionario.acessos.realTime === true) acessos.push('Tempo Real');
                               return acessos.length > 0 ? acessos.join(', ') : 'Nenhum';
                             }
@@ -1383,6 +1399,9 @@ const FuncionariosPage = () => {
                                     }
                                     if (funcionario.acessos.Ouvidoria === true) {
                                       acessosList.push({ label: 'Ouvidoria', id: 'ouvidoria' });
+                                    }
+                                    if (funcionario.acessos.Sociais === true) {
+                                      acessosList.push({ label: 'Sociais', id: 'sociais' });
                                     }
                                     if (funcionario.acessos.realTime === true) {
                                       acessosList.push({ label: 'Tempo Real', id: 'realtime' });
@@ -1869,7 +1888,15 @@ const FuncionariosPage = () => {
       </Dialog>
 
       {/* Modal Acesso */}
-      <Dialog key={funcionarioSelecionado?._id || funcionarioSelecionado?.id || 'acesso-modal'} open={modalAcessoAberto} onClose={fecharModalAcesso} maxWidth="sm" fullWidth>
+      <Dialog 
+        key={funcionarioSelecionado?._id || funcionarioSelecionado?.id || 'acesso-modal'} 
+        open={modalAcessoAberto} 
+        onClose={fecharModalAcesso} 
+        maxWidth="sm" 
+        fullWidth
+        TransitionProps={{ timeout: 0 }}
+        keepMounted
+      >
         <DialogTitle sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>
           Gerenciar Acessos - {funcionarioSelecionado?.colaboradorNome}
         </DialogTitle>
@@ -1883,181 +1910,33 @@ const FuncionariosPage = () => {
                 </Alert>
               </Grid>
             )}
-            <Grid item xs={12} md={4}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={acessoData.Velohub === true}
-                    disabled={funcionarioSelecionado?.desligado || funcionarioSelecionado?.afastado}
-                    onChange={(e) => setAcessoData({ 
-                      ...acessoData, 
-                      Velohub: e.target.checked 
-                    })}
-                    sx={{
-                      color: '#1694FF',
-                      '&.Mui-checked': {
-                        color: '#1694FF'
-                      }
-                    }}
-                  />
-                }
-                label={
-                  <Typography sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
-                    VeloHub
-                  </Typography>
-                }
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={acessoData.Console === true}
-                    disabled={funcionarioSelecionado?.desligado || funcionarioSelecionado?.afastado}
-                    onChange={(e) => setAcessoData({ 
-                      ...acessoData, 
-                      Console: e.target.checked 
-                    })}
-                    sx={{
-                      color: '#1694FF',
-                      '&.Mui-checked': {
-                        color: '#1694FF'
-                      }
-                    }}
-                  />
-                }
-                label={
-                  <Typography sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
-                    Console
-                  </Typography>
-                }
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={acessoData.Academy === true}
-                    disabled={funcionarioSelecionado?.desligado || funcionarioSelecionado?.afastado}
-                    onChange={(e) => setAcessoData({ 
-                      ...acessoData, 
-                      Academy: e.target.checked 
-                    })}
-                    sx={{
-                      color: '#1694FF',
-                      '&.Mui-checked': {
-                        color: '#1694FF'
-                      }
-                    }}
-                  />
-                }
-                label={
-                  <Typography sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
-                    Academy
-                  </Typography>
-                }
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={acessoData.Desk === true}
-                    disabled={funcionarioSelecionado?.desligado || funcionarioSelecionado?.afastado}
-                    onChange={(e) => setAcessoData({ 
-                      ...acessoData, 
-                      Desk: e.target.checked 
-                    })}
-                    sx={{
-                      color: '#1694FF',
-                      '&.Mui-checked': {
-                        color: '#1694FF'
-                      }
-                    }}
-                  />
-                }
-                label={
-                  <Typography sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
-                    Desk
-                  </Typography>
-                }
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={acessoData.Ouvidoria === true}
-                    disabled={funcionarioSelecionado?.desligado || funcionarioSelecionado?.afastado}
-                    onChange={(e) => setAcessoData({ 
-                      ...acessoData, 
-                      Ouvidoria: e.target.checked 
-                    })}
-                    sx={{
-                      color: '#1694FF',
-                      '&.Mui-checked': {
-                        color: '#1694FF'
-                      }
-                    }}
-                  />
-                }
-                label={
-                  <Typography sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
-                    Ouvidoria
-                  </Typography>
-                }
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={acessoData.Sociais === true}
-                    disabled={funcionarioSelecionado?.desligado || funcionarioSelecionado?.afastado}
-                    onChange={(e) => setAcessoData({ 
-                      ...acessoData, 
-                      Sociais: e.target.checked 
-                    })}
-                    sx={{
-                      color: '#1694FF',
-                      '&.Mui-checked': {
-                        color: '#1694FF'
-                      }
-                    }}
-                  />
-                }
-                label={
-                  <Typography sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
-                    Sociais
-                  </Typography>
-                }
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={acessoData.realTime === true}
-                    disabled={funcionarioSelecionado?.desligado || funcionarioSelecionado?.afastado}
-                    onChange={(e) => setAcessoData({ 
-                      ...acessoData, 
-                      realTime: e.target.checked 
-                    })}
-                    sx={{
-                      color: '#1694FF',
-                      '&.Mui-checked': {
-                        color: '#1694FF'
-                      }
-                    }}
-                  />
-                }
-                label={
-                  <Typography sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
-                    Tempo Real
-                  </Typography>
-                }
-              />
-            </Grid>
+            {LISTA_ACESSOS_MODAL.map(({ key, label }) => (
+              <Grid item xs={12} md={4} key={key}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={acessoData[key] === true}
+                      disabled={funcionarioSelecionado?.desligado || funcionarioSelecionado?.afastado}
+                      onChange={(e) => setAcessoData(prev => ({ 
+                        ...prev, 
+                        [key]: e.target.checked 
+                      }))}
+                      sx={{
+                        color: '#1694FF',
+                        '&.Mui-checked': {
+                          color: '#1694FF'
+                        }
+                      }}
+                    />
+                  }
+                  label={
+                    <Typography sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
+                      {label}
+                    </Typography>
+                  }
+                />
+              </Grid>
+            ))}
           </Grid>
         </DialogContent>
         <DialogActions>

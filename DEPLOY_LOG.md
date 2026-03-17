@@ -1,12 +1,35 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.45.0 | DATE: 2026-03-17 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.46.0 | DATE: 2026-03-17 | AUTHOR: VeloHub Development Team -->
+
+## Push GitHub - Funcionários: Correção Checkboxes Acessos na Primeira Abertura - 2026-03-17
+
+### **Tipo:** Push GitHub
+### **Data/Hora:** 2026-03-17
+### **Branch:** main
+### **Commit:** a059bd9
+### **Repositório:** https://github.com/admVeloHub/Console-v2-gcp.git
+
+### **Arquivos Modificados:**
+- `src/pages/FuncionariosPage.jsx` (v1.13.0) - Correção checkboxes acessos não exibidos na primeira abertura do modal
+
+### **Descrição:**
+Correção do bug onde apenas 4 checkboxes (VeloHub, Console, Academy, Desk) eram exibidos na primeira abertura do modal de acessos, exigindo F5 para ver todos os 7:
+
+**Mudanças Principais:**
+- Lista fixa `LISTA_ACESSOS_MODAL` para garantir renderização de todos os checkboxes
+- Dialog com `TransitionProps={{ timeout: 0 }}` e `keepMounted` para evitar renderização parcial
+- useLayoutEffect com merge completo do padrão de acessos
+- onChange com atualização funcional para evitar perda de estado
+- Sociais incluído na exibição da tabela e chips expandidos
+
+---
 
 ## Push GitHub - Academy: Aba Recentes e Correção Formato Pontuações - 2026-03-17
 
 ### **Tipo:** Push GitHub
 ### **Data/Hora:** 2026-03-17
 ### **Branch:** main
-### **Commit:** bb8d6fa
+### **Commit:** 886d762
 ### **Repositório:** https://github.com/admVeloHub/Console-v2-gcp.git
 
 ### **Arquivos Modificados:**
