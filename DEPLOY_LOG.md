@@ -1,5 +1,38 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.44.0 | DATE: 2026-03-04 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.45.0 | DATE: 2026-03-17 | AUTHOR: VeloHub Development Team -->
+
+## Push GitHub - Academy: Aba Recentes e Correção Formato Pontuações - 2026-03-17
+
+### **Tipo:** Push GitHub
+### **Data/Hora:** 2026-03-17
+### **Branch:** main
+### **Commit:** bb8d6fa
+### **Repositório:** https://github.com/admVeloHub/Console-v2-gcp.git
+
+### **Arquivos Modificados:**
+- `src/pages/AcademyPage.jsx` (v1.11.1) - Nova aba Recentes, formatação correta de pontuações (escala 0-10 e 0-100)
+- `src/pages/FuncionariosPage.jsx` - Alterações diversas
+- `src/services/api.js` - Alterações diversas
+- `src/services/qualidadeAPI.js` - Alterações diversas
+- `DEPLOY_LOG.md` - Registro deste deploy
+
+### **Descrição:**
+Implementação da aba "Recentes" no módulo Academy e correção da exibição de pontuações:
+
+**Aba Recentes:**
+- Nova aba exibindo certificados e reprovações unificados em lista
+- Ordenação por data (mais recentes primeiro)
+- Badge Aprovado/Reprovado, data, nota, nome, curso
+- Filtro por data (inicial e final)
+- Link para certificado quando disponível
+
+**Formatação de Pontuações:**
+- Função `formatarNotaAcademy` para tratar escalas 0-10 e 0-100
+- Valores 0-10 convertidos para percentual (ex: 10 → 100%, 6 → 60%)
+- Valores >10 tratados como já percentuais (ex: 85 → 85%)
+- Aplicado em Aprovações, Reprovações e lista Recentes
+
+---
 
 ## Push GitHub - Adição Campo Tempo Real (realTime) ao Controle de Acessos - 2026-03-04
 

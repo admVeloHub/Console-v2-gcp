@@ -1,7 +1,8 @@
-// VERSION: v1.11.0 | DATE: 2026-02-23 | AUTHOR: VeloHub Development Team
+// VERSION: v1.12.0 | DATE: 2026-03-17 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.12.0 - Adicionado campo Sociais ao modal de acessos. Correções de cache: useLayoutEffect para checkboxes, useLocation para recarregar dados ao abrir aba, key no Dialog, normalização no localStorage.
 // CHANGELOG: v1.11.0 - Adicionado campo Ouvidoria ao modal de acessos. Acessos agora incluem: Velohub, Console, Academy, Desk e Ouvidoria.
 // CHANGELOG: v1.10.0 - Adicionado campo Desk ao modal de acessos. Acessos são completamente opcionais - permitido salvar funcionários mesmo com todos os acessos como false.
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useCallback } from 'react';
 import {
   Container,
   Box,
@@ -55,7 +56,7 @@ import {
   BarChart,
   PersonAdd
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import BackButton from '../components/common/BackButton';
 import {
   getFuncionarios,
@@ -80,6 +81,7 @@ const API_BASE_URL = normalizeBaseUrl(process.env.REACT_APP_API_URL || 'https://
 
 const FuncionariosPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   
   // Estados principais
   const [funcionarios, setFuncionarios] = useState([]);
@@ -121,11 +123,13 @@ const FuncionariosPage = () => {
     password: '', // Senha (hash) - opcional para reset
     atuacao: [], // Array de referências para funções
     escala: '',
-    acessos: { // Objeto booleano {Velohub: Boolean, Console: Boolean, Academy: Boolean, Desk: Boolean, Ouvidoria: Boolean, realTime: Boolean}
+    acessos: { // Objeto booleano {Velohub: Boolean, Console: Boolean, Academy: Boolean, Desk: Boolean, Ouvidoria: Boolean, Sociais: Boolean, realTime: Boolean}
       Velohub: false,
       Console: false,
       Academy: false,
       Desk: false,
+      Ouvidoria: false,
+      Sociais: false,
       realTime: false
     },
     desligado: false,
@@ -138,9 +142,10 @@ const FuncionariosPage = () => {
     Velohub: false,
     Console: false,
     Academy: false,
-    realTime: false,
     Desk: false,
-    Ouvidoria: false
+    Ouvidoria: false,
+    Sociais: false,
+    realTime: false
   });
   
   // Estados de UI
@@ -171,11 +176,13 @@ const FuncionariosPage = () => {
     }
   };
 
-  // Carregar funcionários
+  // Carregar funcionários e funções ao montar e sempre que a aba funcionários for acessada (dados sempre frescos)
   useEffect(() => {
-    carregarFuncionarios();
-    carregarFuncoes(); // Adicionar esta linha
-  }, []);
+    if (location.pathname === '/funcionarios') {
+      carregarFuncionarios();
+      carregarFuncoes();
+    }
+  }, [location.pathname]);
 
   // Aplicar filtros
   useEffect(() => {
@@ -604,48 +611,49 @@ const FuncionariosPage = () => {
     }
   };
 
+  // Normalizar acessos do funcionário para formato objeto booleano (usado em abrirModalAcesso e useLayoutEffect)
+  const normalizarAcessosFuncionario = useCallback((acessos) => {
+    const padrao = { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false };
+    if (!acessos || typeof acessos !== 'object') return padrao;
+    if (!Array.isArray(acessos)) {
+      return {
+        Velohub: acessos.Velohub === true,
+        Console: acessos.Console === true,
+        Academy: acessos.Academy === true,
+        Desk: acessos.Desk === true,
+        Ouvidoria: acessos.Ouvidoria === true,
+        Sociais: acessos.Sociais === true,
+        realTime: acessos.realTime === true
+      };
+    }
+    const resultado = { ...padrao };
+    acessos.forEach(acesso => {
+      if (acesso && acesso.sistema) {
+        const sistema = acesso.sistema.toLowerCase();
+        if (sistema === 'velohub') resultado.Velohub = true;
+        else if (sistema === 'console') resultado.Console = true;
+        else if (sistema === 'academy') resultado.Academy = true;
+        else if (sistema === 'desk') resultado.Desk = true;
+        else if (sistema === 'ouvidoria') resultado.Ouvidoria = true;
+        else if (sistema === 'sociais') resultado.Sociais = true;
+        else if (sistema === 'realtime' || sistema === 'tempo real') resultado.realTime = true;
+      }
+    });
+    return resultado;
+  }, []);
+
   const abrirModalAcesso = (funcionario) => {
     setFuncionarioSelecionado(funcionario);
-    
-    // Normalizar acessos do funcionário para o formato objeto booleano
-    let acessosNormalizados = { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, realTime: false };
-    if (funcionario.acessos && typeof funcionario.acessos === 'object') {
-      if (!Array.isArray(funcionario.acessos)) {
-        // Formato novo: objeto booleano
-        acessosNormalizados = {
-          Velohub: funcionario.acessos?.Velohub === true,
-          Console: funcionario.acessos?.Console === true,
-          Academy: funcionario.acessos?.Academy === true,
-          Desk: funcionario.acessos?.Desk === true,
-          Ouvidoria: funcionario.acessos?.Ouvidoria === true,
-          realTime: funcionario.acessos?.realTime === true
-        };
-      } else {
-        // Formato antigo: array de objetos
-        funcionario.acessos.forEach(acesso => {
-          if (acesso && acesso.sistema) {
-            const sistema = acesso.sistema.toLowerCase();
-            if (sistema === 'velohub') {
-              acessosNormalizados.Velohub = true;
-            } else if (sistema === 'console') {
-              acessosNormalizados.Console = true;
-            } else if (sistema === 'academy') {
-              acessosNormalizados.Academy = true;
-            } else if (sistema === 'desk') {
-              acessosNormalizados.Desk = true;
-            } else if (sistema === 'ouvidoria') {
-              acessosNormalizados.Ouvidoria = true;
-            } else if (sistema === 'realtime' || sistema === 'tempo real') {
-              acessosNormalizados.realTime = true;
-            }
-          }
-        });
-      }
-    }
-    
-    setAcessoData(acessosNormalizados);
+    setAcessoData(normalizarAcessosFuncionario(funcionario.acessos));
     setModalAcessoAberto(true);
   };
+
+  // Sincronizar acessoData quando modal abre (corrige checkboxes não exibidos na primeira abertura)
+  useLayoutEffect(() => {
+    if (modalAcessoAberto && funcionarioSelecionado) {
+      setAcessoData(normalizarAcessosFuncionario(funcionarioSelecionado.acessos));
+    }
+  }, [modalAcessoAberto, funcionarioSelecionado, normalizarAcessosFuncionario]);
 
   const fecharModalAcesso = () => {
     setModalAcessoAberto(false);
@@ -656,6 +664,7 @@ const FuncionariosPage = () => {
       Academy: false,
       Desk: false,
       Ouvidoria: false,
+      Sociais: false,
       realTime: false
     });
   };
@@ -671,7 +680,7 @@ const FuncionariosPage = () => {
       if (funcionarioSelecionado.desligado || funcionarioSelecionado.afastado) {
         const funcionarioAtualizado = {
           ...funcionarioSelecionado,
-          acessos: { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, realTime: false }
+          acessos: { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false }
         };
         await updateFuncionario(funcionarioSelecionado._id || funcionarioSelecionado.id, funcionarioAtualizado);
         mostrarSnackbar('Acessos removidos (funcionário desligado/afastado)', 'success');
@@ -687,6 +696,7 @@ const FuncionariosPage = () => {
         Academy: acessoData.Academy === true,
         Desk: acessoData.Desk === true,
         Ouvidoria: acessoData.Ouvidoria === true,
+        Sociais: acessoData.Sociais === true,
         realTime: acessoData.realTime === true
       };
       
@@ -1711,7 +1721,7 @@ const FuncionariosPage = () => {
                         // Se desmarcar desligado, limpar data de desligamento
                         dataDesligamento: isDesligado ? formData.dataDesligamento : '',
                         // Se marcar como desligado, remover todos os acessos (todos false)
-                        acessos: isDesligado ? { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, realTime: false } : formData.acessos
+                        acessos: isDesligado ? { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false } : formData.acessos
                       });
                     }}
                     sx={{
@@ -1742,7 +1752,7 @@ const FuncionariosPage = () => {
                         // Se desmarcar afastado, limpar data de afastamento
                         dataAfastamento: isAfastado ? formData.dataAfastamento : '',
                         // Se marcar como afastado, remover todos os acessos (todos false)
-                        acessos: isAfastado ? { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, realTime: false } : formData.acessos
+                        acessos: isAfastado ? { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false } : formData.acessos
                       });
                     }}
                     sx={{
@@ -1859,7 +1869,7 @@ const FuncionariosPage = () => {
       </Dialog>
 
       {/* Modal Acesso */}
-      <Dialog open={modalAcessoAberto} onClose={fecharModalAcesso} maxWidth="sm" fullWidth>
+      <Dialog key={funcionarioSelecionado?._id || funcionarioSelecionado?.id || 'acesso-modal'} open={modalAcessoAberto} onClose={fecharModalAcesso} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>
           Gerenciar Acessos - {funcionarioSelecionado?.colaboradorNome}
         </DialogTitle>
@@ -1994,6 +2004,31 @@ const FuncionariosPage = () => {
                 label={
                   <Typography sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
                     Ouvidoria
+                  </Typography>
+                }
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={acessoData.Sociais === true}
+                    disabled={funcionarioSelecionado?.desligado || funcionarioSelecionado?.afastado}
+                    onChange={(e) => setAcessoData({ 
+                      ...acessoData, 
+                      Sociais: e.target.checked 
+                    })}
+                    sx={{
+                      color: '#1694FF',
+                      '&.Mui-checked': {
+                        color: '#1694FF'
+                      }
+                    }}
+                  />
+                }
+                label={
+                  <Typography sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
+                    Sociais
                   </Typography>
                 }
               />

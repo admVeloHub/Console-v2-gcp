@@ -1,4 +1,4 @@
-// VERSION: v3.14.5 | DATE: 2025-02-09 | AUTHOR: VeloHub Development Team
+// VERSION: v3.14.6 | DATE: 2026-03-17 | AUTHOR: VeloHub Development Team
 import axios from 'axios';
 
 // Função auxiliar para normalizar URL base (remove /api do final se existir)
@@ -485,9 +485,9 @@ export const qualidadeFuncionariosAPI = {
     return response.data;
   },
 
-  // Atualizar funcionário
+  // Atualizar funcionário (timeout 30s - operação pode demorar com syncUserToConfig e carga do backend)
   update: async (id, data) => {
-    const response = await api.put(`/qualidade/funcionarios/${id}`, data);
+    const response = await api.put(`/qualidade/funcionarios/${id}`, data, { timeout: 30000 });
     return response.data;
   },
 

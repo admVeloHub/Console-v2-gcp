@@ -1,4 +1,4 @@
-// VERSION: v1.10.0 | DATE: 2026-03-11 | AUTHOR: VeloHub Development Team
+// VERSION: v1.11.1 | DATE: 2026-03-17 | AUTHOR: VeloHub Development Team
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -76,6 +76,12 @@ const AcademyPage = () => {
   const [aprovacoes, setAprovacoes] = useState([]);
   const [reprovacoes, setReprovacoes] = useState([]);
   const [loadingProgresso, setLoadingProgresso] = useState(false);
+  
+  // Estados para aba Recentes
+  const [recentesLista, setRecentesLista] = useState([]);
+  const [loadingRecentes, setLoadingRecentes] = useState(false);
+  const [filtroDataInicio, setFiltroDataInicio] = useState('');
+  const [filtroDataFim, setFiltroDataFim] = useState('');
   const [funcionariosAtendimento, setFuncionariosAtendimento] = useState([]);
   const [funcoes, setFuncoes] = useState([]);
   const [loadingFuncionarios, setLoadingFuncionarios] = useState(false);
@@ -229,6 +235,13 @@ const AcademyPage = () => {
     }
   }, [activeTab, progressoSubTab]);
   
+  // Carregar certificados e reprovas quando aba Recentes for selecionada
+  useEffect(() => {
+    if (activeTab === 2) {
+      carregarRecentes();
+    }
+  }, [activeTab]);
+  
   const carregarFuncoesEFuncionarios = async () => {
     try {
       setLoadingFuncionarios(true);
@@ -326,6 +339,39 @@ const AcademyPage = () => {
     }
   };
   
+  const carregarRecentes = async () => {
+    try {
+      setLoadingRecentes(true);
+      const apiUrl = getApiBaseUrl();
+      const [resCertificados, resReprovacoes] = await Promise.all([
+        fetch(`${apiUrl}/mongodb/certificados`),
+        fetch(`${apiUrl}/mongodb/reprovas`)
+      ]);
+      if (!resCertificados.ok || !resReprovacoes.ok) {
+        throw new Error('Erro ao carregar dados');
+      }
+      const dataCert = await resCertificados.json();
+      const dataRep = await resReprovacoes.json();
+      const certs = dataCert.success ? (dataCert.data || []) : [];
+      const repros = dataRep.success ? (dataRep.data || []) : [];
+      const unificados = [
+        ...certs.map(c => ({ ...c, tipo: 'aprovacao', dataSort: c.date || c.createdAt })),
+        ...repros.map(r => ({ ...r, tipo: 'reprovacao', dataSort: r.date || r.createdAt }))
+      ].sort((a, b) => {
+        const da = new Date(a.dataSort || 0).getTime();
+        const db = new Date(b.dataSort || 0).getTime();
+        return db - da;
+      });
+      setRecentesLista(unificados);
+    } catch (error) {
+      console.error('❌ Erro ao carregar recentes:', error);
+      mostrarSnackbar(`Erro ao carregar recentes: ${error.message}`, 'error');
+      setRecentesLista([]);
+    } finally {
+      setLoadingRecentes(false);
+    }
+  };
+  
   const carregarReprovacoes = async () => {
     try {
       setLoadingProgresso(true);
@@ -372,6 +418,15 @@ const AcademyPage = () => {
   
   const handleProgressoSubTabChange = (event, newValue) => {
     setProgressoSubTab(newValue);
+  };
+  
+  // Formatar nota do Academy: dados podem vir em escala 0-10 ou 0-100
+  const formatarNotaAcademy = (finalGrade) => {
+    if (finalGrade === null || finalGrade === undefined) return '-';
+    const num = Number(finalGrade);
+    if (isNaN(num)) return '-';
+    const percentual = num <= 10 ? num * 10 : num;
+    return percentual % 1 === 0 ? `${percentual}%` : `${percentual.toFixed(1)}%`;
   };
   
   // Normalizar nome do curso - usar courseName, mas buscar por courseId se courseName for inválido
@@ -2022,6 +2077,7 @@ const AcademyPage = () => {
           >
             <Tab label="Cursos" />
             <Tab label="Progresso" />
+            <Tab label="Recentes" />
           </Tabs>
         </Box>
       </Box>
@@ -2819,7 +2875,7 @@ const AcademyPage = () => {
                                     </Box>
                                     
                                     <Box sx={{ width: '80px', flexShrink: 0 }}>
-                                      {aprovacao && aprovacao.finalGrade !== null && aprovacao.finalGrade !== undefined ? (
+                                      {aprovacao ? (
                                         <Typography 
                                           variant="body2" 
                                           sx={{ 
@@ -2827,7 +2883,7 @@ const AcademyPage = () => {
                                             color: 'rgba(0, 0, 0, 0.7)'
                                           }}
                                         >
-                                          {aprovacao.finalGrade.toFixed(1)}%
+                                          {formatarNotaAcademy(aprovacao.finalGrade)}
                                         </Typography>
                                       ) : (
                                         <Typography 
@@ -2961,9 +3017,7 @@ const AcademyPage = () => {
                                     <TableCell>{reprovacao.name || '-'}</TableCell>
                                     <TableCell>{reprovacao.email || '-'}</TableCell>
                                     <TableCell>
-                                      {reprovacao.finalGrade !== null && reprovacao.finalGrade !== undefined 
-                                        ? `${reprovacao.finalGrade.toFixed(1)}%` 
-                                        : '-'}
+                                      {formatarNotaAcademy(reprovacao.finalGrade)}
                                     </TableCell>
                                     <TableCell>
                                       {reprovacao.date 
@@ -2987,6 +3041,148 @@ const AcademyPage = () => {
                 )}
               </Box>
             )}
+          </Box>
+        )}
+        
+        {activeTab === 2 && (
+          <Box>
+            {/* Filtro por data */}
+            <Card 
+              className="velohub-container"
+              sx={{ 
+                backgroundColor: 'var(--cor-container)',
+                borderRadius: '12px',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+                padding: '12px 24px',
+                marginBottom: '24px',
+                mx: 0
+              }}
+            >
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+                <TextField
+                  label="Data inicial"
+                  type="date"
+                  value={filtroDataInicio}
+                  onChange={(e) => setFiltroDataInicio(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{ 
+                    minWidth: 180,
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(0, 0, 0, 0.15)' },
+                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--blue-medium)' }
+                  }}
+                />
+                <TextField
+                  label="Data final"
+                  type="date"
+                  value={filtroDataFim}
+                  onChange={(e) => setFiltroDataFim(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{ 
+                    minWidth: 180,
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(0, 0, 0, 0.15)' },
+                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--blue-medium)' }
+                  }}
+                />
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => { setFiltroDataInicio(''); setFiltroDataFim(''); }}
+                  sx={{ fontFamily: 'Poppins', textTransform: 'none' }}
+                >
+                  Limpar filtro
+                </Button>
+              </Box>
+            </Card>
+            
+            {/* Lista de recentes */}
+            {loadingRecentes ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
+                <CircularProgress />
+              </Box>
+            ) : (() => {
+              const filtrados = recentesLista.filter(item => {
+                const dataItem = item.date || item.createdAt;
+                if (!dataItem) return true;
+                const d = new Date(dataItem);
+                const dia = d.toISOString().split('T')[0];
+                if (filtroDataInicio && dia < filtroDataInicio) return false;
+                if (filtroDataFim && dia > filtroDataFim) return false;
+                return true;
+              });
+              return filtrados.length === 0 ? (
+                <Alert severity="info">Nenhum registro encontrado</Alert>
+              ) : (
+                <Card sx={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)', borderRadius: '12px' }}>
+                  <List sx={{ py: 0 }}>
+                    {filtrados.map((item, index) => {
+                      const cursoNome = normalizarNomeCurso(item.courseName, item.courseId);
+                      const dataFormatada = item.date || item.createdAt
+                        ? new Date(item.date || item.createdAt).toLocaleDateString('pt-BR')
+                        : '-';
+                      const nota = formatarNotaAcademy(item.finalGrade);
+                      const isAprovacao = item.tipo === 'aprovacao';
+                      return (
+                        <React.Fragment key={`${item._id}-${item.tipo}-${index}`}>
+                          <ListItem
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 2,
+                              py: 1.5,
+                              px: 2,
+                              backgroundColor: index % 2 === 0 ? 'transparent' : 'rgba(0, 0, 0, 0.02)',
+                              borderBottom: index < filtrados.length - 1 ? '1px solid rgba(0, 0, 0, 0.06)' : 'none'
+                            }}
+                          >
+                            <Chip
+                              label={isAprovacao ? 'Aprovado' : 'Reprovado'}
+                              size="small"
+                              sx={{
+                                backgroundColor: isAprovacao ? '#15A237' : '#d32f2f',
+                                color: 'white',
+                                fontFamily: 'Poppins',
+                                fontWeight: 500,
+                                fontSize: '0.75rem',
+                                minWidth: 88
+                              }}
+                            />
+                            <Box sx={{ minWidth: 100 }}>
+                              <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: 'rgba(0, 0, 0, 0.7)' }}>
+                                {dataFormatada}
+                              </Typography>
+                            </Box>
+                            <Box sx={{ minWidth: 60 }}>
+                              <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: 'rgba(0, 0, 0, 0.7)' }}>
+                                {nota}
+                              </Typography>
+                            </Box>
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Typography variant="body2" sx={{ fontFamily: 'Poppins', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {item.name || '-'}
+                              </Typography>
+                              <Typography variant="caption" sx={{ fontFamily: 'Poppins', color: 'rgba(0, 0, 0, 0.5)' }}>
+                                {cursoNome}
+                              </Typography>
+                            </Box>
+                            {isAprovacao && item.certificateUrl && (
+                              <Button
+                                size="small"
+                                href={item.certificateUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                sx={{ fontFamily: 'Poppins', textTransform: 'none', fontSize: '0.75rem' }}
+                              >
+                                Certificado
+                              </Button>
+                            )}
+                          </ListItem>
+                        </React.Fragment>
+                      );
+                    })}
+                  </List>
+                </Card>
+              );
+            })()}
           </Box>
         )}
       
