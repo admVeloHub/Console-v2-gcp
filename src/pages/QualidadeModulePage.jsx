@@ -1,6 +1,8 @@
-// VERSION: v1.31.0 | DATE: 2025-02-11 | AUTHOR: VeloHub Development Team
+// VERSION: v1.31.2 | DATE: 2026-03-19 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.31.2 - Filtros/tabela resilientes (colaboradorNome/avaliador opcionais); merge refetch com arrays seguros (evita quebra da página)
+// CHANGELOG: v1.31.1 - Revalidar lista de avaliações ao voltar à aba Avaliações e ao focar a janela (status de áudio não ficar preso em amarelo sem F5)
 // CHANGELOG: v1.31.0 - Atualização de métricas: Escuta 15→10pts, Clareza 15→10pts, Empatia 15→10pts, Procedimento -60→-100pts, substituído dominioAssunto por registroAtendimento, adicionado conformidadeTicket -15pts
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Container, 
   Box, 
@@ -170,6 +172,53 @@ const QualidadeModulePage = () => {
     carregarDados();
   }, []);
 
+  /** Preserva uploadingAudio local só enquanto o backend ainda não marcou audioTreated (evita flicker em upload ativo). */
+  const mergeAvaliacoesComEstadoLocal = useCallback((fresh, prev) => {
+    const safeFresh = Array.isArray(fresh) ? fresh : [];
+    const safePrev = Array.isArray(prev) ? prev : [];
+    const map = new Map(safePrev.map((a) => [a._id, a]));
+    return safeFresh.map((a) => {
+      const old = map.get(a._id);
+      if (old?.uploadingAudio && !a.audioTreated) {
+        return { ...a, uploadingAudio: true };
+      }
+      return a;
+    });
+  }, []);
+
+  /** Atualiza só avaliações da API (status de áudio / PubSub) sem recarregar funcionários. */
+  const recarregarAvaliacoesDaApi = useCallback(async () => {
+    try {
+      const data = await getAvaliacoes();
+      setAvaliacoes((prev) => mergeAvaliacoesComEstadoLocal(data, prev));
+    } catch (error) {
+      console.error('Erro ao atualizar lista de avaliações:', error);
+    }
+  }, [mergeAvaliacoesComEstadoLocal]);
+
+  // Evita refetch duplicado no primeiro mount (já coberto por carregarDados)
+  const pularPrimeiroRefetchAvaliacoes = useRef(true);
+
+  // Ao voltar para a aba Avaliações, buscar dados atuais (indicador de áudio / processamento)
+  useEffect(() => {
+    if (currentView !== 'avaliacoes') return;
+    if (pularPrimeiroRefetchAvaliacoes.current) {
+      pularPrimeiroRefetchAvaliacoes.current = false;
+      return;
+    }
+    recarregarAvaliacoesDaApi();
+  }, [currentView, recarregarAvaliacoesDaApi]);
+
+  // Ao voltar à janela/aba do navegador com Avaliações visível, revalidar lista
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState !== 'visible' || currentView !== 'avaliacoes') return;
+      recarregarAvaliacoesDaApi();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, [currentView, recarregarAvaliacoesDaApi]);
+
   // Limpar selectedColaborador quando funcionários carregam (para evitar cache de IDs)
   useEffect(() => {
     if (funcionarios.length > 0) {
@@ -206,7 +255,7 @@ const QualidadeModulePage = () => {
         _id: f._id || f.id
       }));
       
-      setAvaliacoes(avaliacoesData);
+      setAvaliacoes(Array.isArray(avaliacoesData) ? avaliacoesData : []);
       setFuncionarios(funcionariosComId);
       setAvaliadores(avaliadoresValidos);
       setLoading(false);
@@ -223,15 +272,17 @@ const QualidadeModulePage = () => {
 
     // Filtro por colaborador (nome parcial, case-insensitive)
     if (filtros.colaborador) {
-      filtrados = filtrados.filter(a => 
-        a.colaboradorNome.toLowerCase().includes(filtros.colaborador.toLowerCase())
+      const q = filtros.colaborador.toLowerCase();
+      filtrados = filtrados.filter(a =>
+        String(a.colaboradorNome ?? '').toLowerCase().includes(q)
       );
     }
 
     // Filtro por avaliador (nome parcial, case-insensitive)
     if (filtros.avaliador) {
-      filtrados = filtrados.filter(a => 
-        a.avaliador.toLowerCase().includes(filtros.avaliador.toLowerCase())
+      const q = filtros.avaliador.toLowerCase();
+      filtrados = filtrados.filter(a =>
+        String(a.avaliador ?? '').toLowerCase().includes(q)
       );
     }
 
@@ -930,18 +981,20 @@ const QualidadeModulePage = () => {
                   {avaliacoesFiltradas.length > 0 ? (
                     avaliacoesFiltradas.map((avaliacao) => {
                       const status = getStatusPontuacao(avaliacao.pontuacaoTotal);
+                      const nomeColaboradorLista = String(avaliacao.colaboradorNome ?? '').trim() || '—';
+                      const inicialColaborador = nomeColaboradorLista.charAt(0);
                       
                       return (
                         <TableRow key={avaliacao._id}>
                           <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', py: 0.8 }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
                               <Avatar sx={{ width: 25.6, height: 25.6, backgroundColor: '#1694FF', fontSize: '0.8rem' }}>
-                                {avaliacao.colaboradorNome.charAt(0)}
+                                {inicialColaborador}
                               </Avatar>
-                              {avaliacao.colaboradorNome}
+                              {nomeColaboradorLista}
                             </Box>
                           </TableCell>
-                          <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', py: 0.8, color: 'inherit' }}>{avaliacao.avaliador}</TableCell>
+                          <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', py: 0.8, color: 'inherit' }}>{avaliacao.avaliador ?? '—'}</TableCell>
                           <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', py: 0.8, color: 'inherit' }}>
                             {avaliacao.createdAt ? formatDate(avaliacao.createdAt) : '-'}
                           </TableCell>

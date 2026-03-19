@@ -1,4 +1,6 @@
-// VERSION: v3.14.6 | DATE: 2026-03-17 | AUTHOR: VeloHub Development Team
+// VERSION: v3.14.8 | DATE: 2026-03-19 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v3.14.8 - Export getResolvedApiUrl para qualidadeAudioService (fetch/SSE mesmo host que axios na rede local)
+// CHANGELOG: v3.14.7 - Correção rede local: usar hostname do browser quando API aponta para localhost (resolve lista de colaboradores vazia ao acessar via IP)
 import axios from 'axios';
 
 // Função auxiliar para normalizar URL base (remove /api do final se existir)
@@ -6,8 +8,23 @@ const normalizeBaseUrl = (url) => {
   return url.replace(/\/api\/?$/, '');
 };
 
-// Configuração base da API - garantir que sempre termine com /api
-const API_BASE_URL = normalizeBaseUrl(process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app') + '/api';
+// Resolver URL da API: em dev, se config aponta para localhost mas acesso é via IP (rede local), usar hostname do browser
+export const getResolvedApiUrl = () => {
+  const envUrl = process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app';
+  const normalized = normalizeBaseUrl(envUrl) + '/api';
+  // Se env usa localhost e estamos no browser com hostname diferente (acesso via rede)
+  if (typeof window !== 'undefined' && envUrl.includes('localhost') && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    const urlObj = new URL(normalized);
+    const fallbackUrl = `${urlObj.protocol}//${window.location.hostname}:${urlObj.port || '3001'}/api`;
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔗 [Rede local] API URL ajustada para:', fallbackUrl, '(hostname:', window.location.hostname + ')');
+    }
+    return fallbackUrl;
+  }
+  return normalized;
+};
+
+const API_BASE_URL = getResolvedApiUrl();
 
 // Log da URL configurada (apenas em desenvolvimento)
 if (process.env.NODE_ENV === 'development') {

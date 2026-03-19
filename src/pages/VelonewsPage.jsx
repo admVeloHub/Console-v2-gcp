@@ -1,5 +1,5 @@
-// VERSION: v4.8.4 | DATE: 2025-02-09 | AUTHOR: VeloHub Development Team
-import React, { useState, useCallback, useEffect } from 'react';
+// VERSION: v4.8.6 | DATE: 2025-03-19 | AUTHOR: VeloHub Development Team
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { 
   Container, 
   Typography, 
@@ -42,7 +42,6 @@ const VelonewsPage = () => {
 
   // Estados para a aba "Gerenciar Notícias"
   const [newsList, setNewsList] = useState([]);
-  const [filteredNews, setFilteredNews] = useState([]);
   const [selectedNews, setSelectedNews] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [editFormData, setEditFormData] = useState({
@@ -173,7 +172,6 @@ const VelonewsPage = () => {
       if (!Array.isArray(response)) {
         console.error('Resposta não é um array:', response);
         setNewsList([]);
-        setFilteredNews([]);
         return;
       }
       
@@ -197,7 +195,6 @@ const VelonewsPage = () => {
       });
       
       setNewsList(sorted);
-      setFilteredNews(sorted);
     } catch (error) {
       console.error('Erro ao carregar notícias:', error);
       setSnackbar({
@@ -210,25 +207,22 @@ const VelonewsPage = () => {
     }
   }, []);
 
-  // 2. Pesquisar Notícias
-  const handleSearch = (event) => {
-    const term = event.target.value;
-    setSearchTerm(term);
-    
-    if (!term.trim()) {
-      setFilteredNews(newsList);
-      return;
-    }
-    
-    const filtered = newsList.filter(news =>
-      news.titulo?.toLowerCase().includes(term.toLowerCase()) ||
-      news.conteudo?.toLowerCase().includes(term.toLowerCase())
+  // 2. Lista filtrada derivada de searchTerm e newsList (sincroniza contador e lista)
+  const filteredNews = useMemo(() => {
+    if (!searchTerm.trim()) return newsList;
+    const term = searchTerm.toLowerCase();
+    return newsList.filter(news =>
+      news.titulo?.toLowerCase().includes(term) ||
+      news.conteudo?.toLowerCase().includes(term)
     );
-    
-    setFilteredNews(filtered);
+  }, [searchTerm, newsList]);
+
+  // 3. Pesquisar Notícias
+  const handleSearch = (event) => {
+    setSearchTerm(event.target.value);
   };
 
-  // 3. Selecionar Notícia para Edição (CRÍTICO - Carregar todos os campos)
+  // 4. Selecionar Notícia para Edição (CRÍTICO - Carregar todos os campos)
   const handleSelectNews = (news) => {
     setSelectedNews(news);
     setEditFormData({
@@ -255,7 +249,7 @@ const VelonewsPage = () => {
     }
   };
 
-  // 4. Atualizar Notícia (Payload completo com solved)
+  // 5. Atualizar Notícia (Payload completo com solved)
   const handleUpdateNews = async (event) => {
     event.preventDefault();
     
@@ -336,7 +330,7 @@ const VelonewsPage = () => {
     }
   };
 
-  // 5. Deletar Notícia
+  // 6. Deletar Notícia
   const handleDeleteVelonews = async () => {
     if (!editFormData.id) {
       setSnackbar({
@@ -383,7 +377,7 @@ const VelonewsPage = () => {
     }
   };
 
-  // 6. useEffect para Carregar Dados
+  // 7. useEffect para Carregar Dados
   useEffect(() => {
     if (activeTab === 1) {
       loadNewsList();
@@ -929,8 +923,10 @@ const VelonewsPage = () => {
                   {filteredNews.length} notícia(s) encontrada(s)
                 </Typography>
                 
-                {/* Lista de Notícias */}
-                <Box sx={{ 
+                {/* Lista de Notícias - key força remount quando filtro muda (garante sincronia contador/lista) */}
+                <Box
+                  key={`news-list-${searchTerm}-${filteredNews.length}`}
+                  sx={{ 
                   maxHeight: '600px', 
                   overflowY: 'auto',
                   '&::-webkit-scrollbar': {

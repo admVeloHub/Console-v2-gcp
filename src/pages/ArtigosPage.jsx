@@ -1,4 +1,4 @@
-// VERSION: v3.8.4 | DATE: 2025-02-09 | AUTHOR: VeloHub Development Team
+// VERSION: v3.8.6 | DATE: 2025-03-19 | AUTHOR: VeloHub Development Team
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { 
   Container, 
@@ -46,7 +46,6 @@ const ArtigosPage = () => {
 
   // Estados para a aba "Gerenciar Artigos"
   const [artigosList, setArtigosList] = useState([]);
-  const [filteredArtigos, setFilteredArtigos] = useState([]);
   const [selectedArtigo, setSelectedArtigo] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [editFormData, setEditFormData] = useState({
@@ -185,7 +184,6 @@ const ArtigosPage = () => {
       } else {
         console.error('Resposta não é um array:', response);
         setArtigosList([]);
-        setFilteredArtigos([]);
         return;
       }
       
@@ -209,7 +207,6 @@ const ArtigosPage = () => {
       });
       
       setArtigosList(sorted);
-      setFilteredArtigos(sorted);
     } catch (error) {
       console.error('Erro ao carregar artigos:', error);
       setSnackbar({
@@ -222,25 +219,24 @@ const ArtigosPage = () => {
     }
   }, []);
 
-  // 2. Pesquisar Artigos
-  const handleSearch = (event) => {
-    const term = event.target.value;
-    setSearchTerm(term);
-    
-    if (!term.trim()) {
-      setFilteredArtigos(artigosList);
-      return;
-    }
-    
-    const filtered = artigosList.filter(artigo =>
-      artigo.artigo_titulo?.toLowerCase().includes(term.toLowerCase()) ||
-      artigo.artigo_conteudo?.toLowerCase().includes(term.toLowerCase())
+  // 2. Lista filtrada derivada de searchTerm e artigosList (sincroniza contador e lista)
+  const filteredArtigos = useMemo(() => {
+    if (!searchTerm.trim()) return artigosList;
+    const term = searchTerm.toLowerCase();
+    return artigosList.filter(artigo =>
+      artigo.artigo_titulo?.toLowerCase().includes(term) ||
+      artigo.artigo_conteudo?.toLowerCase().includes(term) ||
+      artigo.tag?.toLowerCase().includes(term) ||
+      artigo.categoria_titulo?.toLowerCase().includes(term)
     );
-    
-    setFilteredArtigos(filtered);
+  }, [searchTerm, artigosList]);
+
+  // 3. Pesquisar Artigos
+  const handleSearch = (event) => {
+    setSearchTerm(event.target.value);
   };
 
-  // 3. Selecionar Artigo para Edição
+  // 4. Selecionar Artigo para Edição
   const handleSelectArtigo = (artigo) => {
     setSelectedArtigo(artigo);
     
@@ -284,7 +280,7 @@ const ArtigosPage = () => {
     }
   };
 
-  // 4. Atualizar Artigo
+  // 5. Atualizar Artigo
   const handleUpdateArtigo = async (event) => {
     event.preventDefault();
     
@@ -368,7 +364,7 @@ const ArtigosPage = () => {
     }
   };
 
-  // 5. Deletar Artigo
+  // 6. Deletar Artigo
   const handleDeleteArtigo = async () => {
     if (!editFormData.id) {
       setSnackbar({
@@ -416,7 +412,7 @@ const ArtigosPage = () => {
     }
   };
 
-  // 6. useEffect para Carregar Dados
+  // 7. useEffect para Carregar Dados
   useEffect(() => {
     if (activeTab === 1) {
       loadArtigosList();
@@ -923,8 +919,10 @@ const ArtigosPage = () => {
                   {filteredArtigos.length} artigo(s) encontrado(s)
                 </Typography>
                 
-                {/* Lista de Artigos */}
-                <Box sx={{ 
+                {/* Lista de Artigos - key força remount quando filtro muda (garante sincronia contador/lista) */}
+                <Box
+                  key={`artigos-list-${searchTerm}-${filteredArtigos.length}`}
+                  sx={{ 
                   maxHeight: '600px', 
                   overflowY: 'auto',
                   '&::-webkit-scrollbar': {

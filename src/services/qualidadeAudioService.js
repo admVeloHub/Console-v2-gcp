@@ -2,18 +2,24 @@
  * qualidadeAudioService.js
  * Serviço para upload e análise de áudios com GPT
  * 
- * VERSION: v2.2.0
- * DATE: 2025-03-03
+ * VERSION: v2.4.1
+ * DATE: 2026-03-19
  * AUTHOR: VeloHub Development Team
+ * CHANGELOG: v2.4.1 - API_URL/SSE via getResolvedApiUrl (igual api.js) para listar/upload funcionarem ao acessar Console pelo IP da rede
+ * CHANGELOG: v2.4.0 - editarAuditoria: envia corpoAuditoria (backend persiste { auditoriaFeita, corpoAuditoria })
+ * CHANGELOG: v2.3.0 - listarAnalisesPorColaborador: propaga details/error do JSON quando GET /listar retorna 4xx/5xx
  * CHANGELOG: v2.2.0 - Melhorado tratamento de erro SSE, otimizado handlers para performance, melhorada mensagem de erro de upload bloqueado
  */
+
+import { getResolvedApiUrl } from './api';
 
 // Função auxiliar para normalizar URL base (remove /api do final se existir)
 const normalizeBaseUrl = (url) => {
   return url.replace(/\/api\/?$/, '');
 };
 
-const API_URL = normalizeBaseUrl(process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app');
+// Mesma resolução de host que axios (api.js) — evita localhost:3001 no browser em outro IP
+const API_URL = normalizeBaseUrl(getResolvedApiUrl());
 const SSE_URL = `${API_URL}/events`;
 
 // Formatos aceitos (atualizado conforme backend)
@@ -689,11 +695,17 @@ export const listarAnalisesPorColaborador = async (colaboradorNome, mes, ano) =>
     if (ano) params.append('ano', ano);
     
     const response = await fetch(`${API_URL}/api/audio-analise/listar?${params}`);
-    
+
     if (!response.ok) {
-      throw new Error('Erro ao listar análises');
+      const errBody = await response.json().catch(() => ({}));
+      const msg =
+        errBody.details ||
+        errBody.error ||
+        errBody.message ||
+        `Erro ao listar análises (${response.status})`;
+      throw new Error(msg);
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Erro ao listar análises:', error);
@@ -769,6 +781,44 @@ export const editarAnaliseGPT = async (analiseId, analysis, tipo = 'gpt') => {
     return await response.json();
   } catch (error) {
     console.error('Erro ao editar análise:', error);
+    throw error;
+  }
+};
+
+/**
+ * Editar auditoria da análise
+ * @param {string} analiseId - ID da análise
+ * @param {string} corpoAuditoriaOuLegado - Texto da auditoria (corpoAuditoria)
+ * @returns {Promise<Object>} Resultado da edição
+ */
+export const editarAuditoria = async (analiseId, corpoAuditoriaOuLegado) => {
+  try {
+    if (!analiseId) {
+      throw new Error('ID da análise é obrigatório');
+    }
+
+    const texto = typeof corpoAuditoriaOuLegado === 'string'
+      ? corpoAuditoriaOuLegado
+      : String(corpoAuditoriaOuLegado?.corpoAuditoria ?? corpoAuditoriaOuLegado ?? '');
+
+    const response = await fetch(`${API_URL}/api/audio-analise/${analiseId}/editar-auditoria`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        corpoAuditoria: texto
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || error.message || 'Erro ao salvar auditoria');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Erro ao salvar auditoria:', error);
     throw error;
   }
 };
@@ -893,7 +943,11 @@ export const reenviarAudioPubSub = async (avaliacaoId) => {
         errorData = { error: `Erro HTTP ${response.status}: ${response.statusText}` };
       }
       console.error('❌ Erro na resposta:', errorData);
-      throw new Error(errorData.error || `Erro ao reenviar áudio: ${response.status} ${response.statusText}`);
+      const msg =
+        errorData.details ||
+        errorData.error ||
+        `Erro ao reenviar áudio: ${response.status} ${response.statusText}`;
+      throw new Error(msg);
     }
 
     const data = await response.json();

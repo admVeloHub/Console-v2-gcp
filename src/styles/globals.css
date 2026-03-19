@@ -1,4 +1,5 @@
-/* VERSION: v3.2.3 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team */
+/* VERSION: v3.2.4 | DATE: 2026-03-19 | AUTHOR: VeloHub Development Team */
+/* CHANGELOG: v3.2.4 - --green-hover / --yellow-hover (extensão da paleta LAYOUT_GUIDELINES.md para hovers de botão) */
 
 /* Importar fontes VeloHub */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Anton&display=swap');
@@ -17,6 +18,9 @@
   --blue-opaque: #006AB9;
   --yellow: #FCC200;
   --green: #15A237;
+  /* Hovers derivados da mesma família (LAYOUT_GUIDELINES: --green / --yellow) — uso em botões contained */
+  --green-hover: #128A2F;
+  --yellow-hover: #E6B000;
 
   /* CORES DE FUNDO E CONTAINERS */
   --cor-fundo: #f0f4f8;

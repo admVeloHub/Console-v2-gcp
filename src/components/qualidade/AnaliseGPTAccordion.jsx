@@ -2,9 +2,10 @@
  * AnaliseGPTAccordion.jsx
  * Componente de acordeão para lista de análises GPT
  * 
- * VERSION: v1.2.0
- * DATE: 2024-12-19
+ * VERSION: v1.2.1
+ * DATE: 2026-03-19
  * AUTHOR: VeloHub Development Team
+ * CHANGELOG: v1.2.1 - Corrigido validateDOMNesting: Chip fora de Typography <p> (Tom + Chip em Box flex)
  */
 
 import React, { useState } from 'react';
@@ -213,25 +214,23 @@ const AnaliseGPTAccordion = ({
                   </Typography>
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                     {analise.emotion.tom && (
-                      <Box>
-                        <Typography variant="body2" sx={{ 
+                      <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1, mb: 0.5 }}>
+                        <Typography component="span" variant="body2" sx={{ 
                           fontFamily: 'Poppins',
-                          color: '#666666',
-                          mb: 0.5
+                          color: '#666666'
                         }}>
-                          Tom: 
-                          <Chip 
-                            label={analise.emotion.tom} 
-                            size="medium" 
-                            sx={{ 
-                              ml: 1,
-                              backgroundColor: analise.emotion.tom === 'positivo' ? '#15A237' : 
-                                             analise.emotion.tom === 'negativo' ? '#f44336' : '#FCC200',
-                              color: '#ffffff',
-                              fontFamily: 'Poppins'
-                            }} 
-                          />
+                          Tom:
                         </Typography>
+                        <Chip 
+                          label={analise.emotion.tom} 
+                          size="medium" 
+                          sx={{ 
+                            backgroundColor: analise.emotion.tom === 'positivo' ? '#15A237' : 
+                                           analise.emotion.tom === 'negativo' ? '#f44336' : '#FCC200',
+                            color: '#ffffff',
+                            fontFamily: 'Poppins'
+                          }} 
+                        />
                       </Box>
                     )}
                     {analise.emotion.empatia !== null && analise.emotion.empatia !== undefined && (() => {

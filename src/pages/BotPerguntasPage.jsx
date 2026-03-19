@@ -1,5 +1,5 @@
-// VERSION: v4.4.3 | DATE: 2025-02-09 | AUTHOR: VeloHub Development Team
-import React, { useState, useCallback, useEffect } from 'react';
+// VERSION: v4.4.6 | DATE: 2025-03-19 | AUTHOR: VeloHub Development Team
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { 
   Container, 
   Typography, 
@@ -41,7 +41,6 @@ const BotPerguntasPage = () => {
 
   // Estados para a aba "Gerenciar Perguntas"
   const [perguntasList, setPerguntasList] = useState([]);
-  const [filteredPerguntas, setFilteredPerguntas] = useState([]);
   const [selectedPergunta, setSelectedPergunta] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [editFormData, setEditFormData] = useState({
@@ -181,7 +180,6 @@ const BotPerguntasPage = () => {
       } else {
         console.error('Resposta não é um array:', response);
         setPerguntasList([]);
-        setFilteredPerguntas([]);
         return;
       }
       
@@ -205,7 +203,6 @@ const BotPerguntasPage = () => {
       });
       
       setPerguntasList(sorted);
-      setFilteredPerguntas(sorted);
     } catch (error) {
       console.error('Erro ao carregar perguntas:', error);
       setSnackbar({
@@ -218,25 +215,31 @@ const BotPerguntasPage = () => {
     }
   }, []);
 
-  // 2. Pesquisar Perguntas
+  // 2. Lista filtrada derivada de searchTerm e perguntasList (sincroniza contador e lista)
+  // Busca prioriza o campo pergunta para que o card exibido contenha o termo buscado
+  const filteredPerguntas = useMemo(() => {
+    if (!searchTerm.trim()) return perguntasList;
+    const term = searchTerm.toLowerCase().trim();
+    return perguntasList.filter(item => {
+      const pergunta = item.pergunta ?? item.question ?? '';
+      const resposta = item.resposta ?? item.answer ?? '';
+      const palavrasChave = item.palavrasChave ?? item.palavras_chave ?? '';
+      const sinonimos = item.sinonimos ?? '';
+      return (
+        String(pergunta).toLowerCase().includes(term) ||
+        String(resposta).toLowerCase().includes(term) ||
+        String(palavrasChave).toLowerCase().includes(term) ||
+        String(sinonimos).toLowerCase().includes(term)
+      );
+    });
+  }, [searchTerm, perguntasList]);
+
+  // 3. Pesquisar Perguntas
   const handleSearch = (event) => {
-    const term = event.target.value;
-    setSearchTerm(term);
-    
-    if (!term.trim()) {
-      setFilteredPerguntas(perguntasList);
-      return;
-    }
-    
-    const filtered = perguntasList.filter(pergunta =>
-      pergunta.pergunta?.toLowerCase().includes(term.toLowerCase()) ||
-      pergunta.resposta?.toLowerCase().includes(term.toLowerCase())
-    );
-    
-    setFilteredPerguntas(filtered);
+    setSearchTerm(event.target.value);
   };
 
-  // 3. Selecionar Pergunta para Edição
+  // 4. Selecionar Pergunta para Edição
   const handleSelectPergunta = (pergunta) => {
     setSelectedPergunta(pergunta);
     setEditFormData({
@@ -264,7 +267,7 @@ const BotPerguntasPage = () => {
     }
   };
 
-  // 4. Atualizar Pergunta
+  // 5. Atualizar Pergunta
   const handleUpdatePergunta = async (event) => {
     event.preventDefault();
     
@@ -347,7 +350,7 @@ const BotPerguntasPage = () => {
     }
   };
 
-  // 5. Deletar Pergunta
+  // 6. Deletar Pergunta
   const handleDeletePergunta = async () => {
     if (!editFormData.id) {
       setSnackbar({
@@ -395,7 +398,7 @@ const BotPerguntasPage = () => {
     }
   };
 
-  // 6. useEffect para Carregar Dados
+  // 7. useEffect para Carregar Dados
   useEffect(() => {
     if (activeTab === 1) {
       loadPerguntasList();
@@ -1021,8 +1024,10 @@ const BotPerguntasPage = () => {
                   {filteredPerguntas.length} pergunta(s) encontrada(s)
                 </Typography>
                 
-                {/* Lista de Perguntas */}
-                <Box sx={{ 
+                {/* Lista de Perguntas - key força remount quando filtro muda (garante sincronia contador/lista) */}
+                <Box
+                  key={`perguntas-list-${searchTerm}-${filteredPerguntas.length}`}
+                  sx={{ 
                   maxHeight: '600px', 
                   overflowY: 'auto',
                   '&::-webkit-scrollbar': {
@@ -1060,11 +1065,11 @@ const BotPerguntasPage = () => {
                       >
                         <CardContent sx={{ p: 1.6 }}>
                           <Typography variant="subtitle1" sx={{ fontWeight: 600, fontSize: '0.8rem', color: 'var(--blue-dark)', fontFamily: 'Poppins', mb: 0.8 }}>
-                            {pergunta.pergunta}
+                            {pergunta.pergunta ?? pergunta.question ?? ''}
                           </Typography>
                           
                           <MarkdownRenderer 
-                            content={pergunta.resposta} 
+                            content={pergunta.resposta ?? pergunta.answer ?? ''} 
                             maxLength={100}
                             sx={{ fontSize: '0.72rem', color: 'var(--gray)', mb: 0.8 }}
                           />

@@ -2,9 +2,15 @@
  * DetalhesAnaliseModal.jsx
  * Modal para exibir detalhes completos da análise GPT
  * 
- * VERSION: v1.4.0
- * DATE: 2025-02-11
+ * VERSION: v1.6.3
+ * DATE: 2026-03-19
  * AUTHOR: VeloHub Development Team
+ * CHANGELOG: v1.6.3 - Botão Auditoria e Salvar: cores via var(--green|--yellow|--white|--blue-dark|--green-hover|--yellow-hover) alinhadas a LAYOUT_GUIDELINES / globals.css
+ * CHANGELOG: v1.6.2 - Botão Auditoria: !important em .MuiButton-contained (theme.js define contained → #1634FF e anulava verde/amarelo)
+ * CHANGELOG: v1.6.1 - Sempre GET /result ao abrir (não pular quando há populate); verde = presença no doc (corpo ou auditoriaFeita); salvar usa auditoria devolvida pela API; ícone ✓ no botão
+ * CHANGELOG: v1.6.0 - auditoria como { auditoriaFeita, corpoAuditoria }; botão verde só com auditoriaFeita true; MUI color=inherit para não ficar azul (primary)
+ * CHANGELOG: v1.5.1 - Botão verde após salvar: atualizar estado com setAnaliseCompleta (mutação direta não re-renderizava)
+ * CHANGELOG: v1.5.0 - Botão Auditoria: abre modal secundário, salva em campo auditoria, fica verde quando preenchido
  * CHANGELOG: v1.4.0 - Atualização de métricas: substituído dominioAssunto por registroAtendimento, adicionado conformidadeTicket, atualizadas pontuações
  */
 
@@ -38,14 +44,40 @@ import {
   ExpandLess as ExpandLessIcon,
   Search as SearchIcon,
   Gavel as GavelIcon,
-  Edit as EditIcon,
   Save as SaveIcon,
-  Cancel as CancelIcon,
   CheckCircle as CheckCircleIcon,
   HighlightOff as CancelXIcon
 } from '@mui/icons-material';
-import { editarAnaliseGPT, obterResultadoAnalise } from '../../services/qualidadeAudioService';
+import { editarAuditoria, obterResultadoAnalise } from '../../services/qualidadeAudioService';
 import { calcularPontuacaoTotal, PONTUACAO } from '../../types/qualidade';
+
+/**
+ * Alinha com o backend: auditoria pode ser string (legado), ou { auditoriaFeita, corpoAuditoria }.
+ */
+const normalizeAuditoriaFromDoc = (obj) => {
+  if (!obj?.auditoria) return { auditoriaFeita: false, corpoAuditoria: '' };
+  const a = obj.auditoria;
+  if (typeof a === 'string') {
+    const t = a.trim();
+    return { auditoriaFeita: t.length > 0, corpoAuditoria: a };
+  }
+  if (typeof a === 'object' && a !== null) {
+    const corpo = a.corpoAuditoria != null ? String(a.corpoAuditoria) : '';
+    if (Object.prototype.hasOwnProperty.call(a, 'auditoriaFeita')) {
+      return { auditoriaFeita: a.auditoriaFeita === true, corpoAuditoria: corpo };
+    }
+    const t = corpo.trim();
+    return { auditoriaFeita: t.length > 0, corpoAuditoria: corpo };
+  }
+  return { auditoriaFeita: false, corpoAuditoria: '' };
+};
+
+/** Indicador visual: há auditoria persistida (texto não vazio ou flag explícita true). */
+const docTemAuditoria = (norm) => {
+  if (!norm) return false;
+  if (norm.auditoriaFeita === true) return true;
+  return String(norm.corpoAuditoria ?? '').trim().length > 0;
+};
 
 const DetalhesAnaliseModal = ({ 
   open, 
@@ -57,56 +89,55 @@ const DetalhesAnaliseModal = ({
 }) => {
   const [transcricaoExpandida, setTranscricaoExpandida] = useState(false);
   const [buscaTranscricao, setBuscaTranscricao] = useState('');
-  const [editandoAnalise, setEditandoAnalise] = useState(false);
-  const [analiseEditada, setAnaliseEditada] = useState('');
-  const [salvandoAnalise, setSalvandoAnalise] = useState(false);
-  const [erroSalvar, setErroSalvar] = useState(null);
+  const [modalAuditoriaAberto, setModalAuditoriaAberto] = useState(false);
+  const [textoAuditoria, setTextoAuditoria] = useState('');
+  const [salvandoAuditoria, setSalvandoAuditoria] = useState(false);
+  const [erroAuditoria, setErroAuditoria] = useState(null);
   const [analiseCompleta, setAnaliseCompleta] = useState(null);
   const [carregandoAnalise, setCarregandoAnalise] = useState(false);
 
-  // Buscar dados completos quando o modal abrir
+  // Sempre buscar GET /result pela id da avaliação monitor (qualidade_avaliacoes), para trazer auditoria e demais campos atuais.
+  // Não usar atalho com só o item da lista: o populate ocultava auditoria desatualizada/ausente.
   useEffect(() => {
+    let cancelado = false;
+
     const buscarDadosCompletos = async () => {
       if (!open || !analise) return;
-      
-      // Se já temos avaliacaoMonitorId populado com critérios, usar diretamente
-      if (analise.avaliacaoMonitorId && typeof analise.avaliacaoMonitorId === 'object' && analise.avaliacaoMonitorId.saudacaoAdequada !== undefined) {
-        setAnaliseCompleta(analise);
+
+      const idAvaliacaoMonitor = analise.avaliacaoId || analise.avaliacaoMonitorId?._id;
+
+      if (!idAvaliacaoMonitor) {
+        console.warn('⚠️ Nenhum id da avaliação (monitor) para GET /audio-analise/result — usando item da lista');
+        if (!cancelado) setAnaliseCompleta(analise);
         return;
       }
-      
-      // Caso contrário, buscar dados completos usando avaliacaoId
-      const avaliacaoId = analise.avaliacaoId || analise.avaliacaoMonitorId?._id || analise._id;
-      if (!avaliacaoId) {
-        console.warn('⚠️ Nenhum avaliacaoId encontrado para buscar dados completos');
-        setAnaliseCompleta(analise);
-        return;
-      }
-      
+
       try {
-        setCarregandoAnalise(true);
-        console.log('🔍 Buscando dados completos para avaliacaoId:', avaliacaoId);
-        const dadosCompletos = await obterResultadoAnalise(avaliacaoId);
-        console.log('✅ Dados completos recebidos:', dadosCompletos);
-        setAnaliseCompleta(dadosCompletos);
+        if (!cancelado) setCarregandoAnalise(true);
+        const dadosCompletos = await obterResultadoAnalise(idAvaliacaoMonitor);
+        if (!cancelado) {
+          setAnaliseCompleta(dadosCompletos);
+        }
       } catch (error) {
         console.error('❌ Erro ao buscar dados completos:', error);
-        // Em caso de erro, usar os dados que já temos
-        setAnaliseCompleta(analise);
+        if (!cancelado) setAnaliseCompleta(analise);
       } finally {
-        setCarregandoAnalise(false);
+        if (!cancelado) setCarregandoAnalise(false);
       }
     };
-    
+
     buscarDadosCompletos();
+    return () => {
+      cancelado = true;
+    };
   }, [open, analise]);
 
   // Resetar estados quando o modal fechar ou análise mudar
   useEffect(() => {
     if (!open) {
-      setEditandoAnalise(false);
-      setAnaliseEditada('');
-      setErroSalvar(null);
+      setModalAuditoriaAberto(false);
+      setTextoAuditoria('');
+      setErroAuditoria(null);
       setAnaliseCompleta(null);
     }
   }, [open]);
@@ -139,6 +170,9 @@ const DetalhesAnaliseModal = ({
   const analiseExibida = analiseCompleta || analise;
 
   if (!analise) return null;
+
+  const auditoriaParaUi = normalizeAuditoriaFromDoc(analiseExibida);
+  const botaoAuditoriaVerde = docTemAuditoria(auditoriaParaUi);
 
   const getScoreColor = (pontuacao) => {
     if (pontuacao >= 80) return '#15A237';
@@ -614,158 +648,172 @@ const DetalhesAnaliseModal = ({
 
         <Divider sx={{ my: 3 }} />
 
-        {/* Seção 4: Análise Editável */}
+        {/* Seção 4: Análise (somente leitura) + Botão Auditoria */}
         <Box sx={{ mb: 3 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Typography variant="h6" sx={{ 
               fontFamily: 'Poppins', 
               fontWeight: 600, 
-              color: '#000058'
+              color: 'var(--blue-dark)'
             }}>
               Análise
             </Typography>
-            {!editandoAnalise && (
+            {podeAuditar && (
               <Button
-                variant="outlined"
+                variant="contained"
+                color="inherit"
                 size="small"
-                startIcon={<EditIcon />}
-                disabled={!podeAuditar}
+                startIcon={<GavelIcon />}
+                endIcon={botaoAuditoriaVerde ? <CheckCircleIcon sx={{ fontSize: '1.1rem !important' }} /> : null}
+                disableElevation
+                aria-label={botaoAuditoriaVerde ? 'Auditoria registrada nesta análise' : 'Registrar ou editar auditoria'}
                 onClick={() => {
-                  if (!podeAuditar) return;
-                  // Buscar o texto da análise (priorizar gptAnalysis, depois qualityAnalysis)
-                  const textoAnalise = analiseExibida.gptAnalysis?.analysis || 
-                                       analiseExibida.qualityAnalysis?.analysis || 
-                                       '';
-                  setAnaliseEditada(textoAnalise);
-                  setEditandoAnalise(true);
-                  setErroSalvar(null);
+                  const textoInicial = auditoriaParaUi.corpoAuditoria.trim()
+                    ? auditoriaParaUi.corpoAuditoria
+                    : (analiseExibida.gptAnalysis?.analysis || analiseExibida.qualityAnalysis?.analysis || '');
+                  setTextoAuditoria(textoInicial);
+                  setErroAuditoria(null);
+                  setModalAuditoriaAberto(true);
                 }}
                 sx={{
                   fontFamily: 'Poppins',
                   fontWeight: 500,
-                  borderColor: podeAuditar ? '#FCC200' : '#cccccc',
-                  color: podeAuditar ? '#000000' : '#999999',
-                  '&:hover': podeAuditar ? {
-                    borderColor: '#e6b000',
-                    backgroundColor: 'rgba(252, 194, 0, 0.1)'
-                  } : {},
-                  '&.Mui-disabled': {
-                    borderColor: '#e0e0e0',
-                    color: '#bdbdbd'
-                  }
+                  textTransform: 'none',
+                  boxShadow: 'none',
+                  // Paleta LAYOUT_GUIDELINES (via :root em globals.css); !important evita override do theme.js contained
+                  ...(botaoAuditoriaVerde
+                    ? {
+                        color: 'var(--white)',
+                        '&.MuiButton-contained': {
+                          backgroundColor: 'var(--green) !important',
+                          color: 'var(--white) !important',
+                          boxShadow: 'none'
+                        },
+                        '&.MuiButton-contained:hover': {
+                          backgroundColor: 'var(--green-hover) !important',
+                          boxShadow: 'none'
+                        }
+                      }
+                    : {
+                        color: 'var(--blue-dark)',
+                        '&.MuiButton-contained': {
+                          backgroundColor: 'var(--yellow) !important',
+                          color: 'var(--blue-dark) !important',
+                          boxShadow: 'none'
+                        },
+                        '&.MuiButton-contained:hover': {
+                          backgroundColor: 'var(--yellow-hover) !important',
+                          boxShadow: 'none'
+                        }
+                      }),
+                  '& .MuiButton-endIcon': { color: 'inherit' }
                 }}
               >
-                Auditoria
+                {botaoAuditoriaVerde ? 'Auditoria registrada' : 'Auditoria'}
               </Button>
             )}
           </Box>
 
-          {erroSalvar && (
-            <Alert severity="error" sx={{ mb: 2, fontFamily: 'Poppins' }}>
-              {erroSalvar}
-            </Alert>
-          )}
-
-          {editandoAnalise ? (
-            <Box>
-              <TextField
-                fullWidth
-                multiline
-                rows={8}
-                value={analiseEditada}
-                onChange={(e) => setAnaliseEditada(e.target.value)}
-                variant="outlined"
-                sx={{
-                  mb: 2,
-                  '& .MuiOutlinedInput-root': {
-                    fontFamily: 'Poppins'
-                  }
-                }}
-              />
-              <Box sx={{ display: 'flex', gap: 2 }}>
-                <Button
-                  variant="contained"
-                  startIcon={salvandoAnalise ? <CircularProgress size={16} /> : <SaveIcon />}
-                  onClick={async () => {
-                    try {
-                      setSalvandoAnalise(true);
-                      setErroSalvar(null);
-                      
-                      // Determinar o tipo da análise (gpt ou quality)
-                      // Priorizar gptAnalysis se existir, senão usar qualityAnalysis
-                      const tipo = (analiseExibida.gptAnalysis && (analiseExibida.gptAnalysis.analysis || Object.keys(analiseExibida.gptAnalysis).length > 0)) ? 'gpt' : 'quality';
-                      
-                      const resultado = await editarAnaliseGPT(analiseExibida?._id || analise?._id, analiseEditada, tipo);
-                      
-                      // Atualizar o objeto analise localmente
-                      if (tipo === 'gpt') {
-                        analiseExibida.gptAnalysis = analiseExibida.gptAnalysis || {};
-                        analiseExibida.gptAnalysis.analysis = analiseEditada;
-                      } else {
-                        analiseExibida.qualityAnalysis = analiseExibida.qualityAnalysis || {};
-                        analiseExibida.qualityAnalysis.analysis = analiseEditada;
-                      }
-                      
-                      setEditandoAnalise(false);
-                      setSalvandoAnalise(false);
-                      setErroSalvar(null);
-                      
-                      // Notificar componente pai se necessário
-                      if (onAnaliseAtualizada) {
-                        onAnaliseAtualizada(analise);
-                      }
-                    } catch (error) {
-                      console.error('Erro ao salvar análise:', error);
-                      setErroSalvar(error.message || 'Erro ao salvar análise');
-                      setSalvandoAnalise(false);
-                    }
-                  }}
-                  disabled={salvandoAnalise}
-                  sx={{
-                    fontFamily: 'Poppins',
-                    fontWeight: 500,
-                    backgroundColor: '#15A237',
-                    '&:hover': {
-                      backgroundColor: '#128a2e'
-                    }
-                  }}
-                >
-                  Salvar
-                </Button>
-                <Button
-                  variant="outlined"
-                  startIcon={<CancelIcon />}
-                  onClick={() => {
-                    setEditandoAnalise(false);
-                    setAnaliseEditada('');
-                    setErroSalvar(null);
-                  }}
-                  disabled={salvandoAnalise}
-                  sx={{
-                    fontFamily: 'Poppins',
-                    fontWeight: 500,
-                    borderColor: '#666666',
-                    color: '#666666',
-                    '&:hover': {
-                      borderColor: '#000000',
-                      backgroundColor: 'rgba(0, 0, 0, 0.05)'
-                    }
-                  }}
-                >
-                  Cancelar
-                </Button>
-              </Box>
-            </Box>
-          ) : (
-            <Typography variant="body1" sx={{ 
-              fontFamily: 'Poppins',
-              lineHeight: 1.6,
-              whiteSpace: 'pre-wrap'
-            }}>
-              {analiseExibida.gptAnalysis?.analysis || analiseExibida.qualityAnalysis?.analysis || 'Análise não disponível'}
-            </Typography>
-          )}
+          <Typography variant="body1" sx={{ 
+            fontFamily: 'Poppins',
+            lineHeight: 1.6,
+            whiteSpace: 'pre-wrap'
+          }}>
+            {analiseExibida.gptAnalysis?.analysis || analiseExibida.qualityAnalysis?.analysis || 'Análise não disponível'}
+          </Typography>
         </Box>
+
+        {/* Modal secundário: Auditoria */}
+        <Dialog
+          open={modalAuditoriaAberto}
+          onClose={() => !salvandoAuditoria && setModalAuditoriaAberto(false)}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{
+            sx: { borderRadius: '16px' }
+          }}
+        >
+          <DialogTitle sx={{ fontFamily: 'Poppins', fontWeight: 600, color: 'var(--blue-dark)' }}>
+            Auditoria
+          </DialogTitle>
+          <DialogContent>
+            {erroAuditoria && (
+              <Alert severity="error" sx={{ mb: 2, fontFamily: 'Poppins' }}>
+                {erroAuditoria}
+              </Alert>
+            )}
+            <TextField
+              fullWidth
+              multiline
+              rows={12}
+              value={textoAuditoria}
+              onChange={(e) => setTextoAuditoria(e.target.value)}
+              variant="outlined"
+              placeholder="Digite a auditoria da análise..."
+              sx={{
+                mt: 1,
+                '& .MuiOutlinedInput-root': { fontFamily: 'Poppins' }
+              }}
+            />
+          </DialogContent>
+          <DialogActions sx={{ p: 2 }}>
+            <Button
+              onClick={() => !salvandoAuditoria && setModalAuditoriaAberto(false)}
+              sx={{ fontFamily: 'Poppins', color: '#666666' }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="contained"
+              color="inherit"
+              disableElevation
+              startIcon={salvandoAuditoria ? <CircularProgress size={16} /> : <SaveIcon />}
+              disabled={salvandoAuditoria}
+              onClick={async () => {
+                try {
+                  setSalvandoAuditoria(true);
+                  setErroAuditoria(null);
+                  const analiseId = analiseExibida?._id || analise?._id;
+                  const respostaApi = await editarAuditoria(analiseId, textoAuditoria);
+                  const base = analiseCompleta || analise;
+                  const trimmed = textoAuditoria.trim();
+                  const auditoriaApi = respostaApi?.data?.auditoria;
+                  const auditoriaObj = auditoriaApi && typeof auditoriaApi === 'object'
+                    ? auditoriaApi
+                    : {
+                        auditoriaFeita: trimmed.length > 0,
+                        corpoAuditoria: textoAuditoria
+                      };
+                  const atualizado = { ...base, auditoria: auditoriaObj };
+                  setAnaliseCompleta(atualizado);
+                  setModalAuditoriaAberto(false);
+                  if (onAnaliseAtualizada) onAnaliseAtualizada(atualizado);
+                } catch (error) {
+                  setErroAuditoria(error.message || 'Erro ao salvar auditoria');
+                } finally {
+                  setSalvandoAuditoria(false);
+                }
+              }}
+              sx={{
+                fontFamily: 'Poppins',
+                fontWeight: 500,
+                textTransform: 'none',
+                boxShadow: 'none',
+                '&.MuiButton-contained': {
+                  backgroundColor: 'var(--green) !important',
+                  color: 'var(--white) !important',
+                  boxShadow: 'none'
+                },
+                '&.MuiButton-contained:hover': {
+                  backgroundColor: 'var(--green-hover) !important',
+                  boxShadow: 'none'
+                }
+              }}
+            >
+              Salvar
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         <Divider sx={{ my: 3 }} />
 

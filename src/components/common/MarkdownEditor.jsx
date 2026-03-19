@@ -1,4 +1,4 @@
-// VERSION: v3.4.2 | DATE: 2025-02-09 | AUTHOR: VeloHub Development Team
+// VERSION: v3.4.3 | DATE: 2025-03-19 | AUTHOR: VeloHub Development Team
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
@@ -736,7 +736,7 @@ const MarkdownEditor = ({
       }
       existingStyle.textContent = `
         /* REMOVER COMPLETAMENTE O PRIMEIRO PATH - CSS APENAS COMO BACKUP */
-        button.ql-image svg path:first-child {
+        button.ql-image svg path:first-of-type {
           display: none !important;
         }
       `;
@@ -914,7 +914,7 @@ const MarkdownEditor = ({
             },
             '& button.ql-image': {
               // CSS apenas como backup - o JavaScript remove o primeiro path do DOM
-              '& svg path:first-child': {
+              '& svg path:first-of-type': {
                 display: 'none !important'
               }
             },
