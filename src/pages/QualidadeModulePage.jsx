@@ -1,8 +1,9 @@
-// VERSION: v1.31.2 | DATE: 2026-03-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.31.3 | DATE: 2026-03-23 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.31.3 - Nova Avaliação: avaliador preenchido da sessão (nome/_userId/id); Select inclui nome logado se fora da lista
 // CHANGELOG: v1.31.2 - Filtros/tabela resilientes (colaboradorNome/avaliador opcionais); merge refetch com arrays seguros (evita quebra da página)
 // CHANGELOG: v1.31.1 - Revalidar lista de avaliações ao voltar à aba Avaliações e ao focar a janela (status de áudio não ficar preso em amarelo sem F5)
 // CHANGELOG: v1.31.0 - Atualização de métricas: Escuta 15→10pts, Clareza 15→10pts, Empatia 15→10pts, Procedimento -60→-100pts, substituído dominioAssunto por registroAtendimento, adicionado conformidadeTicket -15pts
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { 
   Container, 
   Box, 
@@ -166,6 +167,15 @@ const QualidadeModulePage = () => {
   const [loadingAnalisesGPT, setLoadingAnalisesGPT] = useState(false);
   const [modalDetalhesAberto, setModalDetalhesAberto] = useState(false);
   const [analiseSelecionada, setAnaliseSelecionada] = useState(null);
+
+  /** Nome do avaliador na sessão (login grava em `nome`/`id`; cadastro Mongo usa `_userId`) */
+  const nomeAvaliadorLogado = (user?.nome || user?._userId || user?.id || '').trim();
+
+  const opcoesAvaliadorModal = useMemo(() => {
+    if (!nomeAvaliadorLogado) return avaliadores;
+    if (avaliadores.includes(nomeAvaliadorLogado)) return avaliadores;
+    return [nomeAvaliadorLogado, ...avaliadores];
+  }, [avaliadores, nomeAvaliadorLogado]);
 
   // Carregar dados
   useEffect(() => {
@@ -351,13 +361,11 @@ const QualidadeModulePage = () => {
       // Debug: Log dos dados da avaliação sendo editada
       console.log('🔍 DEBUG - Editando avaliação:', avaliacao._id);
       
-      // Verificar se o usuário atual é avaliador
       const isAvaliador = user?._funcoesAdministrativas?.avaliador === true;
-      const avaliadorAutomatico = isAvaliador ? user._userId : '';
-      
+
       setFormData({
         colaboradorNome: avaliacao.colaboradorNome || avaliacao.colaboradorNome,
-        avaliador: isAvaliador ? user._userId : avaliacao.avaliador,
+        avaliador: isAvaliador ? nomeAvaliadorLogado : (avaliacao.avaliador || ''),
         mes: avaliacao.mes,
         ano: avaliacao.ano,
         saudacaoAdequada: avaliacao.saudacaoAdequada,
@@ -381,14 +389,10 @@ const QualidadeModulePage = () => {
       
     } else {
       setAvaliacaoEditando(null);
-      
-      // Verificar se o usuário atual é avaliador para preenchimento automático
-      const isAvaliador = user?._funcoesAdministrativas?.avaliador === true;
-      const avaliadorAutomatico = isAvaliador ? user._userId : '';
-      
+
       setFormData({
         colaboradorNome: '',
-        avaliador: avaliadorAutomatico,
+        avaliador: nomeAvaliadorLogado,
         mes: new Date().toLocaleDateString('pt-BR', { month: 'long' }).replace(/^\w/, c => c.toUpperCase()),
         ano: new Date().getFullYear(),
         saudacaoAdequada: false,
@@ -445,7 +449,12 @@ const QualidadeModulePage = () => {
         return;
       }
       
-      if (!formData.avaliador) {
+      const avaliadorEfetivo =
+        user?._funcoesAdministrativas?.avaliador === true && nomeAvaliadorLogado
+          ? nomeAvaliadorLogado
+          : formData.avaliador;
+
+      if (!avaliadorEfetivo) {
         mostrarSnackbar('Selecione um avaliador', 'error');
         return;
       }
@@ -469,6 +478,7 @@ const QualidadeModulePage = () => {
       
       const dadosParaEnvio = {
         ...formData,
+        avaliador: avaliadorEfetivo,
         colaboradorNome: formData.colaboradorNome, // colaboradorNome já é o nome agora
         dataLigacao: dataLigacaoCombinada
       };
@@ -1825,7 +1835,7 @@ const QualidadeModulePage = () => {
             <Grid item xs={12} md={6}>
               {user?._funcoesAdministrativas?.avaliador === true ? (
                 <TextField
-                  value={user._userId}
+                  value={nomeAvaliadorLogado}
                   label="Avaliador"
                   disabled
                   fullWidth
@@ -1860,9 +1870,9 @@ const QualidadeModulePage = () => {
                       '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
                         borderColor: '#000058'
                       }
-                    }}
-                  >
-                    {avaliadores.map((avaliador) => (
+                  }}
+                >
+                    {opcoesAvaliadorModal.map((avaliador) => (
                       <MenuItem key={avaliador} value={avaliador} sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
                         {avaliador}
                       </MenuItem>

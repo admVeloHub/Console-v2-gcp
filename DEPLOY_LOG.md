@@ -1,5 +1,25 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.46.0 | DATE: 2026-03-17 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.47.0 | DATE: 2026-03-23 | AUTHOR: VeloHub Development Team -->
+
+## Push GitHub - Login: _funcoesAdministrativas na sessão; Qualidade: avaliador automático (Nova Avaliação) - 2026-03-23
+
+### **Tipo:** Push GitHub
+### **Data/Hora:** 2026-03-23
+### **Branch:** main
+### **Commit:** 5ddd524
+### **Repositório:** https://github.com/admVeloHub/Console-v2-gcp.git
+
+### **Arquivos Modificados:**
+- `src/pages/LoginPage.jsx` (v3.6.1) - Sessão de login inclui `_funcoesAdministrativas` (ex.: botão Auditoria na Análise IA)
+- `src/pages/QualidadeModulePage.jsx` (v1.31.3) - Nova Avaliação: campo Avaliador preenchido a partir da sessão (`nome`/`id`/`_userId`); salvamento e lista do Select alinhados ao usuário logado
+- `DEPLOY_LOG.md` - Registro deste push
+
+### **Descrição:**
+Correção da sessão pós-login para carregar funções administrativas do documento `users`, permitindo que regras de UI (Auditoria, avaliador) funcionem sem depender só do Mongo em tempo real.
+
+No módulo Qualidade, **Nova Avaliação** passa a definir o avaliador automaticamente com o nome do usuário logado; usuários com flag de avaliador continuam com campo fixo; demais usuários recebem o nome na lista e valor inicial do Select.
+
+---
 
 ## Push GitHub - Funcionários: Correção Checkboxes Acessos na Primeira Abertura - 2026-03-17
 
