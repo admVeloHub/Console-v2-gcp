@@ -1,4 +1,5 @@
-// VERSION: v3.9.0 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
+// VERSION: v3.10.0 | DATE: 2026-03-19 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v3.10.0 - Remoção da rota /conexoes e do módulo WhatsApp do bundle inicial (sem import de ConexoesPage)
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
@@ -33,7 +34,6 @@ import BotAnalisesPage from './pages/BotAnalisesPage';
 import CapacityPage from './pages/CapacityPage';
 import HubAnalisesPage from './pages/HubAnalisesPage';
 import AcademyPage from './pages/AcademyPage';
-import ConexoesPage from './pages/ConexoesPage';
 
 // Componente para rotas protegidas
 const ProtectedRoute = ({ children, requiredPermission }) => {
@@ -162,11 +162,6 @@ const AppContent = () => {
             <Route path="/academy" element={
               <ProtectedRoute requiredPermission="academy">
                 <AcademyPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/conexoes" element={
-              <ProtectedRoute requiredPermission="whatsapp">
-                <ConexoesPage />
               </ProtectedRoute>
             } />
         <Route path="/login" element={<Navigate to="/" replace />} />

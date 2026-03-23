@@ -1,4 +1,5 @@
-// VERSION: v1.13.0 | DATE: 2026-03-17 | AUTHOR: VeloHub Development Team
+// VERSION: v1.14.0 | DATE: 2026-03-19 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.14.0 - Funções (cargas/CRUD) via qualidadeFuncoesAPI + extractQualidadeLista (mesma base URL que axios/rede local); filtros empresa/atuacao resilientes a campos ausentes
 // CHANGELOG: v1.13.0 - Correção checkboxes acessos: lista fixa, merge com padrão, TransitionProps timeout 0, acessoData garantido antes de abrir modal.
 // CHANGELOG: v1.12.0 - Adicionado campo Sociais ao modal de acessos. Correções de cache: useLayoutEffect para checkboxes, useLocation para recarregar dados ao abrir aba, key no Dialog, normalização no localStorage.
 // CHANGELOG: v1.11.0 - Adicionado campo Ouvidoria ao modal de acessos. Acessos agora incluem: Velohub, Console, Academy, Desk e Ouvidoria.
@@ -67,15 +68,12 @@ import {
   deleteFuncionario,
   migrarDadosParaMongoDB,
   verificarDadosLocais,
-  limparDadosLocais
+  limparDadosLocais,
+  extractQualidadeLista
 } from '../services/qualidadeAPI';
+import { qualidadeFuncoesAPI } from '../services/api';
 import { exportFuncionariosToExcel, exportFuncionariosToPDF } from '../services/qualidadeExport';
 import { generateId } from '../types/qualidade';
-
-// Função auxiliar para normalizar URL base (remove /api do final se existir)
-const normalizeBaseUrl = (url) => {
-  return url.replace(/\/api\/?$/, '');
-};
 
 // Lista fixa de acessos - garante que todos os checkboxes sejam sempre renderizados (evita bug de exibição parcial)
 const LISTA_ACESSOS_MODAL = [
@@ -87,9 +85,6 @@ const LISTA_ACESSOS_MODAL = [
   { key: 'Sociais', label: 'Sociais' },
   { key: 'realTime', label: 'Tempo Real' }
 ];
-
-// ✅ CORREÇÃO 1: Importar API_BASE_URL do arquivo de configuração - garantir que sempre termine com /api
-const API_BASE_URL = normalizeBaseUrl(process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app') + '/api';
 
 const FuncionariosPage = () => {
   const navigate = useNavigate();
@@ -243,8 +238,8 @@ const FuncionariosPage = () => {
     }
 
     if (filtros.empresa) {
-      filtrados = filtrados.filter(f => 
-        f.empresa.toLowerCase().includes(filtros.empresa.toLowerCase())
+      filtrados = filtrados.filter(f =>
+        String(f.empresa || '').toLowerCase().includes(filtros.empresa.toLowerCase())
       );
     }
 
@@ -254,7 +249,7 @@ const FuncionariosPage = () => {
           // Para array, verificar se alguma função contém o filtro
           return f.atuacao.some(id => {
             const funcao = funcoes.find(fun => fun._id === id);
-            return funcao && funcao.funcao.toLowerCase().includes(filtros.atuacao.toLowerCase());
+            return funcao && String(funcao.funcao || '').toLowerCase().includes(filtros.atuacao.toLowerCase());
           });
         } else if (typeof f.atuacao === 'string') {
           // Para string (dados antigos), usar busca normal
@@ -304,10 +299,11 @@ const FuncionariosPage = () => {
 
   const carregarFuncoes = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/qualidade/funcoes`);
-      const data = await response.json();
-      if (data.success) {
-        setFuncoes(data.data);
+      const raw = await qualidadeFuncoesAPI.getAll();
+      const list = extractQualidadeLista(raw);
+      setFuncoes(list);
+      if (raw && typeof raw.success === 'boolean' && raw.success === false) {
+        mostrarSnackbar(raw.error || raw.message || 'Erro ao carregar funções', 'error');
       }
     } catch (error) {
       console.error('Erro ao carregar funções:', error);
@@ -322,44 +318,26 @@ const FuncionariosPage = () => {
         return;
       }
 
-      const url = funcaoEditando 
-        ? `${API_BASE_URL}/qualidade/funcoes/${funcaoEditando._id}`
-        : `${API_BASE_URL}/qualidade/funcoes`;
-      
-      const method = funcaoEditando ? 'PUT' : 'POST';
-      
-      // ✅ LOG: Exibir payload das funções antes do envio
-      console.log('🔍 DEBUG - Salvando função:');
-      console.log('📋 URL:', url);
-      console.log('🔧 Método:', method);
-      console.log('📦 Payload:', novaFuncao);
-      console.log('🆔 Função editando:', funcaoEditando ? funcaoEditando._id : 'Nova função');
-      
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(novaFuncao)
-      });
+      console.log('🔍 DEBUG - Salvando função:', { funcaoEditando: funcaoEditando?._id, payload: novaFuncao });
 
-      const data = await response.json();
-      
-      // ✅ LOG: Exibir resposta da API
+      const data = funcaoEditando
+        ? await qualidadeFuncoesAPI.update(funcaoEditando._id, novaFuncao)
+        : await qualidadeFuncoesAPI.create(novaFuncao);
+
       console.log('📥 Resposta da API:', data);
-      console.log('✅ Status da resposta:', data.success ? 'Sucesso' : 'Erro');
-      
-      if (data.success) {
-        mostrarSnackbar(
-          funcaoEditando ? 'Função atualizada com sucesso!' : 'Função criada com sucesso!', 
-          'success'
-        );
-        setNovaFuncao({ funcao: '', descricao: '' });
-        setFuncaoEditando(null);
-        carregarFuncoes();
-      } else {
+
+      if (data && data.success === false) {
         mostrarSnackbar(data.error || 'Erro ao salvar função', 'error');
+        return;
       }
+
+      mostrarSnackbar(
+        funcaoEditando ? 'Função atualizada com sucesso!' : 'Função criada com sucesso!',
+        'success'
+      );
+      setNovaFuncao({ funcao: '', descricao: '' });
+      setFuncaoEditando(null);
+      carregarFuncoes();
     } catch (error) {
       console.error('Erro ao salvar função:', error);
       mostrarSnackbar('Erro ao salvar função', 'error');
@@ -374,17 +352,13 @@ const FuncionariosPage = () => {
   const deletarFuncao = async (id) => {
     try {
       if (window.confirm('Tem certeza que deseja deletar esta função?')) {
-        const response = await fetch(`${API_BASE_URL}/qualidade/funcoes/${id}`, {
-          method: 'DELETE'
-        });
+        const data = await qualidadeFuncoesAPI.delete(id);
 
-        const data = await response.json();
-        
-        if (data.success) {
+        if (data && data.success === false) {
+          mostrarSnackbar(data.error || 'Erro ao deletar função', 'error');
+        } else {
           mostrarSnackbar('Função deletada com sucesso!', 'success');
           carregarFuncoes();
-        } else {
-          mostrarSnackbar(data.error || 'Erro ao deletar função', 'error');
         }
       }
     } catch (error) {

@@ -1,4 +1,5 @@
-// VERSION: v4.2.0 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
+// VERSION: v4.3.0 | DATE: 2026-03-19 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v4.3.0 - Removido card Conexões/WhatsApp do dashboard
 import React from 'react';
 import { Container, Grid, Typography, Box, Card, CardContent } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
@@ -13,8 +14,7 @@ import {
   SettingsOutlined,
   EngineeringOutlined,
   AnalyticsOutlined,
-  SchoolOutlined,
-  PowerOutlined
+  SchoolOutlined
 } from '@mui/icons-material';
 import DashboardCard from '../components/Dashboard/DashboardCard';
 import { useAuth } from '../contexts/AuthContext';
@@ -110,7 +110,7 @@ const DashboardPage = () => {
     }
   ];
 
-  // Terceira fileira: Chamados Internos, WhatsApp (OPCIONAL)
+  // Terceira fileira: Chamados Internos
   const thirdRowCards = [
     {
       title: 'Chamados Internos',
@@ -119,14 +119,6 @@ const DashboardPage = () => {
       path: '/chamados-internos',
       color: 'secondary',
       permission: 'chamadosInternos'
-    },
-    {
-      title: 'Conexões',
-      description: 'Gerenciar conexões do sistema',
-      icon: <PowerOutlined sx={{ fontSize: '2.24rem' }} />,
-      path: '/conexoes',
-      color: 'secondary',
-      permission: 'whatsapp'
     }
   ];
 

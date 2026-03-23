@@ -1,16 +1,28 @@
-// VERSION: v3.14.8 | DATE: 2026-03-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.15.1 | DATE: 2026-03-19 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v3.15.1 - Comentários: removidas referências ao módulo WhatsApp removido do Console
+// CHANGELOG: v3.15.0 - Base URL: fallback REACT_APP_SKYNET_API_URL antes do default; timeout axios 30s (cold start Cloud Run)
 // CHANGELOG: v3.14.8 - Export getResolvedApiUrl para qualidadeAudioService (fetch/SSE mesmo host que axios na rede local)
 // CHANGELOG: v3.14.7 - Correção rede local: usar hostname do browser quando API aponta para localhost (resolve lista de colaboradores vazia ao acessar via IP)
 import axios from 'axios';
+
+/** Backend SKYNET padrão quando variáveis de ambiente não estão definidas. */
+export const DEFAULT_SKYNET_API_ORIGIN = 'https://backend-gcp-hfsqj6konq-ue.a.run.app';
 
 // Função auxiliar para normalizar URL base (remove /api do final se existir)
 const normalizeBaseUrl = (url) => {
   return url.replace(/\/api\/?$/, '');
 };
 
-// Resolver URL da API: em dev, se config aponta para localhost mas acesso é via IP (rede local), usar hostname do browser
+/**
+ * URL base da API REST (axios).
+ * Ordem: REACT_APP_API_URL → REACT_APP_SKYNET_API_URL → DEFAULT_SKYNET_API_ORIGIN.
+ * Em produção, defina REACT_APP_API_URL e REACT_APP_SKYNET_API_URL apontando para o mesmo serviço Cloud Run quando aplicável.
+ */
 export const getResolvedApiUrl = () => {
-  const envUrl = process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app';
+  const envUrl =
+    process.env.REACT_APP_API_URL ||
+    process.env.REACT_APP_SKYNET_API_URL ||
+    DEFAULT_SKYNET_API_ORIGIN;
   const normalized = normalizeBaseUrl(envUrl) + '/api';
   // Se env usa localhost e estamos no browser com hostname diferente (acesso via rede)
   if (typeof window !== 'undefined' && envUrl.includes('localhost') && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
@@ -37,7 +49,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000, // 10 segundos
+  timeout: 30000, // 30s — listas Qualidade + cold start Cloud Run costumam estourar 10s
 });
 
 // Interceptor de request para logs detalhados (apenas em desenvolvimento)
@@ -94,7 +106,7 @@ api.interceptors.response.use(
       let errorDetails = '';
       
       // Obter timeout configurado (pode ser específico da requisição ou padrão)
-      const timeoutMs = error.config?.timeout || 10000;
+      const timeoutMs = error.config?.timeout || 30000;
       const timeoutSeconds = timeoutMs / 1000;
       
       if (error.code === 'ECONNABORTED') {

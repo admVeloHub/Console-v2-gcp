@@ -1,4 +1,5 @@
-// VERSION: v3.6.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.6.1 | DATE: 2026-03-23 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v3.6.1 - Sessão de login inclui _funcoesAdministrativas (ex.: botão Auditoria na Análise IA)
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
@@ -119,7 +120,7 @@ const LoginPage = () => {
         }
         
         if (registeredUser) {
-          // Usar dados do MongoDB com campos corretos
+          // Usar dados do MongoDB com campos corretos (incl. _funcoesAdministrativas para Qualidade/Auditoria)
           const user = {
             id: registeredUser._userId,
             email: registeredUser._userMail,
@@ -127,6 +128,11 @@ const LoginPage = () => {
             funcao: registeredUser._userRole,
             permissoes: registeredUser._userClearance,
             tiposTickets: registeredUser._userTickets,
+            _funcoesAdministrativas: registeredUser._funcoesAdministrativas || {
+              avaliador: false,
+              auditoria: false,
+              relatoriosGestao: false
+            },
             picture: userInfo.picture
           };
           

@@ -1,4 +1,5 @@
-// VERSION: v3.9.6 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
+// VERSION: v3.9.7 | DATE: 2026-03-19 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v3.9.7 - Removida permissão de card WhatsApp da UI de configuração de usuários
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -157,8 +158,7 @@ const ConfigPage = () => {
     { key: 'capacity', label: 'Capacity' },
     { key: 'config', label: 'Config' },
     { key: 'servicos', label: 'Serviços' },
-    { key: 'academy', label: 'Academy' },
-    { key: 'whatsapp', label: 'WhatsApp' }
+    { key: 'academy', label: 'Academy' }
   ];
 
   // Mapeamento dos tipos de tickets dos chamados internos
@@ -196,8 +196,7 @@ const ConfigPage = () => {
           capacity: false,
           config: false,
           servicos: false,
-          academy: false,
-          whatsapp: false
+          academy: false
         },
         tiposTickets: user._userTickets || {
           artigos: false,
@@ -237,8 +236,7 @@ const ConfigPage = () => {
           capacity: false,
           config: false,
           servicos: false,
-          academy: false,
-          whatsapp: false
+          academy: false
         },
         tiposTickets: {
           artigos: false,

@@ -1,4 +1,5 @@
-// VERSION: v1.38.0 | DATE: 2026-03-17 | AUTHOR: VeloHub Development Team
+// VERSION: v1.39.0 | DATE: 2026-03-19 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.39.0 - extractQualidadeLista: suporta vários formatos de resposta da API (data/funcionarios/items/results e aninhados); getFuncionarios/getFuncionariosAtivos usam extração resiliente
 // CHANGELOG: v1.38.0 - Adicionado campo Sociais ao objeto acessos em todas as funções. Normalização aplicada ao retorno de getFuncionariosLocalStorage.
 // CHANGELOG: v1.37.0 - Adicionado campo realTime ao objeto acessos em todas as funções de normalização {Velohub: Boolean, Console: Boolean, Academy: Boolean, Desk: Boolean, Ouvidoria: Boolean, realTime: Boolean}
 // CHANGELOG: v1.36.1 - Corrigido acesso aos dados do funcionário criado em addFuncionario: API retorna {success, data, message}, então dados estão em response.data
@@ -27,6 +28,29 @@ import {
 } from './qualidadeStorage';
 
 // ===== FUNCIONÁRIOS - API MONGODB =====
+
+/**
+ * Extrai um array de documentos de respostas da API Qualidade (formatos variados).
+ * Evita lista vazia quando o backend envia { funcionarios }, { data: { data } }, etc.
+ */
+export const extractQualidadeLista = (payload) => {
+  if (payload == null) return [];
+  if (Array.isArray(payload)) return payload;
+  if (typeof payload !== 'object') return [];
+
+  const topKeys = ['data', 'funcionarios', 'items', 'results', 'rows'];
+  for (const k of topKeys) {
+    const v = payload[k];
+    if (Array.isArray(v)) return v;
+    if (v && typeof v === 'object') {
+      const innerKeys = ['data', 'items', 'rows', 'results', 'funcionarios'];
+      for (const ik of innerKeys) {
+        if (Array.isArray(v[ik])) return v[ik];
+      }
+    }
+  }
+  return [];
+};
 
 // Testar conectividade da API
 export const testarAPI = async () => {
@@ -97,11 +121,9 @@ export const getFuncionarios = async () => {
     console.log('🔍 Tentando carregar funcionários da API...');
     const response = await qualidadeFuncionariosAPI.getAll();
     console.log('📊 Dados recebidos da API:', response);
-    
-    // A API retorna { count: X, data: Array, success: true }
-    // Precisamos extrair o array 'data'
-    const funcionarios = response?.data || response;
-    console.log(`📊 Funcionários extraídos: ${Array.isArray(funcionarios) ? funcionarios.length : 0}`);
+
+    const funcionarios = extractQualidadeLista(response);
+    console.log(`📊 Funcionários extraídos: ${funcionarios.length}`);
     
     // Normalizar formato de acessos para cada funcionário
     const funcionariosNormalizados = Array.isArray(funcionarios) 
@@ -125,11 +147,9 @@ export const getFuncionariosAtivos = async () => {
   try {
     const response = await qualidadeFuncionariosAPI.getAtivos();
     console.log('📊 Dados recebidos da API (ativos):', response);
-    
-    // A API retorna { count: X, data: Array, success: true }
-    // Precisamos extrair o array 'data'
-    const funcionarios = response?.data || response;
-    console.log(`📊 Funcionários ativos extraídos: ${Array.isArray(funcionarios) ? funcionarios.length : 0}`);
+
+    const funcionarios = extractQualidadeLista(response);
+    console.log(`📊 Funcionários ativos extraídos: ${funcionarios.length}`);
     
     // Normalizar formato de acessos para cada funcionário
     const funcionariosNormalizados = Array.isArray(funcionarios)
