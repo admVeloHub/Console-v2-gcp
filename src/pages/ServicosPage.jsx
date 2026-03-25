@@ -1,4 +1,5 @@
-// VERSION: v1.5.1 | DATE: 2026-03-25 | AUTHOR: VeloHub Development Team
+// VERSION: v1.5.2 | DATE: 2026-03-25 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.5.2 - Etiqueta do serviço seguro-credito exibida como Prestamista
 // CHANGELOG: v1.5.1 - Removido subtítulo (descrição) dos cards de serviços
 import React, { useState, useEffect } from 'react';
 import {
@@ -47,7 +48,7 @@ const ServicosPage = () => {
     { key: 'credito-pessoal', name: 'Crédito pessoal' },
     { key: 'antecipacao', name: 'Antecipação' },
     { key: 'pagamento-antecipado', name: 'Pagamento antecipado' },
-    { key: 'seguro-credito', name: 'Seguro crédito' },
+    { key: 'seguro-credito', name: 'Prestamista' },
     { key: 'seguro-celular', name: 'Seguro celular' },
     { key: 'perda-renda', name: 'Perda de renda' },
     { key: 'cupons', name: 'Cupons' },
