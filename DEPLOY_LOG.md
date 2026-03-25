@@ -1,12 +1,18 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.47.2 | DATE: 2026-03-25 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.47.3 | DATE: 2026-03-25 | AUTHOR: VeloHub Development Team -->
+<!--
+  REGRA (push GitHub): Preencher a nova entrada do DEPLOY_LOG (tipo, data, branch, repositório,
+  arquivos, descrição) ANTES do `git commit`. Incluir DEPLOY_LOG no MESMO commit que o código.
+  Não criar commit adicional só para corrigir hash, SHA ou “fechar” o log.
+  Campo **Commit:** opcional; se não usar SHA aqui, consultar `git log -1 --oneline` no remoto.
+-->
 
 ## Push GitHub - Serviços: module_status (8 campos) e cards sem subtítulo - 2026-03-25
 
 ### **Tipo:** Push GitHub
 ### **Data/Hora:** 2026-03-25
 ### **Branch:** main
-### **Commit:** be8567e
+### **Commit:** *(SHA no histórico Git; esta entrada vai no mesmo commit que as alterações de código)*
 ### **Repositório:** https://github.com/admVeloHub/Console-v2-gcp.git
 
 ### **Arquivos Modificados:**
