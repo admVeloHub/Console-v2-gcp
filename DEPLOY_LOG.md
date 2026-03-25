@@ -1,5 +1,22 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.47.1 | DATE: 2026-03-23 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.47.2 | DATE: 2026-03-25 | AUTHOR: VeloHub Development Team -->
+
+## Push GitHub - Serviços: module_status (8 campos) e cards sem subtítulo - 2026-03-25
+
+### **Tipo:** Push GitHub
+### **Data/Hora:** 2026-03-25
+### **Branch:** main
+### **Commit:** 8f2f3c8
+### **Repositório:** https://github.com/admVeloHub/Console-v2-gcp.git
+
+### **Arquivos Modificados:**
+- `src/pages/ServicosPage.jsx` (v1.5.1) — Oito serviços alinhados ao schema `console_config.module_status` (chaves: credito-pessoal, antecipacao, pagamento-antecipado, seguro-credito, seguro-celular, perda-renda, cupons, seguro-pessoal); remoção do subtítulo (descrição) dos cards
+- `DEPLOY_LOG.md` — Registro deste push
+
+### **Descrição:**
+A página Serviços reflete os oito status do `module_status` conforme LISTA_SCHEMAS, com payloads de leitura/gravação compatíveis com o backend quando atualizado. Cards mostram apenas título, chip de status e botões Ativo / Revisão / Inativo.
+
+---
 
 ## Push GitHub - Login: _funcoesAdministrativas na sessão; Qualidade: avaliador automático (Nova Avaliação) - 2026-03-23
 

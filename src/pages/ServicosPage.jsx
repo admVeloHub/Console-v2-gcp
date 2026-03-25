@@ -1,5 +1,5 @@
-// VERSION: v1.4.1 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
-// CHANGELOG: v1.4.0 - Reorganização de serviços, adicionado Divida Zero, removido Saúde Simplificada
+// VERSION: v1.5.1 | DATE: 2026-03-25 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.5.1 - Removido subtítulo (descrição) dos cards de serviços
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -19,30 +19,39 @@ import {
   Warning as RevisaoIcon,
   Cancel as OffIcon
 } from '@mui/icons-material';
-import { useAuth } from '../contexts/AuthContext';
 import BackButton from '../components/common/BackButton';
 import { servicesAPI } from '../services/api';
 
+const FRONTEND_MODULE_KEYS = [
+  'credito-pessoal',
+  'antecipacao',
+  'pagamento-antecipado',
+  'seguro-credito',
+  'seguro-celular',
+  'perda-renda',
+  'cupons',
+  'seguro-pessoal'
+];
+
+const emptyFrontendStatus = () =>
+  Object.fromEntries(FRONTEND_MODULE_KEYS.map((k) => [k, 'off']));
 
 const ServicosPage = () => {
-  const { user } = useAuth();
-  const [moduleStatus, setModuleStatus] = useState({});
   const [localStatus, setLocalStatus] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
 
-  // Configuração dos 9 serviços com mapeamento para o schema (ordem reorganizada)
+  // Oito serviços conforme console_config.module_status (LISTA_SCHEMAS)
   const services = [
-    { key: 'credito-trabalhador', name: 'Crédito Trabalhador', description: 'Sistema de crédito para trabalhadores', schemaKey: '_trabalhador' },
-    { key: 'credito-pessoal', name: 'Crédito Pessoal', description: 'Sistema de crédito pessoal', schemaKey: '_pessoal' },
-    { key: 'antecipacao', name: 'Antecipação', description: 'Sistema de antecipação de valores', schemaKey: '_antecipacao' },
-    { key: 'pagamento-antecipado', name: 'Pagamento Antecipado', description: 'Sistema de pagamentos antecipados', schemaKey: '_pgtoAntecip' },
-    { key: 'clube-velotax', name: 'Clube Velotax', description: 'Sistema do Clube Velotax', schemaKey: '_clubeVelotax' },
-    { key: 'modulo-irpf', name: 'Módulo IRPF', description: 'Sistema de declaração IRPF', schemaKey: '_irpf' },
-    { key: 'seguro-prestamista', name: 'Prestamista', description: 'Sistema de seguro prestamista', schemaKey: '_seguroCred' },
-    { key: 'seguro-celular', name: 'Seguro Celular', description: 'Sistema de seguro celular', schemaKey: '_seguroCel' },
-    { key: 'divida-zero', name: 'Divida Zero', description: 'Sistema Divida Zero', schemaKey: '_dividaZero' }
+    { key: 'credito-pessoal', name: 'Crédito pessoal' },
+    { key: 'antecipacao', name: 'Antecipação' },
+    { key: 'pagamento-antecipado', name: 'Pagamento antecipado' },
+    { key: 'seguro-credito', name: 'Seguro crédito' },
+    { key: 'seguro-celular', name: 'Seguro celular' },
+    { key: 'perda-renda', name: 'Perda de renda' },
+    { key: 'cupons', name: 'Cupons' },
+    { key: 'seguro-pessoal', name: 'Seguro pessoal' }
   ];
 
   // Função auxiliar para obter valor válido ou 'off' como padrão
@@ -63,51 +72,29 @@ const ServicosPage = () => {
   const convertBackendToFrontend = (backendData) => {
     if (!backendData || typeof backendData !== 'object') {
       console.warn('⚠️ Dados inválidos recebidos:', backendData);
-      return {
-        'credito-trabalhador': 'off',
-        'credito-pessoal': 'off',
-        'antecipacao': 'off',
-        'pagamento-antecipado': 'off',
-        'clube-velotax': 'off',
-        'modulo-irpf': 'off',
-        'seguro-prestamista': 'off',
-        'seguro-celular': 'off',
-        'divida-zero': 'off'
-      };
+      return emptyFrontendStatus();
     }
 
-    // Verificar se já está no formato frontend (tem chaves como 'credito-trabalhador')
-    if ('credito-trabalhador' in backendData || 'credito-pessoal' in backendData) {
+    const hasFrontendShape = FRONTEND_MODULE_KEYS.some((k) => Object.prototype.hasOwnProperty.call(backendData, k));
+    if (hasFrontendShape) {
       console.log('📊 Dados já estão no formato frontend');
-      return {
-        'credito-trabalhador': getValue(backendData['credito-trabalhador']),
-        'credito-pessoal': getValue(backendData['credito-pessoal']),
-        'antecipacao': getValue(backendData['antecipacao']),
-        'pagamento-antecipado': getValue(backendData['pagamento-antecipado']),
-        'clube-velotax': getValue(backendData['clube-velotax']),
-        'modulo-irpf': getValue(backendData['modulo-irpf']),
-        'seguro-prestamista': getValue(backendData['seguro-prestamista']),
-        'seguro-celular': getValue(backendData['seguro-celular']),
-        'divida-zero': getValue(backendData['divida-zero'])
-      };
+      return Object.fromEntries(
+        FRONTEND_MODULE_KEYS.map((k) => [k, getValue(backendData[k])])
+      );
     }
-    
+
     // Converter do formato schema MongoDB para formato frontend
-    // Se o backend ainda retornar _seguro (dados antigos), usar como fallback
-    const seguroFallback = getValue(backendData._seguro);
-    
     const converted = {
-      'credito-trabalhador': getValue(backendData._trabalhador),
       'credito-pessoal': getValue(backendData._pessoal),
       'antecipacao': getValue(backendData._antecipacao),
       'pagamento-antecipado': getValue(backendData._pgtoAntecip),
-      'clube-velotax': getValue(backendData._clubeVelotax),
-      'modulo-irpf': getValue(backendData._irpf),
-      'seguro-prestamista': getValue(backendData._seguroCred) !== 'off' ? getValue(backendData._seguroCred) : seguroFallback,
-      'seguro-celular': getValue(backendData._seguroCel) !== 'off' ? getValue(backendData._seguroCel) : seguroFallback,
-      'divida-zero': getValue(backendData._dividaZero)
+      'seguro-credito': getValue(backendData._seguroCred),
+      'seguro-celular': getValue(backendData._seguroCel),
+      'perda-renda': getValue(backendData._perdaRenda),
+      'cupons': getValue(backendData._cupons),
+      'seguro-pessoal': getValue(backendData._seguroPessoal)
     };
-    
+
     console.log('📊 Dados convertidos do schema:', converted);
     return converted;
   };
@@ -148,7 +135,6 @@ const ServicosPage = () => {
       const frontendData = convertBackendToFrontend(backendData);
       console.log('📊 Dados finais convertidos (formato frontend):', JSON.stringify(frontendData, null, 2));
       
-      setModuleStatus(frontendData);
       setLocalStatus(frontendData);
     } catch (error) {
       console.error('❌ Erro ao buscar status dos módulos:', error);
@@ -172,24 +158,13 @@ const ServicosPage = () => {
     try {
       setSaving(true);
       
-      // Mapear dados para o formato esperado pelo backend
-      const modulesData = {
-        'credito-trabalhador': localStatus['credito-trabalhador'] || 'off',
-        'credito-pessoal': localStatus['credito-pessoal'] || 'off',
-        'antecipacao': localStatus['antecipacao'] || 'off',
-        'pagamento-antecipado': localStatus['pagamento-antecipado'] || 'off',
-        'clube-velotax': localStatus['clube-velotax'] || 'off',
-        'modulo-irpf': localStatus['modulo-irpf'] || 'off',
-        'seguro-prestamista': localStatus['seguro-prestamista'] || 'off',
-        'seguro-celular': localStatus['seguro-celular'] || 'off',
-        'divida-zero': localStatus['divida-zero'] || 'off'
-      };
+      // Mapear dados para o formato esperado pelo backend (chaves frontend = contrato GET/PUT)
+      const modulesData = Object.fromEntries(
+        FRONTEND_MODULE_KEYS.map((k) => [k, localStatus[k] || 'off'])
+      );
 
       console.log('🔍 Enviando dados para o backend:', modulesData);
       await servicesAPI.updateMultipleModules(modulesData);
-      
-      // Atualizar estado principal
-      setModuleStatus(localStatus);
       
       showToast('Status de todos os serviços atualizados com sucesso!', 'success');
     } catch (error) {
@@ -357,7 +332,7 @@ const ServicosPage = () => {
                   >
                     <CardContent sx={{ flexGrow: 1, p: 1.6 }}>
                       {/* Header do Card */}
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.6 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2.4 }}>
                         <Typography 
                           variant="h6" 
                           component="h3" 
@@ -380,20 +355,6 @@ const ServicosPage = () => {
                           sx={{ fontSize: '0.64rem', height: '20px' }}
                         />
                       </Box>
-
-                      {/* Descrição */}
-                      <Typography 
-                        variant="body2" 
-                        color="text.secondary" 
-                        sx={{ 
-                          mb: 2.4,
-                          fontFamily: 'Poppins, sans-serif',
-                          lineHeight: 1.6,
-                          fontSize: '0.8rem'
-                        }}
-                      >
-                        {service.description}
-                      </Typography>
 
                       {/* Botões de Status */}
                       {renderStatusButtons(service.key, currentStatus)}
@@ -426,4 +387,3 @@ const ServicosPage = () => {
 };
 
 export default ServicosPage;
-
