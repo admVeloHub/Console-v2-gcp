@@ -1,4 +1,6 @@
-// VERSION: v3.15.1 | DATE: 2026-03-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.16.1 | DATE: 2026-03-26 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v3.16.1 - Payload categorias com Ordem + categoria_id snake_case (backend recalcula ids)
+// CHANGELOG: v3.16.0 - artigosCategoriasAPI (GET/PUT /artigos-categorias)
 // CHANGELOG: v3.15.1 - Comentários: removidas referências ao módulo WhatsApp removido do Console
 // CHANGELOG: v3.15.0 - Base URL: fallback REACT_APP_SKYNET_API_URL antes do default; timeout axios 30s (cold start Cloud Run)
 // CHANGELOG: v3.14.8 - Export getResolvedApiUrl para qualidadeAudioService (fetch/SSE mesmo host que axios na rede local)
@@ -168,6 +170,18 @@ export const artigosAPI = {
   // Deletar artigo
   delete: async (id) => {
     const response = await api.delete(`/artigos/${id}`);
+    return response.data;
+  }
+};
+
+// API para categorias de artigos (documento singleton em MongoDB)
+export const artigosCategoriasAPI = {
+  get: async () => {
+    const response = await api.get('/artigos-categorias');
+    return response.data;
+  },
+  update: async (payload) => {
+    const response = await api.put('/artigos-categorias', payload);
     return response.data;
   }
 };

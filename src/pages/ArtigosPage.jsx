@@ -1,5 +1,5 @@
-// VERSION: v3.8.6 | DATE: 2025-03-19 | AUTHOR: VeloHub Development Team
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+// VERSION: v3.10.5 | DATE: 2026-03-26 | AUTHOR: VeloHub Development Team
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { 
   Container, 
   Typography, 
@@ -23,15 +23,28 @@ import {
   DialogTitle,
   DialogContent,
   DialogContentText,
-  DialogActions
+  DialogActions,
+  IconButton
 } from '@mui/material';
-import { Save, Search, Delete } from '@mui/icons-material';
-import { artigosAPI } from '../services/api';
+import { Save, Search, Delete, Settings, Add, DeleteOutline } from '@mui/icons-material';
+import { artigosAPI, artigosCategoriasAPI } from '../services/api';
 import BackButton from '../components/common/BackButton';
 import MarkdownEditor from '../components/common/MarkdownEditor';
 import MarkdownRenderer from '../components/common/MarkdownRenderer';
 import { processImageUploads, countTemporaryImages } from '../utils/imageUploadProcessor';
 import { clearAllTemporaryImages } from '../utils/imageStorage';
+import {
+  inserirCategoriaNaPosicao,
+  renumerarOrdemRascunho,
+  montarPayloadCategorias
+} from '../utils/categoriaSlugUtils';
+
+function newDraftId() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `d-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+}
 
 const ArtigosPage = () => {
   const [activeTab, setActiveTab] = useState(0);
@@ -67,16 +80,143 @@ const ArtigosPage = () => {
   });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  // Categorias conforme especificado - usando useMemo para evitar re-criação
-  const categories = useMemo(() => [
-    { categoria_id: '01_Crédito', categoria_titulo: 'Crédito' },
-    { categoria_id: '02_restituição', categoria_titulo: 'Restituição e Declaração' },
-    { categoria_id: '03_Calculadora e Darf', categoria_titulo: 'DARF e Calculadora' },
-    { categoria_id: '04_Conta', categoria_titulo: 'Conta e Planos' },
-    { categoria_id: '05_POP', categoria_titulo: 'POPs B2C' },
-    { categoria_id: '06_ferramentas', categoria_titulo: 'Ferramentas do Agente' },
-    { categoria_id: '07_manual de voz', categoria_titulo: 'Manual de Voz e Estilo' }
-  ], []);
+  const [categories, setCategories] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categoriasModalOpen, setCategoriasModalOpen] = useState(false);
+  const [categoriasDraft, setCategoriasDraft] = useState([]);
+  const [savingCategorias, setSavingCategorias] = useState(false);
+
+  const loadCategories = useCallback(async () => {
+    try {
+      setCategoriesLoading(true);
+      const res = await artigosCategoriasAPI.get();
+      const list = res?.data?.Categorias;
+      if (Array.isArray(list)) {
+        const sorted = [...list].sort(
+          (a, b) => (a.Ordem ?? a.ordem ?? 0) - (b.Ordem ?? b.ordem ?? 0)
+        );
+        setCategories(sorted);
+      } else {
+        setCategories([]);
+      }
+    } catch (error) {
+      setCategories([]);
+      setSnackbar({
+        open: true,
+        message: error.message || 'Erro ao carregar categorias. Verifique se o seed foi executado no backend.',
+        severity: 'error'
+      });
+    } finally {
+      setCategoriesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadCategories();
+  }, [loadCategories]);
+
+  /** Quando o usuário seleciona artigo antes das categorias carregarem, sincroniza uma vez ao chegar a lista */
+  const pendingCategoriaNormalizeIdRef = useRef(null);
+
+  useEffect(() => {
+    if (!selectedArtigo || categories.length === 0 || !pendingCategoriaNormalizeIdRef.current) return;
+    if (String(pendingCategoriaNormalizeIdRef.current) !== String(selectedArtigo._id)) return;
+    pendingCategoriaNormalizeIdRef.current = null;
+
+    const artigo = selectedArtigo;
+    let normalizedCategoriaId = artigo.categoria_id || '';
+    if (normalizedCategoriaId) {
+      const matchingCategory = categories.find(
+        (cat) => cat.categoria_id.toLowerCase() === normalizedCategoriaId.toLowerCase()
+      );
+      normalizedCategoriaId = matchingCategory ? matchingCategory.categoria_id : '';
+    }
+    setEditFormData((prev) => ({
+      ...prev,
+      categoria_id: normalizedCategoriaId,
+      categoria_titulo:
+        categories.find((cat) => cat.categoria_id === normalizedCategoriaId)?.categoria_titulo ||
+        artigo.categoria_titulo ||
+        ''
+    }));
+  }, [categories, selectedArtigo]);
+
+  const openCategoriasModal = useCallback(() => {
+    if (categories.length > 0) {
+      const rows = categories.map((c, idx) => ({
+        draftId: c.categoria_id || newDraftId(),
+        ordem: idx + 1,
+        categoria_titulo: c.categoria_titulo || ''
+      }));
+      setCategoriasDraft(rows);
+    } else {
+      setCategoriasDraft([{ draftId: newDraftId(), ordem: 1, categoria_titulo: '' }]);
+    }
+    setCategoriasModalOpen(true);
+  }, [categories]);
+
+  const atualizarRascunhoCategorias = useCallback((rows) => {
+    setCategoriasDraft(renumerarOrdemRascunho(rows));
+  }, []);
+
+  const handleSaveCategoriasModal = useCallback(async () => {
+    if (categoriasDraft.length === 0) {
+      setSnackbar({
+        open: true,
+        message: 'Informe ao menos uma categoria.',
+        severity: 'warning'
+      });
+      return;
+    }
+    let body;
+    try {
+      body = montarPayloadCategorias(categoriasDraft);
+    } catch (e) {
+      setSnackbar({
+        open: true,
+        message: e.message || 'Verifique os dados das categorias.',
+        severity: 'warning'
+      });
+      return;
+    }
+    try {
+      setSavingCategorias(true);
+      await artigosCategoriasAPI.update(body);
+      await loadCategories();
+      setCategoriasModalOpen(false);
+      setSnackbar({
+        open: true,
+        message: 'Categorias salvas com sucesso.',
+        severity: 'success'
+      });
+    } catch (error) {
+      const msg =
+        error.response?.data?.error ||
+        error.message ||
+        'Erro ao salvar categorias';
+      setSnackbar({
+        open: true,
+        message: msg,
+        severity: 'error'
+      });
+    } finally {
+      setSavingCategorias(false);
+    }
+  }, [categoriasDraft, loadCategories]);
+
+  const categoriasGearIconButtonSx = {
+    flexShrink: 0,
+    alignSelf: 'flex-start',
+    mt: '4px',
+    color: 'secondary.main',
+    border: '1px solid',
+    borderColor: 'secondary.main',
+    borderRadius: '8px',
+    '&:hover': {
+      borderColor: 'secondary.main',
+      backgroundColor: 'rgba(0, 106, 185, 0.08)'
+    }
+  };
 
   const handleTabChange = useCallback((event, newValue) => {
     setActiveTab(newValue);
@@ -237,9 +377,14 @@ const ArtigosPage = () => {
   };
 
   // 4. Selecionar Artigo para Edição
-  const handleSelectArtigo = (artigo) => {
+  const handleSelectArtigo = useCallback((artigo) => {
     setSelectedArtigo(artigo);
-    
+    if (categories.length === 0) {
+      pendingCategoriaNormalizeIdRef.current = artigo._id;
+    } else {
+      pendingCategoriaNormalizeIdRef.current = null;
+    }
+
     // Normalizar categoria_id para garantir que corresponda exatamente a um dos valores disponíveis
     let normalizedCategoriaId = artigo.categoria_id || '';
     if (normalizedCategoriaId) {
@@ -278,7 +423,7 @@ const ArtigosPage = () => {
     } else {
       setEditAttachedVideos([]);
     }
-  };
+  }, [categories]);
 
   // 5. Atualizar Artigo
   const handleUpdateArtigo = async (event) => {
@@ -523,34 +668,45 @@ const ArtigosPage = () => {
                   </Grid>
 
                   <Grid item xs={12} md={6}>
-                    <FormControl fullWidth required>
-                      <InputLabel sx={{ fontSize: '0.8rem' }}>Categoria</InputLabel>
-                      <Select
-                        value={formData.categoria_id}
-                        onChange={handleInputChange('categoria_id')}
-                        label="Categoria"
-                        sx={{
-                          '& .MuiOutlinedInput-notchedOutline': {
-                            borderColor: 'rgba(0, 0, 0, 0.15)',
-                          },
-                          '&:hover .MuiOutlinedInput-notchedOutline': {
-                            borderColor: 'var(--blue-medium)',
-                          },
-                          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                            borderColor: 'var(--blue-medium)',
-                          },
-                          '& .MuiSelect-select': {
-                            fontSize: '0.8rem',
-                          },
-                        }}
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                      <FormControl fullWidth required disabled={categoriesLoading || categories.length === 0} sx={{ flex: 1 }}>
+                        <InputLabel sx={{ fontSize: '0.8rem' }}>Categoria</InputLabel>
+                        <Select
+                          value={formData.categoria_id}
+                          onChange={handleInputChange('categoria_id')}
+                          label="Categoria"
+                          sx={{
+                            '& .MuiOutlinedInput-notchedOutline': {
+                              borderColor: 'rgba(0, 0, 0, 0.15)',
+                            },
+                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                              borderColor: 'var(--blue-medium)',
+                            },
+                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                              borderColor: 'var(--blue-medium)',
+                            },
+                            '& .MuiSelect-select': {
+                              fontSize: '0.8rem',
+                            },
+                          }}
+                        >
+                          {categories.map((category) => (
+                            <MenuItem key={category.categoria_id} value={category.categoria_id}>
+                              {category.categoria_titulo}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                      <IconButton
+                        aria-label="Gerenciar categorias"
+                        color="secondary"
+                        onClick={openCategoriasModal}
+                        size="small"
+                        sx={categoriasGearIconButtonSx}
                       >
-                        {categories.map((category) => (
-                          <MenuItem key={category.categoria_id} value={category.categoria_id}>
-                            {category.categoria_titulo}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
+                        <Settings fontSize="small" />
+                      </IconButton>
+                    </Box>
                   </Grid>
 
                   <Grid item xs={12}>
@@ -728,59 +884,70 @@ const ArtigosPage = () => {
                     
                     {/* Campo Categoria */}
                     <Grid item xs={12} md={6}>
-                      <FormControl fullWidth disabled={!selectedArtigo} required size="small">
-                        <InputLabel sx={{ 
-                          fontSize: '0.8rem',
-                          color: 'rgba(0, 0, 0, 0.6)',
-                          '&.Mui-focused': {
-                            color: 'var(--blue-medium)',
-                          },
-                          '&.Mui-disabled': {
-                            color: 'rgba(0, 0, 0, 0.38)',
-                          },
-                        }}>Categoria</InputLabel>
-                        <Select
-                          value={editFormData.categoria_id}
-                          label="Categoria"
-                          onChange={(e) => {
-                            const selectedCategory = categories.find(cat => cat.categoria_id === e.target.value);
-                            setEditFormData({
-                              ...editFormData,
-                              categoria_id: e.target.value,
-                              categoria_titulo: selectedCategory ? selectedCategory.categoria_titulo : ''
-                            });
-                          }}
-                          sx={{ 
-                            fontFamily: 'Poppins', 
+                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                        <FormControl fullWidth disabled={!selectedArtigo || categoriesLoading || categories.length === 0} required size="small" sx={{ flex: 1 }}>
+                          <InputLabel sx={{ 
                             fontSize: '0.8rem',
-                            backgroundColor: 'var(--cor-container)',
-                            '& .MuiOutlinedInput-notchedOutline': {
-                              borderColor: 'rgba(0, 0, 0, 0.15)',
-                            },
-                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                              borderColor: 'var(--blue-medium)',
-                            },
-                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                              borderColor: 'var(--blue-medium)',
-                            },
-                            '& .MuiSelect-select': {
-                              color: 'var(--gray)',
+                            color: 'rgba(0, 0, 0, 0.6)',
+                            '&.Mui-focused': {
+                              color: 'var(--blue-medium)',
                             },
                             '&.Mui-disabled': {
-                              backgroundColor: 'rgba(0, 0, 0, 0.05)',
-                              '& .MuiSelect-select': {
-                                color: 'rgba(0, 0, 0, 0.38)',
-                              },
+                              color: 'rgba(0, 0, 0, 0.38)',
                             },
-                          }}
+                          }}>Categoria</InputLabel>
+                          <Select
+                            value={editFormData.categoria_id}
+                            label="Categoria"
+                            onChange={(e) => {
+                              const selectedCategory = categories.find(cat => cat.categoria_id === e.target.value);
+                              setEditFormData({
+                                ...editFormData,
+                                categoria_id: e.target.value,
+                                categoria_titulo: selectedCategory ? selectedCategory.categoria_titulo : ''
+                              });
+                            }}
+                            sx={{ 
+                              fontFamily: 'Poppins', 
+                              fontSize: '0.8rem',
+                              backgroundColor: 'var(--cor-container)',
+                              '& .MuiOutlinedInput-notchedOutline': {
+                                borderColor: 'rgba(0, 0, 0, 0.15)',
+                              },
+                              '&:hover .MuiOutlinedInput-notchedOutline': {
+                                borderColor: 'var(--blue-medium)',
+                              },
+                              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                borderColor: 'var(--blue-medium)',
+                              },
+                              '& .MuiSelect-select': {
+                                color: 'var(--gray)',
+                              },
+                              '&.Mui-disabled': {
+                                backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                                '& .MuiSelect-select': {
+                                  color: 'rgba(0, 0, 0, 0.38)',
+                                },
+                              },
+                            }}
+                          >
+                            {categories.map((category) => (
+                              <MenuItem key={category.categoria_id} value={category.categoria_id}>
+                                {category.categoria_titulo}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                        <IconButton
+                          aria-label="Gerenciar categorias"
+                          color="secondary"
+                          onClick={openCategoriasModal}
+                          size="small"
+                          sx={categoriasGearIconButtonSx}
                         >
-                          {categories.map((category) => (
-                            <MenuItem key={category.categoria_id} value={category.categoria_id}>
-                              {category.categoria_titulo}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
+                          <Settings fontSize="small" />
+                        </IconButton>
+                      </Box>
                     </Grid>
                     
                     {/* Campo Conteúdo */}
@@ -1008,6 +1175,214 @@ const ArtigosPage = () => {
           </Box>
         </Box>
       )}
+
+      <Dialog
+        open={categoriasModalOpen}
+        onClose={() => {
+          if (!savingCategorias) setCategoriasModalOpen(false);
+        }}
+        maxWidth="sm"
+        fullWidth
+        aria-labelledby="categorias-dialog-title"
+        PaperProps={{
+          sx: {
+            backgroundColor: 'var(--cor-container)',
+            borderRadius: '12px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+            maxHeight: 'min(92vh, 760px)',
+            display: 'flex',
+            flexDirection: 'column'
+          }
+        }}
+      >
+        <DialogTitle
+          id="categorias-dialog-title"
+          sx={{
+            fontFamily: 'Poppins',
+            fontSize: '0.875rem',
+            color: 'var(--gray)',
+            flexShrink: 0,
+            pb: 1,
+            lineHeight: 1.3
+          }}
+        >
+          Gerenciar categorias
+        </DialogTitle>
+        <DialogContent
+          sx={{
+            // Sobrescreve o padding-top: 0 do tema (.MuiDialogTitle-root + .MuiDialogContent-root)
+            paddingTop: '16px !important',
+            px: 2.4,
+            pb: 0,
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+            flex: '1 1 auto',
+            minHeight: 0
+          }}
+        >
+          <Box
+            sx={{
+              overflowY: 'auto',
+              overflowX: 'hidden',
+              WebkitOverflowScrolling: 'touch',
+              flex: '1 1 auto',
+              minHeight: 0,
+              pr: 0.5,
+              mr: -0.5,
+              // espaço para labels dos OutlinedInput não serem cortados pelo overflow
+              pt: 1.5,
+              pb: 1,
+              '&::-webkit-scrollbar': { width: 8 },
+              '&::-webkit-scrollbar-thumb': {
+                backgroundColor: 'rgba(0, 106, 185, 0.35)',
+                borderRadius: 4
+              }
+            }}
+          >
+            {categoriasDraft.map((row) => (
+              <Box
+                key={row.draftId}
+                sx={{
+                  display: 'flex',
+                  gap: 1,
+                  mb: 1.6,
+                  alignItems: 'center',
+                  flexWrap: 'wrap'
+                }}
+              >
+                <TextField
+                  label="Ordenação"
+                  type="number"
+                  inputProps={{ min: 1, step: 1 }}
+                  value={row.ordem === '' ? '' : row.ordem}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    setCategoriasDraft((prev) =>
+                      prev.map((r) => {
+                        if (r.draftId !== row.draftId) return r;
+                        if (raw === '') return { ...r, ordem: '' };
+                        const n = parseInt(raw, 10);
+                        if (!Number.isFinite(n)) return r;
+                        return { ...r, ordem: Math.max(1, n) };
+                      })
+                    );
+                  }}
+                  onBlur={() => {
+                    setCategoriasDraft((prev) => {
+                      const r = prev.find((x) => x.draftId === row.draftId);
+                      if (!r) return prev;
+                      let k = r.ordem;
+                      if (k === '' || k === undefined) {
+                        return inserirCategoriaNaPosicao(prev, row.draftId, prev.length);
+                      }
+                      const num =
+                        typeof k === 'number' ? k : parseInt(String(k), 10);
+                      if (!Number.isFinite(num)) {
+                        return inserirCategoriaNaPosicao(prev, row.draftId, prev.length);
+                      }
+                      return inserirCategoriaNaPosicao(
+                        prev,
+                        row.draftId,
+                        Math.max(1, num)
+                      );
+                    });
+                  }}
+                  size="small"
+                  sx={{
+                    width: 76,
+                    flexShrink: 0,
+                    '& .MuiInputLabel-root': { fontSize: '0.6875rem' },
+                    '& .MuiOutlinedInput-input': { fontSize: '0.75rem', py: 0.8 }
+                  }}
+                />
+                <TextField
+                  label="Título da categoria"
+                  value={row.categoria_titulo}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setCategoriasDraft((prev) =>
+                      prev.map((r) =>
+                        r.draftId === row.draftId ? { ...r, categoria_titulo: v } : r
+                      )
+                    );
+                  }}
+                  size="small"
+                  sx={{
+                    flex: 1,
+                    minWidth: 160,
+                    '& .MuiInputLabel-root': { fontSize: '0.6875rem' },
+                    '& .MuiOutlinedInput-input': { fontSize: '0.75rem', py: 0.8 }
+                  }}
+                />
+                <IconButton
+                  aria-label="Remover categoria"
+                  size="small"
+                  disabled={categoriasDraft.length <= 1}
+                  onClick={() => {
+                    const next = categoriasDraft.filter((r) => r.draftId !== row.draftId);
+                    atualizarRascunhoCategorias(next);
+                  }}
+                  sx={{ color: 'rgba(0,0,0,0.45)' }}
+                >
+                  <DeleteOutline sx={{ fontSize: '1.1rem' }} />
+                </IconButton>
+              </Box>
+            ))}
+          </Box>
+          <Button
+            type="button"
+            variant="outlined"
+            size="small"
+            color="secondary"
+            startIcon={<Add sx={{ fontSize: '1rem' }} />}
+            onClick={() => {
+              const next = [
+                ...categoriasDraft,
+                {
+                  draftId: newDraftId(),
+                  ordem: categoriasDraft.length + 1,
+                  categoria_titulo: ''
+                }
+              ];
+              atualizarRascunhoCategorias(next);
+            }}
+            sx={{ fontFamily: 'Poppins', fontSize: '0.75rem', mt: 1.2, flexShrink: 0, alignSelf: 'flex-start' }}
+          >
+            Adicionar
+          </Button>
+        </DialogContent>
+        <DialogActions
+          sx={{
+            px: 2.4,
+            pb: 2.4,
+            pt: 1,
+            backgroundColor: 'var(--cor-container)',
+            flexShrink: 0
+          }}
+        >
+          <Button
+            onClick={() => setCategoriasModalOpen(false)}
+            disabled={savingCategorias}
+            sx={{ fontFamily: 'Poppins', fontSize: '0.75rem' }}
+          >
+            Cancelar
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleSaveCategoriasModal}
+            disabled={savingCategorias}
+            sx={{
+              fontFamily: 'Poppins',
+              fontSize: '0.75rem',
+              backgroundColor: 'var(--blue-medium)',
+              '&:hover': { backgroundColor: 'var(--blue-dark)' }
+            }}
+          >
+            {savingCategorias ? 'Salvando...' : 'Salvar'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog
         open={deleteDialogOpen}
