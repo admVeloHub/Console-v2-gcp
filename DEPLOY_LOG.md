@@ -1,11 +1,29 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.47.3 | DATE: 2026-03-25 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.47.4 | DATE: 2026-03-30 | AUTHOR: VeloHub Development Team -->
 <!--
   REGRA (push GitHub): Preencher a nova entrada do DEPLOY_LOG (tipo, data, branch, repositório,
   arquivos, descrição) ANTES do `git commit`. Incluir DEPLOY_LOG no MESMO commit que o código.
   Não criar commit adicional só para corrigir hash, SHA ou “fechar” o log.
   Campo **Commit:** opcional; se não usar SHA aqui, consultar `git log -1 --oneline` no remoto.
 -->
+
+## Push GitHub - Qualidade/Funcionários: credencial Apoio N1 (acessos) - 2026-03-30
+
+### **Tipo:** Push GitHub
+### **Data/Hora:** 2026-03-30
+### **Branch:** main
+### **Commit:** *(SHA no histórico local/remoto após o push; mesma revisão que este commit)*
+### **Repositório:** https://github.com/admVeloHub/Console-v2-gcp.git
+
+### **Arquivos Modificados:**
+- `src/pages/FuncionariosPage.jsx` (v1.15.0) — Checkbox Apoio N1 no modal de acessos; normalização e exibição (tabela/chips); payload de `acessos` completo incluindo `apoioN1` e correção de envio de `Sociais` no salvamento pelo formulário principal
+- `src/services/qualidadeAPI.js` (v1.40.0) — Campo `apoioN1` em `normalizarAcessos`, `addFuncionario` e `updateFuncionario`
+- `DEPLOY_LOG.md` — Registro deste push
+
+### **Descrição:**
+Inclusão da credencial **Apoio N1** (`apoioN1: boolean`) no fluxo de acessos dos funcionários no front, alinhada ao backend quando publicado. Formato legado em array aceita `sistema` `apoioN1` ou texto normalizado `apoion1`.
+
+---
 
 ## Push GitHub - Serviços: module_status (8 campos) e cards sem subtítulo - 2026-03-25
 
