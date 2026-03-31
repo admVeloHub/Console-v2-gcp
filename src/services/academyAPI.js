@@ -1,4 +1,4 @@
-// VERSION: v1.0.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// VERSION: v1.1.1 | DATE: 2026-03-27 | AUTHOR: VeloHub Development Team
 import axios from 'axios';
 
 // Função auxiliar para normalizar URL base (remove /api do final se existir)
@@ -313,6 +313,28 @@ export const cursosConteudoAPI = {
   }
 };
 
+// API quiz_conteudo (academy_registros) — quizID alinhado ao quizId do tema (nome do tema em snake_case)
+export const quizConteudoAPI = {
+  getByQuizId: async (quizID) => {
+    const encoded = encodeURIComponent(quizID);
+    const response = await api.get(`/academy/quiz-conteudo/quiz/${encoded}`, {
+      validateStatus: (status) =>
+        (status >= 200 && status < 300) || status === 404
+    });
+    if (response.status === 404) return null;
+    return response.data?.data ?? null;
+  },
+
+  upsert: async (quizID, body) => {
+    const encoded = encodeURIComponent(quizID);
+    const response = await api.put(`/academy/quiz-conteudo/quiz/${encoded}`, body);
+    if (response.data?.success === false) {
+      throw new Error(response.data.error || 'Erro ao salvar quiz');
+    }
+    return response.data?.data || response.data;
+  }
+};
+
 // Exportar API unificada
 export const academyAPI = {
   courseProgress: courseProgressAPI,
@@ -320,7 +342,8 @@ export const academyAPI = {
   cursos: cursosAPI,
   modulos: modulosAPI,
   secoes: secoesAPI,
-  aulas: aulasAPI
+  aulas: aulasAPI,
+  quizConteudo: quizConteudoAPI
 };
 
 export default academyAPI;

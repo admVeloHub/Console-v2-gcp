@@ -1,5 +1,5 @@
-// VERSION: v1.11.1 | DATE: 2026-03-17 | AUTHOR: VeloHub Development Team
-import React, { useState, useEffect } from 'react';
+// VERSION: v1.13.5 | DATE: 2026-03-27 | AUTHOR: VeloHub Development Team
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Container,
   Box,
@@ -60,6 +60,88 @@ import BackButton from '../components/common/BackButton';
 import { academyAPI } from '../services/academyAPI';
 import { qualidadeFuncionariosAPI, qualidadeFuncoesAPI } from '../services/api';
 
+/** Alinha quizId (cursos_conteudo) e quizID (quiz_conteudo) ao temaNome em snake_case — LISTA_SCHEMAS.rb */
+function temaNomeToQuizId(nome) {
+  if (!nome || typeof nome !== 'string') return '';
+  return nome
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
+function emptyQuizQuestao() {
+  return {
+    pergunta: '',
+    opção1: '',
+    opção2: '',
+    opção3: '',
+    opção4: ''
+  };
+}
+
+function isQuestaoQuizCompleta(q) {
+  if (!q) return false;
+  const p = String(q.pergunta ?? '').trim();
+  const o1 = String(q.opção1 ?? '').trim();
+  const o2 = String(q.opção2 ?? '').trim();
+  if (!p || !o1 || !o2) return false;
+  const o3 = String(q.opção3 ?? '').trim();
+  const o4 = String(q.opção4 ?? '').trim();
+  if (!o3 && !o4) return true;
+  if (o3 && o4) return true;
+  if (o3 && !o4) return true;
+  return false;
+}
+
+function quizTemLinhaParcial(rows) {
+  return rows.some((q) => {
+    const n = ['pergunta', 'opção1', 'opção2', 'opção3', 'opção4'].filter(
+      (k) => q[k] && String(q[k]).trim().length > 0
+    ).length;
+    if (n === 0) return false;
+    return !isQuestaoQuizCompleta(q);
+  });
+}
+
+const outlineFieldSxAcademy = {
+  '& .MuiOutlinedInput-root': {
+    backgroundColor: 'var(--cor-container)',
+    color: 'var(--gray)',
+    '& fieldset': { borderColor: 'rgba(0, 0, 0, 0.15)' },
+    '&:hover fieldset': { borderColor: 'var(--blue-medium)' },
+    '&.Mui-focused fieldset': { borderColor: 'var(--blue-medium)' },
+    '& input': { color: 'var(--gray)' },
+    '& textarea': { color: 'var(--gray)' }
+  },
+  '& .MuiInputLabel-root': {
+    color: 'rgba(0, 0, 0, 0.6)',
+    '&.Mui-focused': { color: 'var(--blue-medium)' }
+  }
+};
+
+/** Campos do modal Quiz — fontes menores */
+const outlineFieldSxQuizModal = {
+  '& .MuiOutlinedInput-root': {
+    backgroundColor: 'var(--cor-container)',
+    color: 'var(--gray)',
+    fontSize: '0.8125rem',
+    '& fieldset': { borderColor: 'rgba(0, 0, 0, 0.15)' },
+    '&:hover fieldset': { borderColor: 'var(--blue-medium)' },
+    '&.Mui-focused fieldset': { borderColor: 'var(--blue-medium)' },
+    '& input': { color: 'var(--gray)', fontSize: '0.8125rem', py: 0.75 },
+    '& textarea': { color: 'var(--gray)', fontSize: '0.8125rem' }
+  },
+  '& .MuiInputLabel-root': {
+    fontSize: '0.75rem',
+    color: 'rgba(0, 0, 0, 0.6)',
+    '&.Mui-focused': { color: 'var(--blue-medium)' },
+    '&.MuiInputLabel-shrink': { fontSize: '0.6875rem' }
+  }
+};
+
 const AcademyPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -103,6 +185,10 @@ const AcademyPage = () => {
   const [modalCursoAberto, setModalCursoAberto] = useState(false);
   const [modalModuloAberto, setModalModuloAberto] = useState(false);
   const [modalTemaAberto, setModalTemaAberto] = useState(false);
+  const [modalQuizAberto, setModalQuizAberto] = useState(false);
+  const [quizFormQuestoes, setQuizFormQuestoes] = useState([]);
+  const [quizFormLoading, setQuizFormLoading] = useState(false);
+  const [salvandoQuiz, setSalvandoQuiz] = useState(false);
   const [modalAulaAberto, setModalAulaAberto] = useState(false);
   
   // Estados de edição
@@ -169,6 +255,23 @@ const AcademyPage = () => {
   
   const classes = ['Todas', 'Essencial', 'Atualização', 'Opcional', 'Reciclagem'];
   const tiposAula = ['video', 'pdf', 'audio', 'slide', 'document'];
+
+  useEffect(() => {
+    if (!modalTemaAberto) return;
+    setFormTema((prev) => {
+      const nextQuizId = prev.hasQuiz ? temaNomeToQuizId(prev.temaNome) : '';
+      if (prev.quizId === nextQuizId) return prev;
+      return { ...prev, quizId: nextQuizId };
+    });
+  }, [modalTemaAberto, formTema.temaNome, formTema.hasQuiz]);
+
+  const podeSalvarQuiz = useMemo(
+    () =>
+      quizFormQuestoes.length > 0 &&
+      isQuestaoQuizCompleta(quizFormQuestoes[0]) &&
+      !quizTemLinhaParcial(quizFormQuestoes),
+    [quizFormQuestoes]
+  );
   
   // Carregar cursos
   useEffect(() => {
@@ -213,6 +316,87 @@ const AcademyPage = () => {
   
   const fecharSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
+  };
+
+  const abrirModalQuiz = async () => {
+    if (!formTema.temaNome?.trim()) {
+      mostrarSnackbar('Preencha o nome do tema antes de editar o quiz.', 'error');
+      return;
+    }
+    const qid = temaNomeToQuizId(formTema.temaNome);
+    if (!qid) {
+      mostrarSnackbar('Nome do tema inválido para gerar o ID do quiz.', 'error');
+      return;
+    }
+    setFormTema((prev) => ({ ...prev, quizId: qid }));
+    setModalQuizAberto(true);
+    setQuizFormLoading(true);
+    try {
+      const doc = await academyAPI.quizConteudo.getByQuizId(qid);
+      if (doc && Array.isArray(doc.questões) && doc.questões.length > 0) {
+        setQuizFormQuestoes(
+          doc.questões.map((q) => ({
+            pergunta: q.pergunta || '',
+            opção1: q.opção1 || '',
+            opção2: q.opção2 || '',
+            opção3: q.opção3 || '',
+            opção4: q.opção4 || ''
+          }))
+        );
+      } else {
+        setQuizFormQuestoes([]);
+      }
+    } catch (err) {
+      console.error(err);
+      mostrarSnackbar(`Erro ao carregar quiz: ${err.message}`, 'error');
+      setQuizFormQuestoes([]);
+    } finally {
+      setQuizFormLoading(false);
+    }
+  };
+
+  const atualizarQuestaoQuiz = (index, campo, valor) => {
+    setQuizFormQuestoes((rows) => {
+      const next = [...rows];
+      next[index] = { ...next[index], [campo]: valor };
+      return next;
+    });
+  };
+
+  const adicionarQuestaoQuiz = () => {
+    setQuizFormQuestoes((rows) => [...rows, emptyQuizQuestao()]);
+  };
+
+  const removerQuestaoQuiz = (index) => {
+    setQuizFormQuestoes((rows) => rows.filter((_, i) => i !== index));
+  };
+
+  const salvarQuizConteudoModal = async () => {
+    if (!podeSalvarQuiz) return;
+    const questões = quizFormQuestoes.filter(isQuestaoQuizCompleta).map((q) => ({
+      pergunta: q.pergunta.trim(),
+      opção1: q.opção1.trim(),
+      opção2: q.opção2.trim(),
+      opção3: q.opção3.trim(),
+      opção4: q.opção4.trim()
+    }));
+    if (questões.length === 0) return;
+    const qid = temaNomeToQuizId(formTema.temaNome);
+    if (!qid) {
+      mostrarSnackbar('Nome do tema inválido.', 'error');
+      return;
+    }
+    setSalvandoQuiz(true);
+    try {
+      await academyAPI.quizConteudo.upsert(qid, { questões });
+      setFormTema((prev) => ({ ...prev, quizId: qid, hasQuiz: true }));
+      mostrarSnackbar('Quiz salvo com sucesso');
+      setModalQuizAberto(false);
+    } catch (e) {
+      mostrarSnackbar(e.message || 'Erro ao salvar quiz', 'error');
+    } finally {
+      setSalvandoQuiz(false);
+    }
   };
   
   // Carregar funções e funcionários quando aba Progresso for selecionada
@@ -871,6 +1055,9 @@ const AcademyPage = () => {
               });
             }
             // Se não há lessons, manter array vazio (permitido agora)
+            if (sectionLimpa.hasQuiz && sectionLimpa.temaNome) {
+              sectionLimpa.quizId = temaNomeToQuizId(sectionLimpa.temaNome);
+            }
             
             return sectionLimpa;
           });
@@ -1239,7 +1426,7 @@ const AcademyPage = () => {
         temaOrder: tema.temaOrder || 1,
         isActive: tema.isActive !== undefined ? tema.isActive : true,
         hasQuiz: tema.hasQuiz || false,
-        quizId: tema.quizId || '',
+        quizId: tema.hasQuiz ? temaNomeToQuizId(tema.temaNome || '') : '',
         lessons: tema.lessons || []
       });
     } else {
@@ -1264,6 +1451,8 @@ const AcademyPage = () => {
   // Função para fechar modal de tema após salvar (sem verificar cancelamento)
   const fecharModalTemaAposSalvar = () => {
     setModalTemaAberto(false);
+    setModalQuizAberto(false);
+    setQuizFormQuestoes([]);
     setTemaEditando(null);
     // Não limpar contexto quando está salvando tema temporário
     // para permitir continuar adicionando mais temas depois
@@ -1277,6 +1466,8 @@ const AcademyPage = () => {
       }
     }
     setModalTemaAberto(false);
+    setModalQuizAberto(false);
+    setQuizFormQuestoes([]);
     setTemaEditando(null);
     if (!cursoTemporario) {
       setModuloContexto(null);
@@ -1294,7 +1485,7 @@ const AcademyPage = () => {
         temaOrder: formTema.temaOrder,
         isActive: formTema.isActive,
         hasQuiz: formTema.hasQuiz || false,
-        quizId: formTema.quizId || '',
+        quizId: formTema.hasQuiz ? temaNomeToQuizId(formTema.temaNome) : '',
         lessons: temaTemporario?.lessons || []
       };
       
@@ -1355,7 +1546,7 @@ const AcademyPage = () => {
       temaOrder: formTema.temaOrder,
       isActive: formTema.isActive,
       hasQuiz: formTema.hasQuiz || false,
-      quizId: formTema.quizId || '',
+      quizId: formTema.hasQuiz ? temaNomeToQuizId(formTema.temaNome) : '',
       lessons: []
     };
 
@@ -1402,7 +1593,7 @@ const AcademyPage = () => {
       temaOrder: formTema.temaOrder,
       isActive: formTema.isActive,
       hasQuiz: formTema.hasQuiz || false,
-      quizId: formTema.quizId || '',
+      quizId: formTema.hasQuiz ? temaNomeToQuizId(formTema.temaNome) : '',
       lessons: []
     };
 
@@ -1449,7 +1640,8 @@ const AcademyPage = () => {
         // Garantir que o tema tenha lessons como array vazio se não especificado
         const temaParaSalvar = {
           ...formTema,
-          lessons: formTema.lessons || []
+          lessons: formTema.lessons || [],
+          quizId: formTema.hasQuiz ? temaNomeToQuizId(formTema.temaNome) : ''
         };
         
         if (temaEditando) {
@@ -1609,7 +1801,7 @@ const AcademyPage = () => {
       temaOrder: temaTemporario.temaOrder,
       isActive: temaTemporario.isActive,
       hasQuiz: temaTemporario.hasQuiz || false,
-      quizId: temaTemporario.quizId || '',
+      quizId: temaTemporario.hasQuiz ? temaNomeToQuizId(temaTemporario.temaNome || '') : '',
       lessons: temaTemporario.lessons || []
     });
     
@@ -3425,57 +3617,58 @@ const AcademyPage = () => {
                 },
               }}
             />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={formTema.hasQuiz}
-                  onChange={(e) => setFormTema({ ...formTema, hasQuiz: e.target.checked })}
-                  sx={{
-                    color: 'var(--blue-medium)',
-                    '&.Mui-checked': {
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 1.5,
+                flexWrap: 'wrap',
+              }}
+            >
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formTema.hasQuiz}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setFormTema({ ...formTema, hasQuiz: checked });
+                      if (!checked) setModalQuizAberto(false);
+                    }}
+                    sx={{
                       color: 'var(--blue-medium)',
+                      '&.Mui-checked': {
+                        color: 'var(--blue-medium)',
+                      },
+                    }}
+                  />
+                }
+                label={
+                  <Typography sx={{ color: 'var(--gray)', fontFamily: 'Poppins' }}>
+                    Tem Quiz
+                  </Typography>
+                }
+                sx={{ m: 0 }}
+              />
+              {formTema.hasQuiz && (
+                <Button
+                  type="button"
+                  variant="outlined"
+                  onClick={abrirModalQuiz}
+                  sx={{
+                    fontFamily: 'Poppins',
+                    borderColor: 'var(--blue-medium)',
+                    color: 'var(--blue-medium)',
+                    '&:hover': {
+                      borderColor: 'var(--blue-dark)',
+                      backgroundColor: 'rgba(22, 52, 255, 0.08)',
                     },
                   }}
-                />
-              }
-              label={
-                <Typography sx={{ color: 'var(--gray)', fontFamily: 'Poppins' }}>
-                  Tem Quiz
-                </Typography>
-              }
-            />
-            {formTema.hasQuiz && (
-              <TextField
-                label="Quiz ID"
-                value={formTema.quizId}
-                onChange={(e) => setFormTema({ ...formTema, quizId: e.target.value })}
-                fullWidth
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    backgroundColor: 'var(--cor-container)',
-                    color: 'var(--gray)',
-                    '& fieldset': {
-                      borderColor: 'rgba(0, 0, 0, 0.15)',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: 'var(--blue-medium)',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: 'var(--blue-medium)',
-                    },
-                    '& input': {
-                      color: 'var(--gray)',
-                    },
-                  },
-                  '& .MuiInputLabel-root': {
-                    color: 'rgba(0, 0, 0, 0.6)',
-                    '&.Mui-focused': {
-                      color: 'var(--blue-medium)',
-                    },
-                  },
-                }}
-              />
-            )}
+                >
+                  Quiz
+                </Button>
+              )}
+            </Box>
           </Box>
         </DialogContent>
         <DialogActions sx={{ backgroundColor: 'var(--cor-container)', px: 2.4, pb: 2.4 }}>
@@ -3536,6 +3729,175 @@ const AcademyPage = () => {
             }}
           >
             {cursoTemporario ? 'Próximo' : 'Salvar'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Modal de Quiz (tema com Tem Quiz) — quizId/quizID derivados do nome do tema (snake_case), não exibidos */}
+      <Dialog
+        open={modalQuizAberto}
+        onClose={() => setModalQuizAberto(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            backgroundColor: 'var(--cor-container)',
+            color: 'var(--gray)',
+            borderRadius: '12px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+          }
+        }}
+      >
+        <DialogTitle sx={{
+          color: 'var(--gray)',
+          backgroundColor: 'var(--cor-container)',
+          fontFamily: 'Poppins',
+          fontSize: '1rem',
+          fontWeight: 600,
+          lineHeight: 1.35,
+          py: 1.5,
+        }}>
+          Quiz
+        </DialogTitle>
+        <DialogContent sx={{ backgroundColor: 'var(--cor-container)' }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, pt: 0.5 }}>
+            {quizFormLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <CircularProgress sx={{ color: 'var(--blue-medium)' }} />
+              </Box>
+            ) : (
+              <>
+                {quizFormQuestoes.map((q, index) => (
+                  <Box key={`quiz-q-${index}`} sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
+                    {index > 0 ? <Divider sx={{ my: 0.5 }} /> : null}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <Typography sx={{ color: 'var(--gray)', fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.8125rem' }}>
+                        Questão {index + 1}
+                      </Typography>
+                      <IconButton
+                        type="button"
+                        size="small"
+                        onClick={() => removerQuestaoQuiz(index)}
+                        aria-label="Remover questão"
+                        sx={{
+                          color: '#d32f2f',
+                          '&:hover': { backgroundColor: 'rgba(211, 47, 47, 0.08)' },
+                        }}
+                      >
+                        <Delete fontSize="small" />
+                      </IconButton>
+                    </Box>
+                    <TextField
+                      label="Pergunta"
+                      value={q.pergunta}
+                      onChange={(e) => atualizarQuestaoQuiz(index, 'pergunta', e.target.value)}
+                      fullWidth
+                      multiline
+                      minRows={2}
+                      size="small"
+                      sx={outlineFieldSxQuizModal}
+                    />
+                    <TextField
+                      label="Opção Correta"
+                      value={q.opção1}
+                      onChange={(e) => atualizarQuestaoQuiz(index, 'opção1', e.target.value)}
+                      fullWidth
+                      size="small"
+                      sx={outlineFieldSxQuizModal}
+                    />
+                    <TextField
+                      label="Opção adicional 1"
+                      value={q.opção2}
+                      onChange={(e) => atualizarQuestaoQuiz(index, 'opção2', e.target.value)}
+                      fullWidth
+                      size="small"
+                      sx={outlineFieldSxQuizModal}
+                    />
+                    <TextField
+                      label="Opção adicional 2"
+                      value={q.opção3}
+                      onChange={(e) => atualizarQuestaoQuiz(index, 'opção3', e.target.value)}
+                      fullWidth
+                      size="small"
+                      sx={outlineFieldSxQuizModal}
+                    />
+                    <TextField
+                      label="Opção adicional 3"
+                      value={q.opção4}
+                      onChange={(e) => atualizarQuestaoQuiz(index, 'opção4', e.target.value)}
+                      fullWidth
+                      size="small"
+                      sx={outlineFieldSxQuizModal}
+                    />
+                  </Box>
+                ))}
+                <Button
+                  type="button"
+                  variant="outlined"
+                  size="small"
+                  startIcon={<Add sx={{ fontSize: '1.125rem' }} />}
+                  onClick={adicionarQuestaoQuiz}
+                  sx={{
+                    alignSelf: 'flex-start',
+                    mt: quizFormQuestoes.length > 0 ? 0.5 : 0,
+                    fontFamily: 'Poppins',
+                    fontSize: '0.8125rem',
+                    textTransform: 'none',
+                    py: 0.5,
+                    px: 1.25,
+                    borderColor: 'var(--blue-medium)',
+                    color: 'var(--blue-medium)',
+                    '&:hover': {
+                      borderColor: 'var(--blue-dark)',
+                      backgroundColor: 'rgba(22, 52, 255, 0.08)',
+                    },
+                  }}
+                >
+                  Questão
+                </Button>
+              </>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions
+          sx={{
+            backgroundColor: 'var(--cor-container)',
+            px: 2,
+            pb: 2,
+            pt: 0.5,
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 1,
+          }}
+        >
+          <Button
+            size="small"
+            onClick={() => setModalQuizAberto(false)}
+            sx={{
+              color: 'var(--gray)',
+              fontFamily: 'Poppins',
+              fontSize: '0.8125rem',
+              textTransform: 'none',
+              '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.05)' },
+            }}
+          >
+            Fechar
+          </Button>
+          <Box sx={{ flex: '1 1 12px' }} />
+          <Button
+            variant="contained"
+            size="small"
+            disabled={!podeSalvarQuiz || salvandoQuiz || quizFormLoading}
+            onClick={salvarQuizConteudoModal}
+            sx={{
+              fontFamily: 'Poppins',
+              fontSize: '0.8125rem',
+              textTransform: 'none',
+              backgroundColor: 'var(--blue-medium)',
+              '&:hover': { backgroundColor: 'var(--blue-dark)' },
+            }}
+          >
+            {salvandoQuiz ? 'Salvando…' : 'Salvar'}
           </Button>
         </DialogActions>
       </Dialog>

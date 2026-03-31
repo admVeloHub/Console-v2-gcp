@@ -1,11 +1,29 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.47.4 | DATE: 2026-03-30 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.47.5 | DATE: 2026-03-30 | AUTHOR: VeloHub Development Team -->
 <!--
   REGRA (push GitHub): Preencher a nova entrada do DEPLOY_LOG (tipo, data, branch, repositório,
   arquivos, descrição) ANTES do `git commit`. Incluir DEPLOY_LOG no MESMO commit que o código.
   Não criar commit adicional só para corrigir hash, SHA ou “fechar” o log.
   Campo **Commit:** opcional; se não usar SHA aqui, consultar `git log -1 --oneline` no remoto.
 -->
+
+## Push GitHub - Academy: modal Quiz, API quiz_conteudo e validação V/F - 2026-03-30
+
+### **Tipo:** Push GitHub
+### **Data/Hora:** 2026-03-30
+### **Branch:** main
+### **Commit:** *(SHA no histórico local/remoto após o push)*
+### **Repositório:** https://github.com/admVeloHub/Console-v2-gcp.git
+
+### **Arquivos Modificados:**
+- `src/pages/AcademyPage.jsx` (v1.13.5) — Modal Quiz: `quizId` derivado do nome do tema (snake_case); questões com gabarito; botão Questão; suporte a questões V/F (`opção3`/`opção4` vazias) e 3 alternativas no salvamento
+- `src/services/academyAPI.js` (v1.1.1) — `academyAPI.quizConteudo` (GET/PUT); `getByQuizId` tolera 404 sem quebrar o modal
+- `DEPLOY_LOG.md` — Registro deste push
+
+### **Descrição:**
+Módulo Academy: edição de quiz alinhada a `quiz_conteudo` e LISTA_SCHEMAS (`opção1` correta). Integração com backend quando a rota `/api/academy/quiz-conteudo` estiver disponível.
+
+---
 
 ## Push GitHub - Qualidade/Funcionários: credencial Apoio N1 (acessos) - 2026-03-30
 
