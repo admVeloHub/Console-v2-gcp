@@ -1,4 +1,7 @@
-// VERSION: v1.9.0 | DATE: 2025-02-11 | AUTHOR: VeloHub Development Team
+// VERSION: v1.11.1 | DATE: 2026-04-10 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.11.1 - Release push GitHub 2026-04-10
+// CHANGELOG: v1.11.0 - Relatório agente: mediaGPT e gráficos usam avaliacao.avaliacaoIA (campo em qualidade_avaliacoes)
+// CHANGELOG: v1.10.0 - somenteAnaliseAudioIA: média/tendência/histórico ignoram nota manual 0 nesse fluxo; mediana e períodos usam nota IA quando só áudio
 // CHANGELOG: v1.9.0 - Removida compatibilidade retroativa com dominioAssunto
 // CHANGELOG: v1.8.0 - Atualização de métricas: Escuta 15→10pts, Clareza 15→10pts, Empatia 15→10pts, Procedimento -60→-100pts, substituído dominioAssunto por registroAtendimento, adicionado conformidadeTicket -15pts
 
@@ -60,6 +63,8 @@
  * @property {boolean} moderado
  * @property {string} observacoesModeracao
  * @property {number} pontuacaoTotal
+ * @property {number} [avaliacaoIA] - Nota IA espelhada no documento (worker); exibição Status IA / relatórios
+ * @property {boolean} [somenteAnaliseAudioIA] - Registro criado para análise por áudio/IA sem avaliação manual prévia
  * @property {AvaliacaoGPT} [avaliacaoGPT]
  * @property {string} createdAt
  * @property {string} updatedAt
@@ -173,6 +178,42 @@ export const PONTUACAO = {
   ENCERRAMENTO_BRUSCO: -100        // Mantém -100 pontos
 };
 
+/** Avaliação criada no fluxo lote / só IA (sem nota manual do supervisor). */
+export const isSomenteAnaliseAudioIA = (avaliacao) => avaliacao?.somenteAnaliseAudioIA === true;
+
+/**
+ * Há preenchimento de critérios ou pontuação pelo supervisor (fluxo manual).
+ * @param {Object} avaliacao
+ * @returns {boolean}
+ */
+export const hasAvaliacaoManualSupervisor = (avaliacao) => {
+  if (isSomenteAnaliseAudioIA(avaliacao)) return false;
+  const p = avaliacao?.pontuacaoTotal ?? 0;
+  if (p > 0) return true;
+  return Boolean(
+    avaliacao?.saudacaoAdequada ||
+      avaliacao?.escutaAtiva ||
+      avaliacao?.clarezaObjetividade ||
+      avaliacao?.resolucaoQuestao ||
+      avaliacao?.registroAtendimento ||
+      avaliacao?.empatiaCordialidade ||
+      avaliacao?.direcionouPesquisa ||
+      avaliacao?.naoConsultouBot ||
+      avaliacao?.conformidadeTicket ||
+      avaliacao?.procedimentoIncorreto ||
+      avaliacao?.encerramentoBrusco
+  );
+};
+
+/** Nota para gráficos: manual ou pontuação IA quando só áudio (campo avaliacaoIA no doc). */
+const pontuacaoParaGrafico = (avaliacao) => {
+  if (!isSomenteAnaliseAudioIA(avaliacao)) {
+    return avaliacao?.pontuacaoTotal ?? 0;
+  }
+  const ia = avaliacao?.avaliacaoIA;
+  return ia != null && ia !== '' && !Number.isNaN(Number(ia)) ? Number(ia) : null;
+};
+
 // Função para gerar ID único
 export const generateId = () => {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -245,29 +286,43 @@ export const getAvaliacoesPorMesAno = (mes, ano, avaliacoes) => {
  * @returns {Object|null} Relatório do agente ou null se não houver dados
  */
 export const gerarRelatorioAgente = (colaboradorNome, avaliacoesFiltradas, avaliacoesParaGrafico = null) => {
-  // Usar avaliacoesFiltradas como padrão se avaliacoesParaGrafico não for fornecido
   const avaliacoesGrafico = avaliacoesParaGrafico || avaliacoesFiltradas;
-  
+
   if (!colaboradorNome || !Array.isArray(avaliacoesFiltradas) || avaliacoesFiltradas.length === 0) {
     return null;
   }
 
-  // Calcular métricas dos cards usando avaliações filtradas
-  const notasAvaliador = avaliacoesFiltradas.map(a => a.pontuacaoTotal || 0);
+  const comManual = avaliacoesFiltradas.filter((a) => !isSomenteAnaliseAudioIA(a));
+  const notasAvaliador = comManual.map((a) => a.pontuacaoTotal || 0);
+  const mediaAvaliador =
+    notasAvaliador.length > 0
+      ? Math.round(
+          (notasAvaliador.reduce((x, y) => x + y, 0) / notasAvaliador.length) * 100
+        ) / 100
+      : null;
+
   const notasGPT = avaliacoesFiltradas
-    .filter(a => a.avaliacaoGPT && a.avaliacaoGPT.pontuacaoGPT)
-    .map(a => a.avaliacaoGPT.pontuacaoGPT);
+    .map((a) => a.avaliacaoIA)
+    .filter((n) => n != null && n !== '' && !Number.isNaN(Number(n)))
+    .map(Number);
 
-  const mediaAvaliador = notasAvaliador.reduce((a, b) => a + b, 0) / notasAvaliador.length;
-  const mediaGPT = notasGPT.length > 0 
-    ? Math.round((notasGPT.reduce((a, b) => a + b, 0) / notasGPT.length) * 100) / 100
-    : null; // Retorna null em vez de 0 quando não há avaliações GPT
+  const mediaGPT =
+    notasGPT.length > 0
+      ? Math.round((notasGPT.reduce((a, b) => a + b, 0) / notasGPT.length) * 100) / 100
+      : null;
 
-  // Calcular tendência (últimas 3 avaliações filtradas)
-  const ultimasAvaliacoes = avaliacoesFiltradas
+  const ultimasAvaliacoes = comManual
     .sort((a, b) => {
-      const dataA = a.createdAt ? new Date(a.createdAt).getTime() : (a.dataAvaliacao ? new Date(a.dataAvaliacao).getTime() : 0);
-      const dataB = b.createdAt ? new Date(b.createdAt).getTime() : (b.dataAvaliacao ? new Date(b.dataAvaliacao).getTime() : 0);
+      const dataA = a.createdAt
+        ? new Date(a.createdAt).getTime()
+        : a.dataAvaliacao
+          ? new Date(a.dataAvaliacao).getTime()
+          : 0;
+      const dataB = b.createdAt
+        ? new Date(b.createdAt).getTime()
+        : b.dataAvaliacao
+          ? new Date(b.dataAvaliacao).getTime()
+          : 0;
       return dataB - dataA;
     })
     .slice(0, 3);
@@ -280,85 +335,85 @@ export const gerarRelatorioAgente = (colaboradorNome, avaliacoesFiltradas, avali
     else if (ultima < primeira) tendencia = 'piorando';
   }
 
-  // Gerar histórico com notas reais, mediana e tendência usando todas as avaliações do gráfico
   const historico = [];
-  
-  // Ordenar avaliações por período (mes/ano) cronologicamente: antigo → recente
+
   const avaliacoesOrdenadas = [...avaliacoesGrafico].sort((a, b) => {
-    // Criar chave de ordenação: ano primeiro, depois mês
     const mesA = MESES.indexOf(a.mes || '');
     const mesB = MESES.indexOf(b.mes || '');
     const anoA = a.ano || 0;
     const anoB = b.ano || 0;
-    
-    // Comparar por ano primeiro
-    if (anoA !== anoB) {
-      return anoA - anoB;
-    }
-    // Se mesmo ano, comparar por mês
+    if (anoA !== anoB) return anoA - anoB;
     return mesA - mesB;
   });
-  
-  // Calcular mediana geral (usando todas as avaliações do gráfico)
-  const notasGrafico = avaliacoesOrdenadas.map(a => a.pontuacaoTotal || 0);
-  const notasOrdenadas = [...notasGrafico].sort((a, b) => a - b);
-  const mediana = notasOrdenadas.length % 2 === 0 
-    ? (notasOrdenadas[notasOrdenadas.length / 2 - 1] + notasOrdenadas[notasOrdenadas.length / 2]) / 2
-    : notasOrdenadas[Math.floor(notasOrdenadas.length / 2)];
-  
-  // Agrupar avaliações por período (mes/ano) e calcular média quando houver múltiplas no mesmo período
+
+  const notasGraficoBrutas = avaliacoesOrdenadas
+    .map((a) => pontuacaoParaGrafico(a))
+    .filter((n) => n != null && !Number.isNaN(n));
+  const notasOrdenadas = [...notasGraficoBrutas].sort((a, b) => a - b);
+  const mediana =
+    notasOrdenadas.length > 0
+      ? notasOrdenadas.length % 2 === 0
+        ? (notasOrdenadas[notasOrdenadas.length / 2 - 1] +
+            notasOrdenadas[notasOrdenadas.length / 2]) /
+          2
+        : notasOrdenadas[Math.floor(notasOrdenadas.length / 2)]
+      : 0;
+
   const avaliacoesPorPeriodo = {};
-  avaliacoesOrdenadas.forEach(avaliacao => {
-    // Validar que temos mes e ano
+  avaliacoesOrdenadas.forEach((avaliacao) => {
     if (!avaliacao.mes || !avaliacao.ano) return;
-    
-    // Criar chave única por período (mes/ano)
     const chavePeriodo = `${avaliacao.mes}/${avaliacao.ano}`;
-    
     if (!avaliacoesPorPeriodo[chavePeriodo]) {
       avaliacoesPorPeriodo[chavePeriodo] = [];
     }
     avaliacoesPorPeriodo[chavePeriodo].push(avaliacao);
   });
-  
-  // Converter para array e ordenar por período cronologicamente
+
   const periodosOrdenados = Object.keys(avaliacoesPorPeriodo).sort((a, b) => {
-    // Extrair mes e ano de cada chave
     const [mesA, anoA] = a.split('/');
     const [mesB, anoB] = b.split('/');
-    
     const indiceMesA = MESES.indexOf(mesA);
     const indiceMesB = MESES.indexOf(mesB);
     const numAnoA = parseInt(anoA, 10);
     const numAnoB = parseInt(anoB, 10);
-    
-    // Comparar por ano primeiro
-    if (numAnoA !== numAnoB) {
-      return numAnoA - numAnoB;
-    }
-    // Se mesmo ano, comparar por mês
+    if (numAnoA !== numAnoB) return numAnoA - numAnoB;
     return indiceMesA - indiceMesB;
   });
-  
-  // Gerar pontos para o gráfico (últimos 30 períodos ou todos se menos)
+
   const pontosGrafico = Math.min(30, periodosOrdenados.length);
   const periodosParaGrafico = periodosOrdenados.slice(-pontosGrafico);
-  
+
   periodosParaGrafico.forEach((chavePeriodo, index) => {
     const avaliacoesNoPeriodo = avaliacoesPorPeriodo[chavePeriodo];
-    
-    // Calcular média quando houver múltiplas avaliações no mesmo período
-    const mediaNotaNoPeriodo = avaliacoesNoPeriodo.reduce((sum, a) => sum + (a.pontuacaoTotal || 0), 0) / avaliacoesNoPeriodo.length;
-    
-    // Formatar período como "Mês/Ano" (ex: "Abril/2025")
+    const manualNoPeriodo = avaliacoesNoPeriodo.filter((a) => !isSomenteAnaliseAudioIA(a));
+    const iaNoPeriodo = avaliacoesNoPeriodo.filter((a) => isSomenteAnaliseAudioIA(a));
+
+    let mediaNotaNoPeriodo = 0;
+    if (manualNoPeriodo.length > 0) {
+      mediaNotaNoPeriodo =
+        manualNoPeriodo.reduce((sum, a) => sum + (a.pontuacaoTotal || 0), 0) /
+        manualNoPeriodo.length;
+    } else {
+      const notasIa = iaNoPeriodo
+        .map((a) => a.avaliacaoIA)
+        .filter((n) => n != null && n !== '' && !Number.isNaN(Number(n)))
+        .map(Number);
+      mediaNotaNoPeriodo =
+        notasIa.length > 0 ? notasIa.reduce((s, n) => s + n, 0) / notasIa.length : 0;
+    }
+
     const periodo = chavePeriodo;
-    
-    // Calcular tendência (média móvel dos últimos 3 períodos)
     const inicioTendencia = Math.max(0, index - 2);
     const periodosTendencia = periodosParaGrafico.slice(inicioTendencia, index + 1);
-    const avaliacoesTendencia = periodosTendencia.flatMap(chave => avaliacoesPorPeriodo[chave]);
-    const tendenciaValor = avaliacoesTendencia.reduce((sum, a) => sum + (a.pontuacaoTotal || 0), 0) / avaliacoesTendencia.length;
-    
+    const avaliacoesTendencia = periodosTendencia.flatMap((chave) => avaliacoesPorPeriodo[chave]);
+    const valsTendencia = avaliacoesTendencia
+      .map((a) => pontuacaoParaGrafico(a))
+      .filter((n) => n != null && !Number.isNaN(n));
+    const tendenciaValor =
+      valsTendencia.length > 0
+        ? valsTendencia.reduce((sum, n) => sum + n, 0) / valsTendencia.length
+        : 0;
+
     historico.push({
       periodo,
       notaReal: Math.round(mediaNotaNoPeriodo * 100) / 100,
@@ -367,15 +422,21 @@ export const gerarRelatorioAgente = (colaboradorNome, avaliacoesFiltradas, avali
     });
   });
 
+  let melhorNota = null;
+  let piorNota = null;
+  if (notasAvaliador.length > 0) {
+    melhorNota = Math.max(...notasAvaliador);
+    piorNota = Math.min(...notasAvaliador);
+  }
+
   return {
     colaboradorNome,
-    colaboradorNome,
-    avaliacoes: avaliacoesFiltradas, // Usar avaliações filtradas para referência
-    mediaAvaliador: Math.round(mediaAvaliador * 100) / 100,
+    avaliacoes: avaliacoesFiltradas,
+    mediaAvaliador,
     mediaGPT: mediaGPT !== null ? Math.round(mediaGPT * 100) / 100 : null,
     totalAvaliacoes: avaliacoesFiltradas.length,
-    melhorNota: Math.max(...notasAvaliador),
-    piorNota: Math.min(...notasAvaliador),
+    melhorNota,
+    piorNota,
     tendencia,
     historico
   };

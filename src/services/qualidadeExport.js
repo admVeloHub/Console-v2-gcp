@@ -1,9 +1,23 @@
-// VERSION: v1.6.0 | DATE: 2025-02-11 | AUTHOR: VeloHub Development Team
+// VERSION: v1.9.1 | DATE: 2026-04-10 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.9.1 - Release push GitHub 2026-04-10
+// CHANGELOG: v1.9.0 - Excel Nota IA: coluna a partir de qualidade_avaliacoes.avaliacaoIA (sem GET audio_analise)
+// CHANGELOG: v1.8.2 - Excel Nota IA: concorrência 2 + pausa entre lotes (mitiga 429 no /audio-analise/result)
+// CHANGELOG: v1.8.1 - PDF: cabeçalho de coluna "Atendimento" (antes "Atendimento em")
+// CHANGELOG: v1.8.0 - Excel: somenteAnaliseAudioIA + Nota IA (batch getAvaliacaoGPTByAvaliacaoId); PDF alinhado a colunas Atendimento / só IA / status
+// CHANGELOG: v1.7.0 - Export: coluna Áudio Processado com pending|done|failed e legado boolean
 // CHANGELOG: v1.6.0 - Atualização de métricas: substituído dominioAssunto por registroAtendimento, adicionado conformidadeTicket e naoConsultouBot
 
 import * as XLSX from 'xlsx';
 import { getAvaliacoes } from './qualidadeAPI';
 import { getFuncionarios } from './qualidadeAPI';
+
+const formatAudioPipelineTreated = (t) => {
+  if (t === true || t === 'done') return 'Concluído';
+  if (t === 'failed') return 'Falha';
+  if (t === 'pending' || t === false) return 'Pendente';
+  if (t == null || t === '') return '';
+  return String(t);
+};
 
 // Exportar avaliações para Excel (XLSX)
 export const exportAvaliacoesToExcel = async () => {
@@ -24,6 +38,7 @@ export const exportAvaliacoesToExcel = async () => {
       'Saudação Adequada', 'Escuta Ativa', 'Clareza/Objetividade', 'Resolução Questão',
       'Registro do Atendimento', 'Empatia/Cordialidade', 'Direcionou Pesquisa',
       'Não Consultou Bot', 'Inconformidade no Ticket', 'Procedimento Incorreto', 'Encerramento Brusco', 'Pontuação Total',
+      'Somente análise IA', 'Nota IA',
       'Observações', 'Nome Arquivo Áudio', 'Áudio Enviado', 'Áudio Processado',
       'Data Criação Áudio', 'Data Atualização Áudio', 'Data Criação', 'Data Atualização'
     ];
@@ -49,10 +64,14 @@ export const exportAvaliacoesToExcel = async () => {
         avaliacao.procedimentoIncorreto ? 'Sim' : 'Não',
         avaliacao.encerramentoBrusco ? 'Sim' : 'Não',
         avaliacao.pontuacaoTotal || 0,
+        avaliacao.somenteAnaliseAudioIA === true ? 'Sim' : 'Não',
+        avaliacao.avaliacaoIA != null && !Number.isNaN(Number(avaliacao.avaliacaoIA))
+          ? Number(avaliacao.avaliacaoIA)
+          : '',
         avaliacao.observacoes || avaliacao.observacoesModeracao || '',
         avaliacao.nomeArquivoAudio || '',
         avaliacao.audioSent ? 'Sim' : 'Não',
-        avaliacao.audioTreated ? 'Sim' : 'Não',
+        formatAudioPipelineTreated(avaliacao.audioTreated),
         avaliacao.audioCreatedAt ? new Date(avaliacao.audioCreatedAt).toLocaleDateString('pt-BR') + ' ' + new Date(avaliacao.audioCreatedAt).toLocaleTimeString('pt-BR') : '',
         avaliacao.audioUpdatedAt ? new Date(avaliacao.audioUpdatedAt).toLocaleDateString('pt-BR') + ' ' + new Date(avaliacao.audioUpdatedAt).toLocaleTimeString('pt-BR') : '',
         avaliacao.createdAt ? new Date(avaliacao.createdAt).toLocaleDateString('pt-BR') + ' ' + new Date(avaliacao.createdAt).toLocaleTimeString('pt-BR') : '',
@@ -83,6 +102,8 @@ export const exportAvaliacoesToExcel = async () => {
       { wch: 20 }, // Procedimento Incorreto
       { wch: 18 }, // Encerramento Brusco
       { wch: 15 }, // Pontuação Total
+      { wch: 18 }, // Somente análise IA
+      { wch: 12 }, // Nota IA
       { wch: 30 }, // Observações
       { wch: 30 }, // Nome Arquivo Áudio
       { wch: 15 }, // Áudio Enviado
@@ -374,13 +395,16 @@ export const exportAvaliacoesToPDF = async () => {
       return;
     }
 
-    // Calcular estatísticas
+    const avalManual = avaliacoes.filter((a) => a.somenteAnaliseAudioIA !== true);
     const totalAvaliacoes = avaliacoes.length;
-    const mediaGeral = avaliacoes.reduce((sum, a) => sum + a.pontuacaoTotal, 0) / totalAvaliacoes;
-    const avaliacoesExcelentes = avaliacoes.filter(a => a.pontuacaoTotal >= 80).length;
-    const avaliacoesBoa = avaliacoes.filter(a => a.pontuacaoTotal >= 60 && a.pontuacaoTotal < 80).length;
-    const avaliacoesRegular = avaliacoes.filter(a => a.pontuacaoTotal >= 40 && a.pontuacaoTotal < 60).length;
-    const avaliacoesRuim = avaliacoes.filter(a => a.pontuacaoTotal < 40).length;
+    const mediaGeral =
+      avalManual.length > 0
+        ? avalManual.reduce((sum, a) => sum + (a.pontuacaoTotal || 0), 0) / avalManual.length
+        : 0;
+    const avaliacoesExcelentes = avalManual.filter((a) => a.pontuacaoTotal >= 80).length;
+    const avaliacoesBoa = avalManual.filter((a) => a.pontuacaoTotal >= 60 && a.pontuacaoTotal < 80).length;
+    const avaliacoesRegular = avalManual.filter((a) => a.pontuacaoTotal >= 40 && a.pontuacaoTotal < 60).length;
+    const avaliacoesRuim = avalManual.filter((a) => a.pontuacaoTotal < 40).length;
 
     // Criar HTML para PDF
     const htmlContent = `
@@ -522,29 +546,37 @@ export const exportAvaliacoesToPDF = async () => {
             <tr>
               <th>Colaborador</th>
               <th>Avaliador</th>
-              <th>Mês/Ano</th>
+              <th>Atendimento</th>
               <th>Pontuação</th>
               <th>Status</th>
-              <th>Data</th>
+              <th>Só IA</th>
             </tr>
           </thead>
           <tbody>
             ${avaliacoes.map(avaliacao => {
-              const status = avaliacao.pontuacaoTotal >= 80 ? 'Excelente' : 
+              const soIa = avaliacao.somenteAnaliseAudioIA === true;
+              const status = soIa
+                ? 'Pendente supervisor'
+                : avaliacao.pontuacaoTotal >= 80 ? 'Excelente' : 
                            avaliacao.pontuacaoTotal >= 60 ? 'Bom' : 
                            avaliacao.pontuacaoTotal >= 40 ? 'Regular' : 'Ruim';
-              const statusClass = avaliacao.pontuacaoTotal >= 80 ? 'status-excelente' : 
+              const statusClass = soIa
+                ? 'status-regular'
+                : avaliacao.pontuacaoTotal >= 80 ? 'status-excelente' : 
                                 avaliacao.pontuacaoTotal >= 60 ? 'status-bom' : 
                                 avaliacao.pontuacaoTotal >= 40 ? 'status-regular' : 'status-ruim';
+              const dataLig = avaliacao.dataLigacao
+                ? new Date(avaliacao.dataLigacao).toLocaleDateString('pt-BR')
+                : '—';
               
               return `
                 <tr>
                   <td>${avaliacao.colaboradorNome}</td>
                   <td>${avaliacao.avaliador}</td>
-                  <td>${avaliacao.mes}/${avaliacao.ano}</td>
+                  <td>${dataLig}</td>
                   <td>${avaliacao.pontuacaoTotal}</td>
                   <td class="${statusClass}">${status}</td>
-                  <td>${new Date(avaliacao.dataAvaliacao).toLocaleDateString('pt-BR')}</td>
+                  <td>${soIa ? 'Sim' : 'Não'}</td>
                 </tr>
               `;
             }).join('')}

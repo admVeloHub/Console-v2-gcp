@@ -1,4 +1,20 @@
-// VERSION: v1.31.3 | DATE: 2026-03-23 | AUTHOR: VeloHub Development Team
+// VERSION: v1.36.1 | DATE: 2026-04-10 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.36.1 - Release push GitHub 2026-04-10
+// CHANGELOG: v1.36.0 - Status IA: somente campo qualidade_avaliacoes.avaliacaoIA (sem GET audio_analise_results na tabela)
+// CHANGELOG: v1.35.0 - Status IA na lista: um GET em lote (results-por-avaliacoes) por página; fallback concorrência 2 se o lote falhar
+// CHANGELOG: v1.34.10 - Status IA: gptInFlightRef + gptFetchedRef só após resposta (corrige Strict Mode sem perder cache ao paginar)
+// CHANGELOG: v1.34.9 - Tabela avaliações: cabeçalhos Status, Áudio, Status IA centralizados; células e ícone de áudio centralizados
+// CHANGELOG: v1.34.8 - Badges Status / Status IA: pontuação no manual (pts · faixa); largura fixa compartilhada + ellipsis + Tooltip
+// CHANGELOG: v1.34.7 - Status IA: chip para _iaParcial (critérios/transcrição etc.); fallback quando áudio processado sem GET resultado; ícone Avaliação alinhado
+// CHANGELOG: v1.34.6 - Filtro Status: registros somenteAnaliseAudioIA não entram em Ruim/Bom/etc.; opção "Pendente supervisor" (alinha ao chip da coluna)
+// CHANGELOG: v1.34.5 - Status IA: chave String(_id) no mapa GPT; chip com análise só em texto; API agora usa qualityAnalysis/pontuacaoConsensual
+// CHANGELOG: v1.34.4 - Mitigação 429: GPT por página com concorrência 2 + pausa entre lotes; carregarDados com token de sequência; debounce no refetch ao focar janela
+// CHANGELOG: v1.34.3 - Lote de Áudio: fluxo Anexar + Enviar (sem abrir upload por linha); props onUploadItem + onLoteEnvioConcluido
+// CHANGELOG: v1.34.2 - Aba IA: botão Lote de Áudio no canto superior direito (linha do título)
+// CHANGELOG: v1.34.1 - Coluna da tabela: rótulo "Atendimento" (antes "Atendimento em")
+// CHANGELOG: v1.34.0 - Aba Avaliações: paginação na tabela; IA (Status IA) só para linhas da página atual — abertura muito mais rápida
+// CHANGELOG: v1.33.0 - Lote de Áudio (só IA); tabela Avaliação/Status IA; filtro colaboradores Atendimento; somenteAnaliseAudioIA; média relatório
+// CHANGELOG: v1.32.0 - Pipeline áudio pending|done|failed; mic vermelho em falha; otimista pending no envio; merge preserva até done
 // CHANGELOG: v1.31.3 - Nova Avaliação: avaliador preenchido da sessão (nome/_userId/id); Select inclui nome logado se fora da lista
 // CHANGELOG: v1.31.2 - Filtros/tabela resilientes (colaboradorNome/avaliador opcionais); merge refetch com arrays seguros (evita quebra da página)
 // CHANGELOG: v1.31.1 - Revalidar lista de avaliações ao voltar à aba Avaliações e ao focar a janela (status de áudio não ficar preso em amarelo sem F5)
@@ -35,11 +51,13 @@ import {
   Snackbar,
   LinearProgress,
   Avatar,
-  Divider
+  Divider,
+  TablePagination,
+  Tooltip
 } from '@mui/material';
 import { 
   Add, 
-  Edit, 
+  EditNote,
   Delete, 
   Assessment, 
   BarChart, 
@@ -63,10 +81,9 @@ import {
   getAvaliacoes, 
   addAvaliacao, 
   updateAvaliacao, 
-  deleteAvaliacao
-} from '../services/qualidadeAPI';
-import { 
+  deleteAvaliacao,
   getFuncionarios,
+  getFuncoes,
   gerarRelatorioAgente,
   gerarRelatorioGestao
 } from '../services/qualidadeAPI';
@@ -78,9 +95,17 @@ import {
   ANOS, 
   getStatusPontuacao, 
   generateId,
-  formatDate
+  formatDate,
+  isSomenteAnaliseAudioIA,
+  hasAvaliacaoManualSupervisor
 } from '../types/qualidade';
+import {
+  normalizeFuncoesLista,
+  findRegistroFuncaoAtendimento,
+  filtrarFuncionariosComFuncaoAtendimento
+} from '../utils/qualidadeFuncionariosAtendimento';
 import UploadAudioModal from '../components/qualidade/UploadAudioModal';
+import LoteAudioModal from '../components/qualidade/LoteAudioModal';
 import AnaliseGPTAccordion from '../components/qualidade/AnaliseGPTAccordion';
 import DetalhesAnaliseModal from '../components/qualidade/DetalhesAnaliseModal';
 import { uploadAudioParaAnalise, listarAnalisesPorColaborador } from '../services/qualidadeAudioService';
@@ -119,6 +144,7 @@ const QualidadeModulePage = () => {
   const [avaliacaoEditando, setAvaliacaoEditando] = useState(null);
   const [avaliacaoSelecionada, setAvaliacaoSelecionada] = useState(null);
   const [avaliacaoParaUpload, setAvaliacaoParaUpload] = useState(null);
+  const [modalLoteAudioAberto, setModalLoteAudioAberto] = useState(false);
   
   // Estados dos formulários
   const [formData, setFormData] = useState({
@@ -168,6 +194,11 @@ const QualidadeModulePage = () => {
   const [modalDetalhesAberto, setModalDetalhesAberto] = useState(false);
   const [analiseSelecionada, setAnaliseSelecionada] = useState(null);
 
+  const [avaliacoesPage, setAvaliacoesPage] = useState(0);
+  const [avaliacoesRowsPerPage, setAvaliacoesRowsPerPage] = useState(25);
+  const carregarDadosSeqRef = useRef(0);
+  const visibilityRecarregarTimerRef = useRef(null);
+
   /** Nome do avaliador na sessão (login grava em `nome`/`id`; cadastro Mongo usa `_userId`) */
   const nomeAvaliadorLogado = (user?.nome || user?._userId || user?.id || '').trim();
 
@@ -177,24 +208,118 @@ const QualidadeModulePage = () => {
     return [nomeAvaliadorLogado, ...avaliadores];
   }, [avaliadores, nomeAvaliadorLogado]);
 
+  const avaliacoesFiltradas = useMemo(() => {
+    const avaliacoesArray = Array.isArray(avaliacoes) ? avaliacoes : [];
+    let filtrados = [...avaliacoesArray];
+
+    if (filtros.colaborador) {
+      const q = filtros.colaborador.toLowerCase();
+      filtrados = filtrados.filter((a) =>
+        String(a.colaboradorNome ?? '').toLowerCase().includes(q)
+      );
+    }
+
+    if (filtros.avaliador) {
+      const q = filtros.avaliador.toLowerCase();
+      filtrados = filtrados.filter((a) =>
+        String(a.avaliador ?? '').toLowerCase().includes(q)
+      );
+    }
+
+    if (filtros.dataAvaliacaoInicio) {
+      filtrados = filtrados.filter(
+        (a) => new Date(a.createdAt) >= new Date(filtros.dataAvaliacaoInicio)
+      );
+    }
+    if (filtros.dataAvaliacaoFim) {
+      filtrados = filtrados.filter(
+        (a) => new Date(a.createdAt) <= new Date(filtros.dataAvaliacaoFim)
+      );
+    }
+
+    if (filtros.dataLigacaoInicio) {
+      filtrados = filtrados.filter(
+        (a) =>
+          a.dataLigacao && new Date(a.dataLigacao) >= new Date(filtros.dataLigacaoInicio)
+      );
+    }
+    if (filtros.dataLigacaoFim) {
+      filtrados = filtrados.filter(
+        (a) =>
+          a.dataLigacao && new Date(a.dataLigacao) <= new Date(filtros.dataLigacaoFim)
+      );
+    }
+
+    if (filtros.mes) {
+      filtrados = filtrados.filter((a) => a.mes === filtros.mes);
+    }
+    if (filtros.ano) {
+      filtrados = filtrados.filter((a) => a.ano === parseInt(filtros.ano, 10));
+    }
+
+    if (filtros.status) {
+      filtrados = filtrados.filter((a) => {
+        if (isSomenteAnaliseAudioIA(a)) {
+          return filtros.status === 'pendente_supervisor';
+        }
+        if (filtros.status === 'pendente_supervisor') {
+          return false;
+        }
+        const status = getStatusPontuacao(a.pontuacaoTotal);
+        return status.status === filtros.status;
+      });
+    }
+
+    return filtrados;
+  }, [avaliacoes, filtros]);
+
+  const avaliacoesPagina = useMemo(() => {
+    const start = avaliacoesPage * avaliacoesRowsPerPage;
+    return avaliacoesFiltradas.slice(start, start + avaliacoesRowsPerPage);
+  }, [avaliacoesFiltradas, avaliacoesPage, avaliacoesRowsPerPage]);
+
+  useEffect(() => {
+    setAvaliacoesPage(0);
+  }, [
+    filtros.colaborador,
+    filtros.avaliador,
+    filtros.dataAvaliacaoInicio,
+    filtros.dataAvaliacaoFim,
+    filtros.dataLigacaoInicio,
+    filtros.dataLigacaoFim,
+    filtros.mes,
+    filtros.ano,
+    filtros.status
+  ]);
+
+  useEffect(() => {
+    const total = avaliacoesFiltradas.length;
+    const maxPage = Math.max(0, Math.ceil(total / avaliacoesRowsPerPage) - 1);
+    if (avaliacoesPage > maxPage) {
+      setAvaliacoesPage(maxPage);
+    }
+  }, [avaliacoesFiltradas.length, avaliacoesRowsPerPage, avaliacoesPage]);
+
   // Carregar dados
   useEffect(() => {
     carregarDados();
   }, []);
 
-  /** Preserva uploadingAudio local só enquanto o backend ainda não marcou audioTreated (evita flicker em upload ativo). */
+  const audioPipelineDone = useCallback((t) => t === true || t === 'done', []);
+
+  /** Preserva uploadingAudio local só enquanto o backend ainda não marcou conclusão do pipeline. */
   const mergeAvaliacoesComEstadoLocal = useCallback((fresh, prev) => {
     const safeFresh = Array.isArray(fresh) ? fresh : [];
     const safePrev = Array.isArray(prev) ? prev : [];
     const map = new Map(safePrev.map((a) => [a._id, a]));
     return safeFresh.map((a) => {
       const old = map.get(a._id);
-      if (old?.uploadingAudio && !a.audioTreated) {
+      if (old?.uploadingAudio && !audioPipelineDone(a.audioTreated)) {
         return { ...a, uploadingAudio: true };
       }
       return a;
     });
-  }, []);
+  }, [audioPipelineDone]);
 
   /** Atualiza só avaliações da API (status de áudio / PubSub) sem recarregar funcionários. */
   const recarregarAvaliacoesDaApi = useCallback(async () => {
@@ -219,14 +344,26 @@ const QualidadeModulePage = () => {
     recarregarAvaliacoesDaApi();
   }, [currentView, recarregarAvaliacoesDaApi]);
 
-  // Ao voltar à janela/aba do navegador com Avaliações visível, revalidar lista
+  // Ao voltar à janela/aba do navegador com Avaliações visível, revalidar lista (debounce para não disparar 429)
   useEffect(() => {
     const onVisibility = () => {
       if (document.visibilityState !== 'visible' || currentView !== 'avaliacoes') return;
-      recarregarAvaliacoesDaApi();
+      if (visibilityRecarregarTimerRef.current) {
+        clearTimeout(visibilityRecarregarTimerRef.current);
+      }
+      visibilityRecarregarTimerRef.current = setTimeout(() => {
+        visibilityRecarregarTimerRef.current = null;
+        recarregarAvaliacoesDaApi();
+      }, 900);
     };
     document.addEventListener('visibilitychange', onVisibility);
-    return () => document.removeEventListener('visibilitychange', onVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      if (visibilityRecarregarTimerRef.current) {
+        clearTimeout(visibilityRecarregarTimerRef.current);
+        visibilityRecarregarTimerRef.current = null;
+      }
+    };
   }, [currentView, recarregarAvaliacoesDaApi]);
 
   // Limpar selectedColaborador quando funcionários carregam (para evitar cache de IDs)
@@ -243,100 +380,66 @@ const QualidadeModulePage = () => {
   }, [selectedColaborador]);
 
   const carregarDados = async () => {
+    const seq = ++carregarDadosSeqRef.current;
+    const stillCurrent = () => seq === carregarDadosSeqRef.current;
     try {
       setLoading(true);
-      
-      // Debug localStorage
-      const funcionariosLocal = localStorage.getItem('funcionarios_velotax');
+
       const avaliacoesData = await getAvaliacoes();
+      if (!stillCurrent()) return;
       const todosFuncionarios = await getFuncionarios();
+      if (!stillCurrent()) return;
       const avaliadoresValidos = await getAvaliadoresValidos();
-      
-      // Filtrar apenas funcionários ativos
-      const funcionariosAtivos = todosFuncionarios.filter(f => !f.desligado && !f.afastado);
-      
-      // Fallback: se não há funcionários ativos, usar todos os funcionários
-      const funcionariosParaUsar = funcionariosAtivos.length > 0 ? funcionariosAtivos : todosFuncionarios;
-      
-      // Garantir que todos os funcionários tenham um ID válido
-      const funcionariosComId = funcionariosParaUsar.map(f => ({
-        ...f,
-        id: f._id || f.id,
-        _id: f._id || f.id
-      }));
-      
+      if (!stillCurrent()) return;
+
+      let funcionariosComId = [];
+      try {
+        const funcoesRes = await getFuncoes();
+        if (!stillCurrent()) return;
+        const funcoesLista = normalizeFuncoesLista(funcoesRes);
+        const registroAtend = findRegistroFuncaoAtendimento(funcoesLista);
+        if (!registroAtend) {
+          setSnackbar({
+            open: true,
+            message: 'Função "Atendimento" não encontrada no cadastro. Lista de colaboradores vazia.',
+            severity: 'warning'
+          });
+        }
+        const funcionariosAtivos = todosFuncionarios.filter((f) => !f.desligado && !f.afastado);
+        const base = funcionariosAtivos.length > 0 ? funcionariosAtivos : todosFuncionarios;
+        const filtrados = registroAtend
+          ? filtrarFuncionariosComFuncaoAtendimento(base, registroAtend)
+          : [];
+        funcionariosComId = filtrados.map((f) => ({
+          ...f,
+          id: f._id || f.id,
+          _id: f._id || f.id
+        }));
+      } catch (fe) {
+        console.error('Erro ao carregar funções para filtro Atendimento:', fe);
+        if (stillCurrent()) {
+          setSnackbar({
+            open: true,
+            message: 'Não foi possível carregar funções. Colaboradores para avaliação indisponíveis.',
+            severity: 'error'
+          });
+        }
+        funcionariosComId = [];
+      }
+
+      if (!stillCurrent()) return;
       setAvaliacoes(Array.isArray(avaliacoesData) ? avaliacoesData : []);
       setFuncionarios(funcionariosComId);
       setAvaliadores(avaliadoresValidos);
-      setLoading(false);
     } catch (error) {
-      console.error('Erro ao carregar dados:', error);
-      setLoading(false);
+      if (stillCurrent()) {
+        console.error('Erro ao carregar dados:', error);
+      }
+    } finally {
+      if (stillCurrent()) {
+        setLoading(false);
+      }
     }
-  };
-
-  const aplicarFiltros = () => {
-    // Garantir que avaliacoes seja sempre um array
-    const avaliacoesArray = Array.isArray(avaliacoes) ? avaliacoes : [];
-    let filtrados = [...avaliacoesArray];
-
-    // Filtro por colaborador (nome parcial, case-insensitive)
-    if (filtros.colaborador) {
-      const q = filtros.colaborador.toLowerCase();
-      filtrados = filtrados.filter(a =>
-        String(a.colaboradorNome ?? '').toLowerCase().includes(q)
-      );
-    }
-
-    // Filtro por avaliador (nome parcial, case-insensitive)
-    if (filtros.avaliador) {
-      const q = filtros.avaliador.toLowerCase();
-      filtrados = filtrados.filter(a =>
-        String(a.avaliador ?? '').toLowerCase().includes(q)
-      );
-    }
-
-    // Filtro por data da avaliação (range)
-    if (filtros.dataAvaliacaoInicio) {
-      filtrados = filtrados.filter(a => 
-        new Date(a.createdAt) >= new Date(filtros.dataAvaliacaoInicio)
-      );
-    }
-    if (filtros.dataAvaliacaoFim) {
-      filtrados = filtrados.filter(a => 
-        new Date(a.createdAt) <= new Date(filtros.dataAvaliacaoFim)
-      );
-    }
-
-    // Filtro por data da ligação (range)
-    if (filtros.dataLigacaoInicio) {
-      filtrados = filtrados.filter(a => 
-        a.dataLigacao && new Date(a.dataLigacao) >= new Date(filtros.dataLigacaoInicio)
-      );
-    }
-    if (filtros.dataLigacaoFim) {
-      filtrados = filtrados.filter(a => 
-        a.dataLigacao && new Date(a.dataLigacao) <= new Date(filtros.dataLigacaoFim)
-      );
-    }
-
-    // Filtro por período (mês/ano)
-    if (filtros.mes) {
-      filtrados = filtrados.filter(a => a.mes === filtros.mes);
-    }
-    if (filtros.ano) {
-      filtrados = filtrados.filter(a => a.ano === parseInt(filtros.ano));
-    }
-
-    // Filtro por status
-    if (filtros.status) {
-      filtrados = filtrados.filter(a => {
-        const status = getStatusPontuacao(a.pontuacaoTotal);
-        return status.status === filtros.status;
-      });
-    }
-
-    return filtrados;
   };
 
   const limparFiltros = () => {
@@ -351,6 +454,7 @@ const QualidadeModulePage = () => {
       ano: '',
       status: ''
     });
+    setAvaliacoesPage(0);
     setModalFiltrosAberto(false);
   };
 
@@ -480,7 +584,8 @@ const QualidadeModulePage = () => {
         ...formData,
         avaliador: avaliadorEfetivo,
         colaboradorNome: formData.colaboradorNome, // colaboradorNome já é o nome agora
-        dataLigacao: dataLigacaoCombinada
+        dataLigacao: dataLigacaoCombinada,
+        somenteAnaliseAudioIA: false
       };
       
       // Remover horaLigacao do objeto de envio (já foi combinado com dataLigacao)
@@ -506,18 +611,12 @@ const QualidadeModulePage = () => {
   };
 
   const excluirAvaliacao = async (id) => {
-    // #region agent log
-    fetch('http://127.0.0.1:7621/ingest/8e27b4c3-0140-42a6-b4bc-2e9c16a86c7a',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'17a57b'},body:JSON.stringify({sessionId:'17a57b',location:'QualidadeModulePage.jsx:447',message:'excluirAvaliacao entry',data:{id,idType:typeof id},timestamp:Date.now(),runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     if (window.confirm('Tem certeza que deseja excluir esta avaliação?')) {
       try {
         await deleteAvaliacao(id);
         mostrarSnackbar('Avaliação excluída com sucesso!', 'success');
         await carregarDados();
       } catch (error) {
-        // #region agent log
-        fetch('http://127.0.0.1:7621/ingest/8e27b4c3-0140-42a6-b4bc-2e9c16a86c7a',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'17a57b'},body:JSON.stringify({sessionId:'17a57b',location:'QualidadeModulePage.jsx:454',message:'excluirAvaliacao error',data:{id,errorMessage:error?.message},timestamp:Date.now(),runId:'run1',hypothesisId:'A,B'})}).catch(()=>{});
-        // #endregion
         console.error('Erro ao excluir avaliação:', error);
         mostrarSnackbar('Erro ao excluir avaliação', 'error');
       }
@@ -572,15 +671,23 @@ const QualidadeModulePage = () => {
 
   const handleUploadAudio = async (result) => {
     try {
-      // O upload já foi feito pelo modal, apenas atualizar estado
       if (result && result.avaliacaoId) {
-        setAvaliacoes(prev => prev.map(avaliacao => 
-          avaliacao._id === result.avaliacaoId 
-            ? { ...avaliacao, uploadingAudio: true, audioUploadId: result.avaliacaoId }
+        const nowIso = new Date().toISOString();
+        setAvaliacoes(prev => prev.map(avaliacao =>
+          avaliacao._id === result.avaliacaoId
+            ? {
+                ...avaliacao,
+                uploadingAudio: false,
+                audioSent: true,
+                audioTreated: result.audioTreated || 'pending',
+                nomeArquivoAudio: result.fileName || avaliacao.nomeArquivoAudio,
+                audioCreatedAt: result.audioCreatedAt || nowIso,
+                audioUpdatedAt: result.audioUpdatedAt || nowIso
+              }
             : avaliacao
         ));
       }
-      
+
       return result;
     } catch (error) {
       console.error('Erro ao processar resultado do upload:', error);
@@ -588,30 +695,25 @@ const QualidadeModulePage = () => {
     }
   };
 
-  // Função para determinar status do áudio
   const getAudioStatus = (avaliacao) => {
-    // Usar campos diretamente da avaliação (fundidos de audio_analise_status)
-    // Verde quando treated=true (processamento concluído)
-    if (avaliacao.audioTreated === true) {
-      return 'completo'; // Verde
+    const t = avaliacao.audioTreated;
+    if (audioPipelineDone(t)) {
+      return 'completo';
     }
-    
-    // Amarelo quando sent=true mas treated=false (enviado mas não processado)
-    if (avaliacao.audioSent === true && avaliacao.audioTreated === false) {
-      return 'enviando'; // Amarelo
+    if (avaliacao.audioSent === true && t === 'failed') {
+      return 'falha';
     }
-    
-    // Compatibilidade com campos antigos (durante migração)
-    if (avaliacao.audioStatus?.treated === true) {
-      return 'completo'; // Verde
+    if (avaliacao.audioSent === true) {
+      const pendente = t === 'pending' || t === false || t == null || t === '';
+      if (pendente) return 'enviando';
     }
-    if (avaliacao.audioStatus?.sent === true && avaliacao.audioStatus?.treated === false) {
-      return 'enviando'; // Amarelo
+    if (avaliacao.audioStatus?.treated === true || audioPipelineDone(avaliacao.audioStatus?.treated)) {
+      return 'completo';
     }
-    if (avaliacao.audioGptId) return 'completo'; // Verde
-    if (avaliacao.uploadingAudio) return 'enviando'; // Amarelo
-    
-    return 'sem_audio'; // Cinza opaco
+    if (avaliacao.audioGptId) return 'completo';
+    if (avaliacao.uploadingAudio && !audioPipelineDone(t)) return 'enviando';
+
+    return 'sem_audio';
   };
 
   // Função para renderizar ícone de áudio
@@ -656,6 +758,19 @@ const QualidadeModulePage = () => {
             }} 
           />
         );
+      case 'falha':
+        return (
+          <Mic
+            {...iconProps}
+            sx={{
+              ...iconProps.sx,
+              color: '#f44336',
+              '& svg': {
+                color: '#f44336'
+              }
+            }}
+          />
+        );
       default:
         return (
           <MicOff 
@@ -670,6 +785,57 @@ const QualidadeModulePage = () => {
           />
         );
     }
+  };
+
+  /** Largura fixa comum aos chips Status (supervisor) e Status IA na tabela de avaliações. */
+  const larguraChipStatusTabela = 176;
+
+  const pontuacaoManualNum = (avaliacao) => {
+    const v = avaliacao?.pontuacaoTotal;
+    if (v == null || v === '') return 0;
+    const n = Number(v);
+    return Number.isFinite(n) ? Math.round(n) : 0;
+  };
+
+  const chipStatusManual = (avaliacao) => {
+    const pts = pontuacaoManualNum(avaliacao);
+    if (isSomenteAnaliseAudioIA(avaliacao)) {
+      return { texto: `${pts} pts · Pendente supervisor`, cor: '#E0E0E0' };
+    }
+    const s = getStatusPontuacao(pts);
+    return { texto: `${pts} pts · ${s.texto}`, cor: s.cor };
+  };
+
+  const corIconeColunaAvaliacao = (avaliacao) => {
+    const ia = avaliacao?.avaliacaoIA;
+    const temIa = ia != null && ia !== '' && !Number.isNaN(Number(ia));
+    if (isSomenteAnaliseAudioIA(avaliacao) && temIa) return '#f44336';
+    if (hasAvaliacaoManualSupervisor(avaliacao)) return 'var(--blue-medium)';
+    return '#9E9E9E';
+  };
+
+  /** Status IA: apenas nota denormalizada em qualidade_avaliacoes.avaliacaoIA (sem outra collection). */
+  const chipStatusIA = (avaliacao) => {
+    const pRaw = avaliacao?.avaliacaoIA;
+    if (pRaw == null || pRaw === '') return null;
+    const p = Number(pRaw);
+    if (Number.isNaN(p)) return null;
+    const cor = p >= 80 ? '#15A237' : p >= 60 ? '#FCC200' : '#f44336';
+    const faixa = p >= 80 ? 'Excelente' : p >= 60 ? 'Bom' : 'Precisa Melhorar';
+    return { cor, label: `${p} pts · ${faixa}` };
+  };
+
+  const chipStatusIALinha = (avaliacao) => {
+    const direct = chipStatusIA(avaliacao);
+    if (direct) return direct;
+    if (
+      avaliacao.audioSent === true &&
+      audioPipelineDone(avaliacao.audioTreated) &&
+      (avaliacao.avaliacaoIA == null || avaliacao.avaliacaoIA === '' || Number.isNaN(Number(avaliacao.avaliacaoIA)))
+    ) {
+      return { cor: '#90A4AE', label: 'IA · sem nota' };
+    }
+    return null;
   };
 
   // ===== FUNÇÕES DA ABA ANÁLISE GPT =====
@@ -783,8 +949,6 @@ const QualidadeModulePage = () => {
   const fecharSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
   };
-
-  const avaliacoesFiltradas = aplicarFiltros();
 
   if (loading) {
     return (
@@ -978,19 +1142,19 @@ const QualidadeModulePage = () => {
                   <TableRow sx={{ backgroundColor: 'var(--cor-container)' }}>
                     <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }}>Colaborador</TableCell>
                     <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }}>Avaliador</TableCell>
-                    <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }}>Data da Avaliação</TableCell>
-                    <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }}>Data da Ligação</TableCell>
-                    <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }}>Período</TableCell>
-                    <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }}>Pontuação</TableCell>
-                    <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }}>Status</TableCell>
-                    <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }}>Áudio</TableCell>
+                    <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }}>Atendimento</TableCell>
+                    <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }} align="center">Avaliação</TableCell>
+                    <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }} align="center">Status</TableCell>
+                    <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }} align="center">Áudio</TableCell>
+                    <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }} align="center">Status IA</TableCell>
                     <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.8rem', py: 0.8 }}>Ações</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {avaliacoesFiltradas.length > 0 ? (
-                    avaliacoesFiltradas.map((avaliacao) => {
-                      const status = getStatusPontuacao(avaliacao.pontuacaoTotal);
+                  {avaliacoesPagina.length > 0 ? (
+                    avaliacoesPagina.map((avaliacao) => {
+                      const stMan = chipStatusManual(avaliacao);
+                      const stIa = chipStatusIALinha(avaliacao);
                       const nomeColaboradorLista = String(avaliacao.colaboradorNome ?? '').trim() || '—';
                       const inicialColaborador = nomeColaboradorLista.charAt(0);
                       
@@ -1006,63 +1170,118 @@ const QualidadeModulePage = () => {
                           </TableCell>
                           <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', py: 0.8, color: 'inherit' }}>{avaliacao.avaliador ?? '—'}</TableCell>
                           <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', py: 0.8, color: 'inherit' }}>
-                            {avaliacao.createdAt ? formatDate(avaliacao.createdAt) : '-'}
-                          </TableCell>
-                          <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', py: 0.8, color: 'inherit' }}>
                             {avaliacao.dataLigacao ? formatDate(avaliacao.dataLigacao) : '-'}
                           </TableCell>
-                          <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', py: 0.8, color: 'inherit' }}>
-                            {avaliacao.mes}/{avaliacao.ano}
-                          </TableCell>
-                          <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.8rem', py: 0.8, color: 'inherit' }}>
-                            {avaliacao.pontuacaoTotal} pts
-                          </TableCell>
-                          <TableCell sx={{ fontSize: '0.8rem', py: 0.8 }}>
-                            <Chip
-                              label={status.texto || 'Indefinido'}
-                              size="small"
-                              sx={{
-                                backgroundColor: status.cor || '#666666',
-                                color: '#000000',
-                                fontFamily: 'Poppins',
-                                fontWeight: 500,
-                                fontSize: '0.64rem',
-                                height: '20px'
-                              }}
-                            />
-                          </TableCell>
-                          <TableCell sx={{ fontSize: '0.8rem', py: 0.8 }}>
-                            {renderAudioIcon(avaliacao)}
-                          </TableCell>
-                          <TableCell sx={{ fontSize: '0.8rem', py: 0.8 }}>
-                            <Box sx={{ display: 'flex', gap: 1 }}>
+                          <TableCell align="center" sx={{ py: 0.8 }}>
                             <IconButton
                               size="medium"
                               onClick={() => abrirModalAvaliacao(avaliacao)}
-                              sx={{ color: '#1694FF', padding: '0.6rem' }}
+                              sx={{ color: corIconeColunaAvaliacao(avaliacao), padding: '0.6rem' }}
+                              aria-label="Abrir avaliação"
                             >
-                              <Edit sx={{ fontSize: '1.1rem' }} />
+                              <EditNote sx={{ fontSize: '1.2rem' }} />
                             </IconButton>
+                          </TableCell>
+                          <TableCell align="center" sx={{ fontSize: '0.8rem', py: 0.8 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+                              <Tooltip title={stMan.texto} arrow placement="top">
+                                <Chip
+                                  label={stMan.texto}
+                                  size="small"
+                                  sx={{
+                                    width: larguraChipStatusTabela,
+                                    minWidth: larguraChipStatusTabela,
+                                    maxWidth: larguraChipStatusTabela,
+                                    height: 22,
+                                    backgroundColor: stMan.cor,
+                                    color: '#000000',
+                                    fontFamily: 'Poppins',
+                                    fontWeight: 500,
+                                    fontSize: '0.64rem',
+                                    '& .MuiChip-label': {
+                                      px: 0.75,
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      whiteSpace: 'nowrap',
+                                      display: 'block',
+                                      textAlign: 'center',
+                                      width: '100%',
+                                      boxSizing: 'border-box'
+                                    }
+                                  }}
+                                />
+                              </Tooltip>
+                            </Box>
+                          </TableCell>
+                          <TableCell align="center" sx={{ fontSize: '0.8rem', py: 0.8 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+                              {renderAudioIcon(avaliacao)}
+                            </Box>
+                          </TableCell>
+                          <TableCell align="center" sx={{ fontSize: '0.8rem', py: 0.8 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+                              {stIa ? (
+                                <Tooltip title={stIa.label} arrow placement="top">
+                                  <Chip
+                                    label={stIa.label}
+                                    size="small"
+                                    sx={{
+                                      width: larguraChipStatusTabela,
+                                      minWidth: larguraChipStatusTabela,
+                                      maxWidth: larguraChipStatusTabela,
+                                      height: 22,
+                                      backgroundColor: stIa.cor,
+                                      color: '#ffffff',
+                                      fontFamily: 'Poppins',
+                                      fontWeight: 500,
+                                      fontSize: '0.64rem',
+                                      '& .MuiChip-label': {
+                                        px: 0.75,
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap',
+                                        display: 'block',
+                                        textAlign: 'center',
+                                        width: '100%',
+                                        boxSizing: 'border-box'
+                                      }
+                                    }}
+                                  />
+                                </Tooltip>
+                              ) : (
+                                <Box
+                                  sx={{
+                                    width: larguraChipStatusTabela,
+                                    minWidth: larguraChipStatusTabela,
+                                    height: 22,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                  }}
+                                >
+                                  <Typography variant="body2" sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', color: '#999' }}>
+                                    —
+                                  </Typography>
+                                </Box>
+                              )}
+                            </Box>
+                          </TableCell>
+                          <TableCell sx={{ fontSize: '0.8rem', py: 0.8 }}>
                             <IconButton
                               size="medium"
-                              onClick={() => {
-                                // #region agent log
-                                fetch('http://127.0.0.1:7621/ingest/8e27b4c3-0140-42a6-b4bc-2e9c16a86c7a',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'17a57b'},body:JSON.stringify({sessionId:'17a57b',location:'QualidadeModulePage.jsx:979',message:'onClick excluirAvaliacao',data:{avaliacaoId:avaliacao?._id,avaliacaoIdType:typeof avaliacao?._id,hasId:!!avaliacao?._id,avaliacaoKeys:Object.keys(avaliacao||{})},timestamp:Date.now(),runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                                // #endregion
-                                excluirAvaliacao(avaliacao._id);
-                              }}
+                              onClick={() => excluirAvaliacao(avaliacao._id)}
                               sx={{ color: '#EF4444', padding: '0.6rem' }}
+                              aria-label="Excluir avaliação"
                             >
                               <Delete sx={{ fontSize: '1.1rem' }} />
                             </IconButton>
-                            </Box>
                           </TableCell>
                         </TableRow>
                       );
                     })
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={9} sx={{ textAlign: 'center', py: 3.2 }}>
+                      <TableCell colSpan={8} sx={{ textAlign: 'center', py: 3.2 }}>
                         <Typography variant="body1" sx={{ fontFamily: 'Poppins', color: '#666666', fontSize: '0.8rem' }}>
                           Nenhuma avaliação encontrada
                         </Typography>
@@ -1072,6 +1291,31 @@ const QualidadeModulePage = () => {
                 </TableBody>
               </Table>
             </TableContainer>
+            <TablePagination
+              component="div"
+              count={avaliacoesFiltradas.length}
+              page={avaliacoesPage}
+              onPageChange={(_e, p) => setAvaliacoesPage(p)}
+              rowsPerPage={avaliacoesRowsPerPage}
+              onRowsPerPageChange={(e) => {
+                setAvaliacoesRowsPerPage(parseInt(e.target.value, 10));
+                setAvaliacoesPage(0);
+              }}
+              rowsPerPageOptions={[10, 25, 50, 100]}
+              labelRowsPerPage="Linhas por página"
+              labelDisplayedRows={({ from, to, count }) =>
+                `${from}–${to} de ${count !== -1 ? count : `mais de ${to}`}`
+              }
+              sx={{
+                borderTop: '1px solid rgba(0,0,0,0.08)',
+                fontFamily: 'Poppins',
+                '& .MuiTablePagination-toolbar': { fontFamily: 'Poppins', fontSize: '0.8rem' },
+                '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
+                  fontFamily: 'Poppins',
+                  fontSize: '0.8rem'
+                }
+              }}
+            />
           </Card>
         </Box>
       )}
@@ -1372,7 +1616,9 @@ const QualidadeModulePage = () => {
                       <Card sx={{ 
                         textAlign: 'center', 
                         p: 2,
-                        background: relatorioAgente.mediaAvaliador > 60 
+                        background: relatorioAgente.mediaAvaliador == null
+                          ? 'var(--cor-card)'
+                          : relatorioAgente.mediaAvaliador > 60 
                           ? 'linear-gradient(135deg, rgba(22, 180, 255, 0.15) 0%, rgba(22, 180, 255, 0.05) 100%)'
                           : 'linear-gradient(135deg, rgba(220, 53, 69, 0.15) 0%, rgba(220, 53, 69, 0.05) 100%)',
                         border: '1.5px solid #000058',
@@ -1380,14 +1626,18 @@ const QualidadeModulePage = () => {
                       }}>
                         <Typography variant="h4" sx={{ fontSize: '1.28rem', 
                           fontFamily: 'Poppins', 
-                          color: relatorioAgente.mediaAvaliador > 60 ? '#1694FF' : '#dc3545', 
+                          color: relatorioAgente.mediaAvaliador == null
+                            ? '#666666'
+                            : relatorioAgente.mediaAvaliador > 60 ? '#1694FF' : '#dc3545', 
                           fontWeight: 700 
                         }}>
-                          {relatorioAgente.mediaAvaliador}
+                          {relatorioAgente.mediaAvaliador == null ? '—' : relatorioAgente.mediaAvaliador}
                         </Typography>
                         <Typography variant="body2" sx={{ 
                           fontFamily: 'Poppins', 
-                          color: relatorioAgente.mediaAvaliador > 60 ? '#1694FF' : '#dc3545'
+                          color: relatorioAgente.mediaAvaliador == null
+                            ? '#666666'
+                            : relatorioAgente.mediaAvaliador > 60 ? '#1694FF' : '#dc3545'
                         }}>
                           Média Avaliador
                         </Typography>
@@ -1479,7 +1729,7 @@ const QualidadeModulePage = () => {
                           color: '#1694FF', 
                           fontWeight: 700 
                         }}>
-                          {relatorioAgente.melhorNota}
+                          {relatorioAgente.melhorNota == null ? '—' : relatorioAgente.melhorNota}
                         </Typography>
                         <Typography variant="body2" sx={{ 
                           fontFamily: 'Poppins', 
@@ -1503,7 +1753,7 @@ const QualidadeModulePage = () => {
                           color: '#dc3545', 
                           fontWeight: 700 
                         }}>
-                          {relatorioAgente.piorNota}
+                          {relatorioAgente.piorNota == null ? '—' : relatorioAgente.piorNota}
                         </Typography>
                         <Typography variant="body2" sx={{ 
                           fontFamily: 'Poppins', 
@@ -1621,10 +1871,42 @@ const QualidadeModulePage = () => {
         <Box>
           <Card sx={{ borderRadius: '16px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}>
             <CardContent>
-              <Typography variant="h6" sx={{ fontFamily: 'Poppins', color: '#000058', fontWeight: 600, mb: 3 }}>
-                Análise GPT - Avaliações por Inteligência Artificial
-              </Typography>
-              
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 2,
+                  mb: 3,
+                  flexWrap: 'wrap'
+                }}
+              >
+                <Typography variant="h6" sx={{ fontFamily: 'Poppins', color: '#000058', fontWeight: 600, flex: '1 1 auto', minWidth: 0 }}>
+                  Avaliações de Performance por IA
+                </Typography>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<Upload />}
+                  onClick={() => setModalLoteAudioAberto(true)}
+                  sx={{
+                    fontFamily: 'Poppins',
+                    fontWeight: 600,
+                    fontSize: '0.8rem',
+                    flexShrink: 0,
+                    alignSelf: { xs: 'flex-end', sm: 'center' },
+                    borderColor: 'var(--blue-medium)',
+                    color: 'var(--blue-medium)',
+                    '&:hover': {
+                      borderColor: 'var(--blue-dark)',
+                      backgroundColor: 'rgba(0, 106, 185, 0.06)'
+                    }
+                  }}
+                >
+                  Lote de Áudio
+                </Button>
+              </Box>
+
               {/* Filtros */}
               <Box sx={{ 
                 display: 'flex', 
@@ -2554,6 +2836,22 @@ const QualidadeModulePage = () => {
         </DialogActions>
       </Dialog>
 
+      <LoteAudioModal
+        open={modalLoteAudioAberto}
+        onClose={() => setModalLoteAudioAberto(false)}
+        funcionarios={funcionarios}
+        avaliadorNome={nomeAvaliadorLogado}
+        onUploadItem={handleUploadAudio}
+        onLoteEnvioConcluido={async ({ enviados }) => {
+          await recarregarAvaliacoesDaApi();
+          mostrarSnackbar(
+            enviados === 1 ? '1 áudio enviado para análise.' : `${enviados} áudios enviados para análise.`,
+            'success'
+          );
+        }}
+        onError={(msg) => mostrarSnackbar(msg, 'error')}
+      />
+
       {/* Modal de Upload de Áudio */}
       <UploadAudioModal
         open={modalUploadAberto}
@@ -2762,6 +3060,7 @@ const QualidadeModulePage = () => {
                   <MenuItem value="bom" sx={{ fontFamily: 'Poppins' }}>Bom</MenuItem>
                   <MenuItem value="regular" sx={{ fontFamily: 'Poppins' }}>Regular</MenuItem>
                   <MenuItem value="ruim" sx={{ fontFamily: 'Poppins' }}>Ruim</MenuItem>
+                  <MenuItem value="pendente_supervisor" sx={{ fontFamily: 'Poppins' }}>Pendente supervisor</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -2775,7 +3074,7 @@ const QualidadeModulePage = () => {
             Limpar
           </Button>
           <Button 
-            onClick={aplicarFiltros}
+            onClick={() => setModalFiltrosAberto(false)}
             variant="contained"
             sx={{ 
               fontFamily: 'Poppins',

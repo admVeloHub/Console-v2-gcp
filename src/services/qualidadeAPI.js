@@ -1,4 +1,13 @@
-// VERSION: v1.40.0 | DATE: 2026-03-30 | AUTHOR: VeloHub Development Team
+// VERSION: v1.45.1 | DATE: 2026-04-10 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.45.1 - Release push GitHub 2026-04-10
+// CHANGELOG: v1.45.0 - gerarRelatorioAgente: média/gráfico IA usa avaliacao.avaliacaoIA (sem sequência getAvaliacaoGPT por id)
+// CHANGELOG: v1.44.0 - getAvaliacaoGPTByAvaliacaoIdsBatch: GET results-por-avaliacoes (lote); mapAudioAnaliseResultDocToGptRow compartilhado com get por id
+// CHANGELOG: v1.43.3 - getAvaliacaoGPTByAvaliacaoId: mais fontes de texto/nota; nunca retorna null em 200 se houver doc (critérios/transcrição/metadados → _iaParcial)
+// CHANGELOG: v1.43.2 - addAvaliacao/updateAvaliacao: extrair documento de { success, data } retornado pelo POST/PUT /qualidade/avaliacoes
+// CHANGELOG: v1.43.1 - getAvaliacaoGPTByAvaliacaoId: aceita qualityAnalysis + pontuacaoConsensual (além de gptAnalysis); alinhado ao schema audio_analise_results
+// CHANGELOG: v1.43.0 - getAvaliacaoGPTByAvaliacaoId: dedupe in-flight, retry/backoff 429; gerarRelatorioAgente: fetch GPT sequencial (evita rate limit)
+// CHANGELOG: v1.42.0 - Campo somenteAnaliseAudioIA em addAvaliacao/updateAvaliacao (fluxo lote só IA)
+// CHANGELOG: v1.41.0 - Mapeamento avaliações: audioTreated sem coerção false; campos auto-retry e unlock no audioStatus
 // CHANGELOG: v1.40.0 - Campo apoioN1 (credencial Apoio N1) no objeto acessos em normalizarAcessos, addFuncionario e updateFuncionario
 // CHANGELOG: v1.39.0 - extractQualidadeLista: suporta vários formatos de resposta da API (data/funcionarios/items/results e aninhados); getFuncionarios/getFuncionariosAtivos usam extração resiliente
 // CHANGELOG: v1.38.0 - Adicionado campo Sociais ao objeto acessos em todas as funções. Normalização aplicada ao retorno de getFuncionariosLocalStorage.
@@ -27,6 +36,20 @@ import {
   getPerformanceText,
   formatDate
 } from './qualidadeStorage';
+
+const _sleepQualidadeApi = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const _gptResultFetchByAvaliacaoId = new Map();
+const _gptBatchFetchByKey = new Map();
+
+/** Resposta da API costuma ser { success, data: documento }; em alguns ambientes pode vir o documento direto. */
+const unwrapQualidadeAvaliacaoDoc = (raw) => {
+  if (!raw || typeof raw !== 'object') return null;
+  if (raw.data != null && typeof raw.data === 'object' && (raw.data._id != null || raw.data.id != null)) {
+    return raw.data;
+  }
+  if (raw._id != null || raw.id != null) return raw;
+  return null;
+};
 
 // ===== FUNCIONÁRIOS - API MONGODB =====
 
@@ -541,18 +564,27 @@ export const getAvaliacoes = async () => {
     
     // Mapear status de áudio diretamente dos campos da avaliação
     const avaliacoesComStatus = avaliacoesArray.map((avaliacao) => {
-      // Os campos de status de áudio agora estão diretamente na avaliação
+      const hasAudioFields =
+        avaliacao.audioSent ||
+        avaliacao.audioTreated !== undefined ||
+        avaliacao.nomeArquivoAudio;
       return {
         ...avaliacao,
-        audioStatus: avaliacao.audioSent || avaliacao.audioTreated ? {
+        audioStatus: hasAudioFields ? {
           sent: avaliacao.audioSent || false,
-          treated: avaliacao.audioTreated || false,
+          treated: avaliacao.audioTreated,
           nomeArquivoAudio: avaliacao.nomeArquivoAudio || null,
           audioCreatedAt: avaliacao.audioCreatedAt || null,
-          audioUpdatedAt: avaliacao.audioUpdatedAt || null
+          audioUpdatedAt: avaliacao.audioUpdatedAt || null,
+          audioManualReenvioDisponivelEm: avaliacao.audioManualReenvioDisponivelEm || null,
+          audioAutoRepublishAttempts: avaliacao.audioAutoRepublishAttempts ?? 0,
+          audioLastAutoRepublishAt: avaliacao.audioLastAutoRepublishAt || null
         } : null,
         audioSent: avaliacao.audioSent || false,
-        audioTreated: avaliacao.audioTreated || false
+        audioTreated: avaliacao.audioTreated,
+        audioManualReenvioDisponivelEm: avaliacao.audioManualReenvioDisponivelEm || null,
+        audioAutoRepublishAttempts: avaliacao.audioAutoRepublishAttempts ?? 0,
+        audioLastAutoRepublishAt: avaliacao.audioLastAutoRepublishAt || null
       };
     });
     
@@ -607,6 +639,7 @@ export const addAvaliacao = async (avaliacaoData) => {
       pontuacaoTotal: 0, // Será calculado
       observacoes: avaliacaoData.observacoes || '', // String
       dataLigacao: avaliacaoData.dataLigacao ? new Date(avaliacaoData.dataLigacao) : new Date(), // Date
+      somenteAnaliseAudioIA: avaliacaoData.somenteAnaliseAudioIA === true,
       createdAt: new Date(), // Date
       updatedAt: new Date() // Date
     };
@@ -639,9 +672,14 @@ export const addAvaliacao = async (avaliacaoData) => {
       }
     });
     
-    const response = await qualidadeAvaliacoesAPI.create(novaAvaliacao);
-    console.log(`✅ Avaliação adicionada via API: ${response._id}`);
-    return response;
+    const raw = await qualidadeAvaliacoesAPI.create(novaAvaliacao);
+    const created = unwrapQualidadeAvaliacaoDoc(raw);
+    if (!created || (created._id == null && created.id == null)) {
+      console.error('❌ Resposta inesperada ao criar avaliação:', raw);
+      throw new Error('Resposta da API sem id da avaliação.');
+    }
+    console.log(`✅ Avaliação adicionada via API: ${created._id || created.id}`);
+    return created;
   } catch (error) {
     console.error('❌ Erro ao adicionar avaliação via API:', error);
     
@@ -681,6 +719,7 @@ export const updateAvaliacao = async (id, avaliacaoData) => {
       pontuacaoTotal: 0, // Será calculado
       observacoes: avaliacaoData.observacoes || '', // String
       dataLigacao: avaliacaoData.dataLigacao ? new Date(avaliacaoData.dataLigacao) : new Date(), // Date
+      somenteAnaliseAudioIA: avaliacaoData.somenteAnaliseAudioIA === true,
       // Campos obrigatórios para atualização
       _id: id,
       updatedAt: new Date()
@@ -691,9 +730,11 @@ export const updateAvaliacao = async (id, avaliacaoData) => {
     avaliacaoAtualizada.pontuacaoTotal = calcularPontuacaoTotal(avaliacaoAtualizada);
     
     
-    const response = await qualidadeAvaliacoesAPI.update(id, avaliacaoAtualizada);
-    console.log(`✅ Avaliação atualizada via API: ${response._id}`);
-    return response;
+    const raw = await qualidadeAvaliacoesAPI.update(id, avaliacaoAtualizada);
+    const updated = unwrapQualidadeAvaliacaoDoc(raw) || raw;
+    const uid = updated?._id ?? updated?.id ?? id;
+    console.log(`✅ Avaliação atualizada via API: ${uid}`);
+    return updated;
   } catch (error) {
     console.error('❌ Erro ao atualizar avaliação via API:', error);
     // Não fazer fallback - apenas propagar erro da API
@@ -791,46 +832,10 @@ export const gerarRelatorioAgente = async (colaboradorNome, dataInicio = null, d
       console.log(`📊 Avaliações filtradas por período (${dataInicio || 'início'} a ${dataFim || 'fim'}): ${avaliacoesFiltradas.length}`);
     }
 
-    // Buscar avaliações GPT para avaliações filtradas (para cards)
-    const avaliacoesFiltradasComGPT = await Promise.all(
-      avaliacoesFiltradas.map(async (avaliacao) => {
-        try {
-          const avaliacaoGPT = await getAvaliacaoGPTByAvaliacaoId(avaliacao._id);
-          return {
-            ...avaliacao,
-            avaliacaoGPT: avaliacaoGPT || null
-          };
-        } catch (error) {
-          console.warn(`⚠️ Não foi possível buscar avaliação GPT para ${avaliacao._id}:`, error.message);
-          return {
-            ...avaliacao,
-            avaliacaoGPT: null
-          };
-        }
-      })
-    );
+    const avaliacoesFiltradasComGPT = avaliacoesFiltradas;
+    const avaliacoesParaGraficoComGPT = avaliacoesParaGrafico;
 
-    // Buscar avaliações GPT para todas as avaliações (para gráfico)
-    const avaliacoesParaGraficoComGPT = await Promise.all(
-      avaliacoesParaGrafico.map(async (avaliacao) => {
-        try {
-          const avaliacaoGPT = await getAvaliacaoGPTByAvaliacaoId(avaliacao._id);
-          return {
-            ...avaliacao,
-            avaliacaoGPT: avaliacaoGPT || null
-          };
-        } catch (error) {
-          console.warn(`⚠️ Não foi possível buscar avaliação GPT para ${avaliacao._id}:`, error.message);
-          return {
-            ...avaliacao,
-            avaliacaoGPT: null
-          };
-        }
-      })
-    );
-
-    console.log(`📊 DEBUG - Total de avaliações com GPT (filtradas): ${avaliacoesFiltradasComGPT.length}`);
-    console.log(`📊 DEBUG - Total de avaliações com GPT (gráfico): ${avaliacoesParaGraficoComGPT.length}`);
+    console.log(`📊 DEBUG - Relatório agente (nota IA em avaliacao.avaliacaoIA): filtradas ${avaliacoesFiltradasComGPT.length}, gráfico ${avaliacoesParaGraficoComGPT.length}`);
 
     // Buscar média IA do backend
     let mediaIA = null;
@@ -967,61 +972,282 @@ export const getAvaliacaoGPTById = async (id) => {
   return null;
 };
 
+function listaIaValorFromGptRow(g) {
+  if (!g) return false;
+  const temNota = g.pontuacaoGPT != null && !Number.isNaN(Number(g.pontuacaoGPT));
+  const temTexto = g.analiseGPT && String(g.analiseGPT).trim().length > 0;
+  const temParcial = typeof g._iaParcial === 'string' && g._iaParcial.length > 0;
+  return temNota || temTexto || temParcial ? g : false;
+}
+
+/** Mapeia documento de audio_analise (GET /result ou item do lote) para o formato usado na UI. */
+function mapAudioAnaliseResultDocToGptRow(d) {
+  if (!d) return null;
+  const g = d.gptAnalysis;
+  const q = d.qualityAnalysis;
+
+  const asNum = (x) => {
+    if (typeof x === 'number' && !Number.isNaN(x)) return x;
+    if (typeof x === 'string' && x.trim() !== '') {
+      const n = Number(x);
+      return Number.isNaN(n) ? null : n;
+    }
+    return null;
+  };
+
+  let pontuacaoGPT = asNum(d.pontuacaoConsensual);
+  if (pontuacaoGPT == null && g) pontuacaoGPT = asNum(g.pontuacao);
+  if (pontuacaoGPT == null && q) pontuacaoGPT = asNum(q.pontuacao);
+
+  const pickAnaliseText = () => {
+    const candidates = [
+      g?.analysis,
+      q?.analysis,
+      d.analysis,
+      g?.analiseGPT,
+      q?.analiseGPT,
+      d.analiseGPT,
+      d.resumoAnalise,
+      d.resumo
+    ];
+    for (let i = 0; i < candidates.length; i += 1) {
+      const c = candidates[i];
+      if (c != null && String(c).trim()) return String(c).trim();
+    }
+    return '';
+  };
+  const analiseGPT = pickAnaliseText();
+
+  const criteriosGPT = (g && g.criterios) || (q && q.criterios) || {};
+  const hasCriteriosBlock =
+    criteriosGPT && typeof criteriosGPT === 'object' && Object.keys(criteriosGPT).length > 0;
+  const hasTranscription = typeof d.transcription === 'string' && d.transcription.trim().length > 0;
+  const hasCalculo = Array.isArray(q?.calculoDetalhado) && q.calculoDetalhado.length > 0;
+  const hasPalavras =
+    (Array.isArray(g?.palavrasCriticas) && g.palavrasCriticas.length > 0) ||
+    (Array.isArray(q?.palavrasCriticas) && q.palavrasCriticas.length > 0);
+
+  let _iaParcial = null;
+  if (pontuacaoGPT == null && !analiseGPT) {
+    if (hasCriteriosBlock) _iaParcial = 'criterios';
+    else if (hasTranscription) _iaParcial = 'transcricao';
+    else if (hasCalculo || hasPalavras) _iaParcial = 'metadados';
+    else if (g || q) _iaParcial = 'estrutura';
+    else _iaParcial = 'resultado';
+  }
+
+  const rawMon = d.avaliacaoMonitorId;
+  const avaliacao_id =
+    rawMon && typeof rawMon === 'object' && rawMon._id != null ? rawMon._id : rawMon;
+
+  const out = {
+    _id: d._id,
+    avaliacao_id,
+    analiseGPT,
+    pontuacaoGPT,
+    criteriosGPT,
+    confianca: (g && g.confianca) ?? (q && q.confianca) ?? 0,
+    palavrasCriticas: (g && g.palavrasCriticas) || (q && q.palavrasCriticas) || [],
+    calculoDetalhado: (q && q.calculoDetalhado) || [],
+    createdAt: d.createdAt,
+    updatedAt: d.updatedAt,
+    recomendacoes: (g && g.recomendacoes) || [],
+    validacaoGemini: g && g.validacaoGemini != null ? g.validacaoGemini : null
+  };
+  if (_iaParcial) out._iaParcial = _iaParcial;
+  return out;
+}
+
+const LISTA_IA_BATCH_MAX_IDS = 60;
+
+async function fetchAudioAnaliseResultsPorAvaliacoesChunk(chunkIds, baseUrl) {
+  const maxAttempts = 4;
+  const url = `${baseUrl}/api/audio-analise/results-por-avaliacoes?ids=${encodeURIComponent(chunkIds.join(','))}`;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    let response;
+    try {
+      response = await fetch(url);
+    } catch (error) {
+      if (attempt < maxAttempts - 1) {
+        await _sleepQualidadeApi(350 * (attempt + 1));
+        continue;
+      }
+      throw error;
+    }
+
+    if (response.status === 429) {
+      let waitMs = 500 * 2 ** attempt + Math.floor(Math.random() * 200);
+      const ra = response.headers.get('Retry-After');
+      if (ra) {
+        const sec = parseInt(ra, 10);
+        if (!Number.isNaN(sec) && sec > 0) waitMs = Math.max(waitMs, sec * 1000);
+      }
+      try {
+        await response.text();
+      } catch {
+        /* ignore */
+      }
+      if (attempt < maxAttempts - 1) {
+        await _sleepQualidadeApi(waitMs);
+        continue;
+      }
+      throw new Error('batch 429');
+    }
+
+    if (!response.ok) {
+      try {
+        await response.text();
+      } catch {
+        /* ignore */
+      }
+      if (attempt < maxAttempts - 1 && response.status >= 500) {
+        await _sleepQualidadeApi(400 * (attempt + 1));
+        continue;
+      }
+      throw new Error(`batch ${response.status}`);
+    }
+
+    let result;
+    try {
+      result = await response.json();
+    } catch {
+      throw new Error('batch json');
+    }
+
+    if (!result.success || !result.data || typeof result.data !== 'object') {
+      throw new Error('batch payload');
+    }
+
+    const out = {};
+    for (const id of chunkIds) {
+      const raw = result.data[id];
+      out[id] = listaIaValorFromGptRow(mapAudioAnaliseResultDocToGptRow(raw));
+    }
+    return out;
+  }
+
+  throw new Error('batch exhausted');
+}
+
+/**
+ * Uma requisição (ou poucas, se >60 ids) para preencher Status IA na lista.
+ * Retorna objeto { [avaliacaoId]: row|false }.
+ */
+export const getAvaliacaoGPTByAvaliacaoIdsBatch = async (avaliacaoIds) => {
+  const ids = [...new Set((avaliacaoIds || []).map((x) => String(x).trim()).filter(Boolean))];
+  if (ids.length === 0) return {};
+
+  const batchKey = [...ids].sort().join('\u0001');
+  const pending = _gptBatchFetchByKey.get(batchKey);
+  if (pending) return pending;
+
+  const task = (async () => {
+    const baseUrl = (process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app').replace(
+      /\/api\/?$/,
+      ''
+    );
+    const merged = {};
+    for (let i = 0; i < ids.length; i += LISTA_IA_BATCH_MAX_IDS) {
+      const chunk = ids.slice(i, i + LISTA_IA_BATCH_MAX_IDS);
+      const part = await fetchAudioAnaliseResultsPorAvaliacoesChunk(chunk, baseUrl);
+      Object.assign(merged, part);
+    }
+    return merged;
+  })();
+
+  _gptBatchFetchByKey.set(batchKey, task);
+  try {
+    return await task;
+  } finally {
+    _gptBatchFetchByKey.delete(batchKey);
+  }
+};
+
 // 3. Obter avaliação GPT por ID da avaliação original
 // DEPRECATED: Agora busca de audio_analise_results ao invés de qualidade_avaliacoes_gpt
 export const getAvaliacaoGPTByAvaliacaoId = async (avaliacaoId) => {
-  try {
-    // Normalizar URL base removendo /api se existir no final
+  if (!avaliacaoId) return null;
+  const key = String(avaliacaoId);
+  const pending = _gptResultFetchByAvaliacaoId.get(key);
+  if (pending) return pending;
+
+  const task = (async () => {
     const baseUrl = (process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app').replace(/\/api\/?$/, '');
-    
-    // Buscar de audio_analise_results ao invés de qualidade_avaliacoes_gpt
-    const response = await fetch(`${baseUrl}/api/audio-analise/result/${avaliacaoId}`);
-    
-    if (!response.ok) {
-      // Se não encontrar em audio_analise_results, retornar null (não há análise ainda)
-      if (response.status === 404) {
-        console.log(`📊 Nenhuma análise GPT encontrada em audio_analise_results para avaliação: ${avaliacaoId}`);
+    const url = `${baseUrl}/api/audio-analise/result/${avaliacaoId}`;
+    const maxAttempts = 6;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      let response;
+      try {
+        response = await fetch(url);
+      } catch (error) {
+        if (attempt < maxAttempts - 1) {
+          await _sleepQualidadeApi(350 * (attempt + 1));
+          continue;
+        }
+        console.error('❌ Erro ao carregar análise GPT de audio_analise_results:', error);
         return null;
       }
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+
+      if (response.status === 429) {
+        let waitMs = 500 * 2 ** attempt + Math.floor(Math.random() * 200);
+        const ra = response.headers.get('Retry-After');
+        if (ra) {
+          const sec = parseInt(ra, 10);
+          if (!Number.isNaN(sec) && sec > 0) waitMs = Math.max(waitMs, sec * 1000);
+        }
+        try {
+          await response.text();
+        } catch {
+          /* ignore */
+        }
+        if (attempt < maxAttempts - 1) {
+          await _sleepQualidadeApi(waitMs);
+          continue;
+        }
+        return null;
+      }
+
+      if (response.status === 404) {
+        return null;
+      }
+
+      if (!response.ok) {
+        try {
+          await response.text();
+        } catch {
+          /* ignore */
+        }
+        if (attempt < maxAttempts - 1 && response.status >= 500) {
+          await _sleepQualidadeApi(400 * (attempt + 1));
+          continue;
+        }
+        return null;
+      }
+
+      let result;
+      try {
+        result = await response.json();
+      } catch {
+        return null;
+      }
+
+      if (!result.success || !result.data) {
+        return null;
+      }
+
+      return mapAudioAnaliseResultDocToGptRow(result.data);
     }
-    
-    const result = await response.json();
-    
-    if (!result.success || !result.data) {
-      console.log(`📊 Resposta inválida de audio_analise_results para avaliação: ${avaliacaoId}`);
-      return null;
-    }
-    
-    // Se não houver gptAnalysis, retornar null
-    if (!result.data.gptAnalysis) {
-      console.log(`📊 Nenhuma análise GPT encontrada em audio_analise_results.gptAnalysis para avaliação: ${avaliacaoId}`);
-      return null;
-    }
-    
-    // Mapear dados de audio_analise_results.gptAnalysis para formato esperado (compatibilidade)
-    const gptAnalysis = result.data.gptAnalysis;
-    const mappedData = {
-      _id: result.data._id,
-      avaliacao_id: result.data.avaliacaoMonitorId,
-      analiseGPT: gptAnalysis.analysis || '',
-      pontuacaoGPT: gptAnalysis.pontuacao || 0,
-      criteriosGPT: gptAnalysis.criterios || {},
-      confianca: gptAnalysis.confianca || 0,
-      palavrasCriticas: gptAnalysis.palavrasCriticas || [],
-      calculoDetalhado: [], // Campo não existe em audio_analise_results - retornar array vazio
-      createdAt: result.data.createdAt,
-      updatedAt: result.data.updatedAt,
-      // Campos adicionais disponíveis em audio_analise_results
-      recomendacoes: gptAnalysis.recomendacoes || [],
-      validacaoGemini: gptAnalysis.validacaoGemini || null
-    };
-    
-    console.log(`📊 Avaliação GPT carregada de audio_analise_results para avaliação: ${avaliacaoId}`);
-    return mappedData;
-  } catch (error) {
-    console.error('❌ Erro ao carregar análise GPT de audio_analise_results:', error);
+
     return null;
+  })();
+
+  _gptResultFetchByAvaliacaoId.set(key, task);
+  try {
+    return await task;
+  } finally {
+    _gptResultFetchByAvaliacaoId.delete(key);
   }
 };
 

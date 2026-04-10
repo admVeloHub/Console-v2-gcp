@@ -2,9 +2,11 @@
  * qualidadeAudioService.js
  * Serviço para upload e análise de áudios com GPT
  * 
- * VERSION: v2.4.1
- * DATE: 2026-03-19
+ * VERSION: v2.5.1
+ * DATE: 2026-04-10
  * AUTHOR: VeloHub Development Team
+ * CHANGELOG: v2.5.1 - Release push GitHub 2026-04-10
+ * CHANGELOG: v2.5.0 - confirm-upload retorna audioTreated/timestamps no resultado do upload; polling trata status falha
  * CHANGELOG: v2.4.1 - API_URL/SSE via getResolvedApiUrl (igual api.js) para listar/upload funcionarem ao acessar Console pelo IP da rede
  * CHANGELOG: v2.4.0 - editarAuditoria: envia corpoAuditoria (backend persiste { auditoriaFeita, corpoAuditoria })
  * CHANGELOG: v2.3.0 - listarAnalisesPorColaborador: propaga details/error do JSON quando GET /listar retorna 4xx/5xx
@@ -232,21 +234,23 @@ export const uploadAudioParaAnalise = async (avaliacaoId, audioFile, onProgress)
       throw lastError || new Error('Falha no upload após múltiplas tentativas');
     }
 
-    // 3. Confirmar upload bem-sucedido no backend
+    let confirmPayload = null;
     try {
-      await confirmUploadSuccess(uploadData.avaliacaoId || avaliacaoId, uploadData.fileName);
+      confirmPayload = await confirmUploadSuccess(uploadData.avaliacaoId || avaliacaoId, uploadData.fileName);
     } catch (confirmError) {
       console.error('⚠️  Erro ao confirmar upload no backend (não crítico):', confirmError);
-      // Não lançar erro, pois o upload foi bem-sucedido
-      // O backend pode verificar o arquivo no bucket se necessário
     }
 
-    // 4. Retornar dados do upload
+    const confirmData = confirmPayload && confirmPayload.data ? confirmPayload.data : {};
+
     return {
       avaliacaoId: uploadData.avaliacaoId || avaliacaoId,
       fileName: uploadData.fileName,
       status: 'uploaded',
-      bucket: uploadData.bucket
+      bucket: uploadData.bucket,
+      audioTreated: confirmData.audioTreated || 'pending',
+      audioCreatedAt: confirmData.audioCreatedAt || null,
+      audioUpdatedAt: confirmData.audioUpdatedAt || null
     };
   } catch (error) {
     console.error('Erro no upload de áudio:', error);
@@ -313,7 +317,10 @@ export const verificarStatusAnaliseGPT = async (avaliacaoId) => {
         sent: data.data.sent,
         treated: data.data.treated,
         audioCreatedAt: data.data.audioCreatedAt,
-        audioUpdatedAt: data.data.audioUpdatedAt
+        audioUpdatedAt: data.data.audioUpdatedAt,
+        audioManualReenvioDisponivelEm: data.data.audioManualReenvioDisponivelEm,
+        audioAutoRepublishAttempts: data.data.audioAutoRepublishAttempts,
+        audioLastAutoRepublishAt: data.data.audioLastAutoRepublishAt
       };
     }
     
@@ -647,8 +654,8 @@ const startPolling = (avaliacaoId, onStatusChange, onComplete, onError) => {
         if (status === 'concluido') {
           onComplete(statusData);
           isPolling = false;
-        } else if (status === 'erro') {
-          onError(new Error('Erro no processamento do áudio'));
+        } else if (status === 'erro' || status === 'falha') {
+          onError(new Error('Falha no processamento do áudio (pipeline ou automático). Use reenvio manual quando liberado.'));
           isPolling = false;
         } else {
           // Continuar polling

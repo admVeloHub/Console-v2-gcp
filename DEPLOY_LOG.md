@@ -1,11 +1,36 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.47.5 | DATE: 2026-03-30 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.47.6 | DATE: 2026-04-10 | AUTHOR: VeloHub Development Team -->
 <!--
   REGRA (push GitHub): Preencher a nova entrada do DEPLOY_LOG (tipo, data, branch, repositório,
   arquivos, descrição) ANTES do `git commit`. Incluir DEPLOY_LOG no MESMO commit que o código.
   Não criar commit adicional só para corrigir hash, SHA ou “fechar” o log.
   Campo **Commit:** opcional; se não usar SHA aqui, consultar `git log -1 --oneline` no remoto.
 -->
+
+## Push GitHub - Qualidade/IA: lote de áudio, Status IA, API e utilitários Atendimento - 2026-04-10
+
+### **Tipo:** Push GitHub
+### **Data/Hora:** 2026-04-10
+### **Branch:** main
+### **Commit:** *(SHA no histórico local/remoto após o push)*
+### **Repositório:** https://github.com/admVeloHub/Console-v2-gcp.git
+
+### **Arquivos Modificados:**
+- `src/pages/QualidadeModulePage.jsx` (v1.36.1) — Módulo Qualidade: fluxo lote de áudio, Status IA, filtros/tabela, integração com `results-por-avaliacoes` e campo `avaliacaoIA` quando aplicável
+- `src/services/qualidadeAPI.js` (v1.45.1) — Cliente HTTP qualidade (lote, resultados IA, exportações)
+- `src/services/qualidadeAudioService.js` (v2.5.1) — Upload, confirm-upload e polling alinhados ao pipeline de áudio
+- `src/services/qualidadeExport.js` (v1.9.1) — Exportações qualidade
+- `src/types/qualidade.js` (v1.11.1) — Tipos/normalização qualidade
+- `src/components/qualidade/UploadAudioModal.jsx` (v2.4.1) — Modal de upload por linha
+- `src/components/qualidade/LoteAudioModal.jsx` (v1.1.2) — Modal lote de áudios para IA
+- `src/utils/qualidadeFuncionariosAtendimento.js` (v1.0.2) — Filtro/normalização funções Atendimento
+- `src/pages/AcademyPage.jsx` (v1.13.7) — Ajustes correlatos na revisão atual
+- `DEPLOY_LOG.md` — Registro deste push
+
+### **Descrição:**
+Entrega front Console alinhada ao backend Skynet: lista de avaliações com Status IA via lote, lote de áudio (modal dedicado), serviços e tipos de qualidade atualizados; depende das rotas `audio-analise` e `qualidade` publicadas no mesmo ciclo.
+
+---
 
 ## Push GitHub - Academy: modal Quiz, API quiz_conteudo e validação V/F - 2026-03-30
 

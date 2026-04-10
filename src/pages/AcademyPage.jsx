@@ -1,4 +1,6 @@
-// VERSION: v1.13.5 | DATE: 2026-03-27 | AUTHOR: VeloHub Development Team
+// VERSION: v1.13.7 | DATE: 2026-04-10 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.13.7 - Release push GitHub 2026-04-10
+// CHANGELOG: v1.13.6 - Filtro Atendimento via util compartilhado qualidadeFuncionariosAtendimento
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Container,
@@ -59,6 +61,11 @@ import { useAuth } from '../contexts/AuthContext';
 import BackButton from '../components/common/BackButton';
 import { academyAPI } from '../services/academyAPI';
 import { qualidadeFuncionariosAPI, qualidadeFuncoesAPI } from '../services/api';
+import {
+  normalizeFuncoesLista,
+  findRegistroFuncaoAtendimento,
+  filtrarFuncionariosComFuncaoAtendimento
+} from '../utils/qualidadeFuncionariosAtendimento';
 
 /** Alinha quizId (cursos_conteudo) e quizID (quiz_conteudo) ao temaNome em snake_case — LISTA_SCHEMAS.rb */
 function temaNomeToQuizId(nome) {
@@ -430,15 +437,11 @@ const AcademyPage = () => {
     try {
       setLoadingFuncionarios(true);
       
-      // Buscar funções para encontrar ObjectId de "atendimento"
       const funcoesResponse = await qualidadeFuncoesAPI.getAll();
-      const funcoesData = funcoesResponse?.data || funcoesResponse || [];
+      const funcoesData = normalizeFuncoesLista(funcoesResponse);
       setFuncoes(funcoesData);
       
-      // Encontrar função "atendimento" (case-insensitive)
-      const funcaoAtendimento = funcoesData.find(f => 
-        f.funcao && f.funcao.toLowerCase().includes('atendimento')
-      );
+      const funcaoAtendimento = findRegistroFuncaoAtendimento(funcoesData);
       
       if (!funcaoAtendimento) {
         console.warn('⚠️ Função "atendimento" não encontrada');
@@ -446,29 +449,13 @@ const AcademyPage = () => {
         return;
       }
       
-      // Buscar todos os funcionários
       const funcionariosResponse = await qualidadeFuncionariosAPI.getAll();
       const funcionariosData = funcionariosResponse?.data || funcionariosResponse || [];
       
-      // Filtrar funcionários com atuacao contendo ObjectId de "atendimento" e desligado = false
-      const funcionariosFiltrados = funcionariosData.filter(func => {
-        if (func.desligado === true) return false;
-        
-        // Verificar se atuacao contém o ObjectId de "atendimento"
-        if (Array.isArray(func.atuacao)) {
-          return func.atuacao.some(atuacaoId => 
-            atuacaoId === funcaoAtendimento._id || 
-            atuacaoId?.toString() === funcaoAtendimento._id?.toString()
-          );
-        }
-        
-        // Formato antigo: string
-        if (typeof func.atuacao === 'string') {
-          return func.atuacao.toLowerCase().includes('atendimento');
-        }
-        
-        return false;
-      });
+      const funcionariosFiltrados = filtrarFuncionariosComFuncaoAtendimento(
+        funcionariosData,
+        funcaoAtendimento
+      );
       
       setFuncionariosAtendimento(funcionariosFiltrados);
     } catch (error) {

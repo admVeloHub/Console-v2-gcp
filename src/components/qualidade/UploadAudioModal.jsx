@@ -2,9 +2,12 @@
  * UploadAudioModal.jsx
  * Modal para upload de arquivos de áudio para análise GPT
  * 
- * VERSION: v2.2.0
- * DATE: 2025-03-03
+ * VERSION: v2.4.1
+ * DATE: 2026-04-10
  * AUTHOR: VeloHub Development Team
+ * CHANGELOG: v2.4.1 - Release push GitHub 2026-04-10
+ * CHANGELOG: v2.4.0 - Status do modal alinhado à linha da tabela (fallback se GET status-por-avaliacao falhar ou data null); normalizeAvaliacaoIdForFetch para URL ($oid / ObjectId)
+ * CHANGELOG: v2.3.0 - Reenvio manual só após audioTreated failed + audioManualReenvioDisponivelEm; chip Processado aligned pending/done/failed
  * CHANGELOG: v2.2.0 - Botão "Enviar para Análise" é ocultado após upload concluído para evitar reenvios acidentais
  */
 
@@ -41,6 +44,21 @@ import {
   reenviarAudioPubSub
 } from '../../services/qualidadeAudioService';
 
+/** ID seguro para path da API (evita [object Object] quando _id vem como objeto Mongo). */
+const normalizeAvaliacaoIdForFetch = (raw) => {
+  if (raw == null || raw === '') return '';
+  if (typeof raw === 'string' || typeof raw === 'number') return String(raw).trim();
+  if (typeof raw === 'object') {
+    if (typeof raw.$oid === 'string') return raw.$oid;
+    if (raw._id != null) return normalizeAvaliacaoIdForFetch(raw._id);
+    if (typeof raw.toString === 'function') {
+      const s = raw.toString();
+      if (s && s !== '[object Object]') return s;
+    }
+  }
+  return '';
+};
+
 const UploadAudioModal = ({ 
   open, 
   onClose, 
@@ -65,6 +83,17 @@ const UploadAudioModal = ({
   
   // Extrair avaliacaoNome do objeto avaliacao se disponível
   const avaliacaoNome = avaliacao?.colaboradorNome || null;
+
+  const rowIdForAudioStatus =
+    normalizeAvaliacaoIdForFetch(avaliacaoId) || normalizeAvaliacaoIdForFetch(avaliacao?._id);
+  const rowAudioSentFlag = avaliacao?.audioSent === true;
+  const rowAudioTreated = avaliacao?.audioTreated;
+  const rowNomeArquivoAudio = avaliacao?.nomeArquivoAudio ?? null;
+  const rowAudioCreatedAt = avaliacao?.audioCreatedAt ?? null;
+  const rowAudioUpdatedAt = avaliacao?.audioUpdatedAt ?? null;
+  const rowAudioUnlock = avaliacao?.audioManualReenvioDisponivelEm ?? null;
+  const rowAudioAttempts = avaliacao?.audioAutoRepublishAttempts ?? 0;
+  const rowAudioLastAuto = avaliacao?.audioLastAutoRepublishAt ?? null;
   
   // Estados de feedback
   const [snackbar, setSnackbar] = useState({ 
@@ -81,28 +110,27 @@ const UploadAudioModal = ({
     setSnackbar(prev => ({ ...prev, open: false }));
   };
 
-  // Verificar se passaram mais de 30 minutos desde o envio
+  const pipelineDone = (t) => t === true || t === 'done';
+
   const podeReenviar = () => {
-    if (!audioStatus || !audioStatus.sent || audioStatus.treated) {
+    if (!audioStatus || !audioStatus.sent || pipelineDone(audioStatus.treated)) {
       return false;
     }
-
-    const audioCreatedAt = audioStatus.audioCreatedAt || audioStatus.audioUpdatedAt;
-    if (!audioCreatedAt) {
+    if (audioStatus.treated !== 'failed') {
       return false;
     }
-
-    const dataEnvio = new Date(audioCreatedAt);
-    const agora = new Date();
-    const diferencaMinutos = (agora - dataEnvio) / (1000 * 60);
-
-    return diferencaMinutos > 30;
+    const unlock = audioStatus.audioManualReenvioDisponivelEm;
+    if (!unlock) return true;
+    return Date.now() >= new Date(unlock).getTime();
   };
 
   // Função para reenviar áudio para Pub/Sub
   const handleReenviarAudio = async () => {
     // Tentar obter avaliacaoId de diferentes fontes
-    const idParaUsar = avaliacaoId || avaliacao?._id || audioStatus?.avaliacaoId;
+    const idParaUsar =
+      normalizeAvaliacaoIdForFetch(avaliacaoId) ||
+      normalizeAvaliacaoIdForFetch(avaliacao?._id) ||
+      normalizeAvaliacaoIdForFetch(audioStatus?.avaliacaoId);
     
     if (!idParaUsar) {
       console.error('❌ avaliacaoId não encontrado:', { avaliacaoId, avaliacao, audioStatus });
@@ -144,46 +172,100 @@ const UploadAudioModal = ({
     return true;
   };
 
-  // Buscar status de áudio quando avaliacaoId muda
+  // Status do áudio: GET + fallback nos mesmos campos da linha da tabela (ícone amarelo/verde).
   useEffect(() => {
-    const buscarStatusAudio = async () => {
-      if (!avaliacaoId || !open) {
-        setAudioStatus(null);
-        setAudioJaEnviado(false);
-        return;
-      }
+    if (!open) {
+      return undefined;
+    }
 
+    const fromList = rowAudioSentFlag
+      ? {
+          avaliacaoId: rowIdForAudioStatus || null,
+          nomeArquivoAudio: rowNomeArquivoAudio,
+          sent: true,
+          treated: rowAudioTreated,
+          audioCreatedAt: rowAudioCreatedAt,
+          audioUpdatedAt: rowAudioUpdatedAt,
+          audioManualReenvioDisponivelEm: rowAudioUnlock,
+          audioAutoRepublishAttempts: rowAudioAttempts,
+          audioLastAutoRepublishAt: rowAudioLastAuto
+        }
+      : null;
+
+    if (fromList) {
+      setAudioJaEnviado(true);
+      setAudioStatus(fromList);
+    } else {
+      setAudioJaEnviado(false);
+      setAudioStatus(null);
+    }
+
+    if (!rowIdForAudioStatus) {
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    (async () => {
       try {
-        // Normalizar URL base removendo /api se existir no final
-        const baseUrl = (process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app').replace(/\/api\/?$/, '');
-        const response = await fetch(`${baseUrl}/api/audio-analise/status-por-avaliacao/${avaliacaoId}`);
-        
+        const baseUrl = (process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app').replace(
+          /\/api\/?$/,
+          ''
+        );
+        const response = await fetch(
+          `${baseUrl}/api/audio-analise/status-por-avaliacao/${rowIdForAudioStatus}`
+        );
+
+        if (cancelled) return;
+
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.data) {
             setAudioStatus(data.data);
             setAudioJaEnviado(data.data.sent === true);
-            // Não precisamos mais de audioId, mas manter para compatibilidade durante migração
-            if (data.data.avaliacaoId) {
-              // Usar avaliacaoId em vez de audioId
-            }
+          } else if (fromList) {
+            setAudioJaEnviado(true);
+            setAudioStatus(fromList);
           } else {
             setAudioStatus(null);
             setAudioJaEnviado(false);
           }
+        } else if (fromList) {
+          setAudioJaEnviado(true);
+          setAudioStatus(fromList);
         } else {
           setAudioStatus(null);
           setAudioJaEnviado(false);
         }
       } catch (error) {
-        console.warn('Erro ao buscar status de áudio:', error);
-        setAudioStatus(null);
-        setAudioJaEnviado(false);
+        if (!cancelled) {
+          console.warn('Erro ao buscar status de áudio:', error);
+          if (fromList) {
+            setAudioJaEnviado(true);
+            setAudioStatus(fromList);
+          } else {
+            setAudioStatus(null);
+            setAudioJaEnviado(false);
+          }
+        }
       }
-    };
+    })();
 
-    buscarStatusAudio();
-  }, [avaliacaoId, open]);
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    open,
+    rowIdForAudioStatus,
+    rowAudioSentFlag,
+    rowAudioTreated,
+    rowNomeArquivoAudio,
+    rowAudioCreatedAt,
+    rowAudioUpdatedAt,
+    rowAudioUnlock,
+    rowAudioAttempts,
+    rowAudioLastAuto
+  ]);
 
   // Limpar estados ao fechar modal
   useEffect(() => {
@@ -247,6 +329,13 @@ const UploadAudioModal = ({
       return;
     }
 
+    const idUpload =
+      normalizeAvaliacaoIdForFetch(avaliacaoId) || normalizeAvaliacaoIdForFetch(avaliacao?._id);
+    if (!idUpload) {
+      showSnackbar('ID da avaliação inválido.', 'error');
+      return;
+    }
+
     try {
       setUploading(true);
       setUploadProgress(0);
@@ -255,7 +344,7 @@ const UploadAudioModal = ({
 
       // 1. Fazer upload para GCS com progresso real
       const result = await uploadAudioParaAnalise(
-        avaliacaoId, 
+        idUpload,
         selectedFile,
         (progress) => {
           setUploadProgress(Math.min(progress, 95)); // Máximo 95% durante upload
@@ -266,7 +355,8 @@ const UploadAudioModal = ({
       // Upload concluído
       setUploadProgress(100);
       // Usar avaliacaoId em vez de audioId
-      const avaliacaoIdParaMonitorar = result.avaliacaoId || avaliacaoId;
+      const avaliacaoIdParaMonitorar =
+        normalizeAvaliacaoIdForFetch(result.avaliacaoId) || idUpload;
       setStatusMessage('Upload concluído! Iniciando processamento...');
       
       // Marcar áudio como enviado para ocultar botão e evitar reenvios acidentais
@@ -523,13 +613,14 @@ const UploadAudioModal = ({
                     sx={{
                       fontFamily: 'Poppins',
                       fontWeight: 500,
-                      backgroundColor: audioStatus.treated 
-                        ? '#1634FF' // Azul médio quando treated=true
-                        : '#B0BEC5', // Cinza opaco (aspecto desativado) quando treated=false
+                      backgroundColor: pipelineDone(audioStatus.treated)
+                        ? '#1634FF'
+                        : audioStatus.treated === 'failed'
+                          ? '#f44336'
+                          : '#B0BEC5',
                       color: '#ffffff'
                     }}
                   />
-                  {/* Chip de reenvio */}
                   {podeReenviar() && (
                     <Chip
                       icon={reenviando ? <CircularProgress size={14} sx={{ color: '#ffffff' }} /> : <RefreshIcon sx={{ fontSize: '14px !important', color: '#ffffff' }} />}
@@ -540,11 +631,11 @@ const UploadAudioModal = ({
                       sx={{
                         fontFamily: 'Poppins',
                         fontWeight: 500,
-                        backgroundColor: '#FCC200', // Amarelo do LAYOUT_GUIDELINES.md
+                        backgroundColor: '#f44336',
                         color: '#ffffff',
                         cursor: reenviando ? 'default' : 'pointer',
                         '&:hover': {
-                          backgroundColor: reenviando ? '#FCC200' : '#E6B000' // Amarelo mais escuro no hover
+                          backgroundColor: reenviando ? '#f44336' : '#c62828'
                         },
                         '&:disabled': {
                           backgroundColor: '#B0BEC5',
