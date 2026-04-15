@@ -1,4 +1,5 @@
-// VERSION: v1.45.1 | DATE: 2026-04-10 | AUTHOR: VeloHub Development Team
+// VERSION: v1.46.0 | DATE: 2026-04-15 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.46.0 - Campo ChavePix (credencial Chave Pix) no objeto acessos em normalizarAcessos, addFuncionario e updateFuncionario; formato legado array aceita sistema ChavePix / normalizado chavepix
 // CHANGELOG: v1.45.1 - Release push GitHub 2026-04-10
 // CHANGELOG: v1.45.0 - gerarRelatorioAgente: média/gráfico IA usa avaliacao.avaliacaoIA (sem sequência getAvaliacaoGPT por id)
 // CHANGELOG: v1.44.0 - getAvaliacaoGPTByAvaliacaoIdsBatch: GET results-por-avaliacoes (lote); mapAudioAnaliseResultDocToGptRow compartilhado com get por id
@@ -93,7 +94,7 @@ export const testarAPI = async () => {
 const normalizarAcessos = (acessos) => {
   // Se for null ou undefined, retornar objeto vazio
   if (!acessos) {
-    return { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false, apoioN1: false };
+    return { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false, apoioN1: false, ChavePix: false };
   }
   
   // Se já for objeto booleano, retornar como está (garantindo todas as chaves de credencial)
@@ -106,13 +107,14 @@ const normalizarAcessos = (acessos) => {
       Ouvidoria: acessos.Ouvidoria === true,
       Sociais: acessos.Sociais === true,
       realTime: acessos.realTime === true,
-      apoioN1: acessos.apoioN1 === true
+      apoioN1: acessos.apoioN1 === true,
+      ChavePix: acessos.ChavePix === true
     };
   }
   
   // Se for array (formato antigo), converter para objeto booleano
   if (Array.isArray(acessos)) {
-    const novoAcessos = { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false, apoioN1: false };
+    const novoAcessos = { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false, apoioN1: false, ChavePix: false };
     acessos.forEach(acesso => {
       if (acesso && acesso.sistema) {
         const sistema = acesso.sistema.toLowerCase();
@@ -132,6 +134,8 @@ const normalizarAcessos = (acessos) => {
           novoAcessos.realTime = true;
         } else if (acesso.sistema === 'apoioN1' || sistema.replace(/[\s_-]/g, '') === 'apoion1') {
           novoAcessos.apoioN1 = true;
+        } else if (acesso.sistema === 'ChavePix' || sistema.replace(/[\s_-]/g, '') === 'chavepix') {
+          novoAcessos.ChavePix = true;
         }
       }
     });
@@ -139,7 +143,7 @@ const normalizarAcessos = (acessos) => {
   }
   
   // Fallback: objeto vazio
-  return { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false, apoioN1: false };
+  return { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false, apoioN1: false, ChavePix: false };
 };
 
 // Obter todos os funcionários
@@ -210,10 +214,10 @@ export const addFuncionario = async (funcionarioData) => {
     };
     
     // Sempre enviar objeto completo de acessos com todos os campos
-    let acessosNormalizados = { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false, apoioN1: false };
+    let acessosNormalizados = { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false, apoioN1: false, ChavePix: false };
     if (funcionarioData.desligado || funcionarioData.afastado) {
       // Se funcionário está desligado ou afastado, forçar acessos como objeto com todos false
-      acessosNormalizados = { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false, apoioN1: false };
+      acessosNormalizados = { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false, apoioN1: false, ChavePix: false };
     } else if (funcionarioData.acessos && typeof funcionarioData.acessos === 'object' && !Array.isArray(funcionarioData.acessos)) {
       // Normalizar acessos: sempre enviar objeto completo com todos os campos
       acessosNormalizados = {
@@ -224,7 +228,8 @@ export const addFuncionario = async (funcionarioData) => {
         Ouvidoria: funcionarioData.acessos?.Ouvidoria === true,
         Sociais: funcionarioData.acessos?.Sociais === true,
         realTime: funcionarioData.acessos?.realTime === true,
-        apoioN1: funcionarioData.acessos?.apoioN1 === true
+        apoioN1: funcionarioData.acessos?.apoioN1 === true,
+        ChavePix: funcionarioData.acessos?.ChavePix === true
       };
     }
     
@@ -281,10 +286,10 @@ export const updateFuncionario = async (id, funcionarioData) => {
     };
     
     // Sempre enviar objeto completo de acessos com todos os campos
-    let acessosNormalizados = { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false, apoioN1: false };
+    let acessosNormalizados = { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false, apoioN1: false, ChavePix: false };
     if (funcionarioData.desligado || funcionarioData.afastado) {
       // Se funcionário está desligado ou afastado, forçar acessos como objeto com todos false
-      acessosNormalizados = { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false, apoioN1: false };
+      acessosNormalizados = { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false, apoioN1: false, ChavePix: false };
     } else if (funcionarioData.acessos !== undefined && funcionarioData.acessos !== null) {
       // Normalizar acessos: sempre enviar objeto completo com todos os campos
       if (typeof funcionarioData.acessos === 'object' && !Array.isArray(funcionarioData.acessos)) {
@@ -296,7 +301,8 @@ export const updateFuncionario = async (id, funcionarioData) => {
           Ouvidoria: funcionarioData.acessos?.Ouvidoria === true,
           Sociais: funcionarioData.acessos?.Sociais === true,
           realTime: funcionarioData.acessos?.realTime === true,
-          apoioN1: funcionarioData.acessos?.apoioN1 === true
+          apoioN1: funcionarioData.acessos?.apoioN1 === true,
+          ChavePix: funcionarioData.acessos?.ChavePix === true
         };
       }
     }
