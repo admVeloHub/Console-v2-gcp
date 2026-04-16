@@ -1,4 +1,6 @@
-// VERSION: v3.16.1 | DATE: 2026-03-26 | AUTHOR: VeloHub Development Team
+// VERSION: v3.17.1 | DATE: 2026-04-16 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v3.17.1 - Erros 5xx: priorizar data.message (detalhe do backend) antes de data.error (mensagem genérica)
+// CHANGELOG: v3.17.0 - Em NODE_ENV development, fallback da API é http://localhost:3001 (SKYNET local); PRD só em build produção ou REACT_APP_* explícito
 // CHANGELOG: v3.16.1 - Payload categorias com Ordem + categoria_id snake_case (backend recalcula ids)
 // CHANGELOG: v3.16.0 - artigosCategoriasAPI (GET/PUT /artigos-categorias)
 // CHANGELOG: v3.15.1 - Comentários: removidas referências ao módulo WhatsApp removido do Console
@@ -7,8 +9,11 @@
 // CHANGELOG: v3.14.7 - Correção rede local: usar hostname do browser quando API aponta para localhost (resolve lista de colaboradores vazia ao acessar via IP)
 import axios from 'axios';
 
-/** Backend SKYNET padrão quando variáveis de ambiente não estão definidas. */
+/** Backend SKYNET em PRD quando não há env e o build é produção (`npm run build`). */
 export const DEFAULT_SKYNET_API_ORIGIN = 'https://backend-gcp-hfsqj6konq-ue.a.run.app';
+
+/** SKYNET local (`npm start` no Dev - SKYNET — PORT padrão 3001 em server.js). Usado só em `NODE_ENV === 'development'`. */
+export const DEFAULT_DEV_SKYNET_ORIGIN = 'http://localhost:3001';
 
 // Função auxiliar para normalizar URL base (remove /api do final se existir)
 const normalizeBaseUrl = (url) => {
@@ -16,34 +21,41 @@ const normalizeBaseUrl = (url) => {
 };
 
 /**
- * URL base da API REST (axios).
- * Ordem: REACT_APP_API_URL → REACT_APP_SKYNET_API_URL → DEFAULT_SKYNET_API_ORIGIN.
- * Em produção, defina REACT_APP_API_URL e REACT_APP_SKYNET_API_URL apontando para o mesmo serviço Cloud Run quando aplicável.
+ * Origem do backend (sem path /api). Mesma regra que getResolvedApiUrl.
+ * Ordem: REACT_APP_API_URL → REACT_APP_SKYNET_API_URL → em development DEFAULT_DEV_SKYNET_ORIGIN → senão DEFAULT_SKYNET_API_ORIGIN.
  */
-export const getResolvedApiUrl = () => {
+const resolveEnvOrigin = () => {
   const envUrl =
     process.env.REACT_APP_API_URL ||
     process.env.REACT_APP_SKYNET_API_URL ||
-    DEFAULT_SKYNET_API_ORIGIN;
-  const normalized = normalizeBaseUrl(envUrl) + '/api';
-  // Se env usa localhost e estamos no browser com hostname diferente (acesso via rede)
+    (process.env.NODE_ENV === 'development' ? DEFAULT_DEV_SKYNET_ORIGIN : DEFAULT_SKYNET_API_ORIGIN);
+  const originBase = normalizeBaseUrl(envUrl);
+  // Se env usa localhost e estamos no browser com hostname diferente (acesso via IP na LAN)
   if (typeof window !== 'undefined' && envUrl.includes('localhost') && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    const urlObj = new URL(normalized);
-    const fallbackUrl = `${urlObj.protocol}//${window.location.hostname}:${urlObj.port || '3001'}/api`;
+    const withScheme = originBase.match(/^https?:\/\//) ? originBase : `http://${originBase}`;
+    const urlObj = new URL(withScheme);
+    const fallbackOrigin = `${urlObj.protocol}//${window.location.hostname}:${urlObj.port || '3001'}`;
     if (process.env.NODE_ENV === 'development') {
-      console.log('🔗 [Rede local] API URL ajustada para:', fallbackUrl, '(hostname:', window.location.hostname + ')');
+      console.log('🔗 [Rede local] API origin ajustada para:', fallbackOrigin, '(hostname:', window.location.hostname + ')');
     }
-    return fallbackUrl;
+    return fallbackOrigin;
   }
-  return normalized;
+  return originBase;
 };
+
+export const getResolvedApiOrigin = () => resolveEnvOrigin();
+
+/**
+ * URL base da API REST (axios): origem + `/api`.
+ */
+export const getResolvedApiUrl = () => resolveEnvOrigin() + '/api';
 
 const API_BASE_URL = getResolvedApiUrl();
 
 // Log da URL configurada (apenas em desenvolvimento)
 if (process.env.NODE_ENV === 'development') {
   console.log('🔗 API Base URL configurada:', API_BASE_URL);
-  console.log('🔗 REACT_APP_API_URL:', process.env.REACT_APP_API_URL || 'não definido');
+  console.log('🔗 REACT_APP_API_URL:', process.env.REACT_APP_API_URL || 'não definido (dev usa backend local por defeito)');
 }
 
 const api = axios.create({
@@ -96,7 +108,10 @@ api.interceptors.response.use(
         throw error; // Não mascarar erro 400
       }
       
-      const message = error.response.data?.error || error.response.data?.message || 'Erro do servidor';
+      const message =
+        error.response.data?.message ||
+        error.response.data?.error ||
+        'Erro do servidor';
       throw new Error(message);
     } else if (error.request) {
       // Erro de rede - diagnóstico detalhado

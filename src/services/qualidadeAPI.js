@@ -1,4 +1,5 @@
-// VERSION: v1.46.0 | DATE: 2026-04-15 | AUTHOR: VeloHub Development Team
+// VERSION: v1.47.0 | DATE: 2026-04-15 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.47.0 - fetch áudio/IA: base URL via getResolvedApiOrigin (dev → localhost:3001 alinhado a api.js)
 // CHANGELOG: v1.46.0 - Campo ChavePix (credencial Chave Pix) no objeto acessos em normalizarAcessos, addFuncionario e updateFuncionario; formato legado array aceita sistema ChavePix / normalizado chavepix
 // CHANGELOG: v1.45.1 - Release push GitHub 2026-04-10
 // CHANGELOG: v1.45.0 - gerarRelatorioAgente: média/gráfico IA usa avaliacao.avaliacaoIA (sem sequência getAvaliacaoGPT por id)
@@ -19,7 +20,7 @@
 // CHANGELOG: v1.34.0 - Adicionado campo Desk ao objeto acessos {Velohub: Boolean, Console: Boolean, Academy: Boolean, Desk: Boolean}. Acessos são completamente opcionais.
 // v1.33.0 - Adicionada normalização de formato de acessos (array vazio/null -> objeto {Velohub: Boolean, Console: Boolean}) para compatibilidade com novo schema
 
-import { qualidadeFuncionariosAPI, qualidadeAvaliacoesAPI, qualidadeFuncoesAPI } from './api';
+import { qualidadeFuncionariosAPI, qualidadeAvaliacoesAPI, qualidadeFuncoesAPI, getResolvedApiOrigin } from './api';
 import axios from 'axios';
 import { generateId, calcularPontuacaoTotal, PONTUACAO } from '../types/qualidade';
 import { getAvaliadoresValidos as getUserAvaliadoresValidos, getAllAuthorizedUsers } from './userService';
@@ -540,7 +541,7 @@ const buscarStatusAudio = async (avaliacaoId) => {
     if (!avaliacaoId) return null;
     
     // Normalizar URL base removendo /api se existir no final
-    const baseUrl = (process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app').replace(/\/api\/?$/, '');
+    const baseUrl = getResolvedApiOrigin();
     const response = await fetch(`${baseUrl}/api/audio-analise/status-por-avaliacao/${avaliacaoId}`);
     
     if (!response.ok) {
@@ -847,7 +848,7 @@ export const gerarRelatorioAgente = async (colaboradorNome, dataInicio = null, d
     let mediaIA = null;
     try {
       // Normalizar URL base removendo /api se existir no final
-      const baseUrl = (process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app').replace(/\/api\/?$/, '');
+      const baseUrl = getResolvedApiOrigin();
       const params = new URLSearchParams();
       if (dataInicio) params.append('dataInicio', dataInicio);
       if (dataFim) params.append('dataFim', dataFim);
@@ -942,7 +943,7 @@ export const getAvaliacoesPorColaborador = async (colaboradorNome) => {
 
 // Configuração do axios para API GPT
 const gptAPI = axios.create({
-  baseURL: 'https://backend-gcp-hfsqj6konq-ue.a.run.app/api/qualidade',
+  baseURL: `${getResolvedApiOrigin()}/api/qualidade`,
   headers: {
     'Content-Type': 'application/json'
   },
@@ -1149,10 +1150,7 @@ export const getAvaliacaoGPTByAvaliacaoIdsBatch = async (avaliacaoIds) => {
   if (pending) return pending;
 
   const task = (async () => {
-    const baseUrl = (process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app').replace(
-      /\/api\/?$/,
-      ''
-    );
+    const baseUrl = getResolvedApiOrigin();
     const merged = {};
     for (let i = 0; i < ids.length; i += LISTA_IA_BATCH_MAX_IDS) {
       const chunk = ids.slice(i, i + LISTA_IA_BATCH_MAX_IDS);
@@ -1179,7 +1177,7 @@ export const getAvaliacaoGPTByAvaliacaoId = async (avaliacaoId) => {
   if (pending) return pending;
 
   const task = (async () => {
-    const baseUrl = (process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app').replace(/\/api\/?$/, '');
+    const baseUrl = getResolvedApiOrigin();
     const url = `${baseUrl}/api/audio-analise/result/${avaliacaoId}`;
     const maxAttempts = 6;
 

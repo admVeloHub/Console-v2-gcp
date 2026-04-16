@@ -1,15 +1,9 @@
-// VERSION: v3.3.0 | DATE: 2025-11-25 | AUTHOR: VeloHub Development Team
+// VERSION: v3.4.0 | DATE: 2026-04-15 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v3.4.0 - Base URL via getResolvedApiUrl (dev → localhost:3001 alinhado a api.js)
 
-// Função auxiliar para normalizar URL base (remove /api do final se existir)
-const normalizeBaseUrl = (url) => {
-  return url.replace(/\/api\/?$/, '');
-};
+import { faqBotAPI, getResolvedApiUrl } from './api';
 
-// Configuração da API - garantir que sempre termine com /api
-const API_BASE_URL = normalizeBaseUrl(process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app') + '/api';
-
-// Import do novo endpoint FAQ
-import { faqBotAPI } from './api';
+const API_BASE_URL = getResolvedApiUrl();
 
 class BotAnalisesService {
   constructor() {

@@ -1,4 +1,6 @@
-// VERSION: v2.1.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// VERSION: v2.3.0 | DATE: 2026-04-16 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v2.3.0 - fetchAcademyTrophyTemasList: GET /uploads/academy-trophy-temas-list (reutilizar Bronze/Prata)
+// CHANGELOG: v2.2.0 - uploadAcademyTrophyImage: POST multipart /uploads/academy-trophy (evita CORS GCS no browser)
 import api from './api';
 
 /**
@@ -119,6 +121,76 @@ export const uploadToGCS = (signedUrl, file, onProgress) => {
  * @param {string} folder - Pasta no GCS (opcional)
  * @returns {Promise<{url: string, fileName: string, bucket: string}>} - Objeto com URL completa, caminho relativo e bucket
  */
+/**
+ * Troféus Academy: envia ficheiro ao SKYNET (multipart), que grava no GCS.
+ * Usar em vez de uploadImage+signed URL para o bucket mediabank_academy (CORS no bucket nem sempre configurável).
+ * @param {File} file
+ * @param {string} folder mediabank_academy/icones_conquistas/modulos | .../temas
+ * @param {Function} onProgress
+ */
+export const uploadAcademyTrophyImage = async (file, folder, onProgress = null) => {
+  const formData = new FormData();
+  formData.append('image', file);
+  formData.append('folder', folder);
+
+  try {
+    const response = await api.post('/uploads/academy-trophy', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 120000,
+      onUploadProgress: onProgress
+        ? (progressEvent) => {
+            if (progressEvent.total) {
+              onProgress((progressEvent.loaded / progressEvent.total) * 100);
+            }
+          }
+        : undefined
+    });
+
+    if (response.data.success && response.data.data) {
+      const { url, fileName, bucket } = response.data.data;
+      if (!url || !fileName) {
+        throw new Error('Resposta inválida do servidor');
+      }
+      return { url, fileName, bucket };
+    }
+    throw new Error('Resposta inválida do servidor');
+  } catch (error) {
+    console.error('Erro upload troféu Academy:', error);
+    if (error.response) {
+      const message =
+        error.response.data?.message || error.response.data?.error || 'Erro ao enviar troféu';
+      throw new Error(message);
+    } else if (error.request) {
+      throw new Error('Erro de conexão. Verifique se o servidor está rodando.');
+    }
+    throw error;
+  }
+};
+
+/**
+ * Lista imagens já existentes em icones_conquistas/temas/ no bucket Academy (reutilizar URL sem novo upload).
+ * @returns {Promise<Array<{ fileName: string, url: string }>>}
+ */
+export const fetchAcademyTrophyTemasList = async () => {
+  try {
+    const response = await api.get('/uploads/academy-trophy-temas-list');
+    if (response.data.success && Array.isArray(response.data.data)) {
+      return response.data.data;
+    }
+    throw new Error('Resposta inválida do servidor');
+  } catch (error) {
+    console.error('Erro ao listar troféus temas:', error);
+    if (error.response) {
+      const message =
+        error.response.data?.message || error.response.data?.error || 'Erro ao listar imagens';
+      throw new Error(message);
+    } else if (error.request) {
+      throw new Error('Erro de conexão. Verifique se o servidor está rodando.');
+    }
+    throw error;
+  }
+};
+
 export const uploadImage = async (file, onProgress = null, folder = null) => {
   try {
     // Validar tipo de arquivo
@@ -200,6 +272,8 @@ export const uploadImage = async (file, onProgress = null, folder = null) => {
 
 export default {
   uploadImage,
+  uploadAcademyTrophyImage,
+  fetchAcademyTrophyTemasList,
   generateImageUploadUrl,
   uploadToGCS
 };

@@ -1,11 +1,34 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.47.6 | DATE: 2026-04-10 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.47.7 | DATE: 2026-04-16 | AUTHOR: VeloHub Development Team -->
 <!--
   REGRA (push GitHub): Preencher a nova entrada do DEPLOY_LOG (tipo, data, branch, repositório,
   arquivos, descrição) ANTES do `git commit`. Incluir DEPLOY_LOG no MESMO commit que o código.
   Não criar commit adicional só para corrigir hash, SHA ou “fechar” o log.
   Campo **Commit:** opcional; se não usar SHA aqui, consultar `git log -1 --oneline` no remoto.
 -->
+
+## Push GitHub - Academy: troféus GCS (multipart), Bronze/Prata existentes, API e serviços - 2026-04-16
+
+### **Tipo:** Push GitHub
+### **Data/Hora:** 2026-04-16
+### **Branch:** main
+### **Commit:** *(SHA no histórico local/remoto após o push)*
+### **Repositório:** https://github.com/admVeloHub/Console-v2-gcp.git
+
+### **Arquivos Modificados:**
+- `src/pages/AcademyPage.jsx` — Troféus módulo/tema: upload via API; paths `icones_conquistas/modulos|temas`; proxy pré-visualização; menu Bronze/Prata (Adicionar novo / Selecionar existente) + modal lista GCS pasta temas; remoção link “Abrir URL”
+- `src/services/uploadAPI.js` — `uploadAcademyTrophyImage`, `fetchAcademyTrophyTemasList`
+- `src/services/api.js` — Base URL dev, erros 5xx, `getResolvedApiUrl`
+- `src/services/academyAPI.js` — Ajustes quiz/cursos-conteudo conforme revisão
+- `src/services/qualidadeAPI.js`, `qualidadeAudioService.js`, `qualidadeAPI`-relacionados — alinhamentos API/rede local
+- `src/components/qualidade/UploadAudioModal.jsx` — Ajustes correlatos
+- `src/services/botAnalisesService.js`, `emailService.js`, `apiIAService.js`, `userPingService.js` — Resolução URL / consistência
+- `DEPLOY_LOG.md` — Registro deste push
+
+### **Descrição:**
+Console Academy: troféus gravados no bucket Academy via backend (sem CORS direto GCS); reutilização de imagens já em `icones_conquistas/temas` sem duplicar upload; serviços atualizados para o mesmo host da API em desenvolvimento.
+
+---
 
 ## Push GitHub - Qualidade/IA: lote de áudio, Status IA, API e utilitários Atendimento - 2026-04-10
 

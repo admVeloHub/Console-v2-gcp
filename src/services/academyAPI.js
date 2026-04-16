@@ -1,38 +1,7 @@
-// VERSION: v1.1.1 | DATE: 2026-03-27 | AUTHOR: VeloHub Development Team
-import axios from 'axios';
-
-// Função auxiliar para normalizar URL base (remove /api do final se existir)
-const normalizeBaseUrl = (url) => {
-  return url.replace(/\/api\/?$/, '');
-};
-
-// Configuração base da API - garantir que sempre termine com /api
-const API_BASE_URL = normalizeBaseUrl(process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app') + '/api';
-
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  timeout: 10000, // 10 segundos
-});
-
-// Interceptors para tratamento de erros
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.error('Academy API Error:', error);
-    
-    if (error.response) {
-      const message = error.response.data?.error || 'Erro do servidor';
-      throw new Error(message);
-    } else if (error.request) {
-      throw new Error('Erro de conexão. Verifique se o servidor está rodando.');
-    } else {
-      throw new Error('Erro inesperado');
-    }
-  }
-);
+// VERSION: v1.2.0 | DATE: 2026-04-15 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.2.0 - Cliente HTTP único: importa `api` de ./api (getResolvedApiUrl, REACT_APP_SKYNET_API_URL, timeout 30s, erros detalhados — evita falhas por cold start e URL divergente)
+// CHANGELOG: v1.1.1 - (histórico)
+import api from './api';
 
 // API para Course Progress
 export const courseProgressAPI = {

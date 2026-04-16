@@ -1,4 +1,5 @@
-// VERSION: v1.0.0 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
+// VERSION: v1.1.0 | DATE: 2026-04-15 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.1.0 - Origem SKYNET via getResolvedApiOrigin (dev → localhost)
 /**
  * VeloHub Console - Email Service
  * 
@@ -7,10 +8,9 @@
  */
 
 import axios from 'axios';
+import { getResolvedApiOrigin } from './api';
 
-// URL base do SKYNET em produção
-// Pode ser sobrescrita via variável de ambiente REACT_APP_SKYNET_API_URL
-const SKYNET_API_URL = process.env.REACT_APP_SKYNET_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app';
+const SKYNET_API_URL = getResolvedApiOrigin();
 
 const emailApi = axios.create({
   baseURL: SKYNET_API_URL,

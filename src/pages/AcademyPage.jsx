@@ -1,7 +1,20 @@
-// VERSION: v1.13.7 | DATE: 2026-04-10 | AUTHOR: VeloHub Development Team
+// VERSION: v1.17.1 | DATE: 2026-04-16 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.17.1 - Import MUI: Menu sem duplicar MenuItem (já usado em Select)
+// CHANGELOG: v1.17.0 - Troféu Bronze/Prata: menu Adicionar novo | Selecionar existente (lista GCS pasta temas)
+// CHANGELOG: v1.16.0 - GCS troféus: icones_conquistas/modulos|temas (bucket já é mediabank_academy)
+// CHANGELOG: v1.15.8 - Troféus: removido link "Abrir URL" (miniatura basta)
+// CHANGELOG: v1.15.7 - Pré-visualização troféu: URL proxy GET /uploads/academy-trophy-media (bucket privado)
+// CHANGELOG: v1.15.6 - Troféus: uploadAcademyTrophyImage (multipart→SKYNET→GCS; evita CORS no bucket)
+// CHANGELOG: v1.15.5 - Pastas troféu GCS: mediabank_academy/icones_conquistas/modulos | .../temas (bucket mediabank_academy)
+// CHANGELOG: v1.15.3 - getApiBaseUrl via getResolvedApiUrl (dev → SKYNET local)
+// CHANGELOG: v1.15.2 - Botões troféu: rótulos Troféu / Troféu Bronze / Troféu Prata (como pedido)
+// CHANGELOG: v1.15.1 - UI troféus: removidos textos explicativos desnecessários
+// CHANGELOG: v1.15.0 - Troféus: prévia local (object URL) até Salvar; upload GCS só ao gravar; remover prévia/URL; miniatura URL guardada ao reabrir
+// CHANGELOG: v1.14.1 - Modais Módulo/Tema: inputs Troféu + upload; voltar de Aula repõe URLs Bronze/Prata; validarELimparCurso remove temaTrophyIconUrl legado
+// CHANGELOG: v1.14.0 - Módulo/Tema: troféu GCS (mediabank_academy/icones_conquistas/modulos|temas); temaTrophyIconUrlBronze/Prata; legado temaTrophyIconUrl → Bronze no formulário
 // CHANGELOG: v1.13.7 - Release push GitHub 2026-04-10
 // CHANGELOG: v1.13.6 - Filtro Atendimento via util compartilhado qualidadeFuncionariosAtendimento
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Container,
   Box,
@@ -43,7 +56,8 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Paper
+  Paper,
+  Menu
 } from '@mui/material';
 import {
   Add,
@@ -54,18 +68,76 @@ import {
   KeyboardArrowUp,
   KeyboardArrowDown,
   Save,
-  ArrowBack
+  ArrowBack,
+  EmojiEvents,
+  Close,
+  PhotoLibrary
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import BackButton from '../components/common/BackButton';
 import { academyAPI } from '../services/academyAPI';
-import { qualidadeFuncionariosAPI, qualidadeFuncoesAPI } from '../services/api';
+import { uploadAcademyTrophyImage, fetchAcademyTrophyTemasList } from '../services/uploadAPI';
+import {
+  getResolvedApiUrl,
+  qualidadeFuncionariosAPI,
+  qualidadeFuncoesAPI
+} from '../services/api';
 import {
   normalizeFuncoesLista,
   findRegistroFuncaoAtendimento,
   filtrarFuncionariosComFuncaoAtendimento
 } from '../utils/qualidadeFuncionariosAtendimento';
+
+/** Pré-visualização: bucket mediabank_academy pode ser privado — proxy de leitura no SKYNET */
+function academyTrophyProxyUrl(storedUrl) {
+  if (!storedUrl || typeof storedUrl !== 'string') return '';
+  if (storedUrl.startsWith('blob:') || storedUrl.startsWith('data:')) return storedUrl;
+  try {
+    const u = new URL(storedUrl);
+    if (u.hostname !== 'storage.googleapis.com') return storedUrl;
+    const parts = u.pathname.split('/').filter(Boolean);
+    if (parts.length < 2) return storedUrl;
+    const bucketName = parts[0];
+    if (bucketName !== 'mediabank_academy') return storedUrl;
+    const objectPath = parts.slice(1).join('/');
+    const ok =
+      /^icones_conquistas\/(modulos|temas)\//.test(objectPath) ||
+      /^mediabank_academy\/icones_conquistas\/(modulos|temas)\//.test(objectPath);
+    if (!ok) return storedUrl;
+    const base = getResolvedApiUrl();
+    return `${base}/uploads/academy-trophy-media?filename=${encodeURIComponent(objectPath)}`;
+  } catch {
+    return storedUrl;
+  }
+}
+
+/** Pastas dentro do bucket mediabank_academy (GCS_BUCKET_NAME3) — sem repetir o nome do bucket no path */
+const GCS_FOLDER_TROFEU_MODULO = 'icones_conquistas/modulos';
+const GCS_FOLDER_TROFEU_TEMAS = 'icones_conquistas/temas';
+
+/** URL troféu tema: Bronze/Prata; legado temaTrophyIconUrl → Bronze se Bronze vazio */
+function normalizeTemaTrophyFields(tema) {
+  if (!tema || typeof tema !== 'object') {
+    return { temaTrophyIconUrlBronze: '', temaTrophyIconUrlPrata: '' };
+  }
+  const legado = typeof tema.temaTrophyIconUrl === 'string' ? tema.temaTrophyIconUrl.trim() : '';
+  const bronze =
+    (typeof tema.temaTrophyIconUrlBronze === 'string' && tema.temaTrophyIconUrlBronze.trim()) ||
+    legado ||
+    '';
+  const prata =
+    (typeof tema.temaTrophyIconUrlPrata === 'string' && tema.temaTrophyIconUrlPrata.trim()) || '';
+  return { temaTrophyIconUrlBronze: bronze, temaTrophyIconUrlPrata: prata };
+}
+
+/** Remove campo legado ao gravar (substituído por Bronze/Prata) */
+function stripLegacyTemaTrophyUrl(obj) {
+  if (!obj || typeof obj !== 'object') return obj;
+  const next = { ...obj };
+  delete next.temaTrophyIconUrl;
+  return next;
+}
 
 /** Alinha quizId (cursos_conteudo) e quizID (quiz_conteudo) ao temaNome em snake_case — LISTA_SCHEMAS.rb */
 function temaNomeToQuizId(nome) {
@@ -230,6 +302,7 @@ const AcademyPage = () => {
     moduleId: '',
     moduleNome: '',
     isActive: true,
+    moduleTrophyIconUrl: '',
     sections: []
   });
   
@@ -239,9 +312,27 @@ const AcademyPage = () => {
     isActive: true,
     hasQuiz: false,
     quizId: '',
+    temaTrophyIconUrlBronze: '',
+    temaTrophyIconUrlPrata: '',
     lessons: []
   });
-  
+
+  const fileTrofeuModuloRef = useRef(null);
+  const fileTrofeuBronzeRef = useRef(null);
+  const fileTrofeuPrataRef = useRef(null);
+  /** Upload GCS apenas ao Salvar; antes disso só prévia local */
+  const [pendingTrofeuModulo, setPendingTrofeuModulo] = useState(null);
+  const [pendingTrofeuBronze, setPendingTrofeuBronze] = useState(null);
+  const [pendingTrofeuPrata, setPendingTrofeuPrata] = useState(null);
+  const [uploadingTrophy, setUploadingTrophy] = useState(null);
+
+  const [trofeuTemasMenuBronzeAnchor, setTrofeuTemasMenuBronzeAnchor] = useState(null);
+  const [trofeuTemasMenuPrataAnchor, setTrofeuTemasMenuPrataAnchor] = useState(null);
+  const [modalTrofeuExistenteOpen, setModalTrofeuExistenteOpen] = useState(false);
+  const [trofeuExistenteSlot, setTrofeuExistenteSlot] = useState(null);
+  const [listaTrofeusTemasGcs, setListaTrofeusTemasGcs] = useState([]);
+  const [loadingListaTrofeusTemasGcs, setLoadingListaTrofeusTemasGcs] = useState(false);
+
   const [formAula, setFormAula] = useState({
     lessonId: '',
     lessonTipo: 'video',
@@ -323,6 +414,191 @@ const AcademyPage = () => {
   
   const fecharSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
+  };
+
+  const clearPendingTrofeuModulo = () => {
+    setPendingTrofeuModulo((prev) => {
+      if (prev?.objectUrl) URL.revokeObjectURL(prev.objectUrl);
+      return null;
+    });
+  };
+
+  const clearPendingTrofeuTema = () => {
+    setPendingTrofeuBronze((prev) => {
+      if (prev?.objectUrl) URL.revokeObjectURL(prev.objectUrl);
+      return null;
+    });
+    setPendingTrofeuPrata((prev) => {
+      if (prev?.objectUrl) URL.revokeObjectURL(prev.objectUrl);
+      return null;
+    });
+  };
+
+  const handleSelectTrofeuModulo = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      mostrarSnackbar('Selecione um arquivo de imagem.', 'error');
+      return;
+    }
+    setPendingTrofeuModulo((prev) => {
+      if (prev?.objectUrl) URL.revokeObjectURL(prev.objectUrl);
+      return { file, objectUrl: URL.createObjectURL(file) };
+    });
+  };
+
+  const handleSelectTrofeuBronze = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      mostrarSnackbar('Selecione um arquivo de imagem.', 'error');
+      return;
+    }
+    setPendingTrofeuBronze((prev) => {
+      if (prev?.objectUrl) URL.revokeObjectURL(prev.objectUrl);
+      return { file, objectUrl: URL.createObjectURL(file) };
+    });
+  };
+
+  const handleSelectTrofeuPrata = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      mostrarSnackbar('Selecione um arquivo de imagem.', 'error');
+      return;
+    }
+    setPendingTrofeuPrata((prev) => {
+      if (prev?.objectUrl) URL.revokeObjectURL(prev.objectUrl);
+      return { file, objectUrl: URL.createObjectURL(file) };
+    });
+  };
+
+  const removerTrofeuModulo = () => {
+    setPendingTrofeuModulo((prevPending) => {
+      if (prevPending) {
+        if (prevPending.objectUrl) URL.revokeObjectURL(prevPending.objectUrl);
+        return null;
+      }
+      setFormModulo((prev) => ({ ...prev, moduleTrophyIconUrl: '' }));
+      return null;
+    });
+  };
+
+  const removerTrofeuBronze = () => {
+    setPendingTrofeuBronze((prevPending) => {
+      if (prevPending) {
+        if (prevPending.objectUrl) URL.revokeObjectURL(prevPending.objectUrl);
+        return null;
+      }
+      setFormTema((prev) => ({ ...prev, temaTrophyIconUrlBronze: '' }));
+      return null;
+    });
+  };
+
+  const removerTrofeuPrata = () => {
+    setPendingTrofeuPrata((prevPending) => {
+      if (prevPending) {
+        if (prevPending.objectUrl) URL.revokeObjectURL(prevPending.objectUrl);
+        return null;
+      }
+      setFormTema((prev) => ({ ...prev, temaTrophyIconUrlPrata: '' }));
+      return null;
+    });
+  };
+
+  const abrirSelecaoTrofeuExistente = async (slot) => {
+    setTrofeuExistenteSlot(slot);
+    setModalTrofeuExistenteOpen(true);
+    setListaTrofeusTemasGcs([]);
+    setLoadingListaTrofeusTemasGcs(true);
+    try {
+      const items = await fetchAcademyTrophyTemasList();
+      setListaTrofeusTemasGcs(items);
+    } catch (err) {
+      mostrarSnackbar(err.message || 'Erro ao listar imagens no GCS', 'error');
+      setModalTrofeuExistenteOpen(false);
+      setTrofeuExistenteSlot(null);
+    } finally {
+      setLoadingListaTrofeusTemasGcs(false);
+    }
+  };
+
+  const aplicarTrofeuExistenteDoGcs = (url) => {
+    if (trofeuExistenteSlot === 'bronze') {
+      setPendingTrofeuBronze((prev) => {
+        if (prev?.objectUrl) URL.revokeObjectURL(prev.objectUrl);
+        return null;
+      });
+      setFormTema((prev) => ({ ...prev, temaTrophyIconUrlBronze: url }));
+    } else if (trofeuExistenteSlot === 'prata') {
+      setPendingTrofeuPrata((prev) => {
+        if (prev?.objectUrl) URL.revokeObjectURL(prev.objectUrl);
+        return null;
+      });
+      setFormTema((prev) => ({ ...prev, temaTrophyIconUrlPrata: url }));
+    }
+    setModalTrofeuExistenteOpen(false);
+    setTrofeuExistenteSlot(null);
+    mostrarSnackbar('Troféu selecionado (URL existente no bucket).', 'success');
+  };
+
+  const fecharModalTrofeuExistente = () => {
+    setModalTrofeuExistenteOpen(false);
+    setTrofeuExistenteSlot(null);
+  };
+
+  const flushPendingModuloTrophy = async (pending, formMod) => {
+    if (!pending) return formMod.moduleTrophyIconUrl || '';
+    const { file, objectUrl } = pending;
+    setUploadingTrophy('modulo');
+    try {
+      const { url } = await uploadAcademyTrophyImage(file, GCS_FOLDER_TROFEU_MODULO);
+      URL.revokeObjectURL(objectUrl);
+      setPendingTrofeuModulo(null);
+      return url;
+    } catch (err) {
+      mostrarSnackbar(err.message || 'Erro ao enviar troféu do módulo', 'error');
+      throw err;
+    } finally {
+      setUploadingTrophy(null);
+    }
+  };
+
+  const flushPendingTemaTrophies = async (pendingB, pendingP, formT) => {
+    let bronze = formT.temaTrophyIconUrlBronze || '';
+    let prata = formT.temaTrophyIconUrlPrata || '';
+    if (pendingB) {
+      setUploadingTrophy('bronze');
+      try {
+        const { url } = await uploadAcademyTrophyImage(pendingB.file, GCS_FOLDER_TROFEU_TEMAS);
+        URL.revokeObjectURL(pendingB.objectUrl);
+        setPendingTrofeuBronze(null);
+        bronze = url;
+      } catch (err) {
+        mostrarSnackbar(err.message || 'Erro ao enviar troféu Bronze', 'error');
+        throw err;
+      } finally {
+        setUploadingTrophy(null);
+      }
+    }
+    if (pendingP) {
+      setUploadingTrophy('prata');
+      try {
+        const { url } = await uploadAcademyTrophyImage(pendingP.file, GCS_FOLDER_TROFEU_TEMAS);
+        URL.revokeObjectURL(pendingP.objectUrl);
+        setPendingTrofeuPrata(null);
+        prata = url;
+      } catch (err) {
+        mostrarSnackbar(err.message || 'Erro ao enviar troféu Prata', 'error');
+        throw err;
+      } finally {
+        setUploadingTrophy(null);
+      }
+    }
+    return { bronze, prata };
   };
 
   const abrirModalQuiz = async () => {
@@ -466,10 +742,7 @@ const AcademyPage = () => {
     }
   };
   
-  const getApiBaseUrl = () => {
-    const baseUrl = process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app';
-    return baseUrl.replace(/\/api\/?$/, '') + '/api';
-  };
+  const getApiBaseUrl = () => getResolvedApiUrl();
   
   const carregarAprovacoes = async () => {
     try {
@@ -1046,7 +1319,7 @@ const AcademyPage = () => {
               sectionLimpa.quizId = temaNomeToQuizId(sectionLimpa.temaNome);
             }
             
-            return sectionLimpa;
+            return stripLegacyTemaTrophyUrl(sectionLimpa);
           });
           // Não filtrar seções vazias - permitir temas sem aulas
         }
@@ -1162,6 +1435,7 @@ const AcademyPage = () => {
   
   // Handlers de Módulo
   const abrirModalModulo = (curso, modulo = null) => {
+    clearPendingTrofeuModulo();
     setCursoContexto(curso);
     
     // Verificar se é curso temporário (sem _id) ou curso existente
@@ -1173,6 +1447,7 @@ const AcademyPage = () => {
         moduleId: modulo.moduleId || '',
         moduleNome: modulo.moduleNome || '',
         isActive: modulo.isActive !== undefined ? modulo.isActive : true,
+        moduleTrophyIconUrl: typeof modulo.moduleTrophyIconUrl === 'string' ? modulo.moduleTrophyIconUrl : '',
         sections: modulo.sections || []
       });
     } else {
@@ -1186,6 +1461,7 @@ const AcademyPage = () => {
         moduleId: `modulo-${modulosExistentes.length + 1}`,
         moduleNome: '',
         isActive: true,
+        moduleTrophyIconUrl: '',
         sections: []
       });
     }
@@ -1194,6 +1470,7 @@ const AcademyPage = () => {
   
   // Função para fechar modal de módulo após salvar (sem verificar cancelamento)
   const fecharModalModuloAposSalvar = () => {
+    clearPendingTrofeuModulo();
     setModalModuloAberto(false);
     setModuloEditando(null);
     // Não limpar cursoContexto quando está salvando módulo temporário
@@ -1207,6 +1484,7 @@ const AcademyPage = () => {
         return; // Dialog será exibido
       }
     }
+    clearPendingTrofeuModulo();
     setModalModuloAberto(false);
     setModuloEditando(null);
     if (!cursoTemporario) {
@@ -1215,15 +1493,22 @@ const AcademyPage = () => {
   };
 
   // Função para voltar ao modal de Curso
-  const voltarParaCurso = () => {
+  const voltarParaCurso = async () => {
     if (!cursoTemporario) return;
     
     // Salvar dados do módulo atual antes de voltar
     if (formModulo.moduleId && formModulo.moduleNome) {
+      let trophyUrl = formModulo.moduleTrophyIconUrl || '';
+      try {
+        trophyUrl = await flushPendingModuloTrophy(pendingTrofeuModulo, formModulo);
+      } catch {
+        return;
+      }
       const moduloAtualizado = {
         moduleId: formModulo.moduleId,
         moduleNome: formModulo.moduleNome,
         isActive: formModulo.isActive,
+        moduleTrophyIconUrl: trophyUrl,
         sections: moduloTemporario?.sections || []
       };
       
@@ -1260,7 +1545,7 @@ const AcademyPage = () => {
   };
 
   // Função para avançar para próximo passo (Módulo → Tema)
-  const proximoPassoModulo = () => {
+  const proximoPassoModulo = async () => {
     // Validar campos obrigatórios
     if (!formModulo.moduleId || !formModulo.moduleId.trim()) {
       mostrarSnackbar('ID do módulo é obrigatório', 'error');
@@ -1271,11 +1556,19 @@ const AcademyPage = () => {
       return;
     }
 
+    let trophyUrl = formModulo.moduleTrophyIconUrl || '';
+    try {
+      trophyUrl = await flushPendingModuloTrophy(pendingTrofeuModulo, formModulo);
+    } catch {
+      return;
+    }
+
     // Criar objeto temporário do módulo
     const moduloTemp = {
       moduleId: formModulo.moduleId,
       moduleNome: formModulo.moduleNome,
       isActive: formModulo.isActive,
+      moduleTrophyIconUrl: trophyUrl,
       sections: []
     };
 
@@ -1294,7 +1587,7 @@ const AcademyPage = () => {
   };
   
   // Função para salvar módulo no curso temporário sem seguir para o próximo passo
-  const salvarModuloTemporario = () => {
+  const salvarModuloTemporario = async () => {
     // Validar campos obrigatórios
     if (!formModulo.moduleId || !formModulo.moduleId.trim()) {
       mostrarSnackbar('ID do módulo é obrigatório', 'error');
@@ -1305,11 +1598,19 @@ const AcademyPage = () => {
       return;
     }
 
+    let trophyUrl = formModulo.moduleTrophyIconUrl || '';
+    try {
+      trophyUrl = await flushPendingModuloTrophy(pendingTrofeuModulo, formModulo);
+    } catch {
+      return;
+    }
+
     // Criar objeto temporário do módulo
     const moduloTemp = {
       moduleId: formModulo.moduleId,
       moduleNome: formModulo.moduleNome,
       isActive: formModulo.isActive,
+      moduleTrophyIconUrl: trophyUrl,
       sections: []
     };
 
@@ -1330,16 +1631,24 @@ const AcademyPage = () => {
       
       // Se está em fluxo de criação (curso temporário), apenas adicionar ao temporário
       if (cursoTemporario && !curso._id) {
-        salvarModuloTemporario();
+        await salvarModuloTemporario();
         return;
       }
       
       // Se é curso existente, salvar no banco
       const modulos = [...(curso.modules || [])];
       
+      let trophyUrl = formModulo.moduleTrophyIconUrl || '';
+      try {
+        trophyUrl = await flushPendingModuloTrophy(pendingTrofeuModulo, formModulo);
+      } catch {
+        return;
+      }
+
       // Garantir que o módulo tenha sections como array vazio se não especificado
       const moduloParaSalvar = {
         ...formModulo,
+        moduleTrophyIconUrl: trophyUrl,
         sections: formModulo.sections || []
       };
       
@@ -1400,6 +1709,7 @@ const AcademyPage = () => {
   
   // Handlers de Tema
   const abrirModalTema = (curso, modulo, tema = null) => {
+    clearPendingTrofeuTema();
     setCursoContexto(curso);
     setModuloContexto(modulo);
     
@@ -1408,12 +1718,15 @@ const AcademyPage = () => {
     
     if (tema) {
       setTemaEditando(tema);
+      const trof = normalizeTemaTrophyFields(tema);
       setFormTema({
         temaNome: tema.temaNome || '',
         temaOrder: tema.temaOrder || 1,
         isActive: tema.isActive !== undefined ? tema.isActive : true,
         hasQuiz: tema.hasQuiz || false,
         quizId: tema.hasQuiz ? temaNomeToQuizId(tema.temaNome || '') : '',
+        temaTrophyIconUrlBronze: trof.temaTrophyIconUrlBronze,
+        temaTrophyIconUrlPrata: trof.temaTrophyIconUrlPrata,
         lessons: tema.lessons || []
       });
     } else {
@@ -1429,6 +1742,8 @@ const AcademyPage = () => {
         isActive: true,
         hasQuiz: false,
         quizId: '',
+        temaTrophyIconUrlBronze: '',
+        temaTrophyIconUrlPrata: '',
         lessons: []
       });
     }
@@ -1437,6 +1752,7 @@ const AcademyPage = () => {
   
   // Função para fechar modal de tema após salvar (sem verificar cancelamento)
   const fecharModalTemaAposSalvar = () => {
+    clearPendingTrofeuTema();
     setModalTemaAberto(false);
     setModalQuizAberto(false);
     setQuizFormQuestoes([]);
@@ -1452,6 +1768,7 @@ const AcademyPage = () => {
         return; // Dialog será exibido
       }
     }
+    clearPendingTrofeuTema();
     setModalTemaAberto(false);
     setModalQuizAberto(false);
     setQuizFormQuestoes([]);
@@ -1462,19 +1779,30 @@ const AcademyPage = () => {
   };
 
   // Função para voltar ao modal de Módulo
-  const voltarParaModulo = () => {
+  const voltarParaModulo = async () => {
     if (!cursoTemporario || !moduloTemporario) return;
     
     // Salvar dados do tema atual antes de voltar
     if (formTema.temaNome) {
-      const temaAtualizado = {
+      let bronze = formTema.temaTrophyIconUrlBronze || '';
+      let prata = formTema.temaTrophyIconUrlPrata || '';
+      try {
+        const urls = await flushPendingTemaTrophies(pendingTrofeuBronze, pendingTrofeuPrata, formTema);
+        bronze = urls.bronze;
+        prata = urls.prata;
+      } catch {
+        return;
+      }
+      const temaAtualizado = stripLegacyTemaTrophyUrl({
         temaNome: formTema.temaNome,
         temaOrder: formTema.temaOrder,
         isActive: formTema.isActive,
         hasQuiz: formTema.hasQuiz || false,
         quizId: formTema.hasQuiz ? temaNomeToQuizId(formTema.temaNome) : '',
+        temaTrophyIconUrlBronze: bronze,
+        temaTrophyIconUrlPrata: prata,
         lessons: temaTemporario?.lessons || []
-      };
+      });
       
       // Atualizar tema no módulo temporário
       const sectionsAtualizadas = moduloTemporario.sections.map(s => 
@@ -1509,6 +1837,7 @@ const AcademyPage = () => {
       moduleId: moduloTemporario.moduleId,
       moduleNome: moduloTemporario.moduleNome,
       isActive: moduloTemporario.isActive,
+      moduleTrophyIconUrl: moduloTemporario.moduleTrophyIconUrl || '',
       sections: moduloTemporario.sections || []
     });
     
@@ -1516,7 +1845,7 @@ const AcademyPage = () => {
   };
 
   // Função para avançar para próximo passo (Tema → Aula)
-  const proximoPassoTema = () => {
+  const proximoPassoTema = async () => {
     // Validar campos obrigatórios
     if (!formTema.temaNome || !formTema.temaNome.trim()) {
       mostrarSnackbar('Nome do tema é obrigatório', 'error');
@@ -1527,15 +1856,27 @@ const AcademyPage = () => {
       return;
     }
 
+    let bronze = formTema.temaTrophyIconUrlBronze || '';
+    let prata = formTema.temaTrophyIconUrlPrata || '';
+    try {
+      const urls = await flushPendingTemaTrophies(pendingTrofeuBronze, pendingTrofeuPrata, formTema);
+      bronze = urls.bronze;
+      prata = urls.prata;
+    } catch {
+      return;
+    }
+
     // Criar objeto temporário do tema
-    const temaTemp = {
+    const temaTemp = stripLegacyTemaTrophyUrl({
       temaNome: formTema.temaNome,
       temaOrder: formTema.temaOrder,
       isActive: formTema.isActive,
       hasQuiz: formTema.hasQuiz || false,
       quizId: formTema.hasQuiz ? temaNomeToQuizId(formTema.temaNome) : '',
+      temaTrophyIconUrlBronze: bronze,
+      temaTrophyIconUrlPrata: prata,
       lessons: []
-    };
+    });
 
     // Adicionar tema ao módulo temporário
     const moduloAtualizado = {
@@ -1563,7 +1904,7 @@ const AcademyPage = () => {
   };
   
   // Função para salvar tema no módulo temporário sem seguir para o próximo passo
-  const salvarTemaTemporario = () => {
+  const salvarTemaTemporario = async () => {
     // Validar campos obrigatórios
     if (!formTema.temaNome || !formTema.temaNome.trim()) {
       mostrarSnackbar('Nome do tema é obrigatório', 'error');
@@ -1574,15 +1915,27 @@ const AcademyPage = () => {
       return;
     }
 
+    let bronze = formTema.temaTrophyIconUrlBronze || '';
+    let prata = formTema.temaTrophyIconUrlPrata || '';
+    try {
+      const urls = await flushPendingTemaTrophies(pendingTrofeuBronze, pendingTrofeuPrata, formTema);
+      bronze = urls.bronze;
+      prata = urls.prata;
+    } catch {
+      return;
+    }
+
     // Criar objeto temporário do tema
-    const temaTemp = {
+    const temaTemp = stripLegacyTemaTrophyUrl({
       temaNome: formTema.temaNome,
       temaOrder: formTema.temaOrder,
       isActive: formTema.isActive,
       hasQuiz: formTema.hasQuiz || false,
       quizId: formTema.hasQuiz ? temaNomeToQuizId(formTema.temaNome) : '',
+      temaTrophyIconUrlBronze: bronze,
+      temaTrophyIconUrlPrata: prata,
       lessons: []
-    };
+    });
 
     // Adicionar tema ao módulo temporário
     const moduloAtualizado = {
@@ -1613,7 +1966,7 @@ const AcademyPage = () => {
       
       // Se está em fluxo de criação (curso temporário), apenas adicionar ao temporário
       if (cursoTemporario && !curso._id) {
-        salvarTemaTemporario();
+        await salvarTemaTemporario();
         return;
       }
       
@@ -1624,17 +1977,32 @@ const AcademyPage = () => {
       if (moduloIndex >= 0) {
         const sections = [...(modulos[moduloIndex].sections || [])];
         
+        let bronze = formTema.temaTrophyIconUrlBronze || '';
+        let prata = formTema.temaTrophyIconUrlPrata || '';
+        try {
+          const urls = await flushPendingTemaTrophies(pendingTrofeuBronze, pendingTrofeuPrata, formTema);
+          bronze = urls.bronze;
+          prata = urls.prata;
+        } catch {
+          return;
+        }
+
         // Garantir que o tema tenha lessons como array vazio se não especificado
-        const temaParaSalvar = {
+        const temaParaSalvar = stripLegacyTemaTrophyUrl({
           ...formTema,
+          temaTrophyIconUrlBronze: bronze,
+          temaTrophyIconUrlPrata: prata,
           lessons: formTema.lessons || [],
           quizId: formTema.hasQuiz ? temaNomeToQuizId(formTema.temaNome) : ''
-        };
+        });
         
         if (temaEditando) {
           const temaIndex = sections.findIndex(t => t.temaNome === temaEditando.temaNome);
           if (temaIndex >= 0) {
-            sections[temaIndex] = { ...sections[temaIndex], ...temaParaSalvar };
+            sections[temaIndex] = stripLegacyTemaTrophyUrl({
+              ...sections[temaIndex],
+              ...temaParaSalvar
+            });
           }
         } else {
           sections.push(temaParaSalvar);
@@ -1783,12 +2151,15 @@ const AcademyPage = () => {
     setAulaEditando(null);
     
     // Reabrir modal de tema com dados temporários
+    const trofT = normalizeTemaTrophyFields(temaTemporario);
     setFormTema({
       temaNome: temaTemporario.temaNome,
       temaOrder: temaTemporario.temaOrder,
       isActive: temaTemporario.isActive,
       hasQuiz: temaTemporario.hasQuiz || false,
       quizId: temaTemporario.hasQuiz ? temaNomeToQuizId(temaTemporario.temaNome || '') : '',
+      temaTrophyIconUrlBronze: trofT.temaTrophyIconUrlBronze,
+      temaTrophyIconUrlPrata: trofT.temaTrophyIconUrlPrata,
       lessons: temaTemporario.lessons || []
     });
     
@@ -3489,6 +3860,59 @@ const AcademyPage = () => {
               }
               label="Módulo Ativo"
             />
+            <input
+              ref={fileTrofeuModuloRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleSelectTrofeuModulo}
+            />
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1.5 }}>
+                <Button
+                  type="button"
+                  variant="outlined"
+                  startIcon={<EmojiEvents />}
+                  disabled={!!uploadingTrophy}
+                  onClick={() => fileTrofeuModuloRef.current?.click()}
+                >
+                  {uploadingTrophy === 'modulo' ? 'A enviar…' : 'Troféu'}
+                </Button>
+                {pendingTrofeuModulo ? (
+                  <Chip size="small" label="Pré-visualização local" variant="outlined" />
+                ) : formModulo.moduleTrophyIconUrl ? (
+                  <Chip size="small" label="Guardado no curso" color="primary" variant="outlined" />
+                ) : null}
+              </Box>
+              {(pendingTrofeuModulo?.objectUrl || formModulo.moduleTrophyIconUrl) ? (
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, flexWrap: 'wrap' }}>
+                  <Box
+                    component="img"
+                    src={
+                      pendingTrofeuModulo?.objectUrl ||
+                      academyTrophyProxyUrl(formModulo.moduleTrophyIconUrl)
+                    }
+                    alt="Pré-visualização troféu do módulo"
+                    sx={{
+                      maxHeight: 88,
+                      maxWidth: 140,
+                      objectFit: 'contain',
+                      borderRadius: 1,
+                      border: '1px solid rgba(0,0,0,0.12)',
+                      backgroundColor: 'rgba(0,0,0,0.02)',
+                    }}
+                  />
+                  <IconButton
+                    size="small"
+                    aria-label="Remover imagem"
+                    onClick={removerTrofeuModulo}
+                    disabled={!!uploadingTrophy}
+                  >
+                    <Close />
+                  </IconButton>
+                </Box>
+              ) : null}
+            </Box>
           </Box>
         </DialogContent>
         <DialogActions>
@@ -3656,6 +4080,205 @@ const AcademyPage = () => {
                 </Button>
               )}
             </Box>
+            <input
+              ref={fileTrofeuBronzeRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleSelectTrofeuBronze}
+            />
+            <input
+              ref={fileTrofeuPrataRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleSelectTrofeuPrata}
+            />
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1.5,
+                pt: 0.5,
+              }}
+            >
+              <Typography
+                variant="caption"
+                sx={{ color: 'rgba(0, 0, 0, 0.6)', fontFamily: 'Poppins' }}
+              >
+                Ícones de conquista (tema)
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1 }}>
+                  <Button
+                    type="button"
+                    variant="outlined"
+                    disabled={!!uploadingTrophy}
+                    startIcon={<EmojiEvents />}
+                    endIcon={<ExpandMore />}
+                    onClick={(e) => setTrofeuTemasMenuBronzeAnchor(e.currentTarget)}
+                    aria-haspopup="menu"
+                    aria-expanded={Boolean(trofeuTemasMenuBronzeAnchor)}
+                    sx={{
+                      fontFamily: 'Poppins',
+                      borderColor: 'var(--blue-medium)',
+                      color: 'var(--blue-medium)',
+                      '&:hover': {
+                        borderColor: 'var(--blue-dark)',
+                        backgroundColor: 'rgba(22, 52, 255, 0.08)',
+                      },
+                    }}
+                  >
+                    {uploadingTrophy === 'bronze' ? 'Enviando…' : 'Troféu Bronze'}
+                  </Button>
+                  <Menu
+                    anchorEl={trofeuTemasMenuBronzeAnchor}
+                    open={Boolean(trofeuTemasMenuBronzeAnchor)}
+                    onClose={() => setTrofeuTemasMenuBronzeAnchor(null)}
+                    anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                    transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+                    PaperProps={{ sx: { fontFamily: 'Poppins' } }}
+                  >
+                    <MenuItem
+                      onClick={() => {
+                        setTrofeuTemasMenuBronzeAnchor(null);
+                        fileTrofeuBronzeRef.current?.click();
+                      }}
+                    >
+                      <Add sx={{ mr: 1, fontSize: 20, color: 'var(--blue-medium)' }} />
+                      Adicionar novo
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        setTrofeuTemasMenuBronzeAnchor(null);
+                        abrirSelecaoTrofeuExistente('bronze');
+                      }}
+                    >
+                      <PhotoLibrary sx={{ mr: 1, fontSize: 20, color: 'var(--blue-medium)' }} />
+                      Selecionar existente
+                    </MenuItem>
+                  </Menu>
+                  {pendingTrofeuBronze ? (
+                    <Chip size="small" label="Prévia local" sx={{ fontFamily: 'Poppins' }} />
+                  ) : formTema.temaTrophyIconUrlBronze ? (
+                    <Chip size="small" label="Guardado" color="primary" variant="outlined" sx={{ fontFamily: 'Poppins' }} />
+                  ) : null}
+                </Box>
+                {(pendingTrofeuBronze?.objectUrl || formTema.temaTrophyIconUrlBronze) ? (
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, flexWrap: 'wrap' }}>
+                    <Box
+                      component="img"
+                      src={
+                        pendingTrofeuBronze?.objectUrl ||
+                        academyTrophyProxyUrl(formTema.temaTrophyIconUrlBronze)
+                      }
+                      alt="Pré-visualização troféu Bronze"
+                      sx={{
+                        maxHeight: 88,
+                        maxWidth: 140,
+                        objectFit: 'contain',
+                        borderRadius: 1,
+                        border: '1px solid rgba(0,0,0,0.12)',
+                        backgroundColor: 'rgba(0,0,0,0.02)',
+                      }}
+                    />
+                    <IconButton
+                      size="small"
+                      aria-label="Remover Bronze"
+                      onClick={removerTrofeuBronze}
+                      disabled={!!uploadingTrophy}
+                    >
+                      <Close />
+                    </IconButton>
+                  </Box>
+                ) : null}
+              </Box>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1 }}>
+                  <Button
+                    type="button"
+                    variant="outlined"
+                    disabled={!!uploadingTrophy}
+                    startIcon={<EmojiEvents />}
+                    endIcon={<ExpandMore />}
+                    onClick={(e) => setTrofeuTemasMenuPrataAnchor(e.currentTarget)}
+                    aria-haspopup="menu"
+                    aria-expanded={Boolean(trofeuTemasMenuPrataAnchor)}
+                    sx={{
+                      fontFamily: 'Poppins',
+                      borderColor: 'var(--blue-medium)',
+                      color: 'var(--blue-medium)',
+                      '&:hover': {
+                        borderColor: 'var(--blue-dark)',
+                        backgroundColor: 'rgba(22, 52, 255, 0.08)',
+                      },
+                    }}
+                  >
+                    {uploadingTrophy === 'prata' ? 'Enviando…' : 'Troféu Prata'}
+                  </Button>
+                  <Menu
+                    anchorEl={trofeuTemasMenuPrataAnchor}
+                    open={Boolean(trofeuTemasMenuPrataAnchor)}
+                    onClose={() => setTrofeuTemasMenuPrataAnchor(null)}
+                    anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                    transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+                    PaperProps={{ sx: { fontFamily: 'Poppins' } }}
+                  >
+                    <MenuItem
+                      onClick={() => {
+                        setTrofeuTemasMenuPrataAnchor(null);
+                        fileTrofeuPrataRef.current?.click();
+                      }}
+                    >
+                      <Add sx={{ mr: 1, fontSize: 20, color: 'var(--blue-medium)' }} />
+                      Adicionar novo
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        setTrofeuTemasMenuPrataAnchor(null);
+                        abrirSelecaoTrofeuExistente('prata');
+                      }}
+                    >
+                      <PhotoLibrary sx={{ mr: 1, fontSize: 20, color: 'var(--blue-medium)' }} />
+                      Selecionar existente
+                    </MenuItem>
+                  </Menu>
+                  {pendingTrofeuPrata ? (
+                    <Chip size="small" label="Prévia local" sx={{ fontFamily: 'Poppins' }} />
+                  ) : formTema.temaTrophyIconUrlPrata ? (
+                    <Chip size="small" label="Guardado" color="primary" variant="outlined" sx={{ fontFamily: 'Poppins' }} />
+                  ) : null}
+                </Box>
+                {(pendingTrofeuPrata?.objectUrl || formTema.temaTrophyIconUrlPrata) ? (
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, flexWrap: 'wrap' }}>
+                    <Box
+                      component="img"
+                      src={
+                        pendingTrofeuPrata?.objectUrl ||
+                        academyTrophyProxyUrl(formTema.temaTrophyIconUrlPrata)
+                      }
+                      alt="Pré-visualização troféu Prata"
+                      sx={{
+                        maxHeight: 88,
+                        maxWidth: 140,
+                        objectFit: 'contain',
+                        borderRadius: 1,
+                        border: '1px solid rgba(0,0,0,0.12)',
+                        backgroundColor: 'rgba(0,0,0,0.02)',
+                      }}
+                    />
+                    <IconButton
+                      size="small"
+                      aria-label="Remover Prata"
+                      onClick={removerTrofeuPrata}
+                      disabled={!!uploadingTrophy}
+                    >
+                      <Close />
+                    </IconButton>
+                  </Box>
+                ) : null}
+              </Box>
+            </Box>
           </Box>
         </DialogContent>
         <DialogActions sx={{ backgroundColor: 'var(--cor-container)', px: 2.4, pb: 2.4 }}>
@@ -3716,6 +4339,97 @@ const AcademyPage = () => {
             }}
           >
             {cursoTemporario ? 'Próximo' : 'Salvar'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={modalTrofeuExistenteOpen}
+        onClose={fecharModalTrofeuExistente}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            backgroundColor: 'var(--cor-container)',
+            color: 'var(--gray)',
+            borderRadius: '12px',
+          }
+        }}
+      >
+        <DialogTitle sx={{ fontFamily: 'Poppins', fontWeight: 600 }}>
+          Selecionar troféu existente
+        </DialogTitle>
+        <DialogContent sx={{ backgroundColor: 'var(--cor-container)' }}>
+          <Typography variant="body2" sx={{ mb: 2, fontFamily: 'Poppins', color: 'rgba(0,0,0,0.65)' }}>
+            Imagens na pasta <strong>icones_conquistas/temas</strong> do bucket. Ao escolher, o URL é reutilizado (sem novo upload).
+          </Typography>
+          {loadingListaTrofeusTemasGcs ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 5 }}>
+              <CircularProgress sx={{ color: 'var(--blue-medium)' }} />
+            </Box>
+          ) : listaTrofeusTemasGcs.length === 0 ? (
+            <Typography sx={{ fontFamily: 'Poppins', py: 2 }}>
+              Nenhuma imagem encontrada nesta pasta.
+            </Typography>
+          ) : (
+            <Grid container spacing={2}>
+              {listaTrofeusTemasGcs.map((item) => (
+                <Grid item xs={6} sm={4} md={3} key={item.fileName}>
+                  <Box
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => aplicarTrofeuExistenteDoGcs(item.url)}
+                    onKeyDown={(ev) => {
+                      if (ev.key === 'Enter' || ev.key === ' ') {
+                        ev.preventDefault();
+                        aplicarTrofeuExistenteDoGcs(item.url);
+                      }
+                    }}
+                    sx={{
+                      cursor: 'pointer',
+                      border: '1px solid rgba(0,0,0,0.12)',
+                      borderRadius: 1,
+                      p: 1,
+                      backgroundColor: 'rgba(0,0,0,0.02)',
+                      transition: 'box-shadow 0.15s',
+                      '&:hover': {
+                        boxShadow: 2,
+                        borderColor: 'var(--blue-medium)',
+                      },
+                    }}
+                  >
+                    <Box
+                      component="img"
+                      src={academyTrophyProxyUrl(item.url)}
+                      alt=""
+                      sx={{
+                        width: '100%',
+                        height: 100,
+                        objectFit: 'contain',
+                        display: 'block',
+                      }}
+                    />
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        fontFamily: 'Poppins',
+                        display: 'block',
+                        mt: 0.5,
+                        wordBreak: 'break-all',
+                        color: 'rgba(0,0,0,0.7)',
+                      }}
+                    >
+                      {item.fileName.split('/').pop()}
+                    </Typography>
+                  </Box>
+                </Grid>
+              ))}
+            </Grid>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ backgroundColor: 'var(--cor-container)', px: 2, pb: 2 }}>
+          <Button onClick={fecharModalTrofeuExistente} sx={{ fontFamily: 'Poppins' }}>
+            Fechar
           </Button>
         </DialogActions>
       </Dialog>

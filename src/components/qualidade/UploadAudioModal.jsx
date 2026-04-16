@@ -2,9 +2,10 @@
  * UploadAudioModal.jsx
  * Modal para upload de arquivos de áudio para análise GPT
  * 
- * VERSION: v2.4.1
- * DATE: 2026-04-10
+ * VERSION: v2.5.0
+ * DATE: 2026-04-15
  * AUTHOR: VeloHub Development Team
+ * CHANGELOG: v2.5.0 - fetch status/reenvio: base via getResolvedApiOrigin (dev → localhost)
  * CHANGELOG: v2.4.1 - Release push GitHub 2026-04-10
  * CHANGELOG: v2.4.0 - Status do modal alinhado à linha da tabela (fallback se GET status-por-avaliacao falhar ou data null); normalizeAvaliacaoIdForFetch para URL ($oid / ObjectId)
  * CHANGELOG: v2.3.0 - Reenvio manual só após audioTreated failed + audioManualReenvioDisponivelEm; chip Processado aligned pending/done/failed
@@ -43,6 +44,7 @@ import {
   getStatusColor,
   reenviarAudioPubSub
 } from '../../services/qualidadeAudioService';
+import { getResolvedApiOrigin } from '../../services/api';
 
 /** ID seguro para path da API (evita [object Object] quando _id vem como objeto Mongo). */
 const normalizeAvaliacaoIdForFetch = (raw) => {
@@ -146,7 +148,7 @@ const UploadAudioModal = ({
       showSnackbar('Áudio reenviado para processamento com sucesso!', 'success');
       
       // Atualizar status do áudio após reenvio
-      const baseUrl = (process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app').replace(/\/api\/?$/, '');
+      const baseUrl = getResolvedApiOrigin();
       const response = await fetch(`${baseUrl}/api/audio-analise/status-por-avaliacao/${idParaUsar}`);
       if (response.ok) {
         const data = await response.json();
@@ -208,10 +210,7 @@ const UploadAudioModal = ({
 
     (async () => {
       try {
-        const baseUrl = (process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app').replace(
-          /\/api\/?$/,
-          ''
-        );
+        const baseUrl = getResolvedApiOrigin();
         const response = await fetch(
           `${baseUrl}/api/audio-analise/status-por-avaliacao/${rowIdForAudioStatus}`
         );

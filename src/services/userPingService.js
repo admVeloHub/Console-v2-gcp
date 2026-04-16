@@ -1,4 +1,7 @@
-// VERSION: v1.0.2 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.1.0 | DATE: 2026-04-15 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.1.0 - URL do ping via getResolvedApiUrl (dev → backend local)
+
+import { getResolvedApiUrl } from './api';
 
 /**
  * Determina o collectionId baseado nas permissões do usuário
@@ -95,14 +98,7 @@ export const sendUserPing = async (user) => {
 
     console.log('Enviando ping do usuário:', pingData);
 
-    // Função auxiliar para normalizar URL base (remove /api do final se existir)
-    const normalizeBaseUrl = (url) => {
-      return url.replace(/\/api\/?$/, '');
-    };
-    
-    // URL do backend - garantir que sempre termine com /api
-    const baseUrl = normalizeBaseUrl(process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app');
-    const apiUrl = `${baseUrl}/api/user-ping`;
+    const apiUrl = `${getResolvedApiUrl()}/user-ping`;
 
     const response = await fetch(apiUrl, {
       method: 'POST',

@@ -2,9 +2,10 @@
  * qualidadeAudioService.js
  * Serviço para upload e análise de áudios com GPT
  * 
- * VERSION: v2.5.1
- * DATE: 2026-04-10
+ * VERSION: v2.6.0
+ * DATE: 2026-04-15
  * AUTHOR: VeloHub Development Team
+ * CHANGELOG: v2.6.0 - reenviarAudioPubSub: base URL via getResolvedApiOrigin (dev → localhost)
  * CHANGELOG: v2.5.1 - Release push GitHub 2026-04-10
  * CHANGELOG: v2.5.0 - confirm-upload retorna audioTreated/timestamps no resultado do upload; polling trata status falha
  * CHANGELOG: v2.4.1 - API_URL/SSE via getResolvedApiUrl (igual api.js) para listar/upload funcionarem ao acessar Console pelo IP da rede
@@ -13,7 +14,7 @@
  * CHANGELOG: v2.2.0 - Melhorado tratamento de erro SSE, otimizado handlers para performance, melhorada mensagem de erro de upload bloqueado
  */
 
-import { getResolvedApiUrl } from './api';
+import { getResolvedApiUrl, getResolvedApiOrigin } from './api';
 
 // Função auxiliar para normalizar URL base (remove /api do final se existir)
 const normalizeBaseUrl = (url) => {
@@ -927,8 +928,7 @@ export const reenviarAudioPubSub = async (avaliacaoId) => {
       throw new Error('avaliacaoId é obrigatório');
     }
 
-    // Normalizar URL base removendo /api se existir no final
-    const baseUrl = (process.env.REACT_APP_API_URL || 'https://backend-gcp-hfsqj6konq-ue.a.run.app').replace(/\/api\/?$/, '');
+    const baseUrl = getResolvedApiOrigin();
     const url = `${baseUrl}/api/audio-analise/reenviar-pubsub/${avaliacaoId}`;
     
     console.log('🔄 Reenviando áudio para Pub/Sub:', { avaliacaoId, url });
