@@ -90,7 +90,7 @@ echo 📱 Para acessar de outros computadores:
 echo 1. Descubra seu IP local (ipconfig)
 echo 2. Acesse: http://[SEU_IP]:8080
 echo.
-echo 🔐 Senha de acesso: velotax2024
+echo 🔐 Senha: defina window.VELOHUB_CAPACITY_PASSWORD no HTML antes de script.js
 echo.
 echo Pressione qualquer tecla para iniciar o servidor...
 pause >nul

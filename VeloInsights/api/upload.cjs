@@ -1,4 +1,5 @@
-
+// VERSION: v1.0.1 | DATE: 2026-04-23 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.0.1 - Extensão .cjs para carregamento via require a partir de api/index.cjs (package type module)
 
 const XLSX = require('xlsx');
 const fs = require('fs');

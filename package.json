@@ -1,6 +1,6 @@
 {
   "name": "console-conteudo-unified",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "Console de Conteúdo VeloHub - Aplicação React Unificada com IGP Integrado",
   "private": true,
   "main": "src/index.js",

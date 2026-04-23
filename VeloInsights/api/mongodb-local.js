@@ -1,6 +1,14 @@
+// VERSION: v1.1.0 | DATE: 2026-04-23 — Bootstrap FONTE DA VERDADE (opcional para env local)
 import express from 'express'
 import cors from 'cors'
 import { MongoClient } from 'mongodb'
+import { createRequire } from 'module'
+import { fileURLToPath } from 'url'
+import path from 'path'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const require = createRequire(import.meta.url)
+require('../config/loadFonteVerdadeEnv.cjs').loadFrom(__dirname)
 
 const app = express()
 const PORT = 3001

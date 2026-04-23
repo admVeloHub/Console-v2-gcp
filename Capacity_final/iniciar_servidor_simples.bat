@@ -45,7 +45,7 @@ echo.
 echo 🌐 Porta: 8080
 echo 🏠 Local: http://localhost:8080
 echo 🌍 Rede: http://[SEU_IP]:8080
-echo 🔐 Senha: velotax2024
+echo 🔐 Senha: defina window.VELOHUB_CAPACITY_PASSWORD no HTML antes de script.js
 echo.
 echo ⚠️  Para parar: Ctrl+C
 echo.

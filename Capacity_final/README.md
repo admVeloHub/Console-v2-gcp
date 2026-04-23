@@ -6,12 +6,12 @@ Sistema profissional para cálculo de capacidade de call center utilizando o mod
 
 O sistema possui proteção por senha para garantir acesso controlado:
 
-- **Senha Padrão:** `velotax2024`
+- **Senha:** definir apenas em uso local com `window.VELOHUB_CAPACITY_PASSWORD = 'sua_senha'` **antes** de carregar `script.js` (ou via snippet no HTML). Não há senha padrão no repositório.
 - **Sessão Persistente:** A sessão é mantida até logout ou fechamento do navegador
 - **Logout Seguro:** Botão de logout no cabeçalho para encerrar a sessão
 - **Proteção Total:** Todas as funcionalidades são protegidas até autenticação
 
-> **⚠️ Importante:** Para produção, recomenda-se alterar a senha padrão no arquivo `script.js` (linha 2: `const SYSTEM_PASSWORD = 'velotax2024';`) para uma senha mais segura.
+> **⚠️ Importante:** Não commitar senhas. Para demo local, use um ficheiro ou bloco `<script>` ignorado pelo Git que defina `window.VELOHUB_CAPACITY_PASSWORD`.
 
 ## 🎯 **Objetivo**
 
@@ -121,7 +121,7 @@ Intervalo de ligações,Quantidade média de ligações recebidas por intervalo
 
 ### **Opção 1: Acesso Local**
 1. Abra o arquivo `index.html` em qualquer navegador moderno
-2. Digite a senha: `velotax2024`
+2. Digite a senha configurada em `window.VELOHUB_CAPACITY_PASSWORD`
 3. Faça upload dos arquivos CSV
 4. Processe o dimensionamento
 
@@ -204,7 +204,7 @@ ifconfig
 ### **Acesso de Outros Dispositivos**
 1. Descubra seu IP local
 2. Acesse: `http://[SEU_IP]:8080`
-3. Digite a senha: `velotax2024`
+3. Digite a senha configurada em `window.VELOHUB_CAPACITY_PASSWORD`
 4. Use normalmente em qualquer dispositivo
 
 ## 🛠️ **Requisitos Técnicos**
@@ -247,7 +247,7 @@ velotax-capacity/
 
 ### **Configuração de Senha**
 1. Abra `script.js`
-2. Localize a linha 2: `const SYSTEM_PASSWORD = 'velotax2024';`
+2. Garanta que `window.VELOHUB_CAPACITY_PASSWORD` está definido antes de `script.js`
 3. Altere para sua senha desejada
 4. Salve o arquivo
 

@@ -1,11 +1,35 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.47.7 | DATE: 2026-04-16 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.49.0 | DATE: 2026-04-23 | AUTHOR: VeloHub Development Team -->
 <!--
   REGRA (push GitHub): Preencher a nova entrada do DEPLOY_LOG (tipo, data, branch, repositório,
   arquivos, descrição) ANTES do `git commit`. Incluir DEPLOY_LOG no MESMO commit que o código.
   Não criar commit adicional só para corrigir hash, SHA ou “fechar” o log.
   Campo **Commit:** opcional; se não usar SHA aqui, consultar `git log -1 --oneline` no remoto.
 -->
+
+## Alteração local - Segurança e higienização (sem push) - 2026-04-23
+
+### **Tipo:** Alteração repositório / segurança
+### **Data/Hora:** 2026-04-23
+### **Branch:** *(a definir no remoto)*
+### **Commit:** *(pendente)*
+### **Repositório:** https://github.com/admVeloHub/Console-v2-gcp.git
+
+### **Arquivos Modificados (principais):**
+- `src/services/api.js` — DEFAULT_SKYNET_API_ORIGIN alinhado ao backend Cloud Run
+- `VeloInsights/api/*.js`, `VeloInsights/config/mongodb.js`, `VeloInsights/API_55_INTEGRATION.md` — URI Mongo só via env
+- `VeloInsights` — bootstrap `loadFonteVerdadeEnv.cjs` (FONTE DA VERDADE / `VELOHUB_DOTENV_PATH`); API Express em `api/index.cjs` + `upload.cjs`; dependência `dotenv`
+- `backend/server.js`, `backend/config/loadFonteVerdadeEnv.js` — mesmo bootstrap no servidor Express do Console
+- `Dockerfile`, `cloudbuild.yaml` — build args sem IDs/URLs sensíveis nos defaults; Client ID só via Secret Manager
+- `quality original/src/components/Login.tsx` — demo: `VITE_DEMO_LOGIN_PASSWORD`
+- `Capacity_final/*` — senha via `window.VELOHUB_CAPACITY_PASSWORD`; README/bat atualizados
+- `.gitignore` (raiz) — pasta `scripts/`
+- `LISTA_SCHEMAS.rb`, `INSTRUCOES-CREDENCIAIS-GCP.md` — rastreio / histórico Git
+
+### **Descrição:**
+Remoção de connection strings e senhas hardcoded; scripts SKYNET operacionais movidos para `scripts/skynet-backend/` (gitignored); pipeline Console/SKYNET/worker documentado para secrets no Cloud Run; legados Capacity/quality sem palavra-passe no Git; desenvolvimento local: credenciais partilhadas via `.env` na FONTE DA VERDADE (bootstrap no backend Console e nas APIs Node VeloInsights).
+
+---
 
 ## Push GitHub - Academy: troféus GCS (multipart), Bronze/Prata existentes, API e serviços - 2026-04-16
 

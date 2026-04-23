@@ -1,7 +1,23 @@
+// VERSION: v1.2.0 | DATE: 2026-04-23 — Bootstrap FONTE DA VERDADE; URI Mongo só via env
 import express from 'express'
 import { MongoClient } from 'mongodb'
 import cors from 'cors'
 import cron from 'node-cron'
+import { createRequire } from 'module'
+import { fileURLToPath } from 'url'
+import path from 'path'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const require = createRequire(import.meta.url)
+require('../config/loadFonteVerdadeEnv.cjs').loadFrom(__dirname)
+
+function getMongoUri() {
+  const u = process.env.MONGODB_URI || process.env.MONGO_ENV || process.env.MONGODB_URL
+  if (!u || !String(u).trim()) {
+    throw new Error('MONGODB_URI, MONGO_ENV ou MONGODB_URL deve estar definido.')
+  }
+  return u.trim()
+}
 
 const app = express()
 const PORT = 3002 // Porta diferente para evitar conflitos
@@ -9,9 +25,6 @@ const PORT = 3002 // Porta diferente para evitar conflitos
 // Middleware
 app.use(cors())
 app.use(express.json({ limit: '50mb' }))
-
-// Configuração MongoDB Atlas
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://REDACTED_ATLAS_URI'
 
 // Configuração da API da 55
 const API_55_CONFIG = {
@@ -34,7 +47,7 @@ let api55Token = null
 async function connectToMongoDB() {
   try {
     if (!client) {
-      client = new MongoClient(MONGODB_URI)
+      client = new MongoClient(getMongoUri())
       await client.connect()
       db = client.db('console_analises')
       console.log('✅ Conectado ao MongoDB Atlas')

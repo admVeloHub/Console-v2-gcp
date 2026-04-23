@@ -2,8 +2,11 @@
  * backend/server.js
  * Servidor Express para servir aplicação React no Cloud Run
  * 
- * VERSION: v1.1.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+ * VERSION: v1.2.0 | DATE: 2026-04-23 | AUTHOR: VeloHub Development Team
+ * CHANGELOG: v1.2.0 - Dev: loadFonteVerdadeEnv antes de Express (FONTE DA VERDADE / VELOHUB_DOTENV_PATH)
  */
+
+require('./config/loadFonteVerdadeEnv').loadFrom(__dirname);
 
 const express = require('express');
 const path = require('path');

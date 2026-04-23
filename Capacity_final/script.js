@@ -1,9 +1,11 @@
 // Sistema de Dimensionamento de Call Center - Velotax Capacity
 // Versão para 2 arquivos: Dias Úteis (Segunda à Sexta) e Sábado
-// ÚLTIMA ATUALIZAÇÃO: 2024-12-19 - CORREÇÃO TMA E DEBUG
+// VERSION: v1.1.0 | DATE: 2026-04-23 — senha só via window.VELOHUB_CAPACITY_PASSWORD (demo local, não commitar)
 
-// Configuração da senha de acesso
-const SYSTEM_PASSWORD = 'velotax2024';
+const SYSTEM_PASSWORD =
+  typeof window !== 'undefined' && window.VELOHUB_CAPACITY_PASSWORD != null
+    ? String(window.VELOHUB_CAPACITY_PASSWORD)
+    : '';
 
 console.log('🚀 Script carregado - iniciando configuração...');
 
@@ -215,6 +217,10 @@ function isAuthenticated() {
 
 // Função para autenticar o usuário
 function authenticate(password) {
+    if (!SYSTEM_PASSWORD) {
+        console.warn('Capacidade: defina window.VELOHUB_CAPACITY_PASSWORD antes do script (apenas uso local).');
+        return false;
+    }
     if (password === SYSTEM_PASSWORD) {
         sessionStorage.setItem('authenticated', 'true');
         return true;

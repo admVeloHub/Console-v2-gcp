@@ -1,4 +1,5 @@
-// VERSION: v3.17.1 | DATE: 2026-04-16 | AUTHOR: VeloHub Development Team
+// VERSION: v3.18.0 | DATE: 2026-04-23 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v3.18.0 - DEFAULT_SKYNET_API_ORIGIN alinhado ao host Cloud Run usado no Cloud Build (backend-gcp-278491073220)
 // CHANGELOG: v3.17.1 - Erros 5xx: priorizar data.message (detalhe do backend) antes de data.error (mensagem genérica)
 // CHANGELOG: v3.17.0 - Em NODE_ENV development, fallback da API é http://localhost:3001 (SKYNET local); PRD só em build produção ou REACT_APP_* explícito
 // CHANGELOG: v3.16.1 - Payload categorias com Ordem + categoria_id snake_case (backend recalcula ids)
@@ -10,7 +11,7 @@
 import axios from 'axios';
 
 /** Backend SKYNET em PRD quando não há env e o build é produção (`npm run build`). */
-export const DEFAULT_SKYNET_API_ORIGIN = 'https://backend-gcp-hfsqj6konq-ue.a.run.app';
+export const DEFAULT_SKYNET_API_ORIGIN = 'https://backend-gcp-278491073220.us-east1.run.app';
 
 /** SKYNET local (`npm start` no Dev - SKYNET — PORT padrão 3001 em server.js). Usado só em `NODE_ENV === 'development'`. */
 export const DEFAULT_DEV_SKYNET_ORIGIN = 'http://localhost:3001';

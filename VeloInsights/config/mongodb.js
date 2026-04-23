@@ -1,14 +1,24 @@
 /**
  * Configuração MongoDB para VeloInsights
  * Schema otimizado para dados de ligações do %%pbx
+ * VERSION: v1.1.0 | DATE: 2026-04-23 — url só via env (MONGODB_URL | MONGODB_URI | MONGO_ENV)
  */
 
 import { MongoClient } from 'mongodb'
 
+function resolveMongoUrl() {
+  const u = process.env.MONGODB_URL || process.env.MONGODB_URI || process.env.MONGO_ENV
+  if (!u || !String(u).trim()) {
+    throw new Error('Defina MONGODB_URL, MONGODB_URI ou MONGO_ENV (ex.: FONTE DA VERDADE/.env).')
+  }
+  return u.trim()
+}
+
 // Configurações MongoDB
 export const MONGODB_CONFIG = {
-  // MongoDB Atlas (recomendado) ou Local
-  url: process.env.MONGODB_URL || 'mongodb+srv://REDACTED_ATLAS_URI',
+  get url() {
+    return resolveMongoUrl()
+  },
   database: 'console_analises',
   collections: {
     calls: 'calls',           // Dados de ligações

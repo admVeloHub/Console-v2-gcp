@@ -1,17 +1,16 @@
 # cloudbuild.yaml
 # Configuração para Cloud Build com Cloud Run
-# VERSION: v1.6.0 | DATE: 2025-01-31 | AUTHOR: VeloHub Development Team
+# VERSION: v1.7.0 | DATE: 2026-04-23 | AUTHOR: VeloHub Development Team
+# CHANGELOG: v1.7.0 - GOOGLE_CLIENT_ID apenas via Secret GOOGLE_ID_CONSOLE; REACT_APP_API_URL via substituição _REACT_APP_API_URL
 # CHANGELOG: v1.6.0 - Adicionado fallback para substituição direta caso Secret Manager não esteja acessível
 #
-# IMPORTANTE: 
+# IMPORTANTE:
 # - GOOGLE_ID_CONSOLE deve estar configurado no Secret Manager do GCP
 # - REACT_APP_GOOGLE_CLIENT_ID é passada como build arg durante o build do Docker
 # - Esta variável é incorporada no código JavaScript durante o build e não pode ser alterada em runtime
 
 substitutions:
-  # Fallback direto caso o Secret Manager não esteja acessível
-  # O Client ID é público e pode ser usado diretamente aqui
-  _GOOGLE_CLIENT_ID: '278491073220-7u7hh1tji5dd65qagkprc1acenagql5o.apps.googleusercontent.com'
+  _REACT_APP_API_URL: 'https://backend-gcp-278491073220.us-east1.run.app/api'
   _AUTHORIZED_DOMAIN: 'velotax.com.br'
 
 steps:
@@ -24,19 +23,14 @@ steps:
       - '-c'
       - |
         echo "🔍 Verificando GOOGLE_CLIENT_ID..."
-        # Tentar usar secret primeiro, depois fallback para substituição
-        if [ -n "$$GOOGLE_CLIENT_ID" ]; then
-          echo "✅ GOOGLE_CLIENT_ID obtido do Secret Manager (primeiros 30 chars): $${GOOGLE_CLIENT_ID:0:30}..."
-          CLIENT_ID="$$GOOGLE_CLIENT_ID"
-        elif [ -n "${_GOOGLE_CLIENT_ID}" ]; then
-          echo "⚠️ Usando GOOGLE_CLIENT_ID da substituição (fallback)"
-          CLIENT_ID="${_GOOGLE_CLIENT_ID}"
-        else
-          echo "❌ ERRO: GOOGLE_CLIENT_ID não está disponível nem do Secret Manager nem da substituição!"
+        if [ -z "$$GOOGLE_CLIENT_ID" ]; then
+          echo "❌ ERRO: secret GOOGLE_ID_CONSOLE não disponível como GOOGLE_CLIENT_ID neste passo."
           exit 1
         fi
+        echo "✅ GOOGLE_CLIENT_ID obtido do Secret Manager (primeiros 30 chars): $${GOOGLE_CLIENT_ID:0:30}..."
+        CLIENT_ID="$$GOOGLE_CLIENT_ID"
         docker build \
-          --build-arg REACT_APP_API_URL=https://backend-gcp-278491073220.us-east1.run.app/api \
+          --build-arg REACT_APP_API_URL=${_REACT_APP_API_URL} \
           --build-arg REACT_APP_GOOGLE_CLIENT_ID="$CLIENT_ID" \
           --build-arg REACT_APP_AUTHORIZED_DOMAIN=${_AUTHORIZED_DOMAIN} \
           -t gcr.io/$PROJECT_ID/frontend-console:$COMMIT_SHA \

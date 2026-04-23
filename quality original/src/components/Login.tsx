@@ -11,8 +11,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Senha padrão - você pode alterar para a senha desejada
-  const CORRECT_PASSWORD = 'velotax2024';
+  // Demo legado: definir VITE_DEMO_LOGIN_PASSWORD no .env (nunca commitar o valor)
+  const CORRECT_PASSWORD =
+    (import.meta as unknown as { env?: { VITE_DEMO_LOGIN_PASSWORD?: string } }).env?.VITE_DEMO_LOGIN_PASSWORD || '';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,6 +22,11 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
     // Simular um pequeno delay para melhor UX
     setTimeout(() => {
+      if (!CORRECT_PASSWORD) {
+        setError('Demo desativada: defina VITE_DEMO_LOGIN_PASSWORD no ambiente.');
+        setIsLoading(false);
+        return;
+      }
       if (password === CORRECT_PASSWORD) {
         // Salvar no localStorage que o usuário está logado
         localStorage.setItem('isAuthenticated', 'true');

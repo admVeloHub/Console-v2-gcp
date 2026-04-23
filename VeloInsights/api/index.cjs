@@ -1,9 +1,13 @@
+// VERSION: v1.1.0 | DATE: 2026-04-23 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.1.0 - Extensão .cjs (package "type":"module"); bootstrap FONTE DA VERDADE antes do resto
+require('../config/loadFonteVerdadeEnv.cjs').loadFrom(__dirname);
+
 const express = require('express');
 const multer = require('multer');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
-const upload = require('./upload');
+const upload = require('./upload.cjs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
