@@ -14,7 +14,7 @@
 ### **Branch:** main
 ### **Ferramenta:** `py -m git_filter_repo --replace-text` (padrões `mongodb+srv://…` e `mongodb://user:pass@…` → placeholders `REDACTED_*`)
 ### **Repositório:** https://github.com/admVeloHub/Console-v2-gcp.git
-### **Commit (tip `main` após reescrita):** 16cd92e
+### **Commit (tip `main` após reescrita + registo no log):** 5925396
 
 ### **Descrição:**
 Reescrita do histórico local e **`git push --force --all`** para remover connection strings Mongo dos commits antigos. Clones e forks devem fazer fetch e reset/re-clone para alinhar a `main`. SHAs anteriores deixam de ser válidos no remoto.
