@@ -1,4 +1,5 @@
-// VERSION: v3.18.0 | DATE: 2026-04-23 | AUTHOR: VeloHub Development Team
+// VERSION: v3.19.0 | DATE: 2026-04-23 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v3.19.0 - Em PRD, REACT_APP_API_URL pode vir de window.__VELOHUB_RUNTIME_CONFIG__ (env do contêiner no index.html)
 // CHANGELOG: v3.18.0 - DEFAULT_SKYNET_API_ORIGIN alinhado ao host Cloud Run usado no Cloud Build (backend-gcp-278491073220)
 // CHANGELOG: v3.17.1 - Erros 5xx: priorizar data.message (detalhe do backend) antes de data.error (mensagem genérica)
 // CHANGELOG: v3.17.0 - Em NODE_ENV development, fallback da API é http://localhost:3001 (SKYNET local); PRD só em build produção ou REACT_APP_* explícito
@@ -26,6 +27,13 @@ const normalizeBaseUrl = (url) => {
  * Ordem: REACT_APP_API_URL → REACT_APP_SKYNET_API_URL → em development DEFAULT_DEV_SKYNET_ORIGIN → senão DEFAULT_SKYNET_API_ORIGIN.
  */
 const resolveEnvOrigin = () => {
+  if (typeof window !== 'undefined' && window.__VELOHUB_RUNTIME_CONFIG__) {
+    const r = window.__VELOHUB_RUNTIME_CONFIG__;
+    const fromContainer = r.REACT_APP_API_URL || r.REACT_APP_SKYNET_API_URL;
+    if (fromContainer) {
+      return normalizeBaseUrl(fromContainer);
+    }
+  }
   const envUrl =
     process.env.REACT_APP_API_URL ||
     process.env.REACT_APP_SKYNET_API_URL ||

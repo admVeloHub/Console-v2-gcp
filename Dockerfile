@@ -1,5 +1,7 @@
 # Dockerfile para Cloud Run - Frontend React Console VeloHub
-# VERSION: v1.7.1 | DATE: 2026-04-23 | AUTHOR: VeloHub Development Team
+# VERSION: v1.7.2 | DATE: 2026-04-23 | AUTHOR: VeloHub Development Team
+# CHANGELOG: v1.7.2 - Comportamento alinhado ao server v1.3.0: em runtime, REACT_APP_GOOGLE* / API podem ser injetados no
+#  index.html a partir de env/secret do contêiner (sem re-build); build-args continuam opcionais no pipeline.
 # CHANGELOG: v1.7.1 - Stage produção: copiar backend/config (loadFonteVerdadeEnv); evita crash ao iniciar no Cloud Run
 # CHANGELOG: v1.7.0 - Sem credenciais/IDs reais nos ARG padrão; Cloud Build deve passar --build-arg
 # CHANGELOG: v1.6.0 - Adicionado fallback para REACT_APP_GOOGLE_CLIENT_ID caso não seja passado como build arg

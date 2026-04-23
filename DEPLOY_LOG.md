@@ -1,11 +1,30 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.52.0 | DATE: 2026-04-23 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.53.0 | DATE: 2026-04-23 | AUTHOR: VeloHub Development Team -->
 <!--
   REGRA (push GitHub): Preencher a nova entrada do DEPLOY_LOG (tipo, data, branch, repositório,
   arquivos, descrição) ANTES do `git commit`. Incluir DEPLOY_LOG no MESMO commit que o código.
   Não criar commit adicional só para corrigir hash, SHA ou “fechar” o log.
   Campo **Commit:** opcional; se não usar SHA aqui, consultar `git log -1 --oneline` no remoto.
 -->
+
+## Push GitHub — Config runtime Cloud Run: OAuth e API a partir de env do contêiner (sem depender de .env no Git) - 2026-04-23
+
+### **Tipo:** Push GitHub
+### **Data/Hora:** 2026-04-23
+### **Branch:** main
+### **Repositório:** https://github.com/admVeloHub/Console-v2-gcp.git
+
+### **Arquivos:**
+- `backend/server.js` v1.3.0 — injeção de `window.__VELOHUB_RUNTIME_CONFIG__` no `index.html` a partir de `process.env` (ex.: `REACT_APP_GOOGLE_CLIENT_ID` ou `GOOGLE_ID_CONSOLE`); `express.static` com `index: false` para a raiz usar o documento com injeção
+- `src/config/google.js` v3.7.0 — leitura do runtime config antes de `process.env` (dev/local inalterado com `.env`)
+- `src/services/api.js` v3.19.0 — base da API a partir de `__VELOHUB_RUNTIME_CONFIG__` quando definido no contêiner
+- `Dockerfile` v1.7.2 — nota de versão (runtime alinhado ao server)
+- `DEPLOY_LOG.md` v1.53.0
+
+### **Descrição:**
+O build CRA continua embutindo `REACT_APP_*` no bundle; em produção o Express injeta no HTML os valores de variáveis/segredos montados no serviço Cloud Run (p.ex. Client ID e URL da API), evitando depender de `.env` commitado e alinhando o deploy à configuração do contêiner após **nova build da imagem** com este código.
+
+---
 
 ## Correção Cloud Run — container não escutava PORT (console-v2) - 2026-04-23
 

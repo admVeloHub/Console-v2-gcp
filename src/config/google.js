@@ -1,3 +1,6 @@
+// VERSION: v3.7.0 | DATE: 2026-04-23 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v3.7.0 - Em PRD (Express/Cloud Run), client ID e domínio podem vir de
+//  window.__VELOHUB_RUNTIME_CONFIG__ (injetado no index.html a partir do env do contêiner); dev continua com .env / build.
 // VERSION: v3.5.4 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
 
 // Configuração do Google OAuth
@@ -11,12 +14,11 @@
 //    - https://seu-dominio.com (produção)
 
 // Client ID do Google OAuth - VeloHub Console
-// VERSION: v3.6.0 | DATE: 2025-01-31 | AUTHOR: VeloHub Development Team
-// CHANGELOG: v3.6.0 - Atualizado para usar GOOGLE_ID_CONSOLE do Secret Manager via build arg
-// IMPORTANTE: Em produção, REACT_APP_GOOGLE_CLIENT_ID é configurado via build arg do Docker
-// que busca o valor do Secret Manager GOOGLE_ID_CONSOLE durante o Cloud Build
-
-const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+// Ordem: window.__VELOHUB_RUNTIME_CONFIG__ (injetado no index.html no Cloud Run) → process.env (build/.env)
+const _runtime = typeof window !== 'undefined' ? window.__VELOHUB_RUNTIME_CONFIG__ : undefined;
+const GOOGLE_CLIENT_ID =
+  (_runtime && _runtime.REACT_APP_GOOGLE_CLIENT_ID) ||
+  process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
 if (!GOOGLE_CLIENT_ID) {
   console.error('❌ REACT_APP_GOOGLE_CLIENT_ID não configurada. Google OAuth não funcionará.');
@@ -25,7 +27,7 @@ if (!GOOGLE_CLIENT_ID) {
   console.error('📍 Após criar o arquivo, REINICIE o servidor de desenvolvimento (npm start)');
   console.error('⚠️ IMPORTANTE: Variáveis do React precisam ter o prefixo REACT_APP_');
   console.error('⚠️ O arquivo .env deve estar em: Dev - Console/.env (não na raiz do workspace)');
-} else {
+} else if (process.env.NODE_ENV === 'development') {
   console.log('✅ Google Client ID configurado:', GOOGLE_CLIENT_ID.substring(0, 30) + '...');
   console.log('📍 Origem atual:', window.location.origin);
   console.log('📍 Client ID completo (primeiros 50 chars):', GOOGLE_CLIENT_ID.substring(0, 50));
@@ -35,8 +37,11 @@ if (!GOOGLE_CLIENT_ID) {
 
 export { GOOGLE_CLIENT_ID };
 
-// Domínio autorizado para login (configurado via variável de ambiente)
-const AUTHORIZED_DOMAIN = process.env.REACT_APP_AUTHORIZED_DOMAIN || 'velotax.com.br';
+// Domínio autorizado para login
+const AUTHORIZED_DOMAIN =
+  (_runtime && _runtime.REACT_APP_AUTHORIZED_DOMAIN) ||
+  process.env.REACT_APP_AUTHORIZED_DOMAIN ||
+  'velotax.com.br';
 
 // Domínios autorizados para login (mantido para compatibilidade)
 export const AUTHORIZED_EMAILS = [
