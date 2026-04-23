@@ -1,5 +1,6 @@
 # Dockerfile para Cloud Run - Frontend React Console VeloHub
-# VERSION: v1.7.0 | DATE: 2026-04-23 | AUTHOR: VeloHub Development Team
+# VERSION: v1.7.1 | DATE: 2026-04-23 | AUTHOR: VeloHub Development Team
+# CHANGELOG: v1.7.1 - Stage produção: copiar backend/config (loadFonteVerdadeEnv); evita crash ao iniciar no Cloud Run
 # CHANGELOG: v1.7.0 - Sem credenciais/IDs reais nos ARG padrão; Cloud Build deve passar --build-arg
 # CHANGELOG: v1.6.0 - Adicionado fallback para REACT_APP_GOOGLE_CLIENT_ID caso não seja passado como build arg
 
@@ -48,8 +49,9 @@ COPY package.json package-lock.json ./
 # Criar diretório backend
 RUN mkdir -p backend
 
-# Copiar servidor Express
+# Copiar servidor Express e config (loadFonteVerdadeEnv — obrigatório no primeiro require de server.js)
 COPY backend/server.js ./backend/
+COPY backend/config ./backend/config/
 
 # Instalar apenas dependências de produção (Express e Helmet)
 RUN npm ci --only=production

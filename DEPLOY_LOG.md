@@ -1,11 +1,26 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.51.0 | DATE: 2026-04-23 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.52.0 | DATE: 2026-04-23 | AUTHOR: VeloHub Development Team -->
 <!--
   REGRA (push GitHub): Preencher a nova entrada do DEPLOY_LOG (tipo, data, branch, repositório,
   arquivos, descrição) ANTES do `git commit`. Incluir DEPLOY_LOG no MESMO commit que o código.
   Não criar commit adicional só para corrigir hash, SHA ou “fechar” o log.
   Campo **Commit:** opcional; se não usar SHA aqui, consultar `git log -1 --oneline` no remoto.
 -->
+
+## Correção Cloud Run — container não escutava PORT (console-v2) - 2026-04-23
+
+### **Tipo:** Correção deploy / Docker
+### **Data/Hora:** 2026-04-23
+### **Branch:** main
+### **Repositório:** https://github.com/admVeloHub/Console-v2-gcp.git
+
+### **Problema:**
+`backend/server.js` faz `require('./config/loadFonteVerdadeEnv')` no arranque; o stage de produção do `Dockerfile` só copiava `server.js`, pelo que o processo terminava com `MODULE_NOT_FOUND` e o Cloud Run reportava falha ao escutar `PORT=8080`.
+
+### **Arquivos:**
+- `Dockerfile` v1.7.1 — `COPY backend/config ./backend/config/`
+
+---
 
 ## Reescrita de histórico Git (remoção de URIs Mongo nos blobs) - 2026-04-23
 
