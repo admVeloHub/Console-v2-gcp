@@ -1,5 +1,5 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.50.0 | DATE: 2026-04-23 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.51.0 | DATE: 2026-04-23 | AUTHOR: VeloHub Development Team -->
 <!--
   REGRA (push GitHub): Preencher a nova entrada do DEPLOY_LOG (tipo, data, branch, repositório,
   arquivos, descrição) ANTES do `git commit`. Incluir DEPLOY_LOG no MESMO commit que o código.
@@ -7,12 +7,26 @@
   Campo **Commit:** opcional; se não usar SHA aqui, consultar `git log -1 --oneline` no remoto.
 -->
 
+## Reescrita de histórico Git (remoção de URIs Mongo nos blobs) - 2026-04-23
+
+### **Tipo:** Manutenção repositório / segurança (histórico)
+### **Data/Hora:** 2026-04-23
+### **Branch:** main
+### **Ferramenta:** `py -m git_filter_repo --replace-text` (padrões `mongodb+srv://…` e `mongodb://user:pass@…` → placeholders `REDACTED_*`)
+### **Repositório:** https://github.com/admVeloHub/Console-v2-gcp.git
+### **Commit (tip `main` após reescrita):** 16cd92e
+
+### **Descrição:**
+Reescrita do histórico local e **`git push --force --all`** para remover connection strings Mongo dos commits antigos. Clones e forks devem fazer fetch e reset/re-clone para alinhar a `main`. SHAs anteriores deixam de ser válidos no remoto.
+
+---
+
 ## Push GitHub - Segurança e higienização - 2026-04-23
 
 ### **Tipo:** Push GitHub
 ### **Data/Hora:** 2026-04-23
 ### **Branch:** main
-### **Commit:** 08aa6e2
+### **Commit (código, SHA após reescrita):** 5a5851d
 ### **Repositório:** https://github.com/admVeloHub/Console-v2-gcp.git
 
 ### **Arquivos Modificados (principais):**
