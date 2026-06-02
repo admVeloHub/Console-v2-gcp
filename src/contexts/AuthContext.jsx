@@ -1,4 +1,7 @@
-// VERSION: v3.8.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.8.3 | DATE: 2026-06-02 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v3.8.3 - Bypass Lucas: não sobrescreve _funcoesAdministrativas; sync API atualiza funções administrativas
+// CHANGELOG: v3.8.2 - Bypass tickets: gestaoQa
+// CHANGELOG: v3.8.0 | DATE: 2024-12-19
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { sendUserPing, debugUserPermissions } from '../services/userPingService';
 import { getAuthorizedUser } from '../services/userService';
@@ -53,7 +56,6 @@ export const AuthProvider = ({ children }) => {
                 velonews: true,
                 botPerguntas: true,
                 chamadosInternos: true,
-                igp: true,
                 botAnalises: true,
                 qualidade: true,
                 capacity: true,
@@ -69,14 +71,15 @@ export const AuthProvider = ({ children }) => {
                 funcionalidades: true,
                 recursos: true,
                 gestao: true,
+                gestaoQa: true,
                 rhFin: true,
                 facilities: true,
                 chamadosInternos: true
               },
-              _funcoesAdministrativas: {
+              _funcoesAdministrativas: parsedUser._funcoesAdministrativas || {
                 avaliador: true,
-                auditoria: true,
-                relatoriosGestao: true
+                auditoria: false,
+                relatoriosGestao: false
               }
             };
             setUser(bypassUserData);
@@ -121,37 +124,36 @@ export const AuthProvider = ({ children }) => {
 
   // Sistema de sincronização automática de permissões
   useEffect(() => {
-    if (!user?.email) return;
+    const userMail = user?.email || user?._userMail;
+    if (!userMail) return;
 
     const syncUserPermissions = async () => {
       try {
-        const freshUser = await getAuthorizedUser(user.email);
-        
-        if (freshUser && freshUser.success) {
-          const updatedUserData = freshUser.data;
-          
-          // Verificar se houve mudanças nas permissões
-          const currentPermissions = user._userClearance || user.permissoes;
-          const newPermissions = updatedUserData._userClearance;
-          
-          if (JSON.stringify(currentPermissions) !== JSON.stringify(newPermissions)) {
-            console.log('🔄 Permissões atualizadas via sincronização automática');
-            updateUser(updatedUserData);
-          }
+        const freshUser = await getAuthorizedUser(userMail);
+        if (!freshUser) return;
+
+        const updatedUserData = freshUser.data || freshUser;
+        const currentPermissions = user._userClearance || user.permissoes;
+        const newPermissions = updatedUserData._userClearance;
+        const currentFa = user._funcoesAdministrativas;
+        const newFa = updatedUserData._funcoesAdministrativas;
+
+        if (
+          JSON.stringify(currentPermissions) !== JSON.stringify(newPermissions) ||
+          JSON.stringify(currentFa) !== JSON.stringify(newFa)
+        ) {
+          console.log('🔄 Permissões/funções administrativas atualizadas via sincronização automática');
+          updateUser({ ...user, ...updatedUserData, email: userMail, _userMail: userMail });
         }
       } catch (error) {
         console.error('❌ Erro na sincronização automática:', error);
       }
     };
 
-    // Sincronizar imediatamente após login
     syncUserPermissions();
-    
-    // Sincronizar a cada 30 minutos
     const syncInterval = setInterval(syncUserPermissions, SYNC_INTERVAL);
-    
     return () => clearInterval(syncInterval);
-  }, [user?.email]);
+  }, [user?.email, user?._userMail]);
 
   // Atualizar timestamp de atividade em interações do usuário
   useEffect(() => {
@@ -188,7 +190,6 @@ export const AuthProvider = ({ children }) => {
           velonews: true,
           botPerguntas: true,
           chamadosInternos: true,
-          igp: true,
           botAnalises: true,
           qualidade: true,
           capacity: true,
@@ -204,14 +205,15 @@ export const AuthProvider = ({ children }) => {
           funcionalidades: true,
           recursos: true,
           gestao: true,
+          gestaoQa: true,
           rhFin: true,
           facilities: true,
           chamadosInternos: true
         },
-        _funcoesAdministrativas: {
+        _funcoesAdministrativas: userData._funcoesAdministrativas || {
           avaliador: true,
-          auditor: true,
-          relatoriosGestao: true
+          auditoria: false,
+          relatoriosGestao: false
         }
       };
       setUser(bypassUserData);
@@ -306,31 +308,31 @@ export const AuthProvider = ({ children }) => {
   };
 
   const updateUser = (updatedUserData) => {
-    if (user && user.email === updatedUserData.email) {
-      // Se é o usuário logado, atualizar o contexto e localStorage
-      const newUserData = { ...user, ...updatedUserData };
+    const currentMail = user?.email || user?._userMail;
+    const updatedMail = updatedUserData?.email || updatedUserData?._userMail;
+    if (user && currentMail && updatedMail && currentMail === updatedMail) {
+      const newUserData = { ...user, ...updatedUserData, email: currentMail, _userMail: currentMail };
       setUser(newUserData);
       localStorage.setItem('user', JSON.stringify(newUserData));
       localStorage.setItem('lastActivity', Date.now().toString());
       console.log('✅ Usuário atualizado no contexto e localStorage');
-      return true; // Indica que a atualização foi feita
+      return true;
     }
-    return false; // Indica que não foi o usuário logado
+    return false;
   };
 
   // Função para forçar sincronização manual
   const forceSync = async () => {
-    if (!user?.email) return false;
-    
+    const userMail = user?.email || user?._userMail;
+    if (!userMail) return false;
+
     try {
       console.log('🔄 Forçando sincronização manual de permissões');
-      const freshUser = await getAuthorizedUser(user.email);
-      
-      if (freshUser && freshUser.success) {
-        updateUser(freshUser.data);
-        return true;
-      }
-      return false;
+      const freshUser = await getAuthorizedUser(userMail);
+      if (!freshUser) return false;
+      const updatedUserData = freshUser.data || freshUser;
+      updateUser({ ...user, ...updatedUserData, email: userMail, _userMail: userMail });
+      return true;
     } catch (error) {
       console.error('❌ Erro na sincronização manual:', error);
       return false;

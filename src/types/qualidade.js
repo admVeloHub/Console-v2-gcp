@@ -1,4 +1,9 @@
-// VERSION: v1.11.1 | DATE: 2026-04-10 | AUTHOR: VeloHub Development Team
+// VERSION: v1.16.0 | DATE: 2026-04-27 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.16.0 - Relatório agente: melhor/pior média (entre médias mensais); melhor nota ligação e melhor nota ticket (em vez de melhor/pior nota única)
+// CHANGELOG: v1.15.0 - Relatório agente: nota do mês e média geral = média aritmética (soma/quantidade) de todas as avaliações do período (ligação + ticket; IA quando somente análise)
+// CHANGELOG: v1.14.0 - qualidade_ticket_avaliacoes: critérios com nomes PascalCase (FONTE LISTA_SCHEMAS), alinhado ao backend; calcularPontuacaoTotalTicket / hasAvaliacaoManualSupervisor
+// CHANGELOG: v1.13.0 - Qualidade ticket: booleanos em campos pos e neg (qualidade_ticket_avaliacoes); calcularPontuacaoTotal delega a calcularPontuacaoTotalTicket; hasAvaliacaoManualSupervisor
+// CHANGELOG: v1.12.0 - calcularPontuacaoTotal: ramo tipoAvaliacao ticket (métricas e pesos distintos da ligação)
 // CHANGELOG: v1.11.1 - Release push GitHub 2026-04-10
 // CHANGELOG: v1.11.0 - Relatório agente: mediaGPT e gráficos usam avaliacao.avaliacaoIA (campo em qualidade_avaliacoes)
 // CHANGELOG: v1.10.0 - somenteAnaliseAudioIA: média/tendência/histórico ignoram nota manual 0 nesse fluxo; mediana e períodos usam nota IA quando só áudio
@@ -123,8 +128,10 @@
  * @property {number} mediaAvaliador
  * @property {number} mediaGPT
  * @property {number} totalAvaliacoes
- * @property {number} melhorNota
- * @property {number} piorNota
+ * @property {number|null} melhorMedia - maior entre as médias por mês/ano (período)
+ * @property {number|null} piorMedia - menor entre as médias por mês/ano
+ * @property {number|null} melhorNotaLigacao - maior pontuação em avaliações de ligação
+ * @property {number|null} melhorNotaTicket - maior pontuação em avaliações de ticket
  * @property {'melhorando'|'piorando'|'estavel'} tendencia
  */
 
@@ -178,6 +185,21 @@ export const PONTUACAO = {
   ENCERRAMENTO_BRUSCO: -100        // Mantém -100 pontos
 };
 
+/** Pontos alinhados ao schema qualidade_ticket_avaliacoes (métricas pos e neg), não reutilizam PONTUACAO de ligação. */
+export const PONTUACAO_TICKET = {
+  PRODUCAO_TEXTO: 15,
+  CLAREZA_OBJETIVIDADE: 15,
+  BOA_RESOLUCAO: 30,
+  ADERENCIA_ESTRUTURA: 15,
+  TABULACAO: 25,
+  PASSOU_PRAZO: -30,
+  PROCEDIMENTO_INCORRETO: -100,
+  NAO_UTILIZOU_BOT: -10
+};
+
+/** @param {Object} a documento (ou payload) de avaliação de ticket, com tipoAvaliacao === 'ticket' */
+export const isTicketAvaliacao = (a) => a?.tipoAvaliacao === 'ticket';
+
 /** Avaliação criada no fluxo lote / só IA (sem nota manual do supervisor). */
 export const isSomenteAnaliseAudioIA = (avaliacao) => avaliacao?.somenteAnaliseAudioIA === true;
 
@@ -190,6 +212,18 @@ export const hasAvaliacaoManualSupervisor = (avaliacao) => {
   if (isSomenteAnaliseAudioIA(avaliacao)) return false;
   const p = avaliacao?.pontuacaoTotal ?? 0;
   if (p > 0) return true;
+  if (isTicketAvaliacao(avaliacao)) {
+    return Boolean(
+      avaliacao?.ProducaoTexto ||
+        avaliacao?.ClarezaObjetividade ||
+        avaliacao?.BoaResolucaoProcedimento ||
+        avaliacao?.AderenciaEstruturaResposta ||
+        avaliacao?.Tabulacao ||
+        avaliacao?.PassouPrazoResposta ||
+        avaliacao?.RepassouProcedimentoIncorreto ||
+        avaliacao?.NaoUtilizouBotApoio
+    );
+  }
   return Boolean(
     avaliacao?.saudacaoAdequada ||
       avaliacao?.escutaAtiva ||
@@ -214,16 +248,54 @@ const pontuacaoParaGrafico = (avaliacao) => {
   return ia != null && ia !== '' && !Number.isNaN(Number(ia)) ? Number(ia) : null;
 };
 
+/**
+ * Média aritmética (soma / quantidade) das notas consideradas no relatório do agente.
+ * Inclui ligação e ticket (pontuacaoTotal) e, no fluxo somente análise IA, avaliacaoIA.
+ * Itens sem nota numérica entram fora do somatório e do denominador.
+ * @param {Array} avaliacoes
+ * @returns {number|null} null se não houver nenhuma nota válida
+ */
+const mediaAritmeticaRelatorioAgente = (avaliacoes) => {
+  if (!Array.isArray(avaliacoes) || avaliacoes.length === 0) return null;
+  const notas = avaliacoes
+    .map((a) => pontuacaoParaGrafico(a))
+    .filter((n) => n != null && !Number.isNaN(n));
+  if (notas.length === 0) return null;
+  return (
+    Math.round(
+      (notas.reduce((s, n) => s + n, 0) / notas.length) * 100
+    ) / 100
+  );
+};
+
 // Função para gerar ID único
 export const generateId = () => {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
 };
 
+/** Pontuação de ticket (console_analises.qualidade_ticket_avaliacoes: campos booleanos em PascalCase). */
+export const calcularPontuacaoTotalTicket = (avaliacao) => {
+  if (!avaliacao || typeof avaliacao !== 'object') return 0;
+  let total = 0;
+  if (avaliacao.ProducaoTexto) total += PONTUACAO_TICKET.PRODUCAO_TEXTO;
+  if (avaliacao.ClarezaObjetividade) total += PONTUACAO_TICKET.CLAREZA_OBJETIVIDADE;
+  if (avaliacao.BoaResolucaoProcedimento) total += PONTUACAO_TICKET.BOA_RESOLUCAO;
+  if (avaliacao.AderenciaEstruturaResposta) total += PONTUACAO_TICKET.ADERENCIA_ESTRUTURA;
+  if (avaliacao.Tabulacao) total += PONTUACAO_TICKET.TABULACAO;
+  if (avaliacao.PassouPrazoResposta) total += PONTUACAO_TICKET.PASSOU_PRAZO;
+  if (avaliacao.RepassouProcedimentoIncorreto) total += PONTUACAO_TICKET.PROCEDIMENTO_INCORRETO;
+  if (avaliacao.NaoUtilizouBotApoio) total += PONTUACAO_TICKET.NAO_UTILIZOU_BOT;
+  return Math.max(0, total);
+};
+
 // Função para calcular pontuação total
 export const calcularPontuacaoTotal = (avaliacao) => {
+  if (isTicketAvaliacao(avaliacao)) {
+    return calcularPontuacaoTotalTicket(avaliacao);
+  }
+
   let total = 0;
-  
-  // Critérios positivos
+
   if (avaliacao.saudacaoAdequada) total += PONTUACAO.SAUDACAO_ADEQUADA;
   if (avaliacao.escutaAtiva) total += PONTUACAO.ESCUTA_ATIVA;
   if (avaliacao.clarezaObjetividade) total += PONTUACAO.CLAREZA_OBJETIVIDADE;
@@ -231,14 +303,12 @@ export const calcularPontuacaoTotal = (avaliacao) => {
   if (avaliacao.registroAtendimento) total += PONTUACAO.REGISTRO_ATENDIMENTO;
   if (avaliacao.empatiaCordialidade) total += PONTUACAO.EMPATIA_CORDIALIDADE;
   if (avaliacao.direcionouPesquisa) total += PONTUACAO.DIRECIONOU_PESQUISA;
-  
-  // Critérios negativos
+
   if (avaliacao.naoConsultouBot) total += PONTUACAO.NAO_CONSULTOU_BOT;
   if (avaliacao.conformidadeTicket) total += PONTUACAO.CONFORMIDADE_TICKET;
   if (avaliacao.procedimentoIncorreto) total += PONTUACAO.PROCEDIMENTO_INCORRETO;
   if (avaliacao.encerramentoBrusco) total += PONTUACAO.ENCERRAMENTO_BRUSCO;
-  
-  // Garantir que a pontuação não seja negativa
+
   return Math.max(0, total);
 };
 
@@ -293,13 +363,7 @@ export const gerarRelatorioAgente = (colaboradorNome, avaliacoesFiltradas, avali
   }
 
   const comManual = avaliacoesFiltradas.filter((a) => !isSomenteAnaliseAudioIA(a));
-  const notasAvaliador = comManual.map((a) => a.pontuacaoTotal || 0);
-  const mediaAvaliador =
-    notasAvaliador.length > 0
-      ? Math.round(
-          (notasAvaliador.reduce((x, y) => x + y, 0) / notasAvaliador.length) * 100
-        ) / 100
-      : null;
+  const mediaAvaliador = mediaAritmeticaRelatorioAgente(avaliacoesFiltradas);
 
   const notasGPT = avaliacoesFiltradas
     .map((a) => a.avaliacaoIA)
@@ -369,6 +433,31 @@ export const gerarRelatorioAgente = (colaboradorNome, avaliacoesFiltradas, avali
     avaliacoesPorPeriodo[chavePeriodo].push(avaliacao);
   });
 
+  const mediasMensais = [];
+  Object.keys(avaliacoesPorPeriodo).forEach((chave) => {
+    const m = mediaAritmeticaRelatorioAgente(avaliacoesPorPeriodo[chave]);
+    if (m != null) mediasMensais.push(m);
+  });
+  let melhorMedia = null;
+  let piorMedia = null;
+  if (mediasMensais.length > 0) {
+    melhorMedia = Math.round(Math.max(...mediasMensais) * 100) / 100;
+    piorMedia = Math.round(Math.min(...mediasMensais) * 100) / 100;
+  }
+
+  const notasLigacao = avaliacoesFiltradas
+    .filter((a) => !isTicketAvaliacao(a))
+    .map((a) => pontuacaoParaGrafico(a))
+    .filter((n) => n != null && !Number.isNaN(n));
+  const notasTicketAval = avaliacoesFiltradas
+    .filter((a) => isTicketAvaliacao(a))
+    .map((a) => pontuacaoParaGrafico(a))
+    .filter((n) => n != null && !Number.isNaN(n));
+  const melhorNotaLigacao =
+    notasLigacao.length > 0 ? Math.round(Math.max(...notasLigacao) * 100) / 100 : null;
+  const melhorNotaTicket =
+    notasTicketAval.length > 0 ? Math.round(Math.max(...notasTicketAval) * 100) / 100 : null;
+
   const periodosOrdenados = Object.keys(avaliacoesPorPeriodo).sort((a, b) => {
     const [mesA, anoA] = a.split('/');
     const [mesB, anoB] = b.split('/');
@@ -385,22 +474,8 @@ export const gerarRelatorioAgente = (colaboradorNome, avaliacoesFiltradas, avali
 
   periodosParaGrafico.forEach((chavePeriodo, index) => {
     const avaliacoesNoPeriodo = avaliacoesPorPeriodo[chavePeriodo];
-    const manualNoPeriodo = avaliacoesNoPeriodo.filter((a) => !isSomenteAnaliseAudioIA(a));
-    const iaNoPeriodo = avaliacoesNoPeriodo.filter((a) => isSomenteAnaliseAudioIA(a));
-
-    let mediaNotaNoPeriodo = 0;
-    if (manualNoPeriodo.length > 0) {
-      mediaNotaNoPeriodo =
-        manualNoPeriodo.reduce((sum, a) => sum + (a.pontuacaoTotal || 0), 0) /
-        manualNoPeriodo.length;
-    } else {
-      const notasIa = iaNoPeriodo
-        .map((a) => a.avaliacaoIA)
-        .filter((n) => n != null && n !== '' && !Number.isNaN(Number(n)))
-        .map(Number);
-      mediaNotaNoPeriodo =
-        notasIa.length > 0 ? notasIa.reduce((s, n) => s + n, 0) / notasIa.length : 0;
-    }
+    const mPeriodo = mediaAritmeticaRelatorioAgente(avaliacoesNoPeriodo);
+    const mediaNotaNoPeriodo = mPeriodo != null ? mPeriodo : 0;
 
     const periodo = chavePeriodo;
     const inicioTendencia = Math.max(0, index - 2);
@@ -422,21 +497,16 @@ export const gerarRelatorioAgente = (colaboradorNome, avaliacoesFiltradas, avali
     });
   });
 
-  let melhorNota = null;
-  let piorNota = null;
-  if (notasAvaliador.length > 0) {
-    melhorNota = Math.max(...notasAvaliador);
-    piorNota = Math.min(...notasAvaliador);
-  }
-
   return {
     colaboradorNome,
     avaliacoes: avaliacoesFiltradas,
     mediaAvaliador,
     mediaGPT: mediaGPT !== null ? Math.round(mediaGPT * 100) / 100 : null,
     totalAvaliacoes: avaliacoesFiltradas.length,
-    melhorNota,
-    piorNota,
+    melhorMedia,
+    piorMedia,
+    melhorNotaLigacao,
+    melhorNotaTicket,
     tendencia,
     historico
   };

@@ -1,4 +1,6 @@
-// VERSION: v3.10.5 | DATE: 2026-03-26 | AUTHOR: VeloHub Development Team
+// VERSION: v3.10.7 | DATE: 2026-04-28 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v3.10.7 - Cabeçalho Voltar/abas: VoltarHeaderRow (alinhamento global)
+// CHANGELOG: v3.10.6 - Cards painel principal: sem sombra 3D; sem hover lift (MuiCard tema)
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { 
   Container, 
@@ -28,7 +30,7 @@ import {
 } from '@mui/material';
 import { Save, Search, Delete, Settings, Add, DeleteOutline } from '@mui/icons-material';
 import { artigosAPI, artigosCategoriasAPI } from '../services/api';
-import BackButton from '../components/common/BackButton';
+import BackButton, { VoltarHeaderRow } from '../components/common/BackButton';
 import MarkdownEditor from '../components/common/MarkdownEditor';
 import MarkdownRenderer from '../components/common/MarkdownRenderer';
 import { processImageUploads, countTemporaryImages } from '../utils/imageUploadProcessor';
@@ -38,6 +40,16 @@ import {
   renumerarOrdemRascunho,
   montarPayloadCategorias
 } from '../utils/categoriaSlugUtils';
+
+/** Painéis principais do módulo: anula boxShadow e hover do tema MuiCard. */
+const CARD_PRINCIPAL_SX = {
+  boxShadow: 'none',
+  transition: 'none',
+  '&:hover': {
+    boxShadow: 'none',
+    transform: 'none',
+  },
+};
 
 function newDraftId() {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -211,7 +223,7 @@ const ArtigosPage = () => {
     color: 'secondary.main',
     border: '1px solid',
     borderColor: 'secondary.main',
-    borderRadius: '8px',
+    borderRadius: '4px',
     '&:hover': {
       borderColor: 'secondary.main',
       backgroundColor: 'rgba(0, 106, 185, 0.08)'
@@ -567,22 +579,9 @@ const ArtigosPage = () => {
 
   return (
     <Container maxWidth="xl" sx={{ py: 3.2, mb: 6.4, pb: 3.2 }}>
-      {/* Header com botão voltar e abas alinhadas */}
-      {/* Header único - alinhamento central absoluto das abas */}
-      <Box sx={{ position: 'relative', mb: 3.2, minHeight: 40 }}>
-        <Box sx={{ position: 'absolute', left: 0, top: 0, bottom: 0, display: 'flex', alignItems: 'center' }}>
-          <BackButton />
-        </Box>
-        <Box sx={{
-          position: 'absolute',
-          left: '50%',
-          top: 0,
-          bottom: 0,
-          transform: 'translateX(-50%)',
-          display: 'flex',
-          alignItems: 'center',
-          width: 'max-content'
-        }}>
+      <VoltarHeaderRow
+        left={<BackButton />}
+        center={
           <Tabs
             value={activeTab}
             onChange={handleTabChange}
@@ -619,20 +618,16 @@ const ArtigosPage = () => {
               aria-controls="artigos-tabpanel-1"
             />
           </Tabs>
-        </Box>
-      </Box>
+        }
+      />
 
       {/* Conteúdo das Abas - Renderização Condicional Direta */}
       {activeTab === 0 && (
         <Box sx={{ pt: 2.4 }}>
-          <Card sx={{ 
+          <Card sx={{
             background: 'var(--cor-container)',
-            borderRadius: '12px',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-            '&:hover': {
-              transform: 'none',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
-            }
+            borderRadius: '6px',
+            ...CARD_PRINCIPAL_SX,
           }}>
             <CardContent sx={{ p: 3.2 }}>
               
@@ -776,7 +771,7 @@ const ArtigosPage = () => {
             width: '70%', 
             pr: 2.5   // 20px de padding direito
           }}>
-            <Card sx={{ backgroundColor: 'var(--cor-container)' }}>
+            <Card sx={{ backgroundColor: 'var(--cor-container)', ...CARD_PRINCIPAL_SX }}>
               <CardContent>
                 <Typography variant="h6" sx={{ mb: 2.4, fontSize: '0.96rem', color: 'var(--blue-dark)', fontFamily: 'Poppins', fontWeight: 600 }}>
                   {selectedArtigo ? 'Editar Artigo' : 'Selecione um artigo'}
@@ -1039,7 +1034,7 @@ const ArtigosPage = () => {
           <Box sx={{ 
             width: '30%'
           }}>
-            <Card sx={{ backgroundColor: 'var(--cor-container)', height: '100%' }}>
+            <Card sx={{ backgroundColor: 'var(--cor-container)', height: '100%', ...CARD_PRINCIPAL_SX }}>
               <CardContent>
                 {/* Barra de Pesquisa */}
                 <TextField
@@ -1187,7 +1182,7 @@ const ArtigosPage = () => {
         PaperProps={{
           sx: {
             backgroundColor: 'var(--cor-container)',
-            borderRadius: '12px',
+            borderRadius: '6px',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
             maxHeight: 'min(92vh, 760px)',
             display: 'flex',
@@ -1236,7 +1231,7 @@ const ArtigosPage = () => {
               '&::-webkit-scrollbar': { width: 8 },
               '&::-webkit-scrollbar-thumb': {
                 backgroundColor: 'rgba(0, 106, 185, 0.35)',
-                borderRadius: 4
+                borderRadius: '3.5px'
               }
             }}
           >
@@ -1393,7 +1388,7 @@ const ArtigosPage = () => {
           sx: {
             backgroundColor: 'var(--cor-container)',
             color: 'var(--gray)',
-            borderRadius: '12px',
+            borderRadius: '6px',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
           }
         }}

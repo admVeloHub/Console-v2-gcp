@@ -1,7 +1,7 @@
 {
   "name": "console-conteudo-unified",
-  "version": "3.1.1",
-  "description": "Console de Conteúdo VeloHub - Aplicação React Unificada com IGP Integrado",
+  "version": "3.2.0",
+  "description": "Console de Conteúdo VeloHub - Aplicação React unificada (gestão de conteúdo e módulos do portal)",
   "private": true,
   "main": "src/index.js",
   "scripts": {
@@ -11,13 +11,12 @@
     "eject": "react-scripts eject",
     "server": "node backend/server.js",
     "start:prod": "node backend/server.js",
+    "export:bot-perguntas-xlsx": "node scripts/exportBotPerguntasExcel.js",
+    "dryrun": "node scripts/exportBotPerguntasExcel.js --dry-run",
     "dev": "concurrently \"npm run server\" \"npm start\"",
     "build:production": "npm run build && npm run server"
   },
   "dependencies": {
-    "@dnd-kit/core": "^6.3.1",
-    "@dnd-kit/sortable": "^10.0.0",
-    "@dnd-kit/utilities": "^3.2.2",
     "@emotion/react": "^11.10.0",
     "@emotion/styled": "^11.10.0",
     "@mui/icons-material": "^5.11.0",
@@ -25,8 +24,6 @@
     "@mui/material": "^5.11.0",
     "@react-oauth/google": "^0.12.2",
     "axios": "^1.3.0",
-    "chart.js": "^4.5.1",
-    "chartjs-plugin-datalabels": "^2.2.0",
     "cors": "^2.8.5",
     "date-fns": "^2.29.0",
     "dotenv": "^16.0.3",
@@ -42,7 +39,6 @@
     "mongoose": "^7.8.8",
     "quill": "^1.3.7",
     "react": "^18.2.0",
-    "react-chartjs-2": "^5.3.0",
     "react-datepicker": "^4.10.0",
     "react-dom": "^18.2.0",
     "react-quill": "^2.0.0",

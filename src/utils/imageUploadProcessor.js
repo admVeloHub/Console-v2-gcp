@@ -1,4 +1,5 @@
-// VERSION: v1.5.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// VERSION: v1.6.0 | DATE: 2026-06-01 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.6.0 - avisos → img_avisos; destaques → img_destaques (bucket mediabank_velohub)
 /**
  * Processador de uploads assíncronos de imagens
  * Encontra imagens temporárias no markdown ou HTML, faz upload para GCS e substitui URLs
@@ -17,7 +18,9 @@ const getFolderFromPageId = (pageId) => {
     'velonews': 'img_velonews',
     'artigos': 'img_artigos',
     'bot_perguntas': 'img_bot_perguntas',
-    'botPerguntas': 'img_bot_perguntas' // Alternativa de nomenclatura
+    'botPerguntas': 'img_bot_perguntas',
+    'destaques': 'img_destaques',
+    'avisos': 'img_avisos',
   };
   
   return folderMap[pageId] || 'img_velonews'; // Padrão para compatibilidade
@@ -147,8 +150,8 @@ export const processImageUploads = async (markdown, pageId, onProgress = null) =
     const uploadPromise = retryUpload(async () => {
       console.log(`⬆️ Fazendo upload da imagem ${i + 1}/${matches.length} (UUID: ${uuid}, Tipo: ${match.type})`);
       
-      // Recuperar arquivo do localStorage
-      const file = getTemporaryImageFile(uuid, pageId);
+      // Recuperar arquivo (IndexedDB ou legado base64 no localStorage)
+      const file = await getTemporaryImageFile(uuid, pageId);
       if (!file) {
         throw new Error(`Arquivo não encontrado para UUID: ${uuid}`);
       }
@@ -190,39 +193,30 @@ export const processImageUploads = async (markdown, pageId, onProgress = null) =
   const imageFileNames = [];
 
   // Substituir todas URLs temporárias pelas URLs do GCS
-  results.forEach(({ uuid, url, fileName, type }) => {
-    // Adicionar URL completa ao array (para markdown)
+  for (const { uuid, url, fileName, type } of results) {
     imageUrls.push(url);
-    
-    // Adicionar caminho relativo ao array (para media.images)
+
     if (fileName) {
       imageFileNames.push(fileName);
     }
-    
-    // Obter dados da imagem temporária
+
     const imageData = getTemporaryImage(uuid, pageId);
     const altText = imageData ? imageData.fileName : 'Imagem';
-    
-    // Substituir baseado no tipo
+
     if (type === 'markdown') {
-      // Substituir ![temp:uuid](blob:url) por ![alt](gcs-url)
       const regex = new RegExp(`!\\[temp:${uuid.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\]\\(blob:[^)]+\\)`, 'g');
       processedMarkdown = processedMarkdown.replace(regex, `![${altText}](${url})`);
     } else if (type === 'html') {
-      // Substituir <img alt="temp:uuid" src="blob:url" ... /> por <img alt="alt" src="gcs-url" ... />
-      // Preservar outros atributos (width, style, etc)
       const htmlRegex = new RegExp(`<img([^>]*alt=["']temp:${uuid.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["'][^>]*src=["'])blob:[^"']+(["'][^>]*)>`, 'gi');
       processedMarkdown = processedMarkdown.replace(htmlRegex, (match) => {
-        // Substituir apenas o src e alt, preservando todos os outros atributos
         return match
           .replace(/alt=["']temp:[^"']+["']/i, `alt="${altText}"`)
           .replace(/src=["']blob:[^"']+["']/i, `src="${url}"`);
       });
     }
-    
-    // Remover do localStorage após sucesso
-    removeTemporaryImage(uuid, pageId);
-  });
+
+    await removeTemporaryImage(uuid, pageId);
+  }
 
   console.log(`✅ Todas ${matches.length} imagem(ns) processadas com sucesso`);
   console.log(`📋 URLs completas das imagens:`, imageUrls);

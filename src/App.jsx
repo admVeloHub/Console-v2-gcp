@@ -1,4 +1,6 @@
-// VERSION: v3.10.0 | DATE: 2026-03-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.12.0 | DATE: 2026-04-28 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v3.12.0 - Rota /qualidade-gerenciar (Gestão e Qualidade → Gerenciar)
+// CHANGELOG: v3.11.0 - Remoção do módulo IGP (IGPPage e pasta pages/IGP); /igp redireciona para /
 // CHANGELOG: v3.10.0 - Remoção da rota /conexoes e do módulo WhatsApp do bundle inicial (sem import de ConexoesPage)
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
@@ -20,7 +22,6 @@ import Header from './components/common/Header';
 import Footer from './components/common/Footer';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
-import IGPPage from './pages/IGPPage';
 import ArtigosPage from './pages/ArtigosPage';
 import VelonewsPage from './pages/VelonewsPage';
 import BotPerguntasPage from './pages/BotPerguntasPage';
@@ -29,11 +30,15 @@ import ConfigPage from './pages/ConfigPage';
 import QualidadePage from './pages/QualidadePage';
 import FuncionariosPage from './pages/FuncionariosPage';
 import QualidadeModulePage from './pages/QualidadeModulePage';
+import QualidadeGerenciarPage from './pages/QualidadeGerenciarPage';
 import ServicosPage from './pages/ServicosPage';
 import BotAnalisesPage from './pages/BotAnalisesPage';
 import CapacityPage from './pages/CapacityPage';
 import HubAnalisesPage from './pages/HubAnalisesPage';
 import AcademyPage from './pages/AcademyPage';
+import CorporativoPage from './pages/CorporativoPage';
+import CorporativoLegalPage from './pages/CorporativoLegalPage';
+import CorporativoComunicacaoPage from './pages/CorporativoComunicacaoPage';
 
 // Componente para rotas protegidas
 const ProtectedRoute = ({ children, requiredPermission }) => {
@@ -94,11 +99,7 @@ const AppContent = () => {
             <DashboardPage />
           </ProtectedRoute>
         } />
-        <Route path="/igp" element={
-          <ProtectedRoute requiredPermission="igp">
-            <IGPPage />
-          </ProtectedRoute>
-        } />
+        <Route path="/igp" element={<Navigate to="/" replace />} />
         <Route path="/artigos" element={
           <ProtectedRoute requiredPermission="artigos">
             <ArtigosPage />
@@ -139,6 +140,11 @@ const AppContent = () => {
             <QualidadeModulePage />
           </ProtectedRoute>
         } />
+        <Route path="/qualidade-gerenciar" element={
+          <ProtectedRoute requiredPermission="qualidade">
+            <QualidadeGerenciarPage />
+          </ProtectedRoute>
+        } />
         <Route path="/servicos" element={
           <ProtectedRoute requiredPermission="servicos">
             <ServicosPage />
@@ -162,6 +168,21 @@ const AppContent = () => {
             <Route path="/academy" element={
               <ProtectedRoute requiredPermission="academy">
                 <AcademyPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/corporativo" element={
+              <ProtectedRoute requiredPermission="corporativo">
+                <CorporativoPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/corporativo/legal" element={
+              <ProtectedRoute requiredPermission="corporativo">
+                <CorporativoLegalPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/corporativo/comunicacao" element={
+              <ProtectedRoute requiredPermission="corporativo">
+                <CorporativoComunicacaoPage />
               </ProtectedRoute>
             } />
         <Route path="/login" element={<Navigate to="/" replace />} />

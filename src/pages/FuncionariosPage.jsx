@@ -1,4 +1,11 @@
-// VERSION: v1.16.0 | DATE: 2026-04-15 | AUTHOR: VeloHub Development Team
+// VERSION: v1.22.0 | DATE: 2026-05-28 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.22.0 - atuacao persistida como [{ funcao }]; select envia nomes por extenso
+// CHANGELOG: v1.21.0 - atuacao: array de strings (nome funcao por extenso); select e exibição alinhados ao schema
+// CHANGELOG: v1.20.0 - Campo departamento no cadastro/edição e exibição (qualidade_funcionarios / LISTA_SCHEMAS)
+// CHANGELOG: v1.19.2 - Voltar: VoltarHeaderRow (mesma faixa/altura que QA e Monitoria)
+// CHANGELOG: v1.19.1 - Cabeçalho Voltar: alinhar ao padrão das abas Qualidade (flex + center, sem absolute/top); Container com mt/px como Gerenciar/Hub sem padding-top excessivo
+// CHANGELOG: v1.19.0 - Cards da página/lista/modal Estatísticas: neutralizar hover elevado herdado do MuiCard do tema (sem transladar/sombra extra)
+// CHANGELOG: v1.17.0 - Botão Novo abre cadastro de funcionário diretamente; gestão de funções movida para aba Gerenciar
 // CHANGELOG: v1.16.0 - Credencial Chave Pix (campo ChavePix) no modal de acessos, normalizações e exibição na tabela/chips; payload completo inclui ChavePix
 // CHANGELOG: v1.15.0 - Credencial Apoio N1 (campo apoioN1) no modal de acessos, normalizações e exibição na tabela/chips; formulário principal envia objeto acessos completo incl. Sociais e apoioN1
 // CHANGELOG: v1.14.0 - Funções (cargas/CRUD) via qualidadeFuncoesAPI + extractQualidadeLista (mesma base URL que axios/rede local); filtros empresa/atuacao resilientes a campos ausentes
@@ -58,10 +65,9 @@ import {
   Work,
   Schedule,
   BarChart,
-  PersonAdd
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
-import BackButton from '../components/common/BackButton';
+import BackButton, { VoltarHeaderRow } from '../components/common/BackButton';
 import {
   getFuncionarios,
   getFuncionariosAtivos,
@@ -71,9 +77,11 @@ import {
   migrarDadosParaMongoDB,
   verificarDadosLocais,
   limparDadosLocais,
-  extractQualidadeLista
+  extractQualidadeLista,
+  getCadastroCamposConfig
 } from '../services/qualidadeAPI';
-import { qualidadeFuncoesAPI } from '../services/api';
+import { qualidadeFuncoesAPI, qualidadeFuncionariosAPI } from '../services/api';
+import { ACESSOS_PLATAFORMA_PADRAO } from '../services/qualidadeAPI';
 import { exportFuncionariosToExcel, exportFuncionariosToPDF } from '../services/qualidadeExport';
 import { generateId } from '../types/qualidade';
 
@@ -83,12 +91,104 @@ const LISTA_ACESSOS_MODAL = [
   { key: 'Console', label: 'Console' },
   { key: 'Academy', label: 'Academy' },
   { key: 'Desk', label: 'Desk' },
-  { key: 'Ouvidoria', label: 'Ouvidoria' },
-  { key: 'Sociais', label: 'Sociais' },
   { key: 'realTime', label: 'Tempo Real' },
-  { key: 'apoioN1', label: 'Apoio N1' },
-  { key: 'ChavePix', label: 'Chave Pix' }
 ];
+
+const normalizarAcessosPlataformaLocal = (acessos) => {
+  const padrao = ACESSOS_PLATAFORMA_PADRAO();
+  if (!acessos) return padrao;
+  if (Array.isArray(acessos)) {
+    acessos.forEach((acesso) => {
+      if (!acesso?.sistema) return;
+      const sistema = String(acesso.sistema).toLowerCase();
+      if (sistema === 'velohub') padrao.Velohub = true;
+      else if (sistema === 'console') padrao.Console = true;
+      else if (sistema === 'academy') padrao.Academy = true;
+      else if (sistema === 'desk') padrao.Desk = true;
+      else if (sistema === 'realtime' || sistema === 'tempo real') padrao.realTime = true;
+    });
+    return padrao;
+  }
+  if (typeof acessos === 'object') {
+    return {
+      Velohub: acessos.Velohub === true,
+      Console: acessos.Console === true,
+      Academy: acessos.Academy === true,
+      Desk: acessos.Desk === true,
+      realTime: acessos.realTime === true,
+    };
+  }
+  return ACESSOS_PLATAFORMA_PADRAO();
+};
+
+/** Sobra fixa igual ao uso nos cards lista/toolbar — hover não altera shadow (neutraliza tema MuiCard). */
+const FUNCIONARIOS_SOMBRA_CARD = '0 3.2px 16px rgba(0, 0, 0, 0.1)';
+
+const FUNCIONARIOS_CARD_SEM_HOVER_TOOLBAR_LISTA = {
+  transition: 'none',
+  '&:hover': {
+    transform: 'none',
+    boxShadow: FUNCIONARIOS_SOMBRA_CARD
+  }
+};
+
+/** container-secondary modal estatísticas: sem elevação no hover */
+const FUNCIONARIOS_CARD_SECUNDARIO_SEM_HOVER = {
+  boxShadow: 'none',
+  transition: 'none',
+  '&:hover': {
+    transform: 'none',
+    boxShadow: 'none'
+  }
+};
+
+/** Resumo geral modal: mantém uma sombra fixa igual ao repouso (tema aplicava translateY ao hover). */
+const FUNCIONARIOS_CARD_RESUMO_SEM_HOVER = {
+  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+  transition: 'none',
+  '&:hover': {
+    transform: 'none',
+    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
+  }
+};
+
+/** Nome por extenso — item { funcao }, string ou ObjectId legado. */
+const rotuloAtuacao = (item, funcoes) => {
+  if (item == null) return '';
+  if (typeof item === 'object' && item.funcao != null) {
+    return String(item.funcao).trim();
+  }
+  const str = String(item).trim();
+  if (!str) return '';
+  const porId = (funcoes || []).find((f) => String(f._id) === str);
+  if (porId) return String(porId.funcao || '').trim();
+  return str;
+};
+
+const atuacaoParaForm = (funcionario, funcoes) => {
+  if (!funcionario?.atuacao) return [];
+  if (typeof funcionario.atuacao === 'string') {
+    const t = funcionario.atuacao.trim();
+    return t ? [t] : [];
+  }
+  if (!Array.isArray(funcionario.atuacao)) return [];
+  const seen = new Set();
+  const out = [];
+  funcionario.atuacao.forEach((item) => {
+    const nome = rotuloAtuacao(item, funcoes);
+    if (!nome) return;
+    const key = nome.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push(nome);
+  });
+  return out;
+};
+
+const formatarAtuacaoLista = (atuacao, funcoes) => {
+  const nomes = atuacaoParaForm({ atuacao }, funcoes);
+  return nomes.length ? nomes.join(', ') : 'Não informado';
+};
 
 const FuncionariosPage = () => {
   const navigate = useNavigate();
@@ -101,10 +201,8 @@ const FuncionariosPage = () => {
   
   // Estados para gestão de funções
   const [funcoes, setFuncoes] = useState([]); // Lista de funções disponíveis
-  const [showModalNovo, setShowModalNovo] = useState(false); // Modal "Novo"
-  const [showModalFuncao, setShowModalFuncao] = useState(false); // Modal "Função"
-  const [novaFuncao, setNovaFuncao] = useState({ funcao: '', descricao: '' });
-  const [funcaoEditando, setFuncaoEditando] = useState(null);
+  const [opcoesEscalas, setOpcoesEscalas] = useState([]);
+  const [opcoesEmpresas, setOpcoesEmpresas] = useState([]);
   
   // Estados dos filtros
   const [filtros, setFiltros] = useState({
@@ -132,36 +230,17 @@ const FuncionariosPage = () => {
     telefone: '',
     userMail: '', // Email do usuário
     password: '', // Senha (hash) - opcional para reset
-    atuacao: [], // Array de referências para funções
+    departamento: '',
+    atuacao: [], // Nomes por extenso no form; enviados como [{ funcao }]
     escala: '',
-    acessos: { // Objeto booleano {Velohub, Console, Academy, Desk, Ouvidoria, Sociais, realTime, apoioN1, ChavePix}
-      Velohub: false,
-      Console: false,
-      Academy: false,
-      Desk: false,
-      Ouvidoria: false,
-      Sociais: false,
-      realTime: false,
-      apoioN1: false,
-      ChavePix: false
-    },
+    acessos: ACESSOS_PLATAFORMA_PADRAO(),
     desligado: false,
     dataDesligamento: '',
     afastado: false,
     dataAfastamento: ''
   });
   
-  const [acessoData, setAcessoData] = useState({
-    Velohub: false,
-    Console: false,
-    Academy: false,
-    Desk: false,
-    Ouvidoria: false,
-    Sociais: false,
-    realTime: false,
-    apoioN1: false,
-    ChavePix: false
-  });
+  const [acessoData, setAcessoData] = useState(ACESSOS_PLATAFORMA_PADRAO());
   
   // Estados de UI
   const [linhasExpandidas, setLinhasExpandidas] = useState(new Set());
@@ -196,7 +275,28 @@ const FuncionariosPage = () => {
     if (location.pathname === '/funcionarios') {
       carregarFuncionarios();
       carregarFuncoes();
+      carregarCamposCadastro();
     }
+  }, [location.pathname]);
+
+  // Ao voltar à aba (ex.: alterou Config em outra aba), recarrega dados para refletir credenciais/funções/cadastro sem hard refresh
+  useEffect(() => {
+    if (location.pathname !== '/funcionarios') return undefined;
+    let timeoutId;
+    const onVisibility = () => {
+      if (document.visibilityState !== 'visible') return;
+      window.clearTimeout(timeoutId);
+      timeoutId = window.setTimeout(() => {
+        carregarFuncionarios();
+        carregarFuncoes();
+        carregarCamposCadastro();
+      }, 450);
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.clearTimeout(timeoutId);
+    };
   }, [location.pathname]);
 
   // Aplicar filtros
@@ -252,18 +352,10 @@ const FuncionariosPage = () => {
     }
 
     if (filtros.atuacao) {
-      filtrados = filtrados.filter(f => {
-        if (Array.isArray(f.atuacao)) {
-          // Para array, verificar se alguma função contém o filtro
-          return f.atuacao.some(id => {
-            const funcao = funcoes.find(fun => fun._id === id);
-            return funcao && String(funcao.funcao || '').toLowerCase().includes(filtros.atuacao.toLowerCase());
-          });
-        } else if (typeof f.atuacao === 'string') {
-          // Para string (dados antigos), usar busca normal
-          return f.atuacao.toLowerCase().includes(filtros.atuacao.toLowerCase());
-        }
-        return false;
+      const termo = filtros.atuacao.toLowerCase();
+      filtrados = filtrados.filter((f) => {
+        const nomes = atuacaoParaForm(f, funcoes);
+        return nomes.some((nome) => nome.toLowerCase().includes(termo));
       });
     }
 
@@ -319,114 +411,35 @@ const FuncionariosPage = () => {
     }
   };
 
-  const salvarFuncao = async () => {
+  const carregarCamposCadastro = async () => {
     try {
-      if (!novaFuncao.funcao.trim()) {
-        mostrarSnackbar('Nome da função é obrigatório', 'error');
-        return;
-      }
-
-      console.log('🔍 DEBUG - Salvando função:', { funcaoEditando: funcaoEditando?._id, payload: novaFuncao });
-
-      const data = funcaoEditando
-        ? await qualidadeFuncoesAPI.update(funcaoEditando._id, novaFuncao)
-        : await qualidadeFuncoesAPI.create(novaFuncao);
-
-      console.log('📥 Resposta da API:', data);
-
-      if (data && data.success === false) {
-        mostrarSnackbar(data.error || 'Erro ao salvar função', 'error');
-        return;
-      }
-
-      mostrarSnackbar(
-        funcaoEditando ? 'Função atualizada com sucesso!' : 'Função criada com sucesso!',
-        'success'
-      );
-      setNovaFuncao({ funcao: '', descricao: '' });
-      setFuncaoEditando(null);
-      carregarFuncoes();
+      const data = await getCadastroCamposConfig();
+      const normalizeUnique = (arr) => {
+        const seen = new Set();
+        return (Array.isArray(arr) ? arr : [])
+          .map((v) => String(v || '').trim())
+          .filter(Boolean)
+          .filter((value) => {
+            const key = value.toLowerCase();
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
+      };
+      setOpcoesEscalas(normalizeUnique(data?.escalas));
+      setOpcoesEmpresas(normalizeUnique(data?.empresas));
     } catch (error) {
-      console.error('Erro ao salvar função:', error);
-      mostrarSnackbar('Erro ao salvar função', 'error');
-    }
-  };
-
-  const editarFuncao = (funcao) => {
-    setFuncaoEditando(funcao);
-    setNovaFuncao({ funcao: funcao.funcao, descricao: funcao.descricao || '' });
-  };
-
-  const deletarFuncao = async (id) => {
-    try {
-      if (window.confirm('Tem certeza que deseja deletar esta função?')) {
-        const data = await qualidadeFuncoesAPI.delete(id);
-
-        if (data && data.success === false) {
-          mostrarSnackbar(data.error || 'Erro ao deletar função', 'error');
-        } else {
-          mostrarSnackbar('Função deletada com sucesso!', 'success');
-          carregarFuncoes();
-        }
-      }
-    } catch (error) {
-      console.error('Erro ao deletar função:', error);
-      mostrarSnackbar('Erro ao deletar função', 'error');
+      console.error('Erro ao carregar cadastro de campos:', error);
+      setOpcoesEscalas([]);
+      setOpcoesEmpresas([]);
     }
   };
 
   const abrirModal = (funcionario = null) => {
     if (funcionario) {
       setFuncionarioEditando(funcionario);
-      
-      // Verificar se há dados antigos (atuacao como string)
-      const temDadosAntigos = funcionario.atuacao && typeof funcionario.atuacao === 'string';
-      if (temDadosAntigos) {
-        mostrarSnackbar('Dados antigos detectados. Atualize selecionando as funções.', 'warning');
-      }
-      
-      // Normalizar formato de acessos (suporta formato antigo array e novo objeto)
-      let acessosNormalizados = { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false, apoioN1: false, ChavePix: false };
-      if (funcionario.acessos && typeof funcionario.acessos === 'object') {
-        if (Array.isArray(funcionario.acessos)) {
-          // Formato antigo: array de objetos
-          funcionario.acessos.forEach(acesso => {
-            if (acesso && acesso.sistema) {
-              const sistema = acesso.sistema.toLowerCase();
-              if (sistema === 'velohub') {
-                acessosNormalizados.Velohub = true;
-              } else if (sistema === 'console') {
-                acessosNormalizados.Console = true;
-              } else if (sistema === 'academy') {
-                acessosNormalizados.Academy = true;
-              } else if (sistema === 'desk') {
-                acessosNormalizados.Desk = true;
-              } else if (sistema === 'ouvidoria') {
-                acessosNormalizados.Ouvidoria = true;
-              } else if (sistema === 'sociais') {
-                acessosNormalizados.Sociais = true;
-              } else if (sistema === 'realtime' || sistema === 'tempo real') {
-                acessosNormalizados.realTime = true;
-              } else if (acesso.sistema === 'apoioN1' || sistema.replace(/[\s_-]/g, '') === 'apoion1') {
-                acessosNormalizados.apoioN1 = true;
-              } else if (acesso.sistema === 'ChavePix' || sistema.replace(/[\s_-]/g, '') === 'chavepix') {
-                acessosNormalizados.ChavePix = true;
-              }
-            }
-          });
-        } else if (!Array.isArray(funcionario.acessos)) {
-          // Formato novo: objeto booleano
-          acessosNormalizados.Velohub = funcionario.acessos?.Velohub === true;
-          acessosNormalizados.Console = funcionario.acessos?.Console === true;
-          acessosNormalizados.Academy = funcionario.acessos?.Academy === true;
-          acessosNormalizados.Desk = funcionario.acessos?.Desk === true;
-          acessosNormalizados.Ouvidoria = funcionario.acessos?.Ouvidoria === true;
-          acessosNormalizados.Sociais = funcionario.acessos?.Sociais === true;
-          acessosNormalizados.realTime = funcionario.acessos?.realTime === true;
-          acessosNormalizados.apoioN1 = funcionario.acessos?.apoioN1 === true;
-          acessosNormalizados.ChavePix = funcionario.acessos?.ChavePix === true;
-        }
-      }
+
+      const acessosNormalizados = normalizarAcessosPlataformaLocal(funcionario.acessos);
       
       setFormData({
         colaboradorNome: funcionario.colaboradorNome || '',
@@ -438,7 +451,8 @@ const FuncionariosPage = () => {
         telefone: funcionario.telefone || '',
         userMail: funcionario.userMail || '',
         password: '', // Não carregar senha por segurança
-        atuacao: Array.isArray(funcionario.atuacao) ? funcionario.atuacao : [],
+        departamento: funcionario.departamento || '',
+        atuacao: atuacaoParaForm(funcionario, funcoes),
         escala: funcionario.escala || '',
         acessos: acessosNormalizados,
         desligado: funcionario.desligado,
@@ -458,9 +472,10 @@ const FuncionariosPage = () => {
         telefone: '',
         userMail: '',
         password: '',
+        departamento: '',
         atuacao: [],
         escala: '',
-        acessos: { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false, apoioN1: false, ChavePix: false },
+        acessos: ACESSOS_PLATAFORMA_PADRAO(),
         desligado: false,
         dataDesligamento: '',
         afastado: false,
@@ -483,9 +498,10 @@ const FuncionariosPage = () => {
       telefone: '',
       userMail: '',
       password: '',
+      departamento: '',
         atuacao: [],
         escala: '',
-        acessos: { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false, apoioN1: false, ChavePix: false },
+        acessos: ACESSOS_PLATAFORMA_PADRAO(),
         desligado: false,
       dataDesligamento: '',
       afastado: false,
@@ -548,31 +564,16 @@ const FuncionariosPage = () => {
       
       // Preparar dados para envio
       const dadosParaEnvio = { ...formData };
+
+      dadosParaEnvio.atuacao = (formData.atuacao || [])
+        .map((nome) => String(nome).trim())
+        .filter(Boolean)
+        .map((funcao) => ({ funcao }));
       
-      // Sempre enviar objeto completo de acessos com todos os campos
-      if (dadosParaEnvio.desligado || dadosParaEnvio.afastado) {
-        // Se funcionário está desligado ou afastado, forçar acessos como objeto com todos false
-        dadosParaEnvio.acessos = { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false, apoioN1: false, ChavePix: false };
-      } else {
-        // Normalizar acessos: sempre enviar objeto completo com todos os campos
-        if (dadosParaEnvio.acessos && typeof dadosParaEnvio.acessos === 'object' && !Array.isArray(dadosParaEnvio.acessos)) {
-          // Formato novo: objeto booleano - garantir que tenha todos os campos
-          dadosParaEnvio.acessos = {
-            Velohub: dadosParaEnvio.acessos?.Velohub === true,
-            Console: dadosParaEnvio.acessos?.Console === true,
-            Academy: dadosParaEnvio.acessos?.Academy === true,
-            Desk: dadosParaEnvio.acessos?.Desk === true,
-            Ouvidoria: dadosParaEnvio.acessos?.Ouvidoria === true,
-            Sociais: dadosParaEnvio.acessos?.Sociais === true,
-            realTime: dadosParaEnvio.acessos?.realTime === true,
-            apoioN1: dadosParaEnvio.acessos?.apoioN1 === true,
-            ChavePix: dadosParaEnvio.acessos?.ChavePix === true
-          };
-        } else {
-          // Se acessos não é um objeto válido ou é array, definir como objeto com todos false
-          dadosParaEnvio.acessos = { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false, apoioN1: false, ChavePix: false };
-        }
-      }
+      dadosParaEnvio.acessos =
+        dadosParaEnvio.desligado || dadosParaEnvio.afastado
+          ? ACESSOS_PLATAFORMA_PADRAO()
+          : normalizarAcessosPlataformaLocal(dadosParaEnvio.acessos);
       
       // Remover campos vazios opcionais antes de enviar
       if (!dadosParaEnvio.CPF || dadosParaEnvio.CPF.trim() === '') {
@@ -618,43 +619,30 @@ const FuncionariosPage = () => {
   };
 
   // Normalizar acessos do funcionário para formato objeto booleano (usado em abrirModalAcesso e useLayoutEffect)
-  const normalizarAcessosFuncionario = useCallback((acessos) => {
-    const padrao = { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false, apoioN1: false, ChavePix: false };
-    if (!acessos || typeof acessos !== 'object') return padrao;
-    if (!Array.isArray(acessos)) {
-      return {
-        Velohub: acessos.Velohub === true,
-        Console: acessos.Console === true,
-        Academy: acessos.Academy === true,
-        Desk: acessos.Desk === true,
-        Ouvidoria: acessos.Ouvidoria === true,
-        Sociais: acessos.Sociais === true,
-        realTime: acessos.realTime === true,
-        apoioN1: acessos.apoioN1 === true,
-        ChavePix: acessos.ChavePix === true
-      };
-    }
-    const resultado = { ...padrao };
-    acessos.forEach(acesso => {
-      if (acesso && acesso.sistema) {
-        const sistema = acesso.sistema.toLowerCase();
-        if (sistema === 'velohub') resultado.Velohub = true;
-        else if (sistema === 'console') resultado.Console = true;
-        else if (sistema === 'academy') resultado.Academy = true;
-        else if (sistema === 'desk') resultado.Desk = true;
-        else if (sistema === 'ouvidoria') resultado.Ouvidoria = true;
-        else if (sistema === 'sociais') resultado.Sociais = true;
-        else if (sistema === 'realtime' || sistema === 'tempo real') resultado.realTime = true;
-        else if (acesso.sistema === 'apoioN1' || sistema.replace(/[\s_-]/g, '') === 'apoion1') resultado.apoioN1 = true;
-        else if (acesso.sistema === 'ChavePix' || sistema.replace(/[\s_-]/g, '') === 'chavepix') resultado.ChavePix = true;
-      }
-    });
-    return resultado;
-  }, []);
+  const normalizarAcessosFuncionario = useCallback(
+    (acessos) => normalizarAcessosPlataformaLocal(acessos),
+    []
+  );
 
-  const abrirModalAcesso = (funcionario) => {
-    const acessosNormalizados = normalizarAcessosFuncionario(funcionario?.acessos);
-    setFuncionarioSelecionado(funcionario);
+  const abrirModalAcesso = async (funcionario) => {
+    const id = funcionario?._id || funcionario?.id;
+    if (!id) {
+      mostrarSnackbar('Colaborador sem identificador.', 'error');
+      return;
+    }
+    let merged = funcionario;
+    try {
+      const raw = await qualidadeFuncionariosAPI.getById(id);
+      const doc = raw?.success === true && raw?.data ? raw.data : raw?.data ?? raw;
+      if (doc && typeof doc === 'object' && (doc._id || doc.id)) {
+        merged = { ...funcionario, ...doc };
+      }
+    } catch (e) {
+      console.warn('Atualização do colaborador ao abrir Acessos:', e);
+      mostrarSnackbar('Não foi possível atualizar do servidor; exibindo dados em tela.', 'warning');
+    }
+    const acessosNormalizados = normalizarAcessosFuncionario(merged?.acessos);
+    setFuncionarioSelecionado(merged);
     setAcessoData(acessosNormalizados);
     setModalAcessoAberto(true);
   };
@@ -662,26 +650,16 @@ const FuncionariosPage = () => {
   // Garantir acessoData completo quando modal abre (corrige checkboxes não exibidos na primeira abertura)
   useLayoutEffect(() => {
     if (modalAcessoAberto && funcionarioSelecionado) {
-      const padrao = { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false, apoioN1: false, ChavePix: false };
+      const padrao = ACESSOS_PLATAFORMA_PADRAO();
       const normalizado = normalizarAcessosFuncionario(funcionarioSelecionado.acessos);
-      setAcessoData(prev => ({ ...padrao, ...prev, ...normalizado }));
+      setAcessoData((prev) => ({ ...padrao, ...prev, ...normalizado }));
     }
   }, [modalAcessoAberto, funcionarioSelecionado, normalizarAcessosFuncionario]);
 
   const fecharModalAcesso = () => {
     setModalAcessoAberto(false);
     setFuncionarioSelecionado(null);
-    setAcessoData({
-      Velohub: false,
-      Console: false,
-      Academy: false,
-      Desk: false,
-      Ouvidoria: false,
-      Sociais: false,
-      realTime: false,
-      apoioN1: false,
-      ChavePix: false
-    });
+    setAcessoData(ACESSOS_PLATAFORMA_PADRAO());
   };
 
   const salvarAcesso = async () => {
@@ -695,7 +673,7 @@ const FuncionariosPage = () => {
       if (funcionarioSelecionado.desligado || funcionarioSelecionado.afastado) {
         const funcionarioAtualizado = {
           ...funcionarioSelecionado,
-          acessos: { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false, apoioN1: false, ChavePix: false }
+          acessos: ACESSOS_PLATAFORMA_PADRAO(),
         };
         await updateFuncionario(funcionarioSelecionado._id || funcionarioSelecionado.id, funcionarioAtualizado);
         mostrarSnackbar('Acessos removidos (funcionário desligado/afastado)', 'success');
@@ -704,18 +682,7 @@ const FuncionariosPage = () => {
         return;
       }
       
-      // Sempre salvar como objeto booleano completo com todos os campos
-      const acessosParaSalvar = {
-        Velohub: acessoData.Velohub === true,
-        Console: acessoData.Console === true,
-        Academy: acessoData.Academy === true,
-        Desk: acessoData.Desk === true,
-        Ouvidoria: acessoData.Ouvidoria === true,
-        Sociais: acessoData.Sociais === true,
-        realTime: acessoData.realTime === true,
-        apoioN1: acessoData.apoioN1 === true,
-        ChavePix: acessoData.ChavePix === true
-      };
+      const acessosParaSalvar = normalizarAcessosPlataformaLocal(acessoData);
       
       // Buscar funcionário atualizado para garantir que temos todos os dados
       const funcionarioAtualizado = {
@@ -783,14 +750,10 @@ const FuncionariosPage = () => {
       }, {}),
       
       porAtuacao: funcionarios.reduce((acc, func) => {
-        if (func.atuacao && Array.isArray(func.atuacao)) {
-          func.atuacao.forEach(funcaoId => {
-            const funcao = funcoes.find(f => f._id === funcaoId);
-            if (funcao) {
-              acc[funcao.funcao] = (acc[funcao.funcao] || 0) + 1;
-            }
-          });
-        } else {
+        atuacaoParaForm(func, funcoes).forEach((nome) => {
+          acc[nome] = (acc[nome] || 0) + 1;
+        });
+        if (!func.atuacao || (Array.isArray(func.atuacao) && func.atuacao.length === 0)) {
           acc['Não informado'] = (acc['Não informado'] || 0) + 1;
         }
         return acc;
@@ -801,12 +764,8 @@ const FuncionariosPage = () => {
     const statsAtuacaoPorEmpresa = funcionarios.reduce((acc, func) => {
       const empresa = func.empresa || 'Não informado';
       
-      if (func.atuacao && Array.isArray(func.atuacao)) {
-        func.atuacao.forEach(funcaoId => {
-          const funcao = funcoes.find(f => f._id === funcaoId);
-          if (funcao) {
-            const atuacao = funcao.funcao;
-            
+      if (func.atuacao && Array.isArray(func.atuacao) && func.atuacao.length > 0) {
+        atuacaoParaForm(func, funcoes).forEach((atuacao) => {
             if (!acc[atuacao]) {
               acc[atuacao] = {
                 Velotax: 0,
@@ -824,7 +783,6 @@ const FuncionariosPage = () => {
             
             // Total geral
             acc[atuacao].Total++;
-          }
         });
       } else {
         const atuacao = 'Não informado';
@@ -908,7 +866,7 @@ const FuncionariosPage = () => {
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ mt: 6, mb: 8, pb: 4, position: 'relative' }}>
+      <Container maxWidth="lg" sx={{ mt: 4.8, mb: 8, pb: 4, position: 'relative' }}>
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
           <Typography variant="h6" sx={{ fontFamily: 'Poppins', color: '#666666' }}>
             Carregando funcionários...
@@ -919,17 +877,19 @@ const FuncionariosPage = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 2, mb: 8, pb: 4, position: 'relative', padding: '40px 20px', fontSize: '0.8rem' }}>
-      {/* Header com botão voltar no mesmo estilo da aba Artigos */}
-      <Box sx={{ position: 'relative', mb: 0.96, minHeight: 32 }}>
-        <Box sx={{ position: 'absolute', left: 0, top: -8, bottom: 0, display: 'flex', alignItems: 'flex-start' }}>
-          {/* Botão voltar padrão das abas, usando BackButton */}
-          <BackButton to="/qualidade" />
-        </Box>
-      </Box>
+    <Container maxWidth="lg" sx={{ mt: 4.8, mb: 8, pb: 4, position: 'relative', px: 2.5, fontSize: '0.8rem' }}>
+      <VoltarHeaderRow left={<BackButton to="/qualidade" />} />
 
       {/* Toolbar */}
-      <Card sx={{ mb: 2.4, borderRadius: '12.8px', boxShadow: '0 3.2px 16px rgba(0, 0, 0, 0.1)', backgroundColor: 'var(--cor-card)' }}>
+      <Card
+        sx={{
+          mb: 2.4,
+          borderRadius: '6px',
+          boxShadow: FUNCIONARIOS_SOMBRA_CARD,
+          backgroundColor: 'var(--cor-card)',
+          ...FUNCIONARIOS_CARD_SEM_HOVER_TOOLBAR_LISTA
+        }}
+      >
         <CardContent>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.6 }}>
             <Typography variant="h6" sx={{ fontFamily: 'Poppins', color: '#000058', fontWeight: 600, fontSize: '0.96rem' }}>
@@ -938,7 +898,7 @@ const FuncionariosPage = () => {
             <Box sx={{ display: 'flex', gap: 0.8 }}>
               <Button
                 startIcon={<Add />}
-                onClick={() => setShowModalNovo(true)}
+                onClick={() => abrirModal()}
                 variant="contained"
                 size="small"
                 sx={{
@@ -1167,7 +1127,14 @@ const FuncionariosPage = () => {
       </Card>
 
       {/* Lista de Funcionários */}
-      <Card sx={{ borderRadius: '12.8px', boxShadow: '0 3.2px 16px rgba(0, 0, 0, 0.1)', backgroundColor: 'var(--cor-card)' }}>
+      <Card
+        sx={{
+          borderRadius: '6px',
+          boxShadow: FUNCIONARIOS_SOMBRA_CARD,
+          backgroundColor: 'var(--cor-card)',
+          ...FUNCIONARIOS_CARD_SEM_HOVER_TOOLBAR_LISTA
+        }}
+      >
         <TableContainer>
           <Table size="small">
             <TableHead>
@@ -1222,16 +1189,9 @@ const FuncionariosPage = () => {
                             if (Array.isArray(funcionario.acessos)) {
                               return funcionario.acessos.length > 0 ? funcionario.acessos.length : 'Nenhum';
                             } else if (funcionario.acessos && typeof funcionario.acessos === 'object') {
-                              const acessos = [];
-                              if (funcionario.acessos.Velohub === true) acessos.push('VeloHub');
-                              if (funcionario.acessos.Console === true) acessos.push('Console');
-                              if (funcionario.acessos.Academy === true) acessos.push('Academy');
-                              if (funcionario.acessos.Desk === true) acessos.push('Desk');
-                              if (funcionario.acessos.Ouvidoria === true) acessos.push('Ouvidoria');
-                              if (funcionario.acessos.Sociais === true) acessos.push('Sociais');
-                              if (funcionario.acessos.realTime === true) acessos.push('Tempo Real');
-                              if (funcionario.acessos.apoioN1 === true) acessos.push('Apoio N1');
-                              if (funcionario.acessos.ChavePix === true) acessos.push('Chave Pix');
+                              const acessos = LISTA_ACESSOS_MODAL.filter(
+                                ({ key }) => funcionario.acessos[key] === true
+                              ).map(({ label }) => label);
                               return acessos.length > 0 ? acessos.join(', ') : 'Nenhum';
                             }
                             return 'Nenhum';
@@ -1351,16 +1311,15 @@ const FuncionariosPage = () => {
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Business sx={{ color: '#666666', fontSize: 12.8 }} />
+                                    <Typography variant="body2" sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
+                                      <strong>Departamento:</strong> {funcionario.departamento || 'Não informado'}
+                                    </Typography>
+                                  </Box>
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <Work sx={{ color: '#666666', fontSize: 12.8 }} />
                                     <Typography variant="body2" sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
-                                      <strong>Atuação:</strong> {funcionario.atuacao && Array.isArray(funcionario.atuacao) && funcionario.atuacao.length > 0
-                                        ? funcionario.atuacao.map(id => {
-                                            const funcao = funcoes.find(f => f._id === id);
-                                            return funcao ? funcao.funcao : '';
-                                          }).filter(Boolean).join(', ')
-                                        : typeof funcionario.atuacao === 'string' && funcionario.atuacao
-                                        ? funcionario.atuacao
-                                        : 'Não informado'}
+                                      <strong>Atuação:</strong> {formatarAtuacaoLista(funcionario.atuacao, funcoes)}
                                     </Typography>
                                   </Box>
                                   {funcionario.escala && (
@@ -1388,34 +1347,11 @@ const FuncionariosPage = () => {
                                       id: acesso.id
                                     }));
                                   } else if (funcionario.acessos && typeof funcionario.acessos === 'object' && !Array.isArray(funcionario.acessos)) {
-                                    // Formato novo: objeto booleano
-                                    if (funcionario.acessos.Velohub === true) {
-                                      acessosList.push({ label: 'VeloHub', id: 'velohub' });
-                                    }
-                                    if (funcionario.acessos.Console === true) {
-                                      acessosList.push({ label: 'Console', id: 'console' });
-                                    }
-                                    if (funcionario.acessos.Academy === true) {
-                                      acessosList.push({ label: 'Academy', id: 'academy' });
-                                    }
-                                    if (funcionario.acessos.Desk === true) {
-                                      acessosList.push({ label: 'Desk', id: 'desk' });
-                                    }
-                                    if (funcionario.acessos.Ouvidoria === true) {
-                                      acessosList.push({ label: 'Ouvidoria', id: 'ouvidoria' });
-                                    }
-                                    if (funcionario.acessos.Sociais === true) {
-                                      acessosList.push({ label: 'Sociais', id: 'sociais' });
-                                    }
-                                    if (funcionario.acessos.realTime === true) {
-                                      acessosList.push({ label: 'Tempo Real', id: 'realtime' });
-                                    }
-                                    if (funcionario.acessos.apoioN1 === true) {
-                                      acessosList.push({ label: 'Apoio N1', id: 'apoion1' });
-                                    }
-                                    if (funcionario.acessos.ChavePix === true) {
-                                      acessosList.push({ label: 'Chave Pix', id: 'chavepix' });
-                                    }
+                                    LISTA_ACESSOS_MODAL.forEach(({ key, label }) => {
+                                      if (funcionario.acessos[key] === true) {
+                                        acessosList.push({ label, id: key });
+                                      }
+                                    });
                                   }
                                   
                                   return acessosList.length > 0 ? (
@@ -1604,13 +1540,43 @@ const FuncionariosPage = () => {
               />
             </Grid>
 
-            {/* Escala e Atuações */}
+            {/* Escala e Departamento */}
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>Escala</InputLabel>
+                <Select
+                  value={formData.escala}
+                  label="Escala"
+                  onChange={(e) => setFormData({ ...formData, escala: e.target.value })}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      fontFamily: 'Poppins',
+                      '&:hover fieldset': {
+                        borderColor: '#1694FF'
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#000058'
+                      }
+                    },
+                    '& .MuiInputLabel-root': {
+                      fontFamily: 'Poppins'
+                    }
+                  }}
+                >
+                  {(opcoesEscalas || []).map((escala) => (
+                    <MenuItem key={escala} value={escala}>
+                      {escala}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Escala"
-                value={formData.escala}
-                onChange={(e) => setFormData({ ...formData, escala: e.target.value })}
+                label="Departamento"
+                value={formData.departamento}
+                onChange={(e) => setFormData({ ...formData, departamento: e.target.value })}
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     fontFamily: 'Poppins',
@@ -1629,6 +1595,8 @@ const FuncionariosPage = () => {
                 }}
               />
             </Grid>
+
+            {/* Atuações */}
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
                 <InputLabel sx={{ fontFamily: 'Poppins' }}>Atuações *</InputLabel>
@@ -1639,12 +1607,9 @@ const FuncionariosPage = () => {
                   required
                   renderValue={(selected) => (
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {selected.map((id) => {
-                        const funcao = funcoes.find(f => f._id === id);
-                        return funcao ? (
-                          <Chip key={id} label={funcao.funcao} size="small" />
-                        ) : null;
-                      })}
+                      {selected.map((nome) => (
+                        <Chip key={nome} label={nome} size="small" />
+                      ))}
                     </Box>
                   )}
                   sx={{
@@ -1663,8 +1628,8 @@ const FuncionariosPage = () => {
                   }}
                 >
                   {funcoes && funcoes.length > 0 && funcoes.map((funcao) => (
-                    <MenuItem key={funcao._id} value={funcao._id}>
-                      <Checkbox checked={Array.isArray(formData.atuacao) && formData.atuacao.indexOf(funcao._id) > -1} />
+                    <MenuItem key={funcao._id} value={funcao.funcao}>
+                      <Checkbox checked={Array.isArray(formData.atuacao) && formData.atuacao.indexOf(funcao.funcao) > -1} />
                       {funcao.funcao}
                     </MenuItem>
                   ))}
@@ -1674,29 +1639,34 @@ const FuncionariosPage = () => {
 
             {/* Empresa e Data de Contratação */}
             <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Empresa"
-                value={formData.empresa}
-                onChange={(e) => setFormData({ ...formData, empresa: e.target.value })}
-                required
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    fontFamily: 'Poppins',
-                    fontSize: '0.8rem',
-                    '&:hover fieldset': {
-                      borderColor: '#1694FF'
+              <FormControl fullWidth required>
+                <InputLabel sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>Empresa</InputLabel>
+                <Select
+                  value={formData.empresa}
+                  label="Empresa"
+                  onChange={(e) => setFormData({ ...formData, empresa: e.target.value })}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      fontFamily: 'Poppins',
+                      '&:hover fieldset': {
+                        borderColor: '#1694FF'
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#000058'
+                      }
                     },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#000058'
+                    '& .MuiInputLabel-root': {
+                      fontFamily: 'Poppins'
                     }
-                  },
-                  '& .MuiInputLabel-root': {
-                    fontFamily: 'Poppins',
-                    fontSize: '0.8rem'
-                  }
-                }}
-              />
+                  }}
+                >
+                  {(opcoesEmpresas || []).map((empresa) => (
+                    <MenuItem key={empresa} value={empresa}>
+                      {empresa}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
@@ -1750,7 +1720,7 @@ const FuncionariosPage = () => {
                         // Se desmarcar desligado, limpar data de desligamento
                         dataDesligamento: isDesligado ? formData.dataDesligamento : '',
                         // Se marcar como desligado, remover todos os acessos (todos false)
-                        acessos: isDesligado ? { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false, apoioN1: false, ChavePix: false } : formData.acessos
+                        acessos: isDesligado ? ACESSOS_PLATAFORMA_PADRAO() : formData.acessos
                       });
                     }}
                     sx={{
@@ -1781,7 +1751,7 @@ const FuncionariosPage = () => {
                         // Se desmarcar afastado, limpar data de afastamento
                         dataAfastamento: isAfastado ? formData.dataAfastamento : '',
                         // Se marcar como afastado, remover todos os acessos (todos false)
-                        acessos: isAfastado ? { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false, apoioN1: false, ChavePix: false } : formData.acessos
+                        acessos: isAfastado ? ACESSOS_PLATAFORMA_PADRAO() : formData.acessos
                       });
                     }}
                     sx={{
@@ -1995,7 +1965,17 @@ const FuncionariosPage = () => {
                   <Grid container spacing={3} direction="column">
                     {/* Estatísticas por Empresa */}
                     <Grid item>
-                      <Card className="container-secondary" sx={{ background: 'transparent', border: '1.5px solid var(--blue-dark)', borderRadius: '8px', padding: '16px', margin: '8px' }}>
+                      <Card
+                        className="container-secondary"
+                        sx={{
+                          background: 'transparent',
+                          border: '1.5px solid var(--blue-dark)',
+                          borderRadius: '4px',
+                          padding: '16px',
+                          margin: '8px',
+                          ...FUNCIONARIOS_CARD_SECUNDARIO_SEM_HOVER
+                        }}
+                      >
                         <CardContent sx={{ p: 0 }}>
                           <Typography variant="h6" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: 'var(--blue-dark)', mb: 2, display: 'flex', alignItems: 'center' }}>
                             <Business sx={{ mr: 1 }} />
@@ -2074,7 +2054,17 @@ const FuncionariosPage = () => {
 
                     {/* Estatísticas por Escala */}
                     <Grid item>
-                      <Card className="container-secondary" sx={{ background: 'transparent', border: '1.5px solid var(--blue-dark)', borderRadius: '8px', padding: '16px', margin: '8px' }}>
+                      <Card
+                        className="container-secondary"
+                        sx={{
+                          background: 'transparent',
+                          border: '1.5px solid var(--blue-dark)',
+                          borderRadius: '4px',
+                          padding: '16px',
+                          margin: '8px',
+                          ...FUNCIONARIOS_CARD_SECUNDARIO_SEM_HOVER
+                        }}
+                      >
                         <CardContent sx={{ p: 0 }}>
                           <Typography variant="h6" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: 'var(--blue-dark)', mb: 2, display: 'flex', alignItems: 'center' }}>
                             <Schedule sx={{ mr: 1 }} />
@@ -2109,7 +2099,18 @@ const FuncionariosPage = () => {
 
                 {/* Coluna Direita: Por Atuação */}
                 <Grid item xs={12} lg={6}>
-                  <Card className="container-secondary" sx={{ background: 'transparent', border: '1.5px solid var(--blue-dark)', borderRadius: '8px', padding: '16px', margin: '8px', height: '100%' }}>
+                  <Card
+                    className="container-secondary"
+                    sx={{
+                      background: 'transparent',
+                      border: '1.5px solid var(--blue-dark)',
+                      borderRadius: '4px',
+                      padding: '16px',
+                      margin: '8px',
+                      height: '100%',
+                      ...FUNCIONARIOS_CARD_SECUNDARIO_SEM_HOVER
+                    }}
+                  >
                     <CardContent sx={{ p: 0 }}>
                       <Typography variant="h6" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: 'var(--blue-dark)', mb: 2, display: 'flex', alignItems: 'center' }}>
                         <Work sx={{ mr: 1 }} />
@@ -2181,7 +2182,13 @@ const FuncionariosPage = () => {
 
                 {/* Resumo Geral */}
                 <Grid item xs={12}>
-                  <Card sx={{ backgroundColor: 'var(--cor-card)', border: '1px solid rgba(22, 52, 255, 0.1)' }}>
+                  <Card
+                    sx={{
+                      backgroundColor: 'var(--cor-card)',
+                      border: '1px solid rgba(22, 52, 255, 0.1)',
+                      ...FUNCIONARIOS_CARD_RESUMO_SEM_HOVER
+                    }}
+                  >
                     <CardContent>
                       <Typography variant="h6" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#424242', mb: 3 }}>
                         Resumo Geral
@@ -2238,215 +2245,6 @@ const FuncionariosPage = () => {
         <DialogActions>
           <Button 
             onClick={() => setShowStats(false)} 
-            sx={{ 
-              fontFamily: 'Poppins', 
-              color: '#666666',
-              '&:hover': {
-                backgroundColor: '#F5F5F5'
-              }
-            }}
-          >
-            Fechar
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Modal Novo */}
-      <Dialog open={showModalNovo} onClose={() => setShowModalNovo(false)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', textAlign: 'center' }}>
-          Novo
-        </DialogTitle>
-        <DialogContent sx={{ textAlign: 'center', py: 4 }}>
-          <Typography variant="body1" sx={{ fontFamily: 'Poppins', color: '#666666', mb: 3 }}>
-            O que você gostaria de criar?
-          </Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Button
-              variant="contained"
-              startIcon={<PersonAdd />}
-              onClick={() => {
-                setShowModalNovo(false);
-                abrirModal();
-              }}
-              sx={{
-                backgroundColor: '#1694FF',
-                fontFamily: 'Poppins',
-                py: 1.5,
-                '&:hover': { backgroundColor: '#0D7AE5' }
-              }}
-            >
-              Funcionário
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={<Work />}
-              onClick={() => {
-                setShowModalNovo(false);
-                setShowModalFuncao(true);
-              }}
-              sx={{
-                backgroundColor: '#1694FF',
-                fontFamily: 'Poppins',
-                py: 1.5,
-                '&:hover': { backgroundColor: '#0D7AE5' }
-              }}
-            >
-              Função
-            </Button>
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ justifyContent: 'center', pb: 3 }}>
-          <Button
-            onClick={() => setShowModalNovo(false)}
-            sx={{ 
-              fontFamily: 'Poppins', 
-              color: '#666666',
-              '&:hover': {
-                backgroundColor: '#F5F5F5'
-              }
-            }}
-          >
-            Cancelar
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Modal Gestão de Funções */}
-      <Dialog open={showModalFuncao} onClose={() => setShowModalFuncao(false)} maxWidth="md" fullWidth>
-        <DialogTitle sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>
-          Gestão de Funções
-        </DialogTitle>
-        <DialogContent>
-          {/* Seção Superior - Formulário */}
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="h6" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', mb: 2 }}>
-              {funcaoEditando ? 'Editar Função' : 'Nova Função'}
-            </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Nome da Função"
-                  value={novaFuncao.funcao}
-                  onChange={(e) => setNovaFuncao({...novaFuncao, funcao: e.target.value})}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      fontFamily: 'Poppins',
-                      '&:hover fieldset': {
-                        borderColor: '#1694FF'
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#000058'
-                      }
-                    },
-                    '& .MuiInputLabel-root': {
-                      fontFamily: 'Poppins'
-                    }
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Descrição (opcional)"
-                  value={novaFuncao.descricao}
-                  onChange={(e) => setNovaFuncao({...novaFuncao, descricao: e.target.value})}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      fontFamily: 'Poppins',
-                      '&:hover fieldset': {
-                        borderColor: '#1694FF'
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#000058'
-                      }
-                    },
-                    '& .MuiInputLabel-root': {
-                      fontFamily: 'Poppins'
-                    }
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                  <Button
-                    variant="contained"
-                    onClick={salvarFuncao}
-                    sx={{
-                      backgroundColor: '#1694FF',
-                      fontFamily: 'Poppins',
-                      px: 3,
-                      '&:hover': { backgroundColor: '#0D7AE5' }
-                    }}
-                  >
-                    {funcaoEditando ? 'Atualizar' : 'Salvar'}
-                  </Button>
-                </Box>
-              </Grid>
-            </Grid>
-          </Box>
-
-          <Divider sx={{ my: 3 }} />
-
-          {/* Seção Inferior - Lista */}
-          <Box>
-            {funcoes.length === 0 ? (
-              <Box sx={{ textAlign: 'center', py: 4 }}>
-                <Typography variant="body1" sx={{ fontFamily: 'Poppins', color: '#666666' }}>
-                  Nenhuma função cadastrada
-                </Typography>
-              </Box>
-            ) : (
-              <TableContainer component={Paper} sx={{ maxHeight: 400, backgroundColor: 'var(--cor-container)' }}>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow sx={{ backgroundColor: '#F5F5F5' }}>
-                      <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>Item</TableCell>
-                      <TableCell sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>Desc</TableCell>
-                      <TableCell align="center" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>Editar</TableCell>
-                      <TableCell align="center" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058' }}>Remover</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {funcoes && funcoes.length > 0 && funcoes.map((funcao) => (
-                      <TableRow key={funcao._id}>
-                        <TableCell sx={{ fontFamily: 'Poppins', color: '#CCCCCC' }}>{funcao.funcao}</TableCell>
-                        <TableCell sx={{ fontFamily: 'Poppins', color: '#666666' }}>
-                          {funcao.descricao || '-'}
-                        </TableCell>
-                        <TableCell align="center">
-                          <IconButton
-                            size="small"
-                            onClick={() => editarFuncao(funcao)}
-                            sx={{ color: '#1694FF' }}
-                          >
-                            <Edit />
-                          </IconButton>
-                        </TableCell>
-                        <TableCell align="center">
-                          <IconButton
-                            size="small"
-                            onClick={() => deletarFuncao(funcao._id)}
-                            sx={{ color: '#FF4444' }}
-                          >
-                            <Delete />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            )}
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ justifyContent: 'center', pb: 3 }}>
-          <Button
-            onClick={() => {
-              setShowModalFuncao(false);
-              setFuncaoEditando(null);
-              setNovaFuncao({ funcao: '', descricao: '' });
-            }}
             sx={{ 
               fontFamily: 'Poppins', 
               color: '#666666',

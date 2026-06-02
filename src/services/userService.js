@@ -1,4 +1,7 @@
-// VERSION: v1.2.3 | DATE: 2025-11-13 | AUTHOR: VeloHub Development Team
+// VERSION: v1.2.6 | DATE: 2026-06-02 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.2.6 - getAuthorizedUser: consulta API para todos os e-mails (funções administrativas vêm do MongoDB)
+// CHANGELOG: v1.2.5 - Bypass getAuthorizedUser: gestaoQa nos tickets
+// CHANGELOG: v1.2.3 | DATE: 2025-11-13
 import { usersAPI } from './api';
 
 // Cache local para melhor performance
@@ -48,89 +51,11 @@ export const isUserAuthorized = async (email) => {
 // Função para obter dados do usuário autorizado
 export const getAuthorizedUser = async (email) => {
   try {
-    // BYPASS TEMPORÁRIO: Retornar dados do Lucas Gravina
-    if (email === 'lucas.gravina@velotax.com.br') {
-      return {
-        _userMail: 'lucas.gravina@velotax.com.br',
-        _userId: 'Lucas Gravina',
-        _userRole: 'Administrador',
-        _userClearance: {
-          artigos: true,
-          velonews: true,
-          botPerguntas: true,
-          chamadosInternos: true,
-          igp: true,
-          botAnalises: true,  // ✅ ADICIONADO: Bot Análises
-          qualidade: true,
-          capacity: true,
-          config: true,
-          servicos: true,
-          funcionarios: true
-        },
-        _userTickets: {
-          artigos: true,
-          processos: true,
-          roteiros: true,
-          treinamentos: true,
-          funcionalidades: true,
-          recursos: true,
-          gestao: true,
-          rhFin: true,
-          facilities: true
-        },
-        _funcoesAdministrativas: {
-          avaliador: true,
-          auditoria: true,
-          relatoriosGestao: true
-        }
-      };
-    }
-    
     const response = await usersAPI.getByEmail(email);
-    // Extrair dados do usuário da resposta
     const mongoUser = response.data || response;
-    return mongoUser; // Retorna dados diretamente do MongoDB
+    return mongoUser;
   } catch (error) {
     console.error('Erro ao obter dados do usuário:', error);
-    
-    // BYPASS TEMPORÁRIO: Em caso de erro, retornar dados do Lucas Gravina
-    if (email === 'lucas.gravina@velotax.com.br') {
-      return {
-        _userMail: 'lucas.gravina@velotax.com.br',
-        _userId: 'Lucas Gravina',
-        _userRole: 'Administrador',
-        _userClearance: {
-          artigos: true,
-          velonews: true,
-          botPerguntas: true,
-          chamadosInternos: true,
-          igp: true,
-          botAnalises: true,  // ✅ ADICIONADO: Bot Análises
-          qualidade: true,
-          capacity: true,
-          config: true,
-          servicos: true,
-          funcionarios: true
-        },
-        _userTickets: {
-          artigos: true,
-          processos: true,
-          roteiros: true,
-          treinamentos: true,
-          funcionalidades: true,
-          recursos: true,
-          gestao: true,
-          rhFin: true,
-          facilities: true
-        },
-        _funcoesAdministrativas: {
-          avaliador: true,
-          auditoria: true,
-          relatoriosGestao: true
-        }
-      };
-    }
-    
     return null;
   }
 };

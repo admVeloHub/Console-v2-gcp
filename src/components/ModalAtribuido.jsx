@@ -1,5 +1,10 @@
-// VERSION: v1.3.2 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
-import React, { useState, useEffect } from 'react';
+// VERSION: v1.5.3 | DATE: 2026-05-08 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.5.3 - Grid: L1 email/sla/atribuído/status; L2 ocorrência C1, processo C3, botões status C4
+// CHANGELOG: v1.5.2 - Processo: largura só até ~22rem (não linha inteira); fonte explícita legível (sem autoWidth)
+// CHANGELOG: v1.5.1 - Campo Processo com largura contida (autoWidth + justifySelf start)
+// CHANGELOG: v1.5.0 - Cabeçalho: id, solicitante, direcionamento, data; removidos do quadro superior
+// CHANGELOG: v1.4.0 - Após PUT: aplica response.data no estado; useEffect não zera rascunho ao só atualizar o mesmo ticket
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -34,6 +39,7 @@ const ModalAtribuido = ({ ticket, open, onClose, onUpdate }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
   const [selectedTicket, setSelectedTicket] = useState(ticket);
+  const lastTicketIdRef = useRef(null);
 
   // Função para verificar se o ticket é de conteúdo
   const isTicketConteudo = (ticket) => {
@@ -48,15 +54,24 @@ const ModalAtribuido = ({ ticket, open, onClose, onUpdate }) => {
     return generosConteudo.includes(generoLower);
   };
 
-  // Atualizar estados quando ticket muda
+  // Sincronizar com o ticket do pai (inclui mesma _id com _corpo atualizado após refresh silencioso)
   useEffect(() => {
-    if (ticket) {
-      setEditedStatus(ticket._statusHub || ticket._statusConsole || '');
-      setEditedProcess(ticket._processo || '');
+    if (!ticket) return;
+    setEditedStatus(ticket._statusHub || ticket._statusConsole || '');
+    setEditedProcess(ticket._processo || '');
+    setSelectedTicket(ticket);
+    if (lastTicketIdRef.current !== ticket._id) {
       setNewMessage('');
-      setSelectedTicket(ticket);
+      lastTicketIdRef.current = ticket._id;
     }
   }, [ticket]);
+
+  const applyServerTicket = (data) => {
+    if (!data) return;
+    setSelectedTicket(data);
+    setEditedStatus(data._statusConsole || data._statusHub || '');
+    setEditedProcess(data._processo || '');
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -125,18 +140,26 @@ const ModalAtribuido = ({ ticket, open, onClose, onUpdate }) => {
         : await ticketsAPI.updateGestao(ticket._id, updateData);
 
       if (response.success) {
-        setEditedStatus(newStatus === 'em espera' ? 'em espera' : newStatus);
         if (newMessage && newMessage.trim()) {
           setNewMessage('');
         }
-        // Update ticket state immediately for real-time UI updates
-        setSelectedTicket(prev => ({
-          ...prev,
-          _statusHub: updateData._statusHub,
-          _statusConsole: updateData._statusConsole,
-          _processo: updateData._processo || prev._processo,
-          _corpo: newMessage && newMessage.trim() ? [...(prev._corpo || []), updateData._novaMensagem] : prev._corpo
-        }));
+        if (response.data) {
+          applyServerTicket(response.data);
+        } else {
+          const statusConsole = updateData._statusConsole;
+          const statusHub = updateData._statusHub;
+          setEditedStatus(newStatus === 'em espera' ? 'em espera' : (statusConsole || statusHub || ''));
+          setSelectedTicket((prev) => ({
+            ...prev,
+            _statusHub: statusHub ?? prev._statusHub,
+            _statusConsole: statusConsole ?? prev._statusConsole,
+            _processo: updateData._processo || prev._processo,
+            _corpo:
+              newMessage && newMessage.trim() && updateData._novaMensagem
+                ? [...(prev._corpo || []), updateData._novaMensagem]
+                : prev._corpo
+          }));
+        }
         onUpdate && onUpdate();
         showSnackbar('Status atualizado com sucesso!', 'success');
       }
@@ -164,11 +187,14 @@ const ModalAtribuido = ({ ticket, open, onClose, onUpdate }) => {
         : await ticketsAPI.updateGestao(ticket._id, updateData);
 
       if (response.success) {
-        // Update ticket state immediately for real-time UI updates
-        setSelectedTicket(prev => ({
-          ...prev,
-          _processo: editedProcess
-        }));
+        if (response.data) {
+          applyServerTicket(response.data);
+        } else {
+          setSelectedTicket((prev) => ({
+            ...prev,
+            _processo: editedProcess
+          }));
+        }
         onUpdate && onUpdate();
         showSnackbar('Processo atualizado com sucesso!', 'success');
       }
@@ -207,15 +233,18 @@ const ModalAtribuido = ({ ticket, open, onClose, onUpdate }) => {
 
       if (response.success) {
         setNewMessage('');
-        setEditedStatus('pendente');
-        // Update local state by appending to existing corpo
-        setSelectedTicket(prev => ({
-          ...prev,
-          _corpo: [...(prev._corpo || []), newMessageObj],
-          _processo: editedProcess,
-          _statusHub: 'aberto',
-          _statusConsole: 'pendente'
-        }));
+        if (response.data) {
+          applyServerTicket(response.data);
+        } else {
+          setEditedStatus('pendente');
+          setSelectedTicket((prev) => ({
+            ...prev,
+            _corpo: [...(prev._corpo || []), newMessageObj],
+            _processo: editedProcess,
+            _statusHub: 'aberto',
+            _statusConsole: 'pendente'
+          }));
+        }
         onUpdate && onUpdate();
         showSnackbar('Mensagem adicionada com sucesso!', 'success');
       }
@@ -245,6 +274,18 @@ const ModalAtribuido = ({ ticket, open, onClose, onUpdate }) => {
 
   if (!ticket) return null;
 
+  const headerTicket = selectedTicket || ticket;
+  const headerSolicitante =
+    headerTicket._corpo && headerTicket._corpo.length > 0
+      ? headerTicket._corpo[0].userName
+      : 'Não informado';
+  const headerDirecionamento = isTicketConteudo(ticket)
+    ? headerTicket._assunto || headerTicket._direcionamento || 'Não informado'
+    : headerTicket._direcionamento || 'Não informado';
+  const headerData = headerTicket.createdAt
+    ? new Date(headerTicket.createdAt).toLocaleDateString('pt-BR')
+    : 'Não informado';
+
   return (
     <>
       <Dialog
@@ -254,7 +295,7 @@ const ModalAtribuido = ({ ticket, open, onClose, onUpdate }) => {
         fullWidth
         sx={{
           '& .MuiDialog-paper': {
-            borderRadius: '12px',
+            borderRadius: '6px',
             height: '90vh',
             width: '90%',
             maxWidth: 'none'
@@ -274,15 +315,38 @@ const ModalAtribuido = ({ ticket, open, onClose, onUpdate }) => {
           fontWeight: 600,
           color: 'var(--blue-dark)',
           display: 'flex',
-          alignItems: 'center',
+          alignItems: 'flex-start',
           justifyContent: 'space-between',
+          gap: 1,
           pb: 1
         }}>
-          {isTicketConteudo(ticket) ?
-            `${ticket._id} - ${ticket._tipo} - ${ticket._assunto || ticket._direcionamento || 'Não informado'}` :
-            `${ticket._id} - ${ticket._tipo} - ${ticket._direcionamento || 'Não informado'}`
-          }
-          <IconButton onClick={onClose} size="small">
+          <Box sx={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'baseline',
+            gap: 0.5,
+            columnGap: 1,
+            flex: 1,
+            minWidth: 0,
+            pr: 1
+          }}>
+            <Typography component="span" sx={{ fontFamily: 'Poppins', fontWeight: 700, color: 'var(--blue-dark)', fontSize: '1rem' }}>
+              {headerTicket._id}
+            </Typography>
+            <Typography component="span" sx={{ color: 'text.secondary', userSelect: 'none', lineHeight: 1 }} aria-hidden>·</Typography>
+            <Typography component="span" sx={{ fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.95rem' }}>
+              {headerSolicitante}
+            </Typography>
+            <Typography component="span" sx={{ color: 'text.secondary', userSelect: 'none', lineHeight: 1 }} aria-hidden>·</Typography>
+            <Typography component="span" sx={{ fontFamily: 'Poppins', fontWeight: 500, fontSize: '0.9rem', wordBreak: 'break-word' }}>
+              {headerDirecionamento}
+            </Typography>
+            <Typography component="span" sx={{ color: 'text.secondary', userSelect: 'none', lineHeight: 1 }} aria-hidden>·</Typography>
+            <Typography component="span" sx={{ fontFamily: 'Poppins', fontWeight: 500, fontSize: '0.9rem' }}>
+              {headerData}
+            </Typography>
+          </Box>
+          <IconButton onClick={onClose} size="small" sx={{ flexShrink: 0 }} aria-label="Fechar">
             <CloseIcon />
           </IconButton>
         </DialogTitle>
@@ -291,7 +355,7 @@ const ModalAtribuido = ({ ticket, open, onClose, onUpdate }) => {
           <Box sx={{
             background: 'transparent',
             border: '1.5px solid var(--blue-dark)',
-            borderRadius: '8px',
+            borderRadius: '4px',
             padding: '16px',
             margin: '8px',
             flexShrink: 0,
@@ -303,21 +367,14 @@ const ModalAtribuido = ({ ticket, open, onClose, onUpdate }) => {
             <Box sx={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr 1fr 1fr',
+              gridTemplateRows: 'auto auto',
               gap: 2,
               mb: 0,
               width: '100%',
-              justifyContent: 'flex-start'
+              justifyContent: 'flex-start',
+              alignItems: 'start'
             }}>
-              {/* Linha 1 */}
-              <Box>
-                <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, mb: 0.5 }}>
-                  Solicitante:
-                </Typography>
-                <Typography sx={{ fontFamily: 'Poppins' }}>
-                  {ticket._corpo && ticket._corpo.length > 0 ? ticket._corpo[0].userName : 'Não informado'}
-                </Typography>
-              </Box>
-              <Box>
+              <Box sx={{ gridColumn: 1, gridRow: 1 }}>
                 <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, mb: 0.5 }}>
                   Email:
                 </Typography>
@@ -325,15 +382,7 @@ const ModalAtribuido = ({ ticket, open, onClose, onUpdate }) => {
                   {ticket._userEmail || 'Não informado'}
                 </Typography>
               </Box>
-              <Box>
-                <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, mb: 0.5 }}>
-                  Data:
-                </Typography>
-                <Typography sx={{ fontFamily: 'Poppins' }}>
-                  {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString('pt-BR') : 'Não informado'}
-                </Typography>
-              </Box>
-              <Box>
+              <Box sx={{ gridColumn: 2, gridRow: 1 }}>
                 <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, mb: 0.5 }}>
                   SLA:
                 </Typography>
@@ -341,16 +390,7 @@ const ModalAtribuido = ({ ticket, open, onClose, onUpdate }) => {
                   {calculateSLA(ticket.createdAt)}
                 </Typography>
               </Box>
-              {/* Linha 2 correta */}
-              <Box>
-                <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, mb: 0.5 }}>
-                  {isTicketConteudo(ticket) ? 'Assunto/Direcionamento:' : 'Direcionamento:'}
-                </Typography>
-                <Typography sx={{ fontFamily: 'Poppins' }}>
-                  {isTicketConteudo(ticket) ? (ticket._assunto || ticket._direcionamento || 'Não informado') : (ticket._direcionamento || 'Não informado')}
-                </Typography>
-              </Box>
-              <Box>
+              <Box sx={{ gridColumn: 3, gridRow: 1 }}>
                 <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, mb: 0.5 }}>
                   Atribuído:
                 </Typography>
@@ -358,30 +398,7 @@ const ModalAtribuido = ({ ticket, open, onClose, onUpdate }) => {
                   {ticket._atribuido || 'Não atribuído'}
                 </Typography>
               </Box>
-              <Box>
-                <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, mb: 0.5 }}>
-                  Processo:
-                </Typography>
-                <FormControl fullWidth size="small">
-                  <Select
-                    value={editedProcess}
-                    onChange={(e) => setEditedProcess(e.target.value)}
-                    disabled={isLoading}
-                    sx={{
-                      fontFamily: 'Poppins',
-                      '& .MuiOutlinedInput-root': {
-                        fontFamily: 'Poppins'
-                      }
-                    }}
-                  >
-                    <MenuItem value="Aprovação do Gestor">Aprovação do Gestor</MenuItem>
-                    <MenuItem value="Avaliação Viabilidade">Avaliação Viabilidade</MenuItem>
-                    <MenuItem value="Em Desenvolvimento">Em Desenvolvimento</MenuItem>
-                    <MenuItem value="Em Teste">Em Teste</MenuItem>
-                  </Select>
-                </FormControl>
-              </Box>
-              <Box>
+              <Box sx={{ gridColumn: 4, gridRow: 1 }}>
                 <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, mb: 0.5 }}>
                   Status:
                 </Typography>
@@ -399,29 +416,72 @@ const ModalAtribuido = ({ ticket, open, onClose, onUpdate }) => {
                 />
               </Box>
 
-              {/* Linha 2 removida (duplicada) */}
-              {/* Botões removidos daqui para reposicionamento */}
-
-            </Box>
-            {/* Removido bloco excedente de botões duplicados */}
-
-            {/* Ocorrência - Full Width Row */}
-            <Box sx={{ mt: 2, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
-              <Box>
+              <Box sx={{ gridColumn: 1, gridRow: 2, minWidth: 0, pr: 1 }}>
                 <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, mb: 0.5 }}>
                   Ocorrência:
                 </Typography>
-                <Typography sx={{ fontFamily: 'Poppins' }}>
+                <Typography sx={{ fontFamily: 'Poppins', wordBreak: 'break-word' }}>
                   {ticket._obs || 'Não informado'}
                 </Typography>
               </Box>
-              {/* Botões Em Espera e Resolvido - MESMA linha, alinhados à direita */}
+
+              <Box sx={{ gridColumn: 3, gridRow: 2, justifySelf: 'stretch', minWidth: 0, width: '100%' }}>
+                <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, mb: 0.5, fontSize: '0.9em' }}>
+                  Processo:
+                </Typography>
+                <FormControl
+                  size="small"
+                  variant="outlined"
+                  fullWidth
+                  sx={{
+                    maxWidth: 'min(100%, 22rem)'
+                  }}
+                >
+                  <Select
+                    value={editedProcess}
+                    onChange={(e) => setEditedProcess(e.target.value)}
+                    disabled={isLoading}
+                    sx={{
+                      fontFamily: 'Poppins',
+                      fontSize: '0.9em',
+                      '& .MuiOutlinedInput-input': {
+                        fontSize: '0.9em',
+                        py: 1
+                      },
+                      '& .MuiOutlinedInput-root': {
+                        fontFamily: 'Poppins'
+                      }
+                    }}
+                    MenuProps={{
+                      PaperProps: {
+                        sx: {
+                          '& .MuiMenuItem-root': {
+                            fontFamily: 'Poppins',
+                            fontSize: '0.9em'
+                          }
+                        }
+                      }
+                    }}
+                  >
+                    <MenuItem value="Aprovação do Gestor">Aprovação do Gestor</MenuItem>
+                    <MenuItem value="Avaliação Viabilidade">Avaliação Viabilidade</MenuItem>
+                    <MenuItem value="Em Desenvolvimento">Em Desenvolvimento</MenuItem>
+                    <MenuItem value="Em Teste">Em Teste</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
+
               <Box sx={{
+                gridColumn: 4,
+                gridRow: 2,
                 display: 'flex',
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+                alignItems: 'flex-end',
                 justifyContent: 'flex-end',
-                alignItems: 'center',
-                gap: 2,
-                ml: 2
+                alignSelf: 'end',
+                gap: 1,
+                minWidth: 0
               }}>
                 <Button
                   variant="outlined"
@@ -433,6 +493,7 @@ const ModalAtribuido = ({ ticket, open, onClose, onUpdate }) => {
                     borderColor: 'var(--yellow)',
                     fontSize: '0.9em',
                     px: 2,
+                    whiteSpace: 'nowrap',
                     '&:hover': {
                       backgroundColor: 'var(--yellow)',
                       color: 'white',
@@ -452,6 +513,7 @@ const ModalAtribuido = ({ ticket, open, onClose, onUpdate }) => {
                     backgroundColor: 'var(--blue-dark)',
                     fontSize: '0.9em',
                     px: 2,
+                    whiteSpace: 'nowrap',
                     '&:hover': {
                       backgroundColor: 'var(--blue-medium)'
                     }
@@ -477,7 +539,7 @@ const ModalAtribuido = ({ ticket, open, onClose, onUpdate }) => {
                   mb: 1,
                   p: 1.5,
                   backgroundColor: 'var(--cor-container)',
-                  borderRadius: 1,
+                  borderRadius: '4px',
                   borderBottom: index < selectedTicket._corpo.length - 1 ? '1px solid rgba(0, 0, 0, 0.1)' : 'none'
                 }}>
                   <Typography

@@ -320,7 +320,7 @@ const DetalhesAnaliseModal = ({
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: '16px',
+          borderRadius: '6px',
           maxHeight: '90vh'
         }
       }}
@@ -730,7 +730,7 @@ const DetalhesAnaliseModal = ({
           maxWidth="md"
           fullWidth
           PaperProps={{
-            sx: { borderRadius: '16px' }
+            sx: { borderRadius: '6px' }
           }}
         >
           <DialogTitle sx={{ fontFamily: 'Poppins', fontWeight: 600, color: 'var(--blue-dark)' }}>
@@ -897,7 +897,7 @@ const DetalhesAnaliseModal = ({
               <Box sx={{ 
                 backgroundColor: 'var(--cor-container)', 
                 padding: 2, 
-                borderRadius: '8px',
+                borderRadius: '4px',
                 maxHeight: '400px',
                 overflow: 'auto',
                 border: '1px solid #e0e0e0'
@@ -934,7 +934,7 @@ const DetalhesAnaliseModal = ({
             <Box sx={{ 
               backgroundColor: analiseExibida.auditoriaGestor.aprovado ? '#d4edda' : '#f8d7da', 
               padding: 2, 
-              borderRadius: '8px',
+              borderRadius: '4px',
               border: `1px solid ${analiseExibida.auditoriaGestor.aprovado ? '#c3e6cb' : '#f5c6cb'}`
             }}>
               <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>

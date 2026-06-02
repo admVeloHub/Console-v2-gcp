@@ -1,6 +1,6 @@
 # .dockerignore
 # Arquivos e diretórios a serem ignorados no build Docker
-# VERSION: v1.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+# VERSION: v1.0.1 | DATE: 2026-04-28 | AUTHOR: VeloHub Development Team
 
 # Dependências
 node_modules
@@ -58,7 +58,6 @@ docs
 # Outros projetos
 Capacity_final
 quality original
-VeloInsights
 
 # Vercel
 .vercel

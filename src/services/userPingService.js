@@ -1,5 +1,5 @@
-// VERSION: v1.1.0 | DATE: 2026-04-15 | AUTHOR: VeloHub Development Team
-// CHANGELOG: v1.1.0 - URL do ping via getResolvedApiUrl (dev → backend local)
+// VERSION: v1.2.0 | DATE: 2026-04-30 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.2.0 - Ping/collectionId: incluir gestaoQa nos tipos de gestão
 
 import { getResolvedApiUrl } from './api';
 
@@ -19,7 +19,7 @@ export const determineCollectionId = (user) => {
   const conteudosTypes = ['artigos', 'processos', 'roteiros', 'treinamentos', 'recursos'];
   
   // Lista de tipos de tickets para "tk_gestão"
-  const gestaoTypes = ['funcionalidades', 'gestao', 'rhFin', 'facilities'];
+  const gestaoTypes = ['funcionalidades', 'gestao', 'gestaoQa', 'rhFin', 'facilities'];
 
   // Verificar se tem acesso a tipos de conteúdo
   const hasConteudosAccess = conteudosTypes.some(type => tiposTickets[type] === true);
@@ -157,7 +157,7 @@ export const debugUserPermissions = (user) => {
   
   // Mostrar quais tipos estão ativos
   const conteudosTypes = ['artigos', 'processos', 'roteiros', 'treinamentos', 'recursos'];
-  const gestaoTypes = ['funcionalidades', 'gestao', 'rhFin', 'facilities'];
+  const gestaoTypes = ['funcionalidades', 'gestao', 'gestaoQa', 'rhFin', 'facilities'];
   
   const activeConteudos = conteudosTypes.filter(type => user.tiposTickets[type]);
   const activeGestao = gestaoTypes.filter(type => user.tiposTickets[type]);

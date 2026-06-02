@@ -1,5 +1,5 @@
 # 🚀 Console de Conteúdo VeloHub - Frontend
-<!-- VERSION: v3.8.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v3.8.3 | DATE: 2026-04-28 | AUTHOR: VeloHub Development Team -->
 
 ## 📋 **Descrição**
 Aplicação React completa para o Console de Conteúdo VeloHub. Sistema unificado que integra todas as funcionalidades de gestão de conteúdo, incluindo dashboard, artigos, velonews, bot perguntas, serviços e sistema de usuários com autenticação Google OAuth.
@@ -21,17 +21,7 @@ Aplicação React completa para o Console de Conteúdo VeloHub. Sistema unificad
 ### **📝 Módulos de Conteúdo**
 - **Artigos** - Criação e gerenciamento com categorias
 - **Velonews** - Publicação de notícias e alertas
-- **Bot Perguntas** - Configuração de FAQ do chatbot
-- **VeloInsights** - Dashboard analítico completo de call center e tickets
-
-### **📊 VeloInsights - Dashboard Analítico**
-- **Dashboard Principal** - Métricas gerais de call center e tickets
-- **Gráficos Detalhados** - Visualizações avançadas com Chart.js
-- **Análise por Agente** - Relatórios individuais de operadores
-- **Sistema de Filtros** - Por período, operador, tipo de chamada
-- **Exportação** - PDF/Excel para relatórios
-- **Integração Google Sheets** - Dados em tempo real
-- **Sistema de Permissões** - Controle granular de acesso
+- **VeloBot** - Configuração de FAQ do chatbot (módulo bot-perguntas)
 
 ### **⚙️ Sistema de Serviços**
 - **5 Módulos de Serviços** - Crédito Trabalhador, Crédito Pessoal, Antecipação, Pagamento Antecipado, IRPF
@@ -54,9 +44,6 @@ Aplicação React completa para o Console de Conteúdo VeloHub. Sistema unificad
 - **Google OAuth** - Autenticação
 - **Axios** - Requisições HTTP
 - **Recharts** - Gráficos e visualizações
-- **Chart.js** - Gráficos avançados (VeloInsights)
-- **React-ChartJS-2** - Integração Chart.js com React
-- **DnD Kit** - Drag and drop (VeloInsights)
 
 ### **Estilização**
 - **CSS Custom Properties** - Variáveis de tema
@@ -176,7 +163,6 @@ front-console/
 │   │   ├── ServicosPage.jsx     # Console de serviços
 │   │   ├── ConfigPage.jsx       # Configuração de usuários
 │   │   ├── LoginPage.jsx        # Página de login
-│   │   └── IGPPage.jsx          # Dashboard IGP
 │   ├── services/            # Serviços e APIs
 │   │   ├── api.js           # Cliente HTTP principal
 │   │   ├── userService.js   # Serviço de usuários
@@ -240,8 +226,7 @@ npm run lint:fix      # ESLint com correção automática
 ### **Módulos Disponíveis**
 - **artigos** - Acesso ao módulo de artigos
 - **velonews** - Acesso ao módulo de velonews
-- **botPerguntas** - Acesso ao módulo de perguntas
-- **igp** - Acesso ao VeloInsights (dashboard analítico)
+- **botPerguntas** - Acesso ao VeloBot (FAQ / perguntas)
 - **servicos** - Acesso ao console de serviços
 - **config** - Acesso à página de configuração
 - **chamadosInternos** - Acesso aos chamados internos
@@ -249,7 +234,7 @@ npm run lint:fix      # ESLint com correção automática
 - **qualidade** - Acesso ao módulo de qualidade
 - **capacity** - Acesso ao módulo de capacidade
 
-### **Funções Administrativas (VeloInsights)**
+### **Funções administrativas (chamados / relatórios)**
 - **avaliador** - Visualizar nomes de operadores
 - **auditor** - Acesso a gráficos detalhados
 - **relatoriosGestao** - Análise individual e exportação
@@ -258,7 +243,6 @@ npm run lint:fix      # ESLint com correção automática
 - **artigos** - Tickets relacionados a artigos
 - **velonews** - Tickets relacionados a velonews
 - **botPerguntas** - Tickets relacionados ao bot
-- **igp** - Tickets relacionados ao IGP
 - **servicos** - Tickets relacionados aos serviços
 - **geral** - Tickets gerais
 

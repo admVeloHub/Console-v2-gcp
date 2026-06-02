@@ -93,7 +93,7 @@ const MarkdownRenderer = ({ content, maxLength, ...props }) => {
         '& img': {
           maxWidth: '100%',
           height: 'auto',
-          borderRadius: '8px',
+          borderRadius: '4px',
           margin: '10px 0',
         },
         ...props.sx

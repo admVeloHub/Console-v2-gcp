@@ -1,4 +1,6 @@
-// VERSION: v1.1.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.1.2 | DATE: 2026-04-27 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.1.2 - addAvaliacao local: numeroTicket quando modo ticket
+// CHANGELOG: v1.1.1 - addAvaliacao local: persiste tipoAvaliacao (ligacao|ticket)
 
 import { 
   generateId, 
@@ -239,6 +241,13 @@ export const addAvaliacao = async (avaliacaoData) => {
       pontuacaoTotal: 0, // Será calculado
       observacoes: avaliacaoData.observacoes || '',
       dataLigacao: avaliacaoData.dataLigacao ? new Date(avaliacaoData.dataLigacao).toISOString() : new Date().toISOString(),
+      tipoAvaliacao: avaliacaoData.tipoAvaliacao === 'ticket' ? 'ticket' : 'ligacao',
+      numeroTicket:
+        avaliacaoData.tipoAvaliacao === 'ticket' &&
+        avaliacaoData.numeroTicket != null &&
+        !Number.isNaN(Number(avaliacaoData.numeroTicket))
+          ? Number(avaliacaoData.numeroTicket)
+          : null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };

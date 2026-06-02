@@ -503,7 +503,7 @@ const UploadAudioModal = ({
         fullWidth
         PaperProps={{
           sx: {
-            borderRadius: '12px',
+            borderRadius: '6px',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
             maxHeight: 'none'
           }
@@ -522,7 +522,7 @@ const UploadAudioModal = ({
         <DialogContent sx={{ pt: 3, overflow: 'visible' }}>
           {/* Informações da avaliação */}
           {avaliacaoNome && (
-            <Box sx={{ mb: audioJaEnviado && !uploading ? 1.5 : 3, p: 2, bgcolor: 'var(--cor-fundo)', borderRadius: '8px' }}>
+            <Box sx={{ mb: audioJaEnviado && !uploading ? 1.5 : 3, p: 2, bgcolor: 'var(--cor-fundo)', borderRadius: '4px' }}>
               <Typography variant="body2" sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
                 Avaliação: <strong>{avaliacaoNome}</strong>
               </Typography>
@@ -531,7 +531,7 @@ const UploadAudioModal = ({
 
           {/* Mensagem quando áudio já foi enviado */}
           {audioJaEnviado && !uploading && (
-            <Box sx={{ mb: 3, p: 2, bgcolor: '#E3F2FD', borderRadius: '8px', border: '1px solid #90CAF9' }}>
+            <Box sx={{ mb: 3, p: 2, bgcolor: '#E3F2FD', borderRadius: '4px', border: '1px solid #90CAF9' }}>
               <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#1976D2', mb: 1 }}>
                 Um áudio já foi enviado para esta avaliação. Aguarde o processamento concluir antes de enviar um novo arquivo.
               </Typography>
@@ -540,7 +540,7 @@ const UploadAudioModal = ({
 
           {/* Seção de informações após envio */}
           {audioStatus && audioStatus.sent && (
-            <Box sx={{ mb: 3, p: 2, bgcolor: 'var(--cor-fundo)', borderRadius: '8px', border: '1px solid var(--blue-opaque)' }}>
+            <Box sx={{ mb: 3, p: 2, bgcolor: 'var(--cor-fundo)', borderRadius: '4px', border: '1px solid var(--blue-opaque)' }}>
               <Typography variant="h6" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: 'var(--blue-dark)', mb: 2 }}>
                 Informações do Áudio Enviado
               </Typography>
@@ -661,7 +661,7 @@ const UploadAudioModal = ({
               onDrop={handleDrop}
               sx={{
                 border: `2px dashed ${dragActive ? 'var(--blue-medium)' : 'var(--blue-opaque)'}`,
-                borderRadius: '8px',
+                borderRadius: '4px',
                 padding: '32px',
                 textAlign: 'center',
                 cursor: 'pointer',
@@ -715,7 +715,7 @@ const UploadAudioModal = ({
               mt: 3, 
               p: 2, 
               border: '1px solid var(--blue-opaque)', 
-              borderRadius: '8px',
+              borderRadius: '4px',
               bgcolor: 'var(--cor-fundo)'
             }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -782,7 +782,7 @@ const UploadAudioModal = ({
                 value={uploadProgress}
                 sx={{
                   height: 8,
-                  borderRadius: 4,
+                  borderRadius: '3.5px',
                   bgcolor: 'rgba(22, 52, 255, 0.1)',
                   '& .MuiLinearProgress-bar': {
                     bgcolor: processingStatus === 'error' 

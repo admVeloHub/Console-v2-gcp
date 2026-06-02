@@ -1,11 +1,14 @@
-/* VERSION: v3.2.4 | DATE: 2026-03-19 | AUTHOR: VeloHub Development Team */
+/* VERSION: v3.4.0 | DATE: 2026-04-28 | AUTHOR: VeloHub Development Team */
+/* CHANGELOG: v3.4.0 - Padronização de raios: --velohub-radius-main 6px, --velohub-radius-secondary 4px, --velohub-radius-sm / sm-plus 3px e 3.5px (container principal/cards, secundários/botões, menores) */
+/* CHANGELOG: v3.3.0 - Removidos import e estilos VeloInsights (pasta veloinsights + veloinsights-integration.css) */
+/* CHANGELOG: v3.2.8 - --velohub-header-logo-height 43px (metade de 86px; PNG sem área vazia) */
+/* CHANGELOG: v3.2.7 - --velohub-header-logo-height 86px (+50% vs 57px); --velohub-header-logo-offset-x 50px */
+/* CHANGELOG: v3.2.6 - #velohub-header-logo: padding e margin 0 */
+/* CHANGELOG: v3.2.5 - #velohub-header-logo + --velohub-header-logo-height (logo AppBar, +30% sobre 44px) */
 /* CHANGELOG: v3.2.4 - --green-hover / --yellow-hover (extensão da paleta LAYOUT_GUIDELINES.md para hovers de botão) */
 
 /* Importar fontes VeloHub */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Anton&display=swap');
-
-/* Importar integração do VeloInsights */
-@import './veloinsights-integration.css';
 
 /* Variáveis CSS - VeloHub */
 :root {
@@ -43,6 +46,17 @@
   --divisoria-escura: rgba(255, 255, 255, 0.2);
   --sombra-escura: rgba(0, 0, 0, 0.3);
   --sombra-header-escura: rgba(0, 102, 171, 0.3);
+
+  /* App principal: logo do header (console.png) */
+  --velohub-header-logo-height: 43px;
+  /* Deslocamento horizontal (evita colidir com título se necessário) */
+  --velohub-header-logo-offset-x: 50px;
+
+  /* Raios de borda padronizados (Dev Console) — FONTE: alinhamento com theme.js */
+  --velohub-radius-main: 6px;
+  --velohub-radius-secondary: 4px;
+  --velohub-radius-sm: 3px;
+  --velohub-radius-sm-plus: 3.5px;
 }
 
 /* Tema escuro - COMPATÍVEL COM LAYOUT_GUIDELINES.md */
@@ -74,6 +88,19 @@
   background-color: var(--cor-header-escuro);
   border-bottom: 1px solid var(--divisoria-escura);
   box-shadow: 0 4px 20px var(--sombra-header-escura);
+}
+
+/* Logo MUI AppBar (Header.jsx): tamanho explícito — evita o logo não refletir alterações no sx/Box+img */
+#velohub-header-logo {
+  height: var(--velohub-header-logo-height) !important;
+  width: auto !important;
+  max-height: none !important;
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0;
 }
 
 /* Textos no tema escuro */
@@ -139,7 +166,7 @@ body {
 
 ::-webkit-scrollbar-thumb {
   background: var(--blue-medium);
-  border-radius: 4px;
+  border-radius: var(--velohub-radius-sm);
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -185,7 +212,7 @@ body {
 /* Classes utilitárias */
 .velohub-container {
   background-color: var(--cor-container);
-  border-radius: 9.6px;
+  border-radius: var(--velohub-radius-main);
   box-shadow: 0 3.2px 16px rgba(0, 0, 0, 0.1);
   padding: 19.2px;
   margin: 12.8px;
@@ -232,7 +259,7 @@ body {
 
 .velohub-card {
   background-color: var(--cor-card);
-  border-radius: 9.6px;
+  border-radius: var(--velohub-radius-main);
   box-shadow: 0 3.2px 16px rgba(0, 0, 0, 0.1);
   padding: 16px;
   margin: 12.8px 0;
@@ -276,7 +303,7 @@ body {
 /* Containers VeloHub */
 .container-main {
   background-color: var(--cor-container);
-  border-radius: 9.6px;
+  border-radius: var(--velohub-radius-main);
   box-shadow: 0 3.2px 16px rgba(0, 0, 0, 0.1);
   padding: 19.2px;
   margin: 12.8px 0;
@@ -290,7 +317,7 @@ body {
 .container-secondary {
   background: transparent;
   border: 1.5px solid var(--blue-dark);
-  border-radius: 6.4px;
+  border-radius: var(--velohub-radius-secondary);
   padding: 12.8px;
   margin: 6.4px;
   box-shadow: none;

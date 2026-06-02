@@ -1,34 +1,26 @@
-// VERSION: v4.3.0 | DATE: 2026-03-19 | AUTHOR: VeloHub Development Team
+// VERSION: v4.5.1 | DATE: 2026-04-28 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v4.5.1 - Segunda fileira: sem full-bleed 100vw (evita scroll horizontal na home)
+// CHANGELOG: v4.5.0 - Ícones dos cards: PNG em public/icons (dashboardCardIcons)
+// CHANGELOG: v4.4.1 - Card Bot Perguntas renomeado para VeloBot (rótulo apenas)
+// CHANGELOG: v4.4.0 - Removido card IGP do dashboard
 // CHANGELOG: v4.3.0 - Removido card Conexões/WhatsApp do dashboard
 import React from 'react';
-import { Container, Grid, Typography, Box, Card, CardContent } from '@mui/material';
+import { Container, Typography, Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { 
-  ArticleOutlined, 
-  WarningAmberOutlined, 
-  SmartToyOutlined, 
-  ConfirmationNumberOutlined, 
-  ShowChartOutlined, 
-  CheckCircleOutlined, 
-  BoltOutlined,
-  SettingsOutlined,
-  EngineeringOutlined,
-  AnalyticsOutlined,
-  SchoolOutlined
-} from '@mui/icons-material';
 import DashboardCard from '../components/Dashboard/DashboardCard';
 import { useAuth } from '../contexts/AuthContext';
+import { dashboardCardIconByPermission } from '../config/dashboardCardIcons';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
   const { hasPermission, user } = useAuth();
 
-  // Primeira fileira: Artigos, Velonews, Bot Perguntas, Serviços, Academy (ESSENCIAL)
+  // Primeira fileira: Artigos, Velonews, VeloBot, Serviços, Academy (ESSENCIAL)
   const firstRowCards = [
     {
       title: 'Artigos',
       description: 'Criar e gerenciar artigos do sistema',
-      icon: <ArticleOutlined sx={{ fontSize: '2.24rem' }} />,
+      iconSrc: dashboardCardIconByPermission.artigos,
       path: '/artigos',
       color: 'primary',
       permission: 'artigos'
@@ -36,15 +28,15 @@ const DashboardPage = () => {
     {
       title: 'Velonews',
       description: 'Publicar notícias e alertas',
-      icon: <WarningAmberOutlined sx={{ fontSize: '2.24rem' }} />,
+      iconSrc: dashboardCardIconByPermission.velonews,
       path: '/velonews',
       color: 'primary',
       permission: 'velonews'
     },
     {
-      title: 'Bot Perguntas',
+      title: 'VeloBot',
       description: 'Processos e Orientações',
-      icon: <SmartToyOutlined sx={{ fontSize: '2.24rem' }} />,
+      iconSrc: dashboardCardIconByPermission.botPerguntas,
       path: '/bot-perguntas',
       color: 'primary',
       permission: 'botPerguntas'
@@ -52,26 +44,26 @@ const DashboardPage = () => {
     {
       title: 'Serviços',
       description: 'Serviços ativos no APP',
-      icon: <EngineeringOutlined sx={{ fontSize: '2.24rem' }} />,
+      iconSrc: dashboardCardIconByPermission.servicos,
       path: '/servicos',
       color: 'primary',
       permission: 'servicos'
     },
     {
       title: 'Academy',
-      icon: <SchoolOutlined sx={{ fontSize: '2.24rem' }} />,
+      iconSrc: dashboardCardIconByPermission.academy,
       path: '/academy',
       color: 'primary',
       permission: 'academy'
     }
   ];
 
-  // Segunda fileira: Hub Análises, Bot Análises, IGP, Capacity, Qualidade (RECICLAGEM)
+  // Segunda fileira: Hub Análises, Bot Análises, Capacity, Qualidade (RECICLAGEM)
   const secondRowCards = [
     {
       title: 'Hub Análises',
       description: 'Análises centralizadas do hub',
-      icon: <AnalyticsOutlined sx={{ fontSize: '2.24rem' }} />,
+      iconSrc: dashboardCardIconByPermission.hubAnalises,
       path: '/hub-analises',
       color: 'success',
       permission: 'hubAnalises'
@@ -79,23 +71,15 @@ const DashboardPage = () => {
     {
       title: 'Bot Análises',
       description: 'Análises e relatórios do bot',
-      icon: <AnalyticsOutlined sx={{ fontSize: '2.24rem' }} />,
+      iconSrc: dashboardCardIconByPermission.botAnalises,
       path: '/bot-analises',
       color: 'success',
       permission: 'botAnalises'
     },
     {
-      title: 'IGP',
-      description: 'Dashboard de métricas e relatórios',
-      icon: <ShowChartOutlined sx={{ fontSize: '2.24rem' }} />,
-      path: '/igp',
-      color: 'success',
-      permission: 'igp'
-    },
-    {
       title: 'Capacity',
       description: 'Monitoramento de capacidade e recursos',
-      icon: <BoltOutlined sx={{ fontSize: '2.24rem' }} />,
+      iconSrc: dashboardCardIconByPermission.capacity,
       path: '/capacity',
       color: 'success',
       permission: 'capacity'
@@ -103,10 +87,18 @@ const DashboardPage = () => {
     {
       title: 'Gestão e Qualidade',
       description: 'Controle de qualidade e auditoria',
-      icon: <CheckCircleOutlined sx={{ fontSize: '2.24rem' }} />,
+      iconSrc: dashboardCardIconByPermission.qualidade,
       path: '/qualidade',
       color: 'success',
       permission: 'qualidade'
+    },
+    {
+      title: 'Corporativo',
+      description: 'Legal, comunicação e conteúdo VeloHub',
+      iconSrc: dashboardCardIconByPermission.corporativo,
+      path: '/corporativo',
+      color: 'success',
+      permission: 'corporativo'
     }
   ];
 
@@ -115,7 +107,7 @@ const DashboardPage = () => {
     {
       title: 'Chamados Internos',
       description: 'Sistema de tickets e suporte interno',
-      icon: <ConfirmationNumberOutlined sx={{ fontSize: '2.24rem' }} />,
+      iconSrc: dashboardCardIconByPermission.chamadosInternos,
       path: '/chamados-internos',
       color: 'secondary',
       permission: 'chamadosInternos'
@@ -126,7 +118,7 @@ const DashboardPage = () => {
   const configCard = {
     title: 'Config',
     description: 'Configurações do sistema e permissões',
-    icon: <SettingsOutlined sx={{ fontSize: '1.28rem' }} />,
+    iconSrc: dashboardCardIconByPermission.config,
     path: '/config',
     color: 'secondary',
     permission: 'config'
@@ -146,7 +138,7 @@ const DashboardPage = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4.8, mb: 6.4, pb: 3.2 }}>
-      {/* Primeira fileira: Artigos, Velonews, Bot Perguntas, Serviços */}
+      {/* Primeira fileira: Artigos, Velonews, VeloBot, Serviços */}
       {filteredFirstRowCards.length > 0 && (
         <Box sx={{
           display: 'flex',
@@ -165,31 +157,25 @@ const DashboardPage = () => {
         </Box>
       )}
 
-      {/* Grid 2: Segunda fileira - 5 colunas extrapolando o container */}
+      {/* Segunda fileira: mesmo alinhamento da primeira (sem 100vw — evita overflow-x) */}
       {filteredSecondRowCards.length > 0 && (
-        <Box sx={{ 
-          width: '100vw', 
-          marginLeft: 'calc(-50vw + 50%)', 
-          paddingX: '24px',
-          mb: 2,
-          display: 'flex',
-          justifyContent: 'center'
-        }}>
-          <Box sx={{
+        <Box
+          sx={{
             display: 'flex',
             flexWrap: 'wrap',
             gap: '16px',
             justifyContent: 'center',
-            alignItems: 'center'
-          }}>
-            {filteredSecondRowCards.map((card) => (
-              <DashboardCard 
-                key={card.title}
-                {...card} 
-                onClick={() => handleCardClick(card.path)}
-              />
-            ))}
-          </Box>
+            alignItems: 'center',
+            mb: 1.6
+          }}
+        >
+          {filteredSecondRowCards.map((card) => (
+            <DashboardCard
+              key={card.title}
+              {...card}
+              onClick={() => handleCardClick(card.path)}
+            />
+          ))}
         </Box>
       )}
 
@@ -225,7 +211,7 @@ const DashboardPage = () => {
           mt: 8, 
           p: 4,
           backgroundColor: 'var(--cor-container)',
-          borderRadius: '12px',
+          borderRadius: '6px',
           border: '1px solid rgba(0, 0, 0, 0.12)'
         }}>
           <Typography variant="h5" sx={{ 

@@ -1,5 +1,5 @@
-// VERSION: v1.17.1 | DATE: 2026-04-16 | AUTHOR: VeloHub Development Team
-// CHANGELOG: v1.17.1 - Import MUI: Menu sem duplicar MenuItem (já usado em Select)
+// VERSION: v1.17.2 | DATE: 2026-04-28 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.17.2 - Cabeçalho Voltar/abas: VoltarHeaderRow (alinhamento global)
 // CHANGELOG: v1.17.0 - Troféu Bronze/Prata: menu Adicionar novo | Selecionar existente (lista GCS pasta temas)
 // CHANGELOG: v1.16.0 - GCS troféus: icones_conquistas/modulos|temas (bucket já é mediabank_academy)
 // CHANGELOG: v1.15.8 - Troféus: removido link "Abrir URL" (miniatura basta)
@@ -75,7 +75,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import BackButton from '../components/common/BackButton';
+import BackButton, { VoltarHeaderRow } from '../components/common/BackButton';
 import { academyAPI } from '../services/academyAPI';
 import { uploadAcademyTrophyImage, fetchAcademyTrophyTemasList } from '../services/uploadAPI';
 import {
@@ -2584,22 +2584,9 @@ const AcademyPage = () => {
   
   return (
     <Container maxWidth="xl" sx={{ py: 3.2, mb: 6.4, pb: 3.2 }}>
-      {/* Header com botão voltar e abas alinhadas */}
-      {/* Header único - alinhamento central absoluto das abas */}
-      <Box sx={{ position: 'relative', mb: 3.2, minHeight: 40 }}>
-        <Box sx={{ position: 'absolute', left: 0, top: 0, bottom: 0, display: 'flex', alignItems: 'center' }}>
-          <BackButton />
-        </Box>
-        <Box sx={{
-          position: 'absolute',
-          left: '50%',
-          top: 0,
-          bottom: 0,
-          transform: 'translateX(-50%)',
-          display: 'flex',
-          alignItems: 'center',
-          width: 'max-content'
-        }}>
+      <VoltarHeaderRow
+        left={<BackButton />}
+        center={
           <Tabs 
             value={activeTab} 
             onChange={handleTabChange}
@@ -2629,8 +2616,8 @@ const AcademyPage = () => {
             <Tab label="Progresso" />
             <Tab label="Recentes" />
           </Tabs>
-        </Box>
-      </Box>
+        }
+      />
       
       {/* Conteúdo Principal */}
       {activeTab === 0 && (
@@ -2640,7 +2627,7 @@ const AcademyPage = () => {
               className="velohub-container academy-filtro-bar"
               sx={{ 
                 backgroundColor: 'var(--cor-container)',
-                borderRadius: '12px',
+                borderRadius: '6px',
                 boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
                 padding: '12px 24px',
                 marginBottom: '24px',
@@ -2840,7 +2827,7 @@ const AcademyPage = () => {
                             ? 'opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
                             : 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                           border: cursoSelecionado?._id === curso._id && isExpanded ? '1px solid var(--blue-medium) !important' : cursoSelecionado?._id === curso._id ? '2px solid var(--blue-medium) !important' : '1px solid transparent !important',
-                          borderRadius: '12px',
+                          borderRadius: '6px',
                           display: 'flex',
                           flexDirection: 'column',
                           overflow: isExpanded ? 'visible' : 'hidden',
@@ -3377,7 +3364,7 @@ const AcademyPage = () => {
                                       py: 1,
                                       px: 2,
                                       backgroundColor: aprovacao ? 'rgba(76, 175, 80, 0.05)' : 'transparent',
-                                      borderRadius: 1,
+                                      borderRadius: '4px',
                                       mb: 0.5
                                     }}
                                   >
@@ -3601,7 +3588,7 @@ const AcademyPage = () => {
               className="velohub-container"
               sx={{ 
                 backgroundColor: 'var(--cor-container)',
-                borderRadius: '12px',
+                borderRadius: '6px',
                 boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
                 padding: '12px 24px',
                 marginBottom: '24px',
@@ -3662,7 +3649,7 @@ const AcademyPage = () => {
               return filtrados.length === 0 ? (
                 <Alert severity="info">Nenhum registro encontrado</Alert>
               ) : (
-                <Card sx={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)', borderRadius: '12px' }}>
+                <Card sx={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)', borderRadius: '6px' }}>
                   <List sx={{ py: 0 }}>
                     {filtrados.map((item, index) => {
                       const cursoNome = normalizarNomeCurso(item.courseName, item.courseId);
@@ -3897,7 +3884,7 @@ const AcademyPage = () => {
                       maxHeight: 88,
                       maxWidth: 140,
                       objectFit: 'contain',
-                      borderRadius: 1,
+                      borderRadius: '4px',
                       border: '1px solid rgba(0,0,0,0.12)',
                       backgroundColor: 'rgba(0,0,0,0.02)',
                     }}
@@ -3953,7 +3940,7 @@ const AcademyPage = () => {
           sx: {
             backgroundColor: 'var(--cor-container)',
             color: 'var(--gray)',
-            borderRadius: '12px',
+            borderRadius: '6px',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
           }
         }}
@@ -4177,7 +4164,7 @@ const AcademyPage = () => {
                         maxHeight: 88,
                         maxWidth: 140,
                         objectFit: 'contain',
-                        borderRadius: 1,
+                        borderRadius: '4px',
                         border: '1px solid rgba(0,0,0,0.12)',
                         backgroundColor: 'rgba(0,0,0,0.02)',
                       }}
@@ -4262,7 +4249,7 @@ const AcademyPage = () => {
                         maxHeight: 88,
                         maxWidth: 140,
                         objectFit: 'contain',
-                        borderRadius: 1,
+                        borderRadius: '4px',
                         border: '1px solid rgba(0,0,0,0.12)',
                         backgroundColor: 'rgba(0,0,0,0.02)',
                       }}
@@ -4352,7 +4339,7 @@ const AcademyPage = () => {
           sx: {
             backgroundColor: 'var(--cor-container)',
             color: 'var(--gray)',
-            borderRadius: '12px',
+            borderRadius: '6px',
           }
         }}
       >
@@ -4388,7 +4375,7 @@ const AcademyPage = () => {
                     sx={{
                       cursor: 'pointer',
                       border: '1px solid rgba(0,0,0,0.12)',
-                      borderRadius: 1,
+                      borderRadius: '4px',
                       p: 1,
                       backgroundColor: 'rgba(0,0,0,0.02)',
                       transition: 'box-shadow 0.15s',
@@ -4444,7 +4431,7 @@ const AcademyPage = () => {
           sx: {
             backgroundColor: 'var(--cor-container)',
             color: 'var(--gray)',
-            borderRadius: '12px',
+            borderRadius: '6px',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
           }
         }}
@@ -4613,7 +4600,7 @@ const AcademyPage = () => {
           sx: {
             backgroundColor: 'var(--cor-container)',
             color: 'var(--gray)',
-            borderRadius: '12px',
+            borderRadius: '6px',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
           }
         }}

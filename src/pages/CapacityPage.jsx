@@ -1,4 +1,5 @@
-// VERSION: v1.7.1 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
+// VERSION: v1.7.2 | DATE: 2026-04-28 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.7.2 - Cabeçalho Voltar: VoltarHeaderRow (alinhamento global)
 import React, { useState, useCallback } from 'react';
 import { 
   Container, 
@@ -22,7 +23,7 @@ import {
   Refresh
 } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
-import BackButton from '../components/common/BackButton';
+import BackButton, { VoltarHeaderRow } from '../components/common/BackButton';
 import { capacityService } from '../services/capacityService';
 
 const CapacityPage = () => {
@@ -300,12 +301,7 @@ const CapacityPage = () => {
 
   return (
     <Container maxWidth="xl" sx={{ py: 3.2, fontSize: '0.64em' }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', mb: 3.2 }}>
-        <Box sx={{ position: 'absolute', left: 0 }}>
-          <BackButton />
-        </Box>
-        {/* Removido o título Capacity do topo */}
-      </Box>
+      <VoltarHeaderRow left={<BackButton />} />
 
       {/* Alertas */}
       {error && (
@@ -379,7 +375,7 @@ const CapacityPage = () => {
               <Card sx={{ 
                 backgroundColor: 'transparent',
                 border: '1.5px solid var(--blue-dark)',
-                borderRadius: '8px',
+                borderRadius: '4px',
                 padding: '16px',
                 margin: '8px'
               }}>
@@ -402,7 +398,7 @@ const CapacityPage = () => {
                         p: 2, 
                         backgroundColor: 'var(--cor-card)',
                         border: '1px solid rgba(22, 52, 255, 0.1)',
-                        borderRadius: '8px'
+                        borderRadius: '4px'
                       }}>
                         <TextField
                           label="Horas de Trabalho"
@@ -422,7 +418,7 @@ const CapacityPage = () => {
                         p: 2, 
                         backgroundColor: 'var(--cor-card)',
                         border: '1px solid rgba(22, 52, 255, 0.1)',
-                        borderRadius: '8px'
+                        borderRadius: '4px'
                       }}>
                         <TextField
                           label="Horário de Almoço"
@@ -442,7 +438,7 @@ const CapacityPage = () => {
                         p: 2, 
                         backgroundColor: 'var(--cor-card)',
                         border: '1px solid rgba(22, 52, 255, 0.1)',
-                        borderRadius: '8px'
+                        borderRadius: '4px'
                       }}>
                         <TextField
                           label="Outras Pausas"
@@ -462,7 +458,7 @@ const CapacityPage = () => {
                         p: 2, 
                         backgroundColor: 'rgba(22, 52, 255, 0.05)',
                         border: '1px solid var(--blue-medium)',
-                        borderRadius: '8px'
+                        borderRadius: '4px'
                       }}>
                         <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--blue-dark)', fontWeight: 600 }}>
                           Horas Efetivas: {parameters.weekdays.horasEfetivas}h
@@ -475,7 +471,7 @@ const CapacityPage = () => {
                         p: 2, 
                         backgroundColor: 'var(--cor-card)',
                         border: '1px solid rgba(22, 52, 255, 0.1)',
-                        borderRadius: '8px'
+                        borderRadius: '4px'
                       }}>
                         <TextField
                           label="Capacidade (lig/hora)"
@@ -495,7 +491,7 @@ const CapacityPage = () => {
                         p: 2, 
                         backgroundColor: 'var(--cor-card)',
                         border: '1px solid rgba(22, 52, 255, 0.1)',
-                        borderRadius: '8px'
+                        borderRadius: '4px'
                       }}>
                         <TextField
                           label="Capacidade Segura (lig/hora)"
@@ -517,7 +513,7 @@ const CapacityPage = () => {
                         p: 2, 
                         backgroundColor: 'var(--cor-card)',
                         border: '1px solid rgba(22, 52, 255, 0.1)',
-                        borderRadius: '8px'
+                        borderRadius: '4px'
                       }}>
                         <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
                           Horas de trabalho: {parameters.weekdays.horasTrabalho}h
@@ -530,7 +526,7 @@ const CapacityPage = () => {
                         p: 2, 
                         backgroundColor: 'var(--cor-card)',
                         border: '1px solid rgba(22, 52, 255, 0.1)',
-                        borderRadius: '8px'
+                        borderRadius: '4px'
                       }}>
                         <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
                           Horário de almoço: {parameters.weekdays.horarioAlmoco}h
@@ -543,7 +539,7 @@ const CapacityPage = () => {
                         p: 2, 
                         backgroundColor: 'var(--cor-card)',
                         border: '1px solid rgba(22, 52, 255, 0.1)',
-                        borderRadius: '8px'
+                        borderRadius: '4px'
                       }}>
                         <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
                           Outras pausas: {parameters.weekdays.outrasPausas}h
@@ -556,7 +552,7 @@ const CapacityPage = () => {
                         p: 2, 
                         backgroundColor: 'rgba(22, 52, 255, 0.05)',
                         border: '1px solid var(--blue-medium)',
-                        borderRadius: '8px'
+                        borderRadius: '4px'
                       }}>
                         <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--blue-dark)', fontWeight: 600 }}>
                           Horas efetivas: {parameters.weekdays.horasEfetivas}h
@@ -569,7 +565,7 @@ const CapacityPage = () => {
                         p: 2, 
                         backgroundColor: 'var(--cor-card)',
                         border: '1px solid rgba(22, 52, 255, 0.1)',
-                        borderRadius: '8px'
+                        borderRadius: '4px'
                       }}>
                         <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
                           Capacidade: {parameters.weekdays.capacidadePorHora} ligações/hora
@@ -582,7 +578,7 @@ const CapacityPage = () => {
                         p: 2, 
                         backgroundColor: 'var(--cor-card)',
                         border: '1px solid rgba(22, 52, 255, 0.1)',
-                        borderRadius: '8px'
+                        borderRadius: '4px'
                       }}>
                         <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
                           Capacidade segura: {parameters.weekdays.capacidadeSegura} ligações/hora
@@ -599,7 +595,7 @@ const CapacityPage = () => {
               <Card sx={{ 
                 backgroundColor: 'transparent',
                 border: '1.5px solid var(--blue-dark)',
-                borderRadius: '8px',
+                borderRadius: '4px',
                 padding: '16px',
                 margin: '8px'
               }}>
@@ -622,7 +618,7 @@ const CapacityPage = () => {
                         p: 2, 
                         backgroundColor: 'var(--cor-card)',
                         border: '1px solid rgba(22, 52, 255, 0.1)',
-                        borderRadius: '8px'
+                        borderRadius: '4px'
                       }}>
                         <TextField
                           label="Horas de Trabalho"
@@ -642,7 +638,7 @@ const CapacityPage = () => {
                         p: 2, 
                         backgroundColor: 'var(--cor-card)',
                         border: '1px solid rgba(22, 52, 255, 0.1)',
-                        borderRadius: '8px'
+                        borderRadius: '4px'
                       }}>
                         <TextField
                           label="Horário de Almoço"
@@ -662,7 +658,7 @@ const CapacityPage = () => {
                         p: 2, 
                         backgroundColor: 'var(--cor-card)',
                         border: '1px solid rgba(22, 52, 255, 0.1)',
-                        borderRadius: '8px'
+                        borderRadius: '4px'
                       }}>
                         <TextField
                           label="Outras Pausas"
@@ -682,7 +678,7 @@ const CapacityPage = () => {
                         p: 2, 
                         backgroundColor: 'rgba(22, 52, 255, 0.05)',
                         border: '1px solid var(--blue-medium)',
-                        borderRadius: '8px'
+                        borderRadius: '4px'
                       }}>
                         <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--blue-dark)', fontWeight: 600 }}>
                           Horas Efetivas: {parameters.saturday.horasEfetivas}h
@@ -695,7 +691,7 @@ const CapacityPage = () => {
                         p: 2, 
                         backgroundColor: 'var(--cor-card)',
                         border: '1px solid rgba(22, 52, 255, 0.1)',
-                        borderRadius: '8px'
+                        borderRadius: '4px'
                       }}>
                         <TextField
                           label="Capacidade (lig/hora)"
@@ -715,7 +711,7 @@ const CapacityPage = () => {
                         p: 2, 
                         backgroundColor: 'var(--cor-card)',
                         border: '1px solid rgba(22, 52, 255, 0.1)',
-                        borderRadius: '8px'
+                        borderRadius: '4px'
                       }}>
                         <TextField
                           label="Capacidade Segura (lig/hora)"
@@ -737,7 +733,7 @@ const CapacityPage = () => {
                         p: 2, 
                         backgroundColor: 'var(--cor-card)',
                         border: '1px solid rgba(22, 52, 255, 0.1)',
-                        borderRadius: '8px'
+                        borderRadius: '4px'
                       }}>
                         <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
                           Horas de trabalho: {parameters.saturday.horasTrabalho}h
@@ -750,7 +746,7 @@ const CapacityPage = () => {
                         p: 2, 
                         backgroundColor: 'var(--cor-card)',
                         border: '1px solid rgba(22, 52, 255, 0.1)',
-                        borderRadius: '8px'
+                        borderRadius: '4px'
                       }}>
                         <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
                           Horário de almoço: {parameters.saturday.horarioAlmoco}h
@@ -763,7 +759,7 @@ const CapacityPage = () => {
                         p: 2, 
                         backgroundColor: 'var(--cor-card)',
                         border: '1px solid rgba(22, 52, 255, 0.1)',
-                        borderRadius: '8px'
+                        borderRadius: '4px'
                       }}>
                         <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
                           Outras pausas: {parameters.saturday.outrasPausas}h
@@ -776,7 +772,7 @@ const CapacityPage = () => {
                         p: 2, 
                         backgroundColor: 'rgba(22, 52, 255, 0.05)',
                         border: '1px solid var(--blue-medium)',
-                        borderRadius: '8px'
+                        borderRadius: '4px'
                       }}>
                         <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--blue-dark)', fontWeight: 600 }}>
                           Horas efetivas: {parameters.saturday.horasEfetivas}h
@@ -789,7 +785,7 @@ const CapacityPage = () => {
                         p: 2, 
                         backgroundColor: 'var(--cor-card)',
                         border: '1px solid rgba(22, 52, 255, 0.1)',
-                        borderRadius: '8px'
+                        borderRadius: '4px'
                       }}>
                         <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
                           Capacidade: {parameters.saturday.capacidadePorHora} ligações/hora
@@ -802,7 +798,7 @@ const CapacityPage = () => {
                         p: 2, 
                         backgroundColor: 'var(--cor-card)',
                         border: '1px solid rgba(22, 52, 255, 0.1)',
-                        borderRadius: '8px'
+                        borderRadius: '4px'
                       }}>
                         <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
                           Capacidade segura: {parameters.saturday.capacidadeSegura} ligações/hora
@@ -819,7 +815,7 @@ const CapacityPage = () => {
               <Card sx={{ 
                 backgroundColor: 'transparent',
                 border: '1.5px solid var(--blue-dark)',
-                borderRadius: '8px',
+                borderRadius: '4px',
                 padding: '16px',
                 margin: '8px'
               }}>
@@ -842,7 +838,7 @@ const CapacityPage = () => {
                         p: 2, 
                         backgroundColor: 'var(--cor-card)',
                         border: '1px solid rgba(22, 52, 255, 0.1)',
-                        borderRadius: '8px'
+                        borderRadius: '4px'
                       }}>
                         <TextField
                           label="TMA (minutos)"
@@ -862,7 +858,7 @@ const CapacityPage = () => {
                         p: 2, 
                         backgroundColor: 'var(--cor-card)',
                         border: '1px solid rgba(22, 52, 255, 0.1)',
-                        borderRadius: '8px'
+                        borderRadius: '4px'
                       }}>
                         <TextField
                           label="Nível de Serviço (%)"
@@ -882,7 +878,7 @@ const CapacityPage = () => {
                         p: 2, 
                         backgroundColor: 'var(--cor-card)',
                         border: '1px solid rgba(22, 52, 255, 0.1)',
-                        borderRadius: '8px'
+                        borderRadius: '4px'
                       }}>
                         <TextField
                           label="Tempo de Espera (segundos)"
@@ -902,7 +898,7 @@ const CapacityPage = () => {
                         p: 2, 
                         backgroundColor: 'var(--cor-card)',
                         border: '1px solid rgba(22, 52, 255, 0.1)',
-                        borderRadius: '8px'
+                        borderRadius: '4px'
                       }}>
                         <TextField
                           label="Abandono (%)"
@@ -924,7 +920,7 @@ const CapacityPage = () => {
                         p: 2, 
                         backgroundColor: 'var(--cor-card)',
                         border: '1px solid rgba(22, 52, 255, 0.1)',
-                        borderRadius: '8px'
+                        borderRadius: '4px'
                       }}>
                         <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
                           TMA: {parameters.global.tma} minutos
@@ -937,7 +933,7 @@ const CapacityPage = () => {
                         p: 2, 
                         backgroundColor: 'var(--cor-card)',
                         border: '1px solid rgba(22, 52, 255, 0.1)',
-                        borderRadius: '8px'
+                        borderRadius: '4px'
                       }}>
                         <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
                           Nível de Serviço: {parameters.global.nivelServico}% em {parameters.global.tempoEspera}s
@@ -950,7 +946,7 @@ const CapacityPage = () => {
                         p: 2, 
                         backgroundColor: 'var(--cor-card)',
                         border: '1px solid rgba(22, 52, 255, 0.1)',
-                        borderRadius: '8px'
+                        borderRadius: '4px'
                       }}>
                         <Typography sx={{ fontSize: '0.8rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
                           Abandono: {parameters.global.abandono}%
@@ -1000,7 +996,7 @@ const CapacityPage = () => {
                 onDrop={(e) => handleDrop(e, 'weekdays')}
                 sx={{
                   border: `2px dashed ${dragActive.weekdays ? 'var(--blue-dark)' : 'var(--blue-medium)'}`,
-                  borderRadius: 2,
+                  borderRadius: '4px',
                   p: 4,
                   minHeight: '200px',
                   display: 'flex',
@@ -1078,7 +1074,7 @@ const CapacityPage = () => {
                 onDrop={(e) => handleDrop(e, 'saturday')}
                 sx={{
                   border: `2px dashed ${dragActive.saturday ? 'var(--green)' : 'var(--blue-medium)'}`,
-                  borderRadius: 2,
+                  borderRadius: '4px',
                   p: 4,
                   minHeight: '200px',
                   display: 'flex',

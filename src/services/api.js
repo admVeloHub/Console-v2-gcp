@@ -1,4 +1,10 @@
-// VERSION: v3.19.0 | DATE: 2026-04-23 | AUTHOR: VeloHub Development Team
+// VERSION: v3.24.0 | DATE: 2026-06-01 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v3.24.0 - Interceptor X-User-Email (sessão localStorage) para checkPermission no SKYNET
+// CHANGELOG: v3.23.0 - qualidadeQaResgateItemsAPI: CRUD /qualidade/qa-resgate-items
+// CHANGELOG: v3.22.0 - GET: parâmetro _nc (timestamp) em cada requisição para evitar cache HTTP/CDN excessivo em dados dinâmicos
+// CHANGELOG: v3.21.1 - Comentário: API bot-perguntas (produto VeloBot no Console)
+// CHANGELOG: v3.21.0 - Removido cliente igpAPI (módulo IGP removido do Console)
+// CHANGELOG: v3.20.0 - qualidadeTicketAvaliacoesAPI: GET/POST/PUT/DELETE /qualidade/ticket-avaliacoes (avaliações de ticket, coleção qualidade_ticket_avaliacoes)
 // CHANGELOG: v3.19.0 - Em PRD, REACT_APP_API_URL pode vir de window.__VELOHUB_RUNTIME_CONFIG__ (env do contêiner no index.html)
 // CHANGELOG: v3.18.0 - DEFAULT_SKYNET_API_ORIGIN alinhado ao host Cloud Run usado no Cloud Build (backend-gcp-278491073220)
 // CHANGELOG: v3.17.1 - Erros 5xx: priorizar data.message (detalhe do backend) antes de data.error (mensagem genérica)
@@ -73,6 +79,27 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 30000, // 30s — listas Qualidade + cold start Cloud Run costumam estourar 10s
+});
+
+// Evita respostas GET reutilizadas por cache de browser/proxy (listas colaboradores, config, etc.)
+api.interceptors.request.use((config) => {
+  if ((config.method || 'get').toLowerCase() === 'get') {
+    config.params = { ...config.params, _nc: Date.now() };
+  }
+  try {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      const parsed = JSON.parse(storedUser);
+      const userEmail = parsed?.email || parsed?._userMail;
+      if (userEmail) {
+        config.headers = config.headers || {};
+        config.headers['X-User-Email'] = userEmail;
+      }
+    }
+  } catch {
+    // ignore parse errors
+  }
+  return config;
 });
 
 // Interceptor de request para logs detalhados (apenas em desenvolvimento)
@@ -248,7 +275,7 @@ export const velonewsAPI = {
   }
 };
 
-// API para Bot Perguntas
+// API VeloBot (rotas /bot-perguntas, permissão botPerguntas)
 export const botPerguntasAPI = {
   // Listar todas as perguntas
   getAll: async () => {
@@ -271,27 +298,6 @@ export const botPerguntasAPI = {
   // Deletar pergunta
   delete: async (id) => {
     const response = await api.delete(`/bot-perguntas/${id}`);
-    return response.data;
-  }
-};
-
-// API para IGP
-export const igpAPI = {
-  // Obter métricas
-  getMetrics: async () => {
-    const response = await api.get('/igp/metrics');
-    return response.data;
-  },
-
-  // Obter relatórios
-  getReports: async (params = {}) => {
-    const response = await api.get('/igp/reports', { params });
-    return response.data;
-  },
-
-  // Exportar dados
-  exportData: async (format, data, filename) => {
-    const response = await api.post(`/igp/export/${format}`, { data, filename });
     return response.data;
   }
 };
@@ -598,6 +604,26 @@ export const qualidadeFuncoesAPI = {
   }
 };
 
+/** Itens de resgate QA — coleção qa_resgate_items (console_analises). */
+export const qualidadeQaResgateItemsAPI = {
+  getAll: async () => {
+    const response = await api.get('/qualidade/qa-resgate-items');
+    return response.data;
+  },
+  create: async (data) => {
+    const response = await api.post('/qualidade/qa-resgate-items', data);
+    return response.data;
+  },
+  update: async (id, data) => {
+    const response = await api.put(`/qualidade/qa-resgate-items/${id}`, data);
+    return response.data;
+  },
+  delete: async (id) => {
+    const response = await api.delete(`/qualidade/qa-resgate-items/${id}`);
+    return response.data;
+  }
+};
+
 // API para Qualidade - Avaliações
 export const qualidadeAvaliacoesAPI = {
   // Listar todas as avaliações
@@ -631,4 +657,35 @@ export const qualidadeAvaliacoesAPI = {
   }
 };
 
+// API Qualidade - Avaliações de ticket (coleção qualidade_ticket_avaliacoes; rotas aditivas; não altera /qualidade/avaliacoes)
+export const qualidadeTicketAvaliacoesAPI = {
+  getAll: async () => {
+    const response = await api.get('/qualidade/ticket-avaliacoes');
+    return response.data;
+  },
+  getById: async (id) => {
+    const response = await api.get(`/qualidade/ticket-avaliacoes/${id}`);
+    return response.data;
+  },
+  create: async (data) => {
+    const response = await api.post('/qualidade/ticket-avaliacoes', data);
+    return response.data;
+  },
+  update: async (id, data) => {
+    const response = await api.put(`/qualidade/ticket-avaliacoes/${id}`, data);
+    return response.data;
+  },
+  delete: async (id) => {
+    const response = await api.delete(`/qualidade/ticket-avaliacoes/${id}`);
+    return response.data;
+  }
+};
+
 export default api;
+
+export {
+  corporativoLegalAPI,
+  corporativoBannerAPI,
+  corporativoAvisosAPI,
+  corporativoAgendaAPI,
+} from './corporativoAPI';

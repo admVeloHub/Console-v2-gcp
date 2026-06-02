@@ -1,11 +1,32 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.53.0 | DATE: 2026-04-23 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.54.0 | DATE: 2026-06-02 | AUTHOR: VeloHub Development Team -->
 <!--
   REGRA (push GitHub): Preencher a nova entrada do DEPLOY_LOG (tipo, data, branch, repositório,
   arquivos, descrição) ANTES do `git commit`. Incluir DEPLOY_LOG no MESMO commit que o código.
   Não criar commit adicional só para corrigir hash, SHA ou “fechar” o log.
   Campo **Commit:** opcional; se não usar SHA aqui, consultar `git log -1 --oneline` no remoto.
 -->
+
+## Push GitHub — Qualidade (feedback, colaboradores, auth) + Corporativo; remoção VeloInsights embarcado — 2026-06-02
+
+### **Tipo:** Push GitHub
+### **Data/Hora:** 2026-06-02
+### **Branch:** main
+### **Repositório:** https://github.com/admVeloHub/Console-v2-gcp.git
+
+### **Arquivos (principais):**
+- `src/pages/QualidadeModulePage.jsx` v1.47.3 — Autocomplete colaborador (modal, filtros lista, feedback); tipos de feedback por Auditoria/Avaliador; tampão «Em desenvolvimento» em Conceder troféu
+- `src/utils/qualidadeFuncionariosAtendimento.js` v1.1.0 — Filtro atendimento com `atuacao[{ funcao }]` (API v5.27)
+- `src/contexts/AuthContext.jsx` v3.8.3 — Bypass Lucas não força auditoria; sync `_funcoesAdministrativas` da API
+- `src/services/userService.js` v1.2.6 — `getAuthorizedUser` sempre via MongoDB/API
+- Módulo Corporativo (páginas, `corporativoAPI.js`, componentes, ícones dashboard)
+- Remoção do subtree `VeloInsights/` e integração IGP/VeloInsights do `App.jsx`
+- `DEPLOY_LOG.md` v1.54.0
+
+### **Descrição:**
+Melhorias no módulo Qualidade (lista de colaboradores para avaliação/feedback, busca por digitação, permissões de tipo de feedback alinhadas ao Config). Correção do bypass de sessão que mantinha Auditoria ativa fora do cadastro. Evolução do portal (Corporativo); limpeza do bundle removendo VeloInsights duplicado no repositório do Console.
+
+---
 
 ## Push GitHub — Config runtime Cloud Run: OAuth e API a partir de env do contêiner (sem depender de .env no Git) - 2026-04-23
 

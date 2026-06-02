@@ -1,4 +1,8 @@
-// VERSION: v3.9.7 | DATE: 2026-03-19 | AUTHOR: VeloHub Development Team
+// VERSION: v3.10.3 | DATE: 2026-04-30 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v3.10.3 - Label do tipo gestaoQa na Config: "QA"
+// CHANGELOG: v3.10.2 - Tipo de ticket gestaoQa (Gestão → QA) na Config
+// CHANGELOG: v3.9.9 - Label da permissão botPerguntas: VeloBot (card do dashboard)
+// CHANGELOG: v3.9.8 - Removida permissão IGP da UI de configuração de usuários
 // CHANGELOG: v3.9.7 - Removida permissão de card WhatsApp da UI de configuração de usuários
 import React, { useState, useEffect } from 'react';
 import {
@@ -31,7 +35,9 @@ import {
   Grid,
   Tooltip,
   Alert,
-  Snackbar
+  Snackbar,
+  Tabs,
+  Tab
 } from '@mui/material';
 import {
   Add,
@@ -43,7 +49,8 @@ import {
   Security
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
-import BackButton from '../components/common/BackButton';
+import BackButton, { VoltarHeaderRow } from '../components/common/BackButton';
+import ConfigConexoesTab from '../components/config/ConfigConexoesTab';
 import { 
   getAllAuthorizedUsers, 
   addAuthorizedUser, 
@@ -51,8 +58,31 @@ import {
   removeAuthorizedUser 
 } from '../services/userService';
 
+/** Tabs no mesmo padrão visual de BotPerguntasPage / BotAnalisesPage */
+const CONFIG_TABS_SX = {
+  borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
+  '& .MuiTab-root': {
+    fontSize: '1rem',
+    fontFamily: 'Poppins',
+    fontWeight: 500,
+    textTransform: 'none',
+    minHeight: 48,
+    '&.Mui-selected': {
+      color: 'var(--blue-light)'
+    },
+    '&:not(.Mui-selected)': {
+      color: 'rgba(0, 0, 0, 0.35)'
+    }
+  },
+  '& .MuiTabs-indicator': {
+    backgroundColor: 'var(--blue-light)',
+    height: 2
+  }
+};
+
 const ConfigPage = () => {
   const { user: currentUser, updateUser } = useAuth();
+  const [configTab, setConfigTab] = useState(0);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [snackbar, setSnackbar] = useState({
@@ -119,12 +149,12 @@ const ConfigPage = () => {
       botAnalises: false,
       hubAnalises: false,
       chamadosInternos: true,
-      igp: false,
       qualidade: false,
       capacity: false,
       config: false,
       servicos: false,
       academy: false,
+      corporativo: false,
       whatsapp: false
     },
     tiposTickets: {
@@ -135,6 +165,7 @@ const ConfigPage = () => {
       funcionalidades: false,
       recursos: false,
       gestao: false,
+      gestaoQa: false,
       rhFin: false,
       facilities: false
     },
@@ -149,16 +180,16 @@ const ConfigPage = () => {
   const cardPermissions = [
     { key: 'artigos', label: 'Artigos' },
     { key: 'velonews', label: 'Velonews' },
-    { key: 'botPerguntas', label: 'Bot Perguntas' },
+    { key: 'botPerguntas', label: 'VeloBot' },
     { key: 'botAnalises', label: 'Bot Análises' },
     { key: 'hubAnalises', label: 'Hub Análises' },
     { key: 'chamadosInternos', label: 'Chamados Internos' },
-    { key: 'igp', label: 'IGP' },
     { key: 'qualidade', label: 'Qualidade' },
     { key: 'capacity', label: 'Capacity' },
     { key: 'config', label: 'Config' },
     { key: 'servicos', label: 'Serviços' },
-    { key: 'academy', label: 'Academy' }
+    { key: 'academy', label: 'Academy' },
+    { key: 'corporativo', label: 'Corporativo' }
   ];
 
   // Mapeamento dos tipos de tickets dos chamados internos
@@ -170,6 +201,7 @@ const ConfigPage = () => {
     { key: 'funcionalidades', label: 'Funcionalidades' },
     { key: 'recursos', label: 'Recursos' },
     { key: 'gestao', label: 'Gestão' },
+    { key: 'gestaoQa', label: 'QA' },
     { key: 'rhFin', label: 'RH & Fin' },
     { key: 'facilities', label: 'Facilities' }
   ];
@@ -191,12 +223,12 @@ const ConfigPage = () => {
           botAnalises: false,
           hubAnalises: false,
           chamadosInternos: true,
-          igp: false,
           qualidade: false,
           capacity: false,
           config: false,
           servicos: false,
-          academy: false
+          academy: false,
+          corporativo: false
         },
         tiposTickets: user._userTickets || {
           artigos: false,
@@ -206,6 +238,7 @@ const ConfigPage = () => {
           funcionalidades: false,
           recursos: false,
           gestao: false,
+          gestaoQa: false,
           rhFin: false,
           facilities: false
         },
@@ -231,12 +264,12 @@ const ConfigPage = () => {
           botAnalises: false,
           hubAnalises: false,
           chamadosInternos: true,
-          igp: false,
           qualidade: false,
           capacity: false,
           config: false,
           servicos: false,
-          academy: false
+          academy: false,
+          corporativo: false
         },
         tiposTickets: {
           artigos: false,
@@ -246,6 +279,7 @@ const ConfigPage = () => {
           funcionalidades: false,
           recursos: false,
           gestao: false,
+          gestaoQa: false,
           rhFin: false,
           facilities: false
         },
@@ -276,7 +310,6 @@ const ConfigPage = () => {
           botPerguntas: false,
           botAnalises: false,
           chamadosInternos: true,
-          igp: false,
           qualidade: false,
           capacity: false,
           config: false,
@@ -290,6 +323,7 @@ const ConfigPage = () => {
           funcionalidades: false,
           recursos: false,
           gestao: false,
+          gestaoQa: false,
           rhFin: false,
           facilities: false
         },
@@ -313,11 +347,12 @@ const ConfigPage = () => {
         botAnalises: false,
         hubAnalises: false,
         chamadosInternos: true,
-        igp: false,
         qualidade: false,
         capacity: false,
         config: false,
-        servicos: false
+        servicos: false,
+        academy: false,
+        corporativo: false
       },
       tiposTickets: user._userTickets || {
         artigos: false,
@@ -327,6 +362,7 @@ const ConfigPage = () => {
         funcionalidades: false,
         recursos: false,
         gestao: false,
+        gestaoQa: false,
         rhFin: false,
         facilities: false
       },
@@ -614,7 +650,7 @@ const ConfigPage = () => {
           letterSpacing: '0.5px',
           fontSize: '0.75rem',
           padding: '6px 12px',
-          borderRadius: '20px'
+          borderRadius: '6px'
         };
       case 'gestão':
       case 'gestao':
@@ -627,7 +663,7 @@ const ConfigPage = () => {
           letterSpacing: '0.5px',
           fontSize: '0.75rem',
           padding: '6px 12px',
-          borderRadius: '20px'
+          borderRadius: '6px'
         };
       case 'monitor':
         // MONITOR: Verde → Azul Claro
@@ -639,7 +675,7 @@ const ConfigPage = () => {
           letterSpacing: '0.5px',
           fontSize: '0.75rem',
           padding: '6px 12px',
-          borderRadius: '20px'
+          borderRadius: '6px'
         };
       case 'editor':
         // ESSENCIAL: Azul Médio → Azul Claro
@@ -651,7 +687,7 @@ const ConfigPage = () => {
           letterSpacing: '0.5px',
           fontSize: '0.75rem',
           padding: '6px 12px',
-          borderRadius: '20px'
+          borderRadius: '6px'
         };
       default:
         return {
@@ -662,30 +698,48 @@ const ConfigPage = () => {
           letterSpacing: '0.5px',
           fontSize: '0.75rem',
           padding: '6px 12px',
-          borderRadius: '20px'
+          borderRadius: '6px'
         };
     }
   };
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 8, pb: 4 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', mb: 4 }}>
-        <Box sx={{ position: 'absolute', left: 0 }}>
-          <BackButton />
-        </Box>
-        <Typography 
-          variant="h4" 
-          component="h1"
-          sx={{ 
-            fontFamily: 'Poppins',
-            fontWeight: 700,
-            color: 'var(--blue-dark)'
-          }}
-        >
-          Config
-        </Typography>
+      <VoltarHeaderRow left={<BackButton />} />
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          width: '100%',
+          mb: 4,
+        }}
+      >
+          <Typography
+            variant="h4"
+            component="h1"
+            sx={{
+              fontFamily: 'Poppins',
+              fontWeight: 700,
+              color: 'var(--blue-dark)',
+              mb: 1
+            }}
+          >
+            Config
+          </Typography>
+          <Tabs
+            value={configTab}
+            onChange={(e, v) => setConfigTab(v)}
+            aria-label="config tabs"
+            sx={CONFIG_TABS_SX}
+          >
+            <Tab label="Usuários e Acessos" id="config-tab-users" aria-controls="config-panel-users" />
+            <Tab label="Conexões" id="config-tab-conexoes" aria-controls="config-panel-conexoes" />
+          </Tabs>
       </Box>
 
+      {configTab === 0 && (
+      <>
       {/* Card de Controle de Acessos */}
       <Card sx={{ mb: 4 }}>
         <CardContent>
@@ -872,6 +926,10 @@ const ConfigPage = () => {
           </TableContainer>
         </CardContent>
       </Card>
+      </>
+      )}
+
+      {configTab === 1 && <ConfigConexoesTab />}
 
       {/* Modal de Usuário - 2 Etapas */}
       <Dialog 

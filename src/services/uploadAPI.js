@@ -1,7 +1,40 @@
-// VERSION: v2.3.0 | DATE: 2026-04-16 | AUTHOR: VeloHub Development Team
+// VERSION: v2.5.1 | DATE: 2026-04-27 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v2.5.1 - uploadAcademyTrophyImage: FormData com folder antes de image (compatibilidade multipart)
+// CHANGELOG: v2.5.0 - getTrophyMediabankDisplayUrl: URL de prévia (proxy academy-trophy-media) para icones_conquistas e qa_trophies
+// CHANGELOG: v2.4.0 - uploadQaTrophyImage: wrapper do upload Academy com folder fixo qa_trophies
 // CHANGELOG: v2.3.0 - fetchAcademyTrophyTemasList: GET /uploads/academy-trophy-temas-list (reutilizar Bronze/Prata)
 // CHANGELOG: v2.2.0 - uploadAcademyTrophyImage: POST multipart /uploads/academy-trophy (evita CORS GCS no browser)
-import api from './api';
+import api, { getResolvedApiUrl } from './api';
+
+/**
+ * URL para &lt;img src&gt; de troféu no bucket mediabank_academy (privado): usa GET /uploads/academy-trophy-media.
+ * Alinha-se ao AcademyPage (icones_conquistas/modulos|temas) e inclui qa_trophies (Gestão e Qualidade).
+ * @param {string} storedUrl URL pública GCS, blob: ou data:
+ * @returns {string}
+ */
+export const getTrophyMediabankDisplayUrl = (storedUrl) => {
+  if (!storedUrl || typeof storedUrl !== 'string') return '';
+  if (storedUrl.startsWith('blob:') || storedUrl.startsWith('data:')) return storedUrl;
+  try {
+    const u = new URL(storedUrl);
+    if (u.hostname !== 'storage.googleapis.com') return storedUrl;
+    const parts = u.pathname.split('/').filter(Boolean);
+    if (parts.length < 2) return storedUrl;
+    const bucketName = parts[0];
+    if (bucketName !== 'mediabank_academy') return storedUrl;
+    const objectPath = parts.slice(1).join('/');
+    const ok =
+      /^icones_conquistas\/(modulos|temas)\//.test(objectPath) ||
+      /^mediabank_academy\/icones_conquistas\/(modulos|temas)\//.test(objectPath) ||
+      /^qa_trophies\//.test(objectPath) ||
+      /^mediabank_academy\/qa_trophies\//.test(objectPath);
+    if (!ok) return storedUrl;
+    const base = getResolvedApiUrl();
+    return `${base}/uploads/academy-trophy-media?filename=${encodeURIComponent(objectPath)}`;
+  } catch {
+    return storedUrl;
+  }
+};
 
 /**
  * Gerar Signed URL para upload de imagem
@@ -130,8 +163,8 @@ export const uploadToGCS = (signedUrl, file, onProgress) => {
  */
 export const uploadAcademyTrophyImage = async (file, folder, onProgress = null) => {
   const formData = new FormData();
+  formData.append('folder', String(folder ?? '').trim());
   formData.append('image', file);
-  formData.append('folder', folder);
 
   try {
     const response = await api.post('/uploads/academy-trophy', formData, {
@@ -165,6 +198,15 @@ export const uploadAcademyTrophyImage = async (file, folder, onProgress = null) 
     }
     throw error;
   }
+};
+
+/**
+ * Troféus QA (Gestão e Qualidade): usa o mesmo endpoint Academy com folder qa_trophies.
+ * @param {File} file
+ * @param {Function|null} onProgress
+ */
+export const uploadQaTrophyImage = async (file, onProgress = null) => {
+  return uploadAcademyTrophyImage(file, 'qa_trophies', onProgress);
 };
 
 /**
@@ -273,6 +315,7 @@ export const uploadImage = async (file, onProgress = null, folder = null) => {
 export default {
   uploadImage,
   uploadAcademyTrophyImage,
+  uploadQaTrophyImage,
   fetchAcademyTrophyTemasList,
   generateImageUploadUrl,
   uploadToGCS

@@ -1,4 +1,5 @@
-// VERSION: v4.8.6 | DATE: 2025-03-19 | AUTHOR: VeloHub Development Team
+// VERSION: v4.8.8 | DATE: 2026-04-28 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v4.8.8 - Cabeçalho Voltar/abas: VoltarHeaderRow (alinhamento global)
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { 
   Container, 
@@ -25,11 +26,21 @@ import {
 } from '@mui/material';
 import { Save, Add, Warning, Search, Delete } from '@mui/icons-material';
 import { velonewsAPI } from '../services/api';
-import BackButton from '../components/common/BackButton';
+import BackButton, { VoltarHeaderRow } from '../components/common/BackButton';
 import MarkdownEditor from '../components/common/MarkdownEditor';
 import MarkdownRenderer from '../components/common/MarkdownRenderer';
 import { processImageUploads, countTemporaryImages } from '../utils/imageUploadProcessor';
 import { clearAllTemporaryImages } from '../utils/imageStorage';
+
+/** Painéis principais do módulo: anula boxShadow e hover do tema MuiCard. */
+const CARD_PRINCIPAL_SX = {
+  boxShadow: 'none',
+  transition: 'none',
+  '&:hover': {
+    boxShadow: 'none',
+    transform: 'none',
+  },
+};
 
 const VelonewsPage = () => {
   const [activeTab, setActiveTab] = useState(0);
@@ -386,22 +397,9 @@ const VelonewsPage = () => {
 
   return (
     <Container maxWidth="xl" sx={{ py: 3.2, mb: 6.4, pb: 3.2 }}>
-      {/* Header com botão voltar e abas alinhadas */}
-      {/* Header único - alinhamento central absoluto das abas */}
-      <Box sx={{ position: 'relative', mb: 3.2, minHeight: 40 }}>
-        <Box sx={{ position: 'absolute', left: 0, top: 0, bottom: 0, display: 'flex', alignItems: 'center' }}>
-          <BackButton />
-        </Box>
-        <Box sx={{
-          position: 'absolute',
-          left: '50%',
-          top: 0,
-          bottom: 0,
-          transform: 'translateX(-50%)',
-          display: 'flex',
-          alignItems: 'center',
-          width: 'max-content'
-        }}>
+      <VoltarHeaderRow
+        left={<BackButton />}
+        center={
           <Tabs
             value={activeTab}
             onChange={(e, v) => setActiveTab(v)}
@@ -430,8 +428,8 @@ const VelonewsPage = () => {
             <Tab label="Publicar Notícia" />
             <Tab label="Gerenciar Notícias" />
           </Tabs>
-        </Box>
-      </Box>
+        }
+      />
 
       {/* Tab 0: Publicar Notícia */}
       {activeTab === 0 && (
@@ -446,7 +444,7 @@ const VelonewsPage = () => {
         </Alert>
       )}
 
-      <Card sx={{ backgroundColor: 'var(--cor-container)' }}>
+      <Card sx={{ backgroundColor: 'var(--cor-container)', ...CARD_PRINCIPAL_SX }}>
         <CardContent sx={{ p: 3.2 }}>
 
           <form onSubmit={handleSubmit}>
@@ -597,7 +595,7 @@ const VelonewsPage = () => {
           sx: {
             backgroundColor: 'var(--cor-container)',
             color: 'var(--gray)',
-            borderRadius: '12px',
+            borderRadius: '6px',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
           }
         }}
@@ -670,7 +668,7 @@ const VelonewsPage = () => {
             width: '70%', 
             pr: 2.5   // 20px de padding direito
           }}>
-            <Card sx={{ backgroundColor: 'var(--cor-container)' }}>
+            <Card sx={{ backgroundColor: 'var(--cor-container)', ...CARD_PRINCIPAL_SX }}>
               <CardContent>
                 <Typography variant="h6" sx={{ mb: 2.4, fontSize: '0.96rem', color: 'var(--blue-dark)', fontFamily: 'Poppins', fontWeight: 600 }}>
                   {selectedNews ? 'Editar Notícia' : 'Selecione uma notícia'}
@@ -876,7 +874,7 @@ const VelonewsPage = () => {
           <Box sx={{ 
             width: '30%'
           }}>
-            <Card sx={{ backgroundColor: 'var(--cor-container)', height: '100%' }}>
+            <Card sx={{ backgroundColor: 'var(--cor-container)', height: '100%', ...CARD_PRINCIPAL_SX }}>
               <CardContent>
                 {/* Barra de Pesquisa */}
                 <TextField

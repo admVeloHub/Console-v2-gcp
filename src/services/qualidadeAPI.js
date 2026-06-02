@@ -1,4 +1,18 @@
-// VERSION: v1.47.0 | DATE: 2026-04-15 | AUTHOR: VeloHub Development Team
+// VERSION: v1.59.0 | DATE: 2026-05-28 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.59.0 - addFuncionario/updateFuncionario: campo departamento (qualidade_funcionarios)
+// CHANGELOG: v1.58.0 - CRUD qa_resgate_items (GET/POST/PUT/DELETE /qualidade/qa-resgate-items)
+// CHANGELOG: v1.57.0 - getAtendimentoTrophyXpTotal: GET /atendimento-trophy/xp-total (Quadro XP Excelência)
+// CHANGELOG: v1.56.0 - salvarAtendimentoTrophy: POST /atendimento-trophy (academy_registros.atendimento_trophies)
+// CHANGELOG: v1.55.0 - gptAPI: interceptor GET com _nc (mesma política anti-cache que api.js / valores_campos)
+// CHANGELOG: v1.54.0 - upsertQaTrophiesCatalog (valores_campos qa_trophies_catalog)
+// CHANGELOG: v1.53.0 - qa_trophy_config: xpClass no payload como rótulo (Baixo|Normal|Alto|Especial), alinhado ao SKYNET
+// CHANGELOG: v1.52.0 - valores_campos: listagem + upsert de catálogos fixos (cadastro_campos, feedback, qa_trophy_config)
+// CHANGELOG: v1.51.0 - QA Feedback: getValoresCampoQa, gerarQaFeedback, salvarQaFeedback (GET/POST /api/qualidade — Skynet)
+// CHANGELOG: v1.50.0 - Relatório agente: com filtro de data, o gráfico (histórico/média mensal) usa a mesma lista que os cards; sem filtro mantém histórico completo
+// CHANGELOG: v1.49.0 - ticket: payload com critérios PascalCase (FONTE / backend qualidade_ticket_avaliacoes)
+// CHANGELOG: v1.48.0 - getAvaliacoes/relatórios: merge liga + ticket-avaliacoes; add/update/delete: ticket → API qualidade_ticket_avaliacoes; liga sem tipoAvaliacao/numeroTicket no POST/PUT; deleteAvaliacao(id, { isTicket })
+// CHANGELOG: v1.47.2 - addAvaliacao/updateAvaliacao: numeroTicket (modo ticket; null em ligação)
+// CHANGELOG: v1.47.1 - addAvaliacao/updateAvaliacao: campo tipoAvaliacao ('ligacao' | 'ticket')
 // CHANGELOG: v1.47.0 - fetch áudio/IA: base URL via getResolvedApiOrigin (dev → localhost:3001 alinhado a api.js)
 // CHANGELOG: v1.46.0 - Campo ChavePix (credencial Chave Pix) no objeto acessos em normalizarAcessos, addFuncionario e updateFuncionario; formato legado array aceita sistema ChavePix / normalizado chavepix
 // CHANGELOG: v1.45.1 - Release push GitHub 2026-04-10
@@ -20,9 +34,9 @@
 // CHANGELOG: v1.34.0 - Adicionado campo Desk ao objeto acessos {Velohub: Boolean, Console: Boolean, Academy: Boolean, Desk: Boolean}. Acessos são completamente opcionais.
 // v1.33.0 - Adicionada normalização de formato de acessos (array vazio/null -> objeto {Velohub: Boolean, Console: Boolean}) para compatibilidade com novo schema
 
-import { qualidadeFuncionariosAPI, qualidadeAvaliacoesAPI, qualidadeFuncoesAPI, getResolvedApiOrigin } from './api';
+import { qualidadeFuncionariosAPI, qualidadeAvaliacoesAPI, qualidadeTicketAvaliacoesAPI, qualidadeFuncoesAPI, qualidadeQaResgateItemsAPI, getResolvedApiOrigin } from './api';
 import axios from 'axios';
-import { generateId, calcularPontuacaoTotal, PONTUACAO } from '../types/qualidade';
+import { generateId, calcularPontuacaoTotal, calcularPontuacaoTotalTicket } from '../types/qualidade';
 import { getAvaliadoresValidos as getUserAvaliadoresValidos, getAllAuthorizedUsers } from './userService';
 import { 
   getAvaliacoes as getAvaliacoesLocalStorage,
@@ -91,60 +105,39 @@ export const testarAPI = async () => {
   }
 };
 
-// Função auxiliar para normalizar formato de acessos
+/** Credenciais de plataforma (módulos VeloHub → qualidade_funcoes.modulosVelohub) */
+export const ACESSOS_PLATAFORMA_PADRAO = () => ({
+  Velohub: false,
+  Console: false,
+  Academy: false,
+  Desk: false,
+  realTime: false,
+});
+
 const normalizarAcessos = (acessos) => {
-  // Se for null ou undefined, retornar objeto vazio
-  if (!acessos) {
-    return { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false, apoioN1: false, ChavePix: false };
+  if (Array.isArray(acessos)) {
+    const novo = ACESSOS_PLATAFORMA_PADRAO();
+    acessos.forEach((acesso) => {
+      if (!acesso?.sistema) return;
+      const sistema = String(acesso.sistema).toLowerCase();
+      if (sistema === 'velohub') novo.Velohub = true;
+      else if (sistema === 'console') novo.Console = true;
+      else if (sistema === 'academy') novo.Academy = true;
+      else if (sistema === 'desk') novo.Desk = true;
+      else if (sistema === 'realtime' || sistema === 'tempo real') novo.realTime = true;
+    });
+    return novo;
   }
-  
-  // Se já for objeto booleano, retornar como está (garantindo todas as chaves de credencial)
-  if (typeof acessos === 'object' && !Array.isArray(acessos)) {
+  if (typeof acessos === 'object' && acessos) {
     return {
       Velohub: acessos.Velohub === true,
       Console: acessos.Console === true,
       Academy: acessos.Academy === true,
       Desk: acessos.Desk === true,
-      Ouvidoria: acessos.Ouvidoria === true,
-      Sociais: acessos.Sociais === true,
       realTime: acessos.realTime === true,
-      apoioN1: acessos.apoioN1 === true,
-      ChavePix: acessos.ChavePix === true
     };
   }
-  
-  // Se for array (formato antigo), converter para objeto booleano
-  if (Array.isArray(acessos)) {
-    const novoAcessos = { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false, apoioN1: false, ChavePix: false };
-    acessos.forEach(acesso => {
-      if (acesso && acesso.sistema) {
-        const sistema = acesso.sistema.toLowerCase();
-        if (sistema === 'velohub') {
-          novoAcessos.Velohub = true;
-        } else if (sistema === 'console') {
-          novoAcessos.Console = true;
-        } else if (sistema === 'academy') {
-          novoAcessos.Academy = true;
-        } else if (sistema === 'desk') {
-          novoAcessos.Desk = true;
-        } else if (sistema === 'ouvidoria') {
-          novoAcessos.Ouvidoria = true;
-        } else if (sistema === 'sociais') {
-          novoAcessos.Sociais = true;
-        } else if (sistema === 'realtime' || sistema === 'tempo real') {
-          novoAcessos.realTime = true;
-        } else if (acesso.sistema === 'apoioN1' || sistema.replace(/[\s_-]/g, '') === 'apoion1') {
-          novoAcessos.apoioN1 = true;
-        } else if (acesso.sistema === 'ChavePix' || sistema.replace(/[\s_-]/g, '') === 'chavepix') {
-          novoAcessos.ChavePix = true;
-        }
-      }
-    });
-    return novoAcessos;
-  }
-  
-  // Fallback: objeto vazio
-  return { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false, apoioN1: false, ChavePix: false };
+  return ACESSOS_PLATAFORMA_PADRAO();
 };
 
 // Obter todos os funcionários
@@ -214,24 +207,11 @@ export const addFuncionario = async (funcionarioData) => {
       return isNaN(data.getTime()) ? null : data;
     };
     
-    // Sempre enviar objeto completo de acessos com todos os campos
-    let acessosNormalizados = { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false, apoioN1: false, ChavePix: false };
+    let acessosNormalizados = ACESSOS_PLATAFORMA_PADRAO();
     if (funcionarioData.desligado || funcionarioData.afastado) {
-      // Se funcionário está desligado ou afastado, forçar acessos como objeto com todos false
-      acessosNormalizados = { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false, apoioN1: false, ChavePix: false };
-    } else if (funcionarioData.acessos && typeof funcionarioData.acessos === 'object' && !Array.isArray(funcionarioData.acessos)) {
-      // Normalizar acessos: sempre enviar objeto completo com todos os campos
-      acessosNormalizados = {
-        Velohub: funcionarioData.acessos?.Velohub === true,
-        Console: funcionarioData.acessos?.Console === true,
-        Academy: funcionarioData.acessos?.Academy === true,
-        Desk: funcionarioData.acessos?.Desk === true,
-        Ouvidoria: funcionarioData.acessos?.Ouvidoria === true,
-        Sociais: funcionarioData.acessos?.Sociais === true,
-        realTime: funcionarioData.acessos?.realTime === true,
-        apoioN1: funcionarioData.acessos?.apoioN1 === true,
-        ChavePix: funcionarioData.acessos?.ChavePix === true
-      };
+      acessosNormalizados = ACESSOS_PLATAFORMA_PADRAO();
+    } else {
+      acessosNormalizados = normalizarAcessos(funcionarioData.acessos);
     }
     
     // Converter strings de data para Date conforme schema MongoDB
@@ -245,6 +225,7 @@ export const addFuncionario = async (funcionarioData) => {
       telefone: funcionarioData.telefone || '',
       userMail: funcionarioData.userMail || null,
       password: funcionarioData.password || null,
+      departamento: funcionarioData.departamento || '',
       atuacao: funcionarioData.atuacao || [],
       escala: funcionarioData.escala || '',
       acessos: acessosNormalizados,
@@ -286,28 +267,12 @@ export const updateFuncionario = async (id, funcionarioData) => {
       return isNaN(data.getTime()) ? null : data;
     };
     
-    // Sempre enviar objeto completo de acessos com todos os campos
-    let acessosNormalizados = { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false, apoioN1: false, ChavePix: false };
+    let acessosNormalizados = ACESSOS_PLATAFORMA_PADRAO();
     if (funcionarioData.desligado || funcionarioData.afastado) {
-      // Se funcionário está desligado ou afastado, forçar acessos como objeto com todos false
-      acessosNormalizados = { Velohub: false, Console: false, Academy: false, Desk: false, Ouvidoria: false, Sociais: false, realTime: false, apoioN1: false, ChavePix: false };
+      acessosNormalizados = ACESSOS_PLATAFORMA_PADRAO();
     } else if (funcionarioData.acessos !== undefined && funcionarioData.acessos !== null) {
-      // Normalizar acessos: sempre enviar objeto completo com todos os campos
-      if (typeof funcionarioData.acessos === 'object' && !Array.isArray(funcionarioData.acessos)) {
-        acessosNormalizados = {
-          Velohub: funcionarioData.acessos?.Velohub === true,
-          Console: funcionarioData.acessos?.Console === true,
-          Academy: funcionarioData.acessos?.Academy === true,
-          Desk: funcionarioData.acessos?.Desk === true,
-          Ouvidoria: funcionarioData.acessos?.Ouvidoria === true,
-          Sociais: funcionarioData.acessos?.Sociais === true,
-          realTime: funcionarioData.acessos?.realTime === true,
-          apoioN1: funcionarioData.acessos?.apoioN1 === true,
-          ChavePix: funcionarioData.acessos?.ChavePix === true
-        };
-      }
+      acessosNormalizados = normalizarAcessos(funcionarioData.acessos);
     }
-    // Se acessos é null ou undefined, manter objeto com todos false (já inicializado acima)
     
     // Converter strings de data para Date conforme schema
     const funcionarioAtualizado = {
@@ -321,6 +286,7 @@ export const updateFuncionario = async (id, funcionarioData) => {
       dataAfastamento: converterData(funcionarioData.dataAfastamento),
       userMail: funcionarioData.userMail !== undefined ? (funcionarioData.userMail || null) : undefined,
       password: funcionarioData.password !== undefined ? (funcionarioData.password || null) : undefined,
+      departamento: funcionarioData.departamento !== undefined ? (funcionarioData.departamento || '') : undefined,
       acessos: acessosNormalizados !== undefined ? acessosNormalizados : undefined
     };
     
@@ -556,18 +522,35 @@ const buscarStatusAudio = async (avaliacaoId) => {
   }
 };
 
+/**
+ * Funde listas liga (qualidade_avaliacoes) e ticket (qualidade_ticket_avaliacoes) para UI e filtros.
+ * @param {import('../types/qualidade').Avaliacao[]|any[]} liga
+ * @param {any[]} ticket
+ */
+const mergeAvaliacoesLigaETicket = (liga, ticket) => {
+  const l = (liga || []).map((a) => ({ ...a, tipoAvaliacao: 'ligacao' }));
+  const t = (ticket || []).map((a) => ({
+    ...a,
+    tipoAvaliacao: 'ticket',
+    dataLigacao: a.dataLigacao != null ? a.dataLigacao : a.dataChamado
+  }));
+  return [...l, ...t];
+};
+
+const fetchAvaliacoesAgrupado = async () => {
+  const [resL, resT] = await Promise.all([
+    qualidadeAvaliacoesAPI.getAll().catch(() => ({})),
+    qualidadeTicketAvaliacoesAPI.getAll().catch(() => ({}))
+  ]);
+  return mergeAvaliacoesLigaETicket(extractQualidadeLista(resL), extractQualidadeLista(resT));
+};
+
 export const getAvaliacoes = async () => {
   try {
-    const response = await qualidadeAvaliacoesAPI.getAll();
-    console.log('📊 Dados recebidos da API (avaliações):', response);
+    const avaliacoesArray = await fetchAvaliacoesAgrupado();
+    console.log('📊 Dados recebidos da API (avaliações liga+ticket):', avaliacoesArray.length);
+    console.log(`📊 Avaliações extraídas: ${avaliacoesArray.length}`);
     
-    // A API retorna { count: X, data: Array, success: true }
-    // Precisamos extrair o array 'data'
-    const avaliacoes = response?.data || response;
-    console.log(`📊 Avaliações extraídas: ${Array.isArray(avaliacoes) ? avaliacoes.length : 0}`);
-    
-    // Garantir que sempre retorne um array
-    const avaliacoesArray = Array.isArray(avaliacoes) ? avaliacoes : [];
     
     // Mapear status de áudio diretamente dos campos da avaliação
     const avaliacoesComStatus = avaliacoesArray.map((avaliacao) => {
@@ -625,7 +608,51 @@ export const addAvaliacao = async (avaliacaoData) => {
   try {
     // Validar dados antes do processamento
     validarDadosAvaliacao(avaliacaoData);
-    
+
+    if (avaliacaoData.tipoAvaliacao === 'ticket') {
+      const dataRef = avaliacaoData.dataChamado || avaliacaoData.dataLigacao;
+      const nro = avaliacaoData.numeroTicket;
+      const numTicket = nro != null && !Number.isNaN(Number(nro)) ? Number(String(nro).replace(/\D/g, '')) : NaN;
+      if (!dataRef) throw new Error('Data do chamado é obrigatória (ticket).');
+      if (Number.isNaN(numTicket)) throw new Error('Número do ticket inválido.');
+
+      const docTicket = {
+        colaboradorNome: avaliacaoData.colaboradorNome,
+        avaliador: avaliacaoData.avaliador,
+        mes: avaliacaoData.mes,
+        ano: Number(avaliacaoData.ano) || new Date().getFullYear(),
+        ProducaoTexto: Boolean(avaliacaoData.ProducaoTexto),
+        ClarezaObjetividade: Boolean(avaliacaoData.ClarezaObjetividade),
+        BoaResolucaoProcedimento: Boolean(avaliacaoData.BoaResolucaoProcedimento),
+        AderenciaEstruturaResposta: Boolean(avaliacaoData.AderenciaEstruturaResposta),
+        Tabulacao: Boolean(avaliacaoData.Tabulacao),
+        PassouPrazoResposta: Boolean(avaliacaoData.PassouPrazoResposta),
+        RepassouProcedimentoIncorreto: Boolean(avaliacaoData.RepassouProcedimentoIncorreto),
+        NaoUtilizouBotApoio: Boolean(avaliacaoData.NaoUtilizouBotApoio),
+        observacoes: avaliacaoData.observacoes || '',
+        dataChamado: new Date(dataRef),
+        numeroTicket: numTicket,
+        pontuacaoTotal: 0,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      docTicket.pontuacaoTotal = calcularPontuacaoTotalTicket(docTicket);
+
+      const raw = await qualidadeTicketAvaliacoesAPI.create(docTicket);
+      const created = unwrapQualidadeAvaliacaoDoc(raw) || { ...docTicket, _id: null };
+      if (!created || (created._id == null && created.id == null)) {
+        console.error('❌ Resposta inesperada ao criar avaliação de ticket:', raw);
+        throw new Error('Resposta da API sem id da avaliação (ticket).');
+      }
+      const uid = created._id || created.id;
+      console.log(`✅ Avaliação de ticket adicionada via API: ${uid}`);
+      return {
+        ...created,
+        tipoAvaliacao: 'ticket',
+        dataLigacao: created.dataChamado || created.dataLigacao
+      };
+    }
+
     // Mapear dados conforme schema console_analises.qualidade_avaliacoes
     const novaAvaliacao = {
       colaboradorNome: avaliacaoData.colaboradorNome, // String
@@ -705,6 +732,45 @@ export const updateAvaliacao = async (id, avaliacaoData) => {
   try {
     // Validar dados antes do processamento
     validarDadosAvaliacao(avaliacaoData);
+
+    if (avaliacaoData.tipoAvaliacao === 'ticket') {
+      const dataRef = avaliacaoData.dataChamado || avaliacaoData.dataLigacao;
+      const nro = avaliacaoData.numeroTicket;
+      const numTicket = nro != null && !Number.isNaN(Number(nro)) ? Number(String(nro).replace(/\D/g, '')) : NaN;
+      if (!dataRef) throw new Error('Data do chamado é obrigatória (ticket).');
+      if (Number.isNaN(numTicket)) throw new Error('Número do ticket inválido.');
+
+      const docTicket = {
+        colaboradorNome: avaliacaoData.colaboradorNome,
+        avaliador: avaliacaoData.avaliador,
+        mes: avaliacaoData.mes,
+        ano: Number(avaliacaoData.ano) || new Date().getFullYear(),
+        ProducaoTexto: Boolean(avaliacaoData.ProducaoTexto),
+        ClarezaObjetividade: Boolean(avaliacaoData.ClarezaObjetividade),
+        BoaResolucaoProcedimento: Boolean(avaliacaoData.BoaResolucaoProcedimento),
+        AderenciaEstruturaResposta: Boolean(avaliacaoData.AderenciaEstruturaResposta),
+        Tabulacao: Boolean(avaliacaoData.Tabulacao),
+        PassouPrazoResposta: Boolean(avaliacaoData.PassouPrazoResposta),
+        RepassouProcedimentoIncorreto: Boolean(avaliacaoData.RepassouProcedimentoIncorreto),
+        NaoUtilizouBotApoio: Boolean(avaliacaoData.NaoUtilizouBotApoio),
+        observacoes: avaliacaoData.observacoes || '',
+        dataChamado: new Date(dataRef),
+        numeroTicket: numTicket,
+        pontuacaoTotal: 0,
+        updatedAt: new Date()
+      };
+      docTicket.pontuacaoTotal = calcularPontuacaoTotalTicket(docTicket);
+
+      const raw = await qualidadeTicketAvaliacoesAPI.update(id, docTicket);
+      const updated = unwrapQualidadeAvaliacaoDoc(raw) || { ...docTicket, _id: id };
+      const uid = updated?._id ?? updated?.id ?? id;
+      console.log(`✅ Avaliação de ticket atualizada via API: ${uid}`);
+      return {
+        ...updated,
+        tipoAvaliacao: 'ticket',
+        dataLigacao: updated.dataChamado || updated.dataLigacao
+      };
+    }
     
     // Mapear dados conforme schema console_analises.qualidade_avaliacoes (igual à criação)
     const avaliacaoAtualizada = {
@@ -749,13 +815,16 @@ export const updateAvaliacao = async (id, avaliacaoData) => {
   }
 };
 
-// Deletar avaliação
-export const deleteAvaliacao = async (id) => {
+// Deletar avaliação (segundo argumento: { isTicket: true } para documentos em qualidade_ticket_avaliacoes)
+export const deleteAvaliacao = async (id, options = {}) => {
+  const isTicket = options?.isTicket === true;
   try {
     // #region agent log
-    fetch('http://127.0.0.1:7621/ingest/8e27b4c3-0140-42a6-b4bc-2e9c16a86c7a',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'17a57b'},body:JSON.stringify({sessionId:'17a57b',location:'qualidadeAPI.js:664',message:'deleteAvaliacao entry',data:{id,idType:typeof id},timestamp:Date.now(),runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    fetch('http://127.0.0.1:7621/ingest/8e27b4c3-0140-42a6-b4bc-2e9c16a86c7a',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'17a57b'},body:JSON.stringify({sessionId:'17a57b',location:'qualidadeAPI.js:664',message:'deleteAvaliacao entry',data:{id,idType:typeof id,isTicket},timestamp:Date.now(),runId:'run1',hypothesisId:'A'})}).catch(()=>{});
     // #endregion
-    const response = await qualidadeAvaliacoesAPI.delete(id);
+    const response = isTicket
+      ? await qualidadeTicketAvaliacoesAPI.delete(id)
+      : await qualidadeAvaliacoesAPI.delete(id);
     // #region agent log
     fetch('http://127.0.0.1:7621/ingest/8e27b4c3-0140-42a6-b4bc-2e9c16a86c7a',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'17a57b'},body:JSON.stringify({sessionId:'17a57b',location:'qualidadeAPI.js:665',message:'deleteAvaliacao success',data:{id,responseSuccess:response?.success},timestamp:Date.now(),runId:'run1',hypothesisId:'A'})}).catch(()=>{});
     // #endregion
@@ -776,29 +845,24 @@ export const deleteAvaliacao = async (id) => {
 // Gerar relatório do agente
 export const gerarRelatorioAgente = async (colaboradorNome, dataInicio = null, dataFim = null) => {
   try {
-    // Buscar todas as avaliações da API e filtrar no frontend
-    const response = await qualidadeAvaliacoesAPI.getAll();
-    console.log('📊 Dados recebidos da API (relatório agente):', response);
-    
-    // A API retorna { count: X, data: Array, success: true }
-    // Precisamos extrair o array 'data'
-    const todasAvaliacoes = response?.data || response;
-    console.log(`📊 Total de avaliações encontradas: ${Array.isArray(todasAvaliacoes) ? todasAvaliacoes.length : 0}`);
+    // Buscar liga + ticket, filtrar no frontend
+    const todasAvaliacoes = await fetchAvaliacoesAgrupado();
+    console.log('📊 Dados recebidos da API (relatório agente, liga+ticket):', todasAvaliacoes.length);
+    console.log(`📊 Total de avaliações encontradas: ${todasAvaliacoes.length}`);
     
     // Filtrar por colaborador
-    let avaliacoes = Array.isArray(todasAvaliacoes) 
-      ? todasAvaliacoes.filter(a => {
+    let avaliacoes = (todasAvaliacoes || [])
+      .filter((a) => {
           const nomeAvaliacao = (a.colaboradorNome || '').trim().toLowerCase();
           const nomeColaborador = (colaboradorNome || '').trim().toLowerCase();
           return nomeAvaliacao === nomeColaborador;
-        })
-      : [];
+        });
     
     console.log(`📊 Avaliações filtradas para ${colaboradorNome}: ${avaliacoes.length}`);
     
     // Log de debug com nomes únicos encontrados
-    if (Array.isArray(todasAvaliacoes) && todasAvaliacoes.length > 0 && avaliacoes.length === 0) {
-      const nomesUnicos = [...new Set(todasAvaliacoes.map(a => a.colaboradorNome).filter(Boolean))];
+    if (todasAvaliacoes.length > 0 && avaliacoes.length === 0) {
+      const nomesUnicos = [...new Set(todasAvaliacoes.map((a) => a.colaboradorNome).filter(Boolean))];
       console.log('🔍 DEBUG - Nomes únicos encontrados nas avaliações:', nomesUnicos.slice(0, 10));
       console.log('🔍 DEBUG - Nome buscado:', colaboradorNome);
     }
@@ -808,10 +872,7 @@ export const gerarRelatorioAgente = async (colaboradorNome, dataInicio = null, d
       return null;
     }
 
-    // Separar avaliações: todas para gráfico, filtradas para cards
-    const avaliacoesParaGrafico = [...avaliacoes]; // Todas as avaliações para o gráfico
-    
-    // Filtrar por período (createdAt) se filtro estiver ativo (apenas para cards)
+    // Filtrar por período (createdAt) se filtro estiver ativo
     let avaliacoesFiltradas = avaliacoes;
     if (dataInicio || dataFim) {
       avaliacoesFiltradas = avaliacoes.filter(a => {
@@ -838,6 +899,10 @@ export const gerarRelatorioAgente = async (colaboradorNome, dataInicio = null, d
       
       console.log(`📊 Avaliações filtradas por período (${dataInicio || 'início'} a ${dataFim || 'fim'}): ${avaliacoesFiltradas.length}`);
     }
+
+    // Gráfico (média mensal / notaReal no histórico): mesma base que os cards quando há filtro; sem filtro, histórico completo do colaborador
+    const avaliacoesParaGrafico =
+      dataInicio || dataFim ? avaliacoesFiltradas : avaliacoes;
 
     const avaliacoesFiltradasComGPT = avaliacoesFiltradas;
     const avaliacoesParaGraficoComGPT = avaliacoesParaGrafico;
@@ -887,18 +952,13 @@ export const gerarRelatorioAgente = async (colaboradorNome, dataInicio = null, d
 // Gerar relatório da gestão
 export const gerarRelatorioGestao = async (mes, ano) => {
   try {
-    // Buscar todas as avaliações da API e filtrar no frontend
-    const response = await qualidadeAvaliacoesAPI.getAll();
-    console.log('📊 Dados recebidos da API (relatório gestão):', response);
+    const todasAvaliacoes = await fetchAvaliacoesAgrupado();
+    console.log('📊 Dados recebidos da API (relatório gestão, liga+ticket):', todasAvaliacoes.length);
+    console.log(`📊 Total de avaliações encontradas: ${todasAvaliacoes.length}`);
     
-    // A API retorna { count: X, data: Array, success: true }
-    // Precisamos extrair o array 'data'
-    const todasAvaliacoes = response?.data || response;
-    console.log(`📊 Total de avaliações encontradas: ${Array.isArray(todasAvaliacoes) ? todasAvaliacoes.length : 0}`);
-    
-    const avaliacoes = Array.isArray(todasAvaliacoes) 
-      ? todasAvaliacoes.filter(a => a.mes === mes && a.ano === ano)
-      : [];
+    const avaliacoes = (todasAvaliacoes || []).filter(
+      (a) => a.mes === mes && a.ano === ano
+    );
     
     console.log(`📊 Avaliações filtradas para ${mes}/${ano}: ${avaliacoes.length}`);
     
@@ -920,16 +980,11 @@ export const gerarRelatorioGestao = async (mes, ano) => {
 // Obter avaliações por colaborador
 export const getAvaliacoesPorColaborador = async (colaboradorNome) => {
   try {
-    // Buscar todas as avaliações da API e filtrar no frontend
-    const response = await qualidadeAvaliacoesAPI.getAll();
-    console.log('📊 Dados recebidos da API (avaliações por colaborador):', response);
-    
-    // A API retorna { count: X, data: Array, success: true }
-    // Precisamos extrair o array 'data'
-    const todasAvaliacoes = response?.data || response;
-    const avaliacoes = Array.isArray(todasAvaliacoes) 
-      ? todasAvaliacoes.filter(a => a.colaboradorNome === colaboradorNome)
-      : [];
+    const todasAvaliacoes = await fetchAvaliacoesAgrupado();
+    console.log('📊 Dados recebidos da API (avaliações por colaborador, liga+ticket):', todasAvaliacoes.length);
+    const avaliacoes = (todasAvaliacoes || []).filter(
+      (a) => a.colaboradorNome === colaboradorNome
+    );
     console.log(`📊 Avaliações do colaborador extraídas: ${avaliacoes.length}`);
     return avaliacoes;
   } catch (error) {
@@ -949,6 +1004,98 @@ const gptAPI = axios.create({
   },
   timeout: 10000
 });
+
+gptAPI.interceptors.request.use((config) => {
+  if ((config.method || 'get').toLowerCase() === 'get') {
+    config.params = { ...config.params, _nc: Date.now() };
+  }
+  return config;
+});
+
+/** Catálogo valores_campos (qa_destaques, qa_apontamentos). Resposta: { success, opcoes, key }. */
+export const getValoresCampoQa = async (key) => {
+  const k = String(key || '').trim();
+  const response = await gptAPI.get(`/valores-campos/${encodeURIComponent(k)}`);
+  return response.data;
+};
+
+/** Lista docs de configuração em valores_campos. includeAll=true retorna toda a coleção. */
+export const listValoresCampos = async (includeAll = false) => {
+  const response = await gptAPI.get('/valores-campos', {
+    params: includeAll ? { includeAll: true } : undefined
+  });
+  return response.data;
+};
+
+/** Upsert por id fixo em valores_campos. */
+export const upsertValoresCampos = async (id, payload) => {
+  const docId = String(id || '').trim();
+  if (!docId) {
+    throw new Error('id é obrigatório para upsertValoresCampos');
+  }
+  const response = await gptAPI.put(`/valores-campos/${encodeURIComponent(docId)}`, payload || {});
+  return response.data;
+};
+
+export const getCadastroCamposConfig = async () => {
+  const response = await listValoresCampos(false);
+  const docs = Array.isArray(response?.data) ? response.data : [];
+  return docs.find((doc) => doc?.id === 'cadastro_campos') || { id: 'cadastro_campos', escalas: [], empresas: [] };
+};
+
+export const upsertCadastroCamposConfig = async ({ escalas = [], empresas = [] } = {}) =>
+  upsertValoresCampos('cadastro_campos', { escalas, empresas });
+
+export const upsertFeedbackCatalogConfig = async (catalogId, values = []) => {
+  if (catalogId === 'destaques_itens') {
+    return upsertValoresCampos(catalogId, { destaques: values });
+  }
+  if (catalogId === 'oportunidades_itens') {
+    return upsertValoresCampos(catalogId, { oportunidades: values });
+  }
+  if (catalogId === 'apontamentos_itens') {
+    return upsertValoresCampos(catalogId, { apontamentos: values });
+  }
+  throw new Error('catalogId inválido para upsertFeedbackCatalogConfig');
+};
+
+export const upsertQaTrophyConfig = async (payload = {}) =>
+  upsertValoresCampos('qa_trophy_config', payload);
+
+/** Catálogo de troféus QA (array `trophies` em valores_campos id qa_trophies_catalog). */
+export const upsertQaTrophiesCatalog = async (trophies = []) =>
+  upsertValoresCampos('qa_trophies_catalog', { trophies });
+
+/** Gera corpo do e-mail via Gemini (Skynet). Body: feedbackType, colaboradorNome, avaliador, campos por tipo, recomendacoesTexto. */
+export const gerarQaFeedback = async (payload) => {
+  const response = await gptAPI.post('/qa-feedback/gerar', payload, { timeout: 120000 });
+  return response.data;
+};
+
+/** Persiste em console_analises.qa_feedback. */
+export const salvarQaFeedback = async (doc) => {
+  const response = await gptAPI.post('/qa-feedback', doc);
+  return response.data;
+};
+
+/** Grava em academy_registros.atendimento_trophies (quadro Excelência do Atendimento na Academy). */
+export const salvarAtendimentoTrophy = async (payload) => {
+  const response = await gptAPI.post('/atendimento-trophy', payload);
+  return response.data;
+};
+
+/** XP total concedido (matriz classe → pontos); query por e-mail ou nome do colaborador. */
+export const getAtendimentoTrophyXpTotal = async ({ email, colaboradorNome } = {}) => {
+  const response = await gptAPI.get('/atendimento-trophy/xp-total', {
+    params: {
+      ...(email ? { email: String(email).trim() } : {}),
+      ...(colaboradorNome != null && String(colaboradorNome).trim()
+        ? { colaboradorNome: String(colaboradorNome).trim() }
+        : {})
+    }
+  });
+  return response.data;
+};
 
 // 1. Listar todas as avaliações GPT
 export const getAvaliacoesGPT = async (avaliacaoId = null) => {
@@ -1329,6 +1476,50 @@ export const deleteFuncao = async (id) => {
     return response;
   } catch (error) {
     console.error('❌ Erro ao deletar função:', error);
+    throw error;
+  }
+};
+
+// ========================================
+// QA RESGATE ITEMS — qa_resgate_items
+// ========================================
+
+export const getQaResgateItems = async () => {
+  try {
+    const response = await qualidadeQaResgateItemsAPI.getAll();
+    return response;
+  } catch (error) {
+    console.error('❌ Erro ao listar resgates QA:', error);
+    throw error;
+  }
+};
+
+export const createQaResgateItem = async (payload) => {
+  try {
+    const response = await qualidadeQaResgateItemsAPI.create(payload);
+    return response;
+  } catch (error) {
+    console.error('❌ Erro ao criar item de resgate:', error);
+    throw error;
+  }
+};
+
+export const updateQaResgateItem = async (id, payload) => {
+  try {
+    const response = await qualidadeQaResgateItemsAPI.update(id, payload);
+    return response;
+  } catch (error) {
+    console.error('❌ Erro ao atualizar item de resgate:', error);
+    throw error;
+  }
+};
+
+export const deleteQaResgateItem = async (id) => {
+  try {
+    const response = await qualidadeQaResgateItemsAPI.delete(id);
+    return response;
+  } catch (error) {
+    console.error('❌ Erro ao remover item de resgate:', error);
     throw error;
   }
 };

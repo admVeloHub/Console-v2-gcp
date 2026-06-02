@@ -1,8 +1,31 @@
-// VERSION: v1.4.1 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
-import React, { useState } from 'react';
-import { Container, Box, Typography, Button, Card, CardContent } from '@mui/material';
-import { ArrowBack, People, Assessment } from '@mui/icons-material';
+// VERSION: v1.7.2 | DATE: 2026-04-30 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.7.2 - Hub: Container mt 2 (igual a QA e Monitoria) para alinhar altura do Voltar à sub-rota
+// CHANGELOG: v1.7.1 - Voltar: BackButton + VoltarHeaderRow (altura alinhada a QA e Monitoria)
+// CHANGELOG: v1.6.1 - Cards hub Qualidade (Funcionários, QA e Monitoria, Gerenciar): sem sombra; borda 1px azul opaco; hover mantido (::before + lift)
+// CHANGELOG: v1.6.0 - Card Gerenciar (ícone gerenciar.png) → /qualidade-gerenciar; grelha 3 colunas em md
+// CHANGELOG: v1.5.1 - Funcionários / QA e Monitoria: ícone sem moldura nem fundo colorido
+// CHANGELOG: v1.5.0 - Ícones dos cards: PNG em public/icons (qualidadeHubIconByModuleId)
+import React from 'react';
+import { Container, Box, Typography, Card, CardContent } from '@mui/material';
+import BackButton, { VoltarHeaderRow } from '../components/common/BackButton';
 import { useNavigate } from 'react-router-dom';
+import { qualidadeHubIconByModuleId } from '../config/dashboardCardIcons';
+
+/** Cards do hub — mesmo contorno sem elevação; sem animação/translação ao hover (tema global MuiCard). */
+const QUALIDADE_HUB_CARD_SX = {
+  cursor: 'pointer',
+  backgroundColor: 'var(--cor-card)',
+  borderRadius: '6px',
+  border: '1px solid var(--blue-dark)',
+  boxShadow: 'none',
+  transition: 'none',
+  overflow: 'hidden',
+  '&:hover': {
+    transform: 'none',
+    boxShadow: 'none',
+    borderColor: 'var(--blue-dark)',
+  },
+};
 
 const QualidadePage = () => {
   const navigate = useNavigate();
@@ -12,91 +35,39 @@ const QualidadePage = () => {
       navigate('/funcionarios');
     } else if (moduleId === 'qualidade') {
       navigate('/qualidade-module');
+    } else if (moduleId === 'gerenciar') {
+      navigate('/qualidade-gerenciar');
     }
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4.8, mb: 6.4, pb: 3.2, position: 'relative' }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', position: 'relative', mb: 3.2 }}>
-        <Button
-          variant="outlined"
-          startIcon={<ArrowBack />}
-          onClick={() => navigate('/')}
-          sx={{
-            color: 'var(--blue-dark)',
-            borderColor: 'var(--blue-dark)',
-            fontFamily: 'Poppins',
-            fontWeight: 500,
-            fontSize: '0.8rem',
-            py: 0.4,
-            px: 1.2,
-            '&:hover': {
-              backgroundColor: 'var(--blue-light)',
-              color: 'var(--white)',
-              borderColor: 'var(--blue-light)'
-            }
-          }}
-        >
-          Voltar
-        </Button>
-      </Box>
+    <Container maxWidth="lg" sx={{ mt: 2, mb: 6.4, pb: 3.2, position: 'relative' }}>
+      <VoltarHeaderRow left={<BackButton to="/" />} />
 
       {/* Cards dos módulos */}
       <Box sx={{ 
         display: 'grid', 
-        gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, 
+        gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, 
         gap: 3.2,
-        maxWidth: '800px',
+        maxWidth: '1100px',
         mx: 'auto'
       }}>
         {/* Card Funcionários */}
-        <Card
-          onClick={() => handleModuleClick('funcionarios')}
-          className="velohub-card"
-          sx={{
-            cursor: 'pointer',
-            backgroundColor: 'var(--cor-card)',
-            borderRadius: '12.8px',
-            border: '1px solid rgba(22, 52, 255, 0.1)',
-            boxShadow: '0 3.2px 16px rgba(0, 0, 0, 0.1)',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            position: 'relative',
-            overflow: 'hidden',
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              height: '3.2px',
-              background: 'linear-gradient(90deg, var(--blue-dark), var(--blue-light))',
-              transform: 'scaleX(0)',
-              transformOrigin: 'left',
-              transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-            },
-            '&:hover::before': {
-              transform: 'scaleX(1)'
-            },
-            '&:hover': {
-              transform: 'translateY(-9.6px) scale(1.02)',
-              boxShadow: '0 16px 32px rgba(0, 0, 0, 0.15)',
-              borderColor: 'var(--blue-light)'
-            }
-          }}
-        >
+        <Card onClick={() => handleModuleClick('funcionarios')} sx={QUALIDADE_HUB_CARD_SX}>
           <CardContent sx={{ p: 3.2, height: '160px', display: 'flex', alignItems: 'center' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.4, width: '100%' }}>
-              <Box sx={{
-                p: 1.6,
-                borderRadius: '9.6px',
-                backgroundColor: 'var(--blue-light)',
-                color: 'var(--white)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <People sx={{ fontSize: 25.6 }} />
-              </Box>
+              <Box
+                component="img"
+                src={qualidadeHubIconByModuleId.funcionarios}
+                alt="Funcionários"
+                sx={{
+                  width: 48,
+                  height: 48,
+                  objectFit: 'contain',
+                  display: 'block',
+                  flexShrink: 0,
+                }}
+              />
               <Box sx={{ flex: 1 }}>
                 <Typography variant="h5" sx={{ 
                   fontFamily: 'Poppins', 
@@ -121,53 +92,21 @@ const QualidadePage = () => {
         </Card>
 
         {/* Card Módulo de Qualidade */}
-        <Card
-          onClick={() => handleModuleClick('qualidade')}
-          className="velohub-card"
-          sx={{
-            cursor: 'pointer',
-            backgroundColor: 'var(--cor-card)',
-            borderRadius: '12.8px',
-            border: '1px solid rgba(22, 52, 255, 0.1)',
-            boxShadow: '0 3.2px 16px rgba(0, 0, 0, 0.1)',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            position: 'relative',
-            overflow: 'hidden',
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              height: '3.2px',
-              background: 'linear-gradient(90deg, var(--blue-dark), var(--blue-light))',
-              transform: 'scaleX(0)',
-              transformOrigin: 'left',
-              transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-            },
-            '&:hover::before': {
-              transform: 'scaleX(1)'
-            },
-            '&:hover': {
-              transform: 'translateY(-9.6px) scale(1.02)',
-              boxShadow: '0 16px 32px rgba(0, 0, 0, 0.15)',
-              borderColor: 'var(--blue-light)'
-            }
-          }}
-        >
+        <Card onClick={() => handleModuleClick('qualidade')} sx={QUALIDADE_HUB_CARD_SX}>
           <CardContent sx={{ p: 3.2, height: '160px', display: 'flex', alignItems: 'center' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.4, width: '100%' }}>
-              <Box sx={{
-                p: 1.6,
-                borderRadius: '9.6px',
-                backgroundColor: 'var(--blue-dark)',
-                color: 'var(--white)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <Assessment sx={{ fontSize: 25.6 }} />
-              </Box>
+              <Box
+                component="img"
+                src={qualidadeHubIconByModuleId.qualidade}
+                alt="QA e Monitoria"
+                sx={{
+                  width: 48,
+                  height: 48,
+                  objectFit: 'contain',
+                  display: 'block',
+                  flexShrink: 0,
+                }}
+              />
               <Box sx={{ flex: 1 }}>
                 <Typography variant="h5" sx={{ 
                   fontFamily: 'Poppins', 
@@ -185,6 +124,40 @@ const QualidadePage = () => {
                   fontSize: '0.8rem'
                 }}>
                   Avaliações de Atendimento
+                </Typography>
+              </Box>
+            </Box>
+          </CardContent>
+        </Card>
+
+        {/* Card Gerenciar */}
+        <Card onClick={() => handleModuleClick('gerenciar')} sx={QUALIDADE_HUB_CARD_SX}>
+          <CardContent sx={{ p: 3.2, height: '160px', display: 'flex', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.4, width: '100%' }}>
+              <Box
+                component="img"
+                src={qualidadeHubIconByModuleId.gerenciar}
+                alt="Gerenciar"
+                sx={{
+                  width: 48,
+                  height: 48,
+                  objectFit: 'contain',
+                  display: 'block',
+                  flexShrink: 0,
+                }}
+              />
+              <Box sx={{ flex: 1 }}>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontFamily: 'Poppins',
+                    fontWeight: 700,
+                    color: 'var(--blue-dark)',
+                    mb: 0,
+                    fontSize: '1.28rem',
+                  }}
+                >
+                  Gerenciar
                 </Typography>
               </Box>
             </Box>

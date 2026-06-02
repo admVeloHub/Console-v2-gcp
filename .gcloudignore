@@ -1,6 +1,6 @@
 # .gcloudignore
 # Arquivos ignorados pelo Cloud Build
-# VERSION: v1.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+# VERSION: v1.0.1 | DATE: 2026-04-28 | AUTHOR: VeloHub Development Team
 
 # Dependências (serão instaladas no build)
 node_modules/
@@ -43,7 +43,6 @@ coverage/
 # Outros projetos
 Capacity_final/
 quality original/
-VeloInsights/
 
 # Vercel
 .vercel/

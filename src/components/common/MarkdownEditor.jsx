@@ -652,7 +652,7 @@ const MarkdownEditor = ({
       selectedImage.style.maxWidth = '100%';
       selectedImage.style.display = 'block';
       selectedImage.style.margin = '10px 0';
-      selectedImage.style.borderRadius = '8px';
+      selectedImage.style.borderRadius = '4px';
 
       // Atualizar o atributo style do elemento no HTML do Quill
       // Isso garante que os estilos sejam preservados quando o Quill sincronizar
@@ -879,7 +879,7 @@ const MarkdownEditor = ({
               height: 'auto',
               display: 'block',
               margin: '10px 0',
-              borderRadius: '8px',
+              borderRadius: '4px',
               cursor: 'pointer',
               '&:hover': {
                 opacity: 0.8
@@ -1114,7 +1114,7 @@ const MarkdownEditor = ({
         }}
         sx={{
           '& .MuiPaper-root': {
-            borderRadius: '8px',
+            borderRadius: '4px',
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
             minWidth: '120px'
           }

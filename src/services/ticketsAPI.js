@@ -1,4 +1,5 @@
-// VERSION: v1.0.0 | DATE: 2024-12-19 | AUTHOR: VeloHub Development Team
+// VERSION: v1.0.1 | DATE: 2026-04-30 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.0.1 - Comentário: tipo gestaoQa (Gestão direcionada a QA)
 // Serviço de API para Chamados Internos - Integração com backend real
 
 import api from './api';
@@ -50,7 +51,7 @@ export const ticketsAPI = {
   /**
    * Criar ticket de gestão
    * POST /api/support/tk-gestao
-   * Para gêneros: Gestão, RH e Financeiro, Facilities
+   * Para gêneros: Gestão (incl. direcionamento qa → visibilidade gestaoQa), RH e Financeiro, Facilities
    */
   createGestao: async (data) => {
     try {

@@ -1,4 +1,55 @@
-// VERSION: v1.36.1 | DATE: 2026-04-10 | AUTHOR: VeloHub Development Team
+// VERSION: v1.47.3 | DATE: 2026-06-02 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.47.3 - Tipos de feedback: só flag Auditoria (sem bypass por papel Administrador)
+// CHANGELOG: v1.47.2 - Envio de Feedback: só Avaliador → Elogio; Auditoria → Elogio + Oportunidade + Apontamento
+// CHANGELOG: v1.47.1 - Conceder troféu: tampão opaco «Em desenvolvimento» sobre o quadro (bloqueia interação)
+// CHANGELOG: v1.47.0 - Envio de Feedback: Monitor só Elogio; Oportunidade/Apontamento só auditoria ou relatórios gestão (config)
+// CHANGELOG: v1.46.9 - Filtros avançados da lista de avaliações: Colaborador com Autocomplete e busca por digitação
+// CHANGELOG: v1.46.8 - Modal Nova Avaliação: Colaborador com Autocomplete e filtro ao digitar (alinhado à aba Feedback)
+// CHANGELOG: v1.46.7 - Modal Nova Avaliação (ticket): mesma área de «Critérios de Avaliação» da ligação + divisor entre métricas positivas e detratoras (evita mistura com dados do atendimento)
+// CHANGELOG: v1.46.6 - Modal Nova Avaliação: FormControl Avaliador com size="small" (alinha label/Select ao Colaborador); floating label shrink mantido nos dois (MUI + displayEmpty)
+// CHANGELOG: v1.46.5 - Modal Nova Avaliação: Select colaborador/avaliador sem texto “Selecione” no campo (evita sobreposição com label); label com shrink; campo Ticket sem placeholder
+// CHANGELOG: v1.46.3 - Relatório Individual: filtros com wrap mais compacto (alignContent, gaps, ml:auto em vez de space-between)
+// CHANGELOG: v1.46.2 - Feedback Relatório Individual: cartão de filtros à parte do cartão de stats/XP; filtros com padding inferior reduzido (sem «vácuo»)
+// CHANGELOG: v1.46.1 - Feedback: XP Excelência ao lado do título «Resultados para…» (stats); filtros sem XP e menos espaço vertical
+// CHANGELOG: v1.45.0 - Conceder troféu: pré-visualização em coluna (título/legenda/XP + imagem ampla); Enviar → POST atendimento-trophy (academy_registros)
+// CHANGELOG: v1.44.3 - Cabeçalho: VoltarHeaderRow (Sx partilhado com resto do projeto); referência mantida para alinhamento do Voltar
+// CHANGELOG: v1.44.2 - Voltar: navegar para /qualidade (hub do módulo), alinhado a Funcionários/Gerenciar; evita default BackButton '/' (home)
+// CHANGELOG: v1.44.1 - Correção JSX card Conceder troféu (CardContent + título) após ajuste de hover
+// CHANGELOG: v1.44.0 - Cards: neutralizar hover do MuiCard do tema (sem translate/sombra extra) em todas as vistas
+// CHANGELOG: v1.42.1 - Padronização global de border-radius (cards/containers 6px; botões/áreas secundárias 4px; troca seletor lista)
+// CHANGELOG: v1.42.0 - Feedback: catálogos por ids fixos (destaques_itens/oportunidades_itens/apontamentos_itens); campo Oportunidades por lista
+// CHANGELOG: v1.41.1 - Relatório Individual: 2.ª linha de cards = Melhor Média, Pior Média, Melhor Nota Ligação, Melhor Nota Ticket (dados em qualidade.js gerarRelatorioAgente)
+// CHANGELOG: v1.41.0 - Envio de Feedback: Gerar entre Recomendações e Feedback Gerado; Gerar e Enviar cada um à direita na sua linha
+// CHANGELOG: v1.40.9 - Envio de Feedback: botão Enviar alinhado à direita do container (Gerar à esquerda)
+// CHANGELOG: v1.40.8 - Destaques/Apontamentos/Recomendações: removidos helperText e noOptionsText/placeholder explicativos
+// CHANGELOG: v1.40.7 - Bloco relatorio+feedback: grid 70% Envio de Feedback + 30% sidebar “Conceder troféu”; mesma altura (row)
+// CHANGELOG: v1.40.6 - Envio de Feedback: tipo/mês/ano com largura contida (não 33% fullWidth cada)
+// CHANGELOG: v1.40.5 - Envio de Feedback: sem linhas com nome; modal Nova/Editar: colaborador/avaliador com Select (valor fechado = “selecionado”, sem o nome) + avaliador com função = só lógica (nomeAvaliadorLogado) — submit inalterado
+// CHANGELOG: v1.40.4 - Destaques e Apontamentos: multi-seleção (catálogos QA); API envia arrays (Skynet junta com "; ")
+// CHANGELOG: v1.40.3 - Recomendações: multi-select (Academy) em vez de texto preenchido automaticamente
+// CHANGELOG: v1.40.2 - nomeColaboradorFeedback: só relatorioAgente.colaboradorNome (sem fallback a selectedColaborador)
+// CHANGELOG: v1.40.1 - Envio de Feedback: sem campo Colaborador (usa colaborador do Relatório Individual); card só com relatório já gerado; colaboradorNome = relatorioAgente
+// CHANGELOG: v1.40.0 - Aba Feedback: formulário Envio de Feedback (tipos Elogio/Oportunidade/Apontamento, catálogos API, recomendações Academy, Gerar IA, Enviar → qa_feedback)
+// CHANGELOG: v1.39.8 - Abas: primeira "Avaliações"; ex-Relatório do Agente → "Feedback"; Card "Envio de Feedback" só na aba Feedback (value relatorio-agente)
+// CHANGELOG: v1.39.7 - Rodapé do módulo: container Card com título "feedback"
+// CHANGELOG: v1.39.6 - Aba e título da listagem: rótulo "Feedback" (antes "Avaliações")
+// CHANGELOG: v1.39.5 - Gráfico Histórico: legenda "Média mensal" (notaReal = média aritmética do mês, ligação + ticket + IA quando aplicável)
+// CHANGELOG: v1.39.4 - Relatório do Agente: colaborador com Autocomplete + filtro ao digitar (alinhado ao modal Nova Avaliação)
+// CHANGELOG: v1.39.3 - Lista avaliações: ordenar por data de atendimento (dataLigacao / dataChamado), mais recente primeiro; posição "todos" exibe ligação + ticket
+// CHANGELOG: v1.39.2 - Tabela: coluna Áudio com chip 'Ticket' em avaliações de ticket (N/A áudio)
+// CHANGELOG: v1.39.1 - Filtro tipo lista: mesma peça visual do modal (Ligação + trilha/thumb 3 posições + Ticket), não ToggleButtonGroup
+// CHANGELOG: v1.39.0 - Aba Avaliações: seletor 3 posições (Ligações | todos | Tickets) após título; padrão = todos
+// CHANGELOG: v1.38.0 - Ticket: critérios com nomes PascalCase (FONTE LISTA_SCHEMAS / backend)
+// CHANGELOG: v1.37.0 - Ticket: critérios em chaves pos*/neg*; exclusão e persistência alinhados a qualidade_ticket_avaliacoes; switch reseta o outro conjunto
+// CHANGELOG: v1.36.10 - Ticket: grid aditivos + célula vazia se ímpar; detratoras só na linha seguinte + célula vazia se ímpar (padrão ligação)
+// CHANGELOG: v1.36.9 - Ticket: removidos títulos seção Métricas Avaliativas / Métricas Detratoras
+// CHANGELOG: v1.36.8 - Critérios e pontuações distintas para tipo ticket (Métricas Positivas / Detratoras)
+// CHANGELOG: v1.36.7 - Campo Colaborador (modal avaliação): Autocomplete com filtro ao digitar (ligação e ticket)
+// CHANGELOG: v1.36.6 - Modo Ticket: rótulos Data do Chamado + Ticket nº (numérico); ligação mantém data/hora
+// CHANGELOG: v1.36.5 - Removido carácter ↔ no cabeçalho; só título + Ligação / switch / Ticket
+// CHANGELOG: v1.36.4 - Cabeçalho modal: "Nova Avaliação" primeiro; depois Ligação ↔ Ticket (switch)
+// CHANGELOG: v1.36.3 - Modal avaliação: título à esquerda como antes; switch imediatamente à frente do título (sem empurrar à direita)
+// CHANGELOG: v1.36.2 - Modal Nova/Editar Avaliação: switch Ligação / Ticket; campo tipoAvaliacao no envio
 // CHANGELOG: v1.36.1 - Release push GitHub 2026-04-10
 // CHANGELOG: v1.36.0 - Status IA: somente campo qualidade_avaliacoes.avaliacaoIA (sem GET audio_analise_results na tabela)
 // CHANGELOG: v1.35.0 - Status IA na lista: um GET em lote (results-por-avaliacoes) por página; fallback concorrência 2 se o lote falhar
@@ -50,11 +101,14 @@ import {
   Alert,
   Snackbar,
   LinearProgress,
+  CircularProgress,
   Avatar,
   Divider,
   TablePagination,
-  Tooltip
+  Tooltip,
+  Switch
 } from '@mui/material';
+import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete';
 import { 
   Add, 
   EditNote,
@@ -85,8 +139,16 @@ import {
   getFuncionarios,
   getFuncoes,
   gerarRelatorioAgente,
-  gerarRelatorioGestao
+  gerarRelatorioGestao,
+  getValoresCampoQa,
+  listValoresCampos,
+  gerarQaFeedback,
+  salvarQaFeedback,
+  salvarAtendimentoTrophy,
+  getAtendimentoTrophyXpTotal
 } from '../services/qualidadeAPI';
+import { cursosConteudoAPI } from '../services/academyAPI';
+import { getTrophyMediabankDisplayUrl } from '../services/uploadAPI';
 import { exportAvaliacoesToExcel, exportAvaliacoesToPDF, exportAnaliseIAToXLSX } from '../services/qualidadeExport';
 import { analyzeCallWithGPT } from '../services/gptService';
 import { getAvaliadoresValidos } from '../services/userService';
@@ -110,7 +172,247 @@ import AnaliseGPTAccordion from '../components/qualidade/AnaliseGPTAccordion';
 import DetalhesAnaliseModal from '../components/qualidade/DetalhesAnaliseModal';
 import { uploadAudioParaAnalise, listarAnalisesPorColaborador } from '../services/qualidadeAudioService';
 import { useAuth } from '../contexts/AuthContext';
-import BackButton from '../components/common/BackButton';
+import BackButton, { VoltarHeaderRow } from '../components/common/BackButton';
+
+const CRITERIOS_TICKET_POSITIVOS = [
+  { key: 'ProducaoTexto', label: 'Produção de texto', pontos: 15, isPositive: true },
+  { key: 'ClarezaObjetividade', label: 'Clareza e objetividade', pontos: 15, isPositive: true },
+  { key: 'BoaResolucaoProcedimento', label: 'Boa resolução / procedimento', pontos: 30, isPositive: true },
+  { key: 'AderenciaEstruturaResposta', label: 'Aderência e estrutura da resposta', pontos: 15, isPositive: true },
+  { key: 'Tabulacao', label: 'Tabulação', pontos: 25, isPositive: true }
+];
+
+const CRITERIOS_TICKET_DETRATORES = [
+  { key: 'PassouPrazoResposta', label: 'Passou do prazo de resposta', pontos: -30, isPositive: false },
+  { key: 'RepassouProcedimentoIncorreto', label: 'Repassou procedimento incorreto', pontos: -100, isPositive: false },
+  { key: 'NaoUtilizouBotApoio', label: 'Não utilização do bot de apoio', pontos: -10, isPositive: false }
+];
+
+const CAMPOS_CRITERIO_LIGACAO = [
+  'saudacaoAdequada',
+  'escutaAtiva',
+  'clarezaObjetividade',
+  'resolucaoQuestao',
+  'registroAtendimento',
+  'empatiaCordialidade',
+  'direcionouPesquisa',
+  'naoConsultouBot',
+  'conformidadeTicket',
+  'procedimentoIncorreto',
+  'encerramentoBrusco'
+];
+const CAMPOS_CRITERIO_TICKET = [
+  'ProducaoTexto',
+  'ClarezaObjetividade',
+  'BoaResolucaoProcedimento',
+  'AderenciaEstruturaResposta',
+  'Tabulacao',
+  'PassouPrazoResposta',
+  'RepassouProcedimentoIncorreto',
+  'NaoUtilizouBotApoio'
+];
+
+/** Catálogo qa_trophies_catalog — alinhado a QualidadeGerenciarPage (lista + fallback qa_trophy_config). */
+const QA_TROPHY_XP_OPTS = ['Baixo', 'Normal', 'Alto', 'Especial'];
+
+const normalizeTrophyXpClassForRow = (raw) => {
+  if (raw == null || raw === '') return 'Normal';
+  const s = String(raw).trim();
+  if (QA_TROPHY_XP_OPTS.includes(s)) return s;
+  const n = Number(raw);
+  if (Number.isFinite(n)) {
+    const idx = Math.max(0, Math.min(QA_TROPHY_XP_OPTS.length - 1, Math.round(n)));
+    return QA_TROPHY_XP_OPTS[idx];
+  }
+  return 'Normal';
+};
+
+const mapQaCatalogRow = (raw) => ({
+  id: String(raw?.id || '').trim(),
+  conquista_titulo: raw?.conquista_titulo != null ? String(raw.conquista_titulo) : '',
+  conquista_legenda: raw?.conquista_legenda != null ? String(raw.conquista_legenda) : '',
+  trophy_url: raw?.trophy_url != null ? String(raw.trophy_url).trim() : '',
+  xpClass: normalizeTrophyXpClassForRow(raw?.xpClass)
+});
+
+const buildQaTrophiesListFromValoresDocs = (docsById) => {
+  const catalogDoc = docsById?.qa_trophies_catalog;
+  let rows = Array.isArray(catalogDoc?.trophies)
+    ? catalogDoc.trophies.map(mapQaCatalogRow).filter((row) => row.id)
+    : [];
+  if (rows.length === 0) {
+    const leg = docsById?.qa_trophy_config;
+    if (leg && (leg.trophy_url || leg.conquista_titulo)) {
+      rows = [
+        mapQaCatalogRow({
+          id: 'legacy-qa-trophy-config',
+          conquista_titulo: leg.conquista_titulo,
+          conquista_legenda: leg.conquista_legenda,
+          xpClass: leg.xpClass,
+          trophy_url: leg.trophy_url
+        })
+      ];
+    }
+  }
+  return rows;
+};
+
+/** Ocupador invisível da 2ª coluna (md) quando a linha tem só um cartão — alinhado ao modal ligação */
+const GridCelulaVaziaQualidade = () => (
+  <Grid item xs={12} md={6}>
+    <Box sx={{ p: 2, visibility: 'hidden' }}>
+      <Typography variant="body1" sx={{ fontFamily: 'Poppins', fontWeight: 500 }}>
+        Espaço vazio
+      </Typography>
+    </Box>
+  </Grid>
+);
+
+const renderCardCriterio = (criterio, formData, setFormData) => (
+  <Grid item xs={12} md={6} key={criterio.key}>
+    <Box
+      className="avaliacao-criterio-card"
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        p: 1.6,
+        border: criterio.isPositive
+          ? formData[criterio.key]
+            ? '1px solid rgba(22, 148, 255, 0.75)'
+            : '1px solid rgba(22, 148, 255, 0.5)'
+          : formData[criterio.key]
+            ? '1px solid #EF4444'
+            : '1px solid rgba(255, 193, 7, 0.6)',
+        borderRadius: '4px',
+        backgroundColor: 'var(--cor-card)'
+      }}
+    >
+      <Box>
+        <Typography
+          variant="body1"
+          sx={{ fontFamily: 'Poppins', fontWeight: 500, fontSize: '0.8rem', color: '#000000' }}
+        >
+          {criterio.label}
+        </Typography>
+        <Typography
+          variant="body2"
+          className={criterio.pontos > 0 ? 'pontuacao-positiva' : 'pontuacao-negativa'}
+          sx={{
+            fontFamily: 'Poppins',
+            color: criterio.pontos > 0 ? '#006AB9' : '#D32F2F',
+            fontSize: '0.8rem'
+          }}
+        >
+          {criterio.pontos > 0 ? `+${criterio.pontos} pontos` : `${criterio.pontos} pontos`}
+        </Typography>
+      </Box>
+      <Button
+        variant="outlined"
+        size="small"
+        className={`${criterio.isPositive ? 'checkbox-positivo' : 'checkbox-negativo'} ${
+          formData[criterio.key] ? 'checkbox-selecionado' : ''
+        }`}
+        onClick={() => setFormData({ ...formData, [criterio.key]: !formData[criterio.key] })}
+        sx={{
+          minWidth: '22.4px',
+          width: '22.4px',
+          height: '22.4px',
+          border: criterio.isPositive
+            ? formData[criterio.key]
+              ? '2px solid rgba(22, 148, 255, 0.75)'
+              : '1px solid rgba(22, 148, 255, 0.5)'
+            : formData[criterio.key]
+              ? '2px solid #EF4444'
+              : '1px solid rgba(255, 193, 7, 0.6)',
+          backgroundColor: criterio.isPositive
+            ? formData[criterio.key]
+              ? '#000058'
+              : 'transparent'
+            : formData[criterio.key]
+              ? '#EF4444'
+              : 'transparent',
+          borderRadius: '4px',
+          '&:hover': {
+            backgroundColor: criterio.isPositive
+              ? formData[criterio.key]
+                ? '#000040'
+                : 'rgba(22, 148, 255, 0.1)'
+              : formData[criterio.key]
+                ? '#DC2626'
+                : 'rgba(255, 193, 7, 0.1)',
+            borderColor: criterio.isPositive ? 'rgba(22, 148, 255, 0.75)' : '#EF4444'
+          }
+        }}
+      >
+        {formData[criterio.key] && <CheckCircle sx={{ color: '#ffffff', fontSize: '11.2px' }} />}
+      </Button>
+    </Box>
+  </Grid>
+);
+
+function CriteriosModalTicket({ formData, setFormData }) {
+  const nAditivos = CRITERIOS_TICKET_POSITIVOS.length;
+  const nDetratoras = CRITERIOS_TICKET_DETRATORES.length;
+
+  return (
+    <>
+      {CRITERIOS_TICKET_POSITIVOS.map((c) => renderCardCriterio(c, formData, setFormData))}
+      {nAditivos % 2 === 1 ? <GridCelulaVaziaQualidade /> : null}
+      <Grid item xs={12}>
+        <Divider sx={{ my: 0.4, borderColor: 'rgba(0, 0, 88, 0.12)' }} />
+      </Grid>
+      {CRITERIOS_TICKET_DETRATORES.map((c) => renderCardCriterio(c, formData, setFormData))}
+      {nDetratoras % 2 === 1 ? <GridCelulaVaziaQualidade /> : null}
+    </>
+  );
+}
+
+/** Lista de opções (módulos e temas) a partir de cursos_conteudo (ativos), única e ordenada. v1.1.0 */
+function buildListaRecomendacoesFromCursos(cursos) {
+  const set = new Set();
+  if (!Array.isArray(cursos)) return [];
+  cursos
+    .filter((c) => c && c.isActive !== false)
+    .forEach((curso) => {
+      (curso.modules || [])
+        .filter((m) => m && m.isActive !== false)
+        .forEach((mod) => {
+          const mn = mod.moduleNome || mod.moduleId || '';
+          if (mn) set.add(`Módulo: ${mn}`);
+          (mod.sections || mod.secoes || [])
+            .filter((s) => s && s.isActive !== false)
+            .forEach((sec) => {
+              const tn = sec.temaNome || sec.temaId || '';
+              if (tn) set.add(`Tema: ${tn}`);
+            });
+        });
+    });
+  return [...set].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+}
+
+/** Mesma sombra no repouso e no hover — remove translate/sombra extra do tema MuiCard nesta página. */
+const QM_SHADOW_SM = '0 3.2px 16px rgba(0, 0, 0, 0.1)';
+const QM_SHADOW_LG = '0 4px 20px rgba(0, 0, 0, 0.1)';
+
+const qmCardSemHoverSomra = (sombra) => ({
+  transition: 'none',
+  boxShadow: sombra,
+  '&:hover': {
+    transform: 'none',
+    boxShadow: sombra
+  }
+});
+
+/** Cards métricas relatório: sem sombra tema; apenas borda/gradientes locais */
+const QM_METRICA_SEM_HOVER = {
+  transition: 'none',
+  boxShadow: 'none',
+  '&:hover': {
+    transform: 'none',
+    boxShadow: 'none'
+  }
+};
 
 const QualidadeModulePage = () => {
   const navigate = useNavigate();
@@ -163,9 +465,21 @@ const QualidadeModulePage = () => {
     conformidadeTicket: false,         // NOVO critério detrator
     procedimentoIncorreto: false,
     encerramentoBrusco: false,
+    ProducaoTexto: false,
+    ClarezaObjetividade: false,
+    BoaResolucaoProcedimento: false,
+    AderenciaEstruturaResposta: false,
+    Tabulacao: false,
+    PassouPrazoResposta: false,
+    RepassouProcedimentoIncorreto: false,
+    NaoUtilizouBotApoio: false,
     observacoes: '',
     dataLigacao: '',
-    horaLigacao: ''
+    horaLigacao: '',
+    /** Número do ticket (só quando tipoAvaliacao === 'ticket') */
+    numeroTicket: '',
+    /** 'ligacao' | 'ticket' — avaliação de ligação telefónica vs ticket */
+    tipoAvaliacao: 'ligacao'
   });
   
   // Estados de UI
@@ -183,6 +497,30 @@ const QualidadeModulePage = () => {
   const [relatorioAgente, setRelatorioAgente] = useState(null);
   const [relatorioGestao, setRelatorioGestao] = useState(null);
 
+  // Formulário Envio de Feedback (aba Feedback)
+  const [fbTipo, setFbTipo] = useState('Elogio');
+  const [fbDestaquesSelecionados, setFbDestaquesSelecionados] = useState([]);
+  const [fbObservacoesIndiv, setFbObservacoesIndiv] = useState('');
+  const [fbOportunidadesSelecionadas, setFbOportunidadesSelecionadas] = useState([]);
+  const [fbObservacao, setFbObservacao] = useState('');
+  const [fbApontamentosSelecionados, setFbApontamentosSelecionados] = useState([]);
+  const [opcoesQaDestaques, setOpcoesQaDestaques] = useState([]);
+  const [opcoesQaOportunidades, setOpcoesQaOportunidades] = useState([]);
+  const [opcoesQaApontamentos, setOpcoesQaApontamentos] = useState([]);
+  const [opcoesRecomendacoesAcademy, setOpcoesRecomendacoesAcademy] = useState([]);
+  const [fbRecomendacoesSelecionadas, setFbRecomendacoesSelecionadas] = useState([]);
+  const [fbFeedbackGerado, setFbFeedbackGerado] = useState('');
+  const [fbMes, setFbMes] = useState(MESES[new Date().getMonth()]);
+  const [fbAno, setFbAno] = useState(new Date().getFullYear());
+  const [fbGerando, setFbGerando] = useState(false);
+  const [fbSalvando, setFbSalvando] = useState(false);
+  const [qaTrophiesConcederLista, setQaTrophiesConcederLista] = useState([]);
+  const [concederTrofeuId, setConcederTrofeuId] = useState('');
+  const [concederTrofeusCatalogLoading, setConcederTrofeusCatalogLoading] = useState(false);
+  const [concederTrofeuEnviando, setConcederTrofeuEnviando] = useState(false);
+  const [xpExcelenciaTotal, setXpExcelenciaTotal] = useState(0);
+  const [xpExcelenciaLoading, setXpExcelenciaLoading] = useState(false);
+
   // Estados para Análise GPT
   const [filtrosGPT, setFiltrosGPT] = useState({
     colaborador: '',
@@ -196,17 +534,176 @@ const QualidadeModulePage = () => {
 
   const [avaliacoesPage, setAvaliacoesPage] = useState(0);
   const [avaliacoesRowsPerPage, setAvaliacoesRowsPerPage] = useState(25);
+  /** Filtro da lista: `todos` (ligações + tickets), só ligação ou só ticket */
+  const [seletorTipoListaAvaliacoes, setSeletorTipoListaAvaliacoes] = useState('todos');
   const carregarDadosSeqRef = useRef(0);
   const visibilityRecarregarTimerRef = useRef(null);
 
   /** Nome do avaliador na sessão (login grava em `nome`/`id`; cadastro Mongo usa `_userId`) */
   const nomeAvaliadorLogado = (user?.nome || user?._userId || user?.id || '').trim();
 
+  /**
+   * Tipos de feedback (config → Funções Administrativas, sem bypass de papel):
+   * - Avaliador (sem Auditoria): Elogio
+   * - Auditoria: Elogio + Oportunidade + Apontamento
+   */
+  const fbTiposDisponiveis = useMemo(() => {
+    const fa = user?._funcoesAdministrativas || {};
+    const isAuditor = fa.auditoria === true || fa.auditor === true;
+    if (isAuditor) {
+      return ['Elogio', 'Oportunidade', 'Apontamento'];
+    }
+    return ['Elogio'];
+  }, [user]);
+
   const opcoesAvaliadorModal = useMemo(() => {
     if (!nomeAvaliadorLogado) return avaliadores;
     if (avaliadores.includes(nomeAvaliadorLogado)) return avaliadores;
     return [nomeAvaliadorLogado, ...avaliadores];
   }, [avaliadores, nomeAvaliadorLogado]);
+
+  const filterOptionsColaborador = useMemo(
+    () =>
+      createFilterOptions({
+        ignoreAccents: true,
+        ignoreCase: true,
+        matchFrom: 'any',
+        limit: 200
+      }),
+    []
+  );
+
+  const filterOptionsQaValores = useMemo(
+    () =>
+      createFilterOptions({
+        ignoreAccents: true,
+        ignoreCase: true,
+        matchFrom: 'any',
+        limit: 200,
+        stringify: (option) => {
+          if (option == null) return '';
+          if (typeof option === 'string') return option;
+          return String(option.label || option.value || '');
+        }
+      }),
+    []
+  );
+
+  /** Nomes únicos para o Autocomplete; inclui valor atual na edição se ainda não estiver na lista */
+  const opcoesColaboradorModal = useMemo(() => {
+    const nomes = funcionarios
+      .map((f) => f.colaboradorNome || f.nomeCompleto)
+      .filter(Boolean);
+    const unique = [...new Set(nomes)].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    const v = (formData.colaboradorNome || '').trim();
+    if (v && !unique.includes(v)) {
+      return [v, ...unique];
+    }
+    return unique;
+  }, [funcionarios, formData.colaboradorNome]);
+
+  /** Opções do Autocomplete na aba Relatório do Agente (inclui valor selecionado ainda fora da lista) */
+  const opcoesColaboradorRelatorioAgente = useMemo(() => {
+    const nomes = funcionarios
+      .map((f) => f.colaboradorNome || f.nomeCompleto)
+      .filter(Boolean);
+    const unique = [...new Set(nomes)].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    const v = (selectedColaborador || '').trim();
+    if (v && !unique.includes(v)) {
+      return [v, ...unique];
+    }
+    return unique;
+  }, [funcionarios, selectedColaborador]);
+
+  /** Opções do Autocomplete nos filtros avançados da lista de avaliações */
+  const opcoesColaboradorFiltrosLista = useMemo(() => {
+    const nomes = funcionarios
+      .map((f) => f.colaboradorNome || f.nomeCompleto)
+      .filter(Boolean);
+    const unique = [...new Set(nomes)].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    const v = (filtros.colaborador || '').trim();
+    if (v && !unique.includes(v)) {
+      return [v, ...unique];
+    }
+    return unique;
+  }, [funcionarios, filtros.colaborador]);
+
+  /** Nome do colaborador alvo do feedback: só o documento do relatório individual (`colaboradorNome`). */
+  const nomeColaboradorFeedback = useMemo(
+    () => (relatorioAgente?.colaboradorNome || '').trim(),
+    [relatorioAgente]
+  );
+
+  /** Email do colaborador (cadastro funcionários), para gravar em atendimento_trophies.colaboradorEmail. */
+  const emailColaboradorFeedback = useMemo(() => {
+    const nome = nomeColaboradorFeedback;
+    if (!nome) return '';
+    const nLower = nome.trim().toLowerCase();
+    const f = funcionarios.find((x) => {
+      const cand = String(x.colaboradorNome || x.nomeCompleto || '').trim().toLowerCase();
+      return cand === nLower;
+    });
+    const em = f?.userMail || f?.email || '';
+    return String(em || '').trim().toLowerCase();
+  }, [funcionarios, nomeColaboradorFeedback]);
+
+  const fbRecomendacoesTexto = useMemo(
+    () => (fbRecomendacoesSelecionadas || []).map((s) => String(s).trim()).filter(Boolean).join('\n'),
+    [fbRecomendacoesSelecionadas]
+  );
+
+  const trofeuConcederSelecionado = useMemo(
+    () =>
+      concederTrofeuId
+        ? qaTrophiesConcederLista.find((t) => t.id === concederTrofeuId) || null
+        : null,
+    [qaTrophiesConcederLista, concederTrofeuId]
+  );
+
+  const concederTrofeuPodeEnviar = useMemo(
+    () =>
+      !!(relatorioAgente && nomeColaboradorFeedback && trofeuConcederSelecionado?.id),
+    [relatorioAgente, nomeColaboradorFeedback, trofeuConcederSelecionado]
+  );
+
+  const fbPodeGerar = useMemo(() => {
+    if (!relatorioAgente) return false;
+    if (!nomeAvaliadorLogado) return false;
+    if (!nomeColaboradorFeedback) return false;
+    if (fbTipo === 'Elogio') {
+      return !!(fbDestaquesSelecionados.length > 0 && (fbObservacoesIndiv || '').trim());
+    }
+    if (fbTipo === 'Oportunidade') {
+      return !!(
+        fbDestaquesSelecionados.length > 0 &&
+        fbOportunidadesSelecionadas.length > 0 &&
+        (fbObservacao || '').trim()
+      );
+    }
+    if (fbTipo === 'Apontamento') {
+      return !!(fbApontamentosSelecionados.length > 0 && (fbObservacao || '').trim());
+    }
+    return false;
+  }, [
+    relatorioAgente,
+    nomeAvaliadorLogado,
+    nomeColaboradorFeedback,
+    fbTipo,
+    fbDestaquesSelecionados,
+    fbObservacoesIndiv,
+    fbOportunidadesSelecionadas,
+    fbObservacao,
+    fbApontamentosSelecionados
+  ]);
+
+  const fbPodeEnviar = useMemo(() => {
+    if (!relatorioAgente) return false;
+    if (!nomeAvaliadorLogado) return false;
+    if (!nomeColaboradorFeedback) return false;
+    if (!fbMes || fbAno == null || fbAno === '') return false;
+    if (!(fbFeedbackGerado || '').trim()) return false;
+    return true;
+  }, [relatorioAgente, nomeAvaliadorLogado, nomeColaboradorFeedback, fbMes, fbAno, fbFeedbackGerado]);
 
   const avaliacoesFiltradas = useMemo(() => {
     const avaliacoesArray = Array.isArray(avaliacoes) ? avaliacoes : [];
@@ -270,8 +767,27 @@ const QualidadeModulePage = () => {
       });
     }
 
-    return filtrados;
-  }, [avaliacoes, filtros]);
+    if (seletorTipoListaAvaliacoes === 'ligacao') {
+      filtrados = filtrados.filter((a) => a.tipoAvaliacao !== 'ticket');
+    } else if (seletorTipoListaAvaliacoes === 'ticket') {
+      filtrados = filtrados.filter((a) => a.tipoAvaliacao === 'ticket');
+    }
+    // seletor 'todos': sem filtro de tipo (ligações + tickets)
+
+    const dataMs = (a) => {
+      const raw = a?.dataLigacao ?? a?.dataChamado;
+      if (raw) {
+        const t = new Date(raw).getTime();
+        if (!Number.isNaN(t)) return t;
+      }
+      if (a?.createdAt) {
+        const t = new Date(a.createdAt).getTime();
+        if (!Number.isNaN(t)) return t;
+      }
+      return 0;
+    };
+    return [...filtrados].sort((a, b) => dataMs(b) - dataMs(a));
+  }, [avaliacoes, filtros, seletorTipoListaAvaliacoes]);
 
   const avaliacoesPagina = useMemo(() => {
     const start = avaliacoesPage * avaliacoesRowsPerPage;
@@ -289,7 +805,8 @@ const QualidadeModulePage = () => {
     filtros.dataLigacaoFim,
     filtros.mes,
     filtros.ano,
-    filtros.status
+    filtros.status,
+    seletorTipoListaAvaliacoes
   ]);
 
   useEffect(() => {
@@ -365,6 +882,61 @@ const QualidadeModulePage = () => {
       }
     };
   }, [currentView, recarregarAvaliacoesDaApi]);
+
+  // Catálogos QA + recomendações (cursos_conteudo) — só com relatório individual já gerado
+  useEffect(() => {
+    if (currentView !== 'relatorio-agente' || !relatorioAgente) return;
+    let cancelled = false;
+    (async () => {
+      setConcederTrofeuId('');
+      setConcederTrofeusCatalogLoading(true);
+      setQaTrophiesConcederLista([]);
+      try {
+        const [dDest, dOport, dApon, cursos, valoresData] = await Promise.all([
+          getValoresCampoQa('destaques_itens'),
+          getValoresCampoQa('oportunidades_itens'),
+          getValoresCampoQa('apontamentos_itens'),
+          cursosConteudoAPI.getActive(),
+          listValoresCampos(false)
+        ]);
+        if (cancelled) return;
+        setOpcoesQaDestaques(
+          dDest?.success && Array.isArray(dDest.opcoes) ? dDest.opcoes : []
+        );
+        setOpcoesQaOportunidades(
+          dOport?.success && Array.isArray(dOport.opcoes) ? dOport.opcoes : []
+        );
+        setOpcoesQaApontamentos(
+          dApon?.success && Array.isArray(dApon.opcoes) ? dApon.opcoes : []
+        );
+        setOpcoesRecomendacoesAcademy(buildListaRecomendacoesFromCursos(cursos));
+        setFbRecomendacoesSelecionadas([]);
+        setFbDestaquesSelecionados([]);
+        setFbOportunidadesSelecionadas([]);
+        setFbApontamentosSelecionados([]);
+        const docs = Array.isArray(valoresData?.data) ? valoresData.data : [];
+        const docsById = docs.reduce((acc, doc) => {
+          if (doc?.id) acc[doc.id] = doc;
+          return acc;
+        }, {});
+        setQaTrophiesConcederLista(buildQaTrophiesListFromValoresDocs(docsById));
+      } catch (e) {
+        console.error('Envio de Feedback: catálogos/recomendações', e);
+        if (!cancelled) {
+          setSnackbar({
+            open: true,
+            message: 'Não foi possível carregar catálogos ou cursos para recomendações.',
+            severity: 'error'
+          });
+        }
+      } finally {
+        if (!cancelled) setConcederTrofeusCatalogLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentView, relatorioAgente]);
 
   // Limpar selectedColaborador quando funcionários carregam (para evitar cache de IDs)
   useEffect(() => {
@@ -466,38 +1038,82 @@ const QualidadeModulePage = () => {
       console.log('🔍 DEBUG - Editando avaliação:', avaliacao._id);
       
       const isAvaliador = user?._funcoesAdministrativas?.avaliador === true;
+      const ligaCriteriosFalsos = Object.fromEntries(
+        CAMPOS_CRITERIO_LIGACAO.map((k) => [k, false])
+      );
+      const ticketCriteriosFalsos = Object.fromEntries(
+        CAMPOS_CRITERIO_TICKET.map((k) => [k, false])
+      );
 
-      setFormData({
-        colaboradorNome: avaliacao.colaboradorNome || avaliacao.colaboradorNome,
-        avaliador: isAvaliador ? nomeAvaliadorLogado : (avaliacao.avaliador || ''),
-        mes: avaliacao.mes,
-        ano: avaliacao.ano,
-        saudacaoAdequada: avaliacao.saudacaoAdequada,
-        escutaAtiva: avaliacao.escutaAtiva,
-        clarezaObjetividade: Boolean(avaliacao.clarezaObjetividade),
-        resolucaoQuestao: avaliacao.resolucaoQuestao,
-        registroAtendimento: Boolean(avaliacao.registroAtendimento),
-        empatiaCordialidade: avaliacao.empatiaCordialidade,
-        direcionouPesquisa: avaliacao.direcionouPesquisa,
-        naoConsultouBot: Boolean(avaliacao.naoConsultouBot),
-        conformidadeTicket: Boolean(avaliacao.conformidadeTicket),
-        procedimentoIncorreto: avaliacao.procedimentoIncorreto,
-        encerramentoBrusco: avaliacao.encerramentoBrusco,
-        observacoes: avaliacao.observacoes || '',
-        dataLigacao: avaliacao.dataLigacao ? (avaliacao.dataLigacao.includes('T') ? avaliacao.dataLigacao.split('T')[0] : avaliacao.dataLigacao) : '',
-        horaLigacao: avaliacao.dataLigacao && avaliacao.dataLigacao.includes('T') 
-          ? avaliacao.dataLigacao.split('T')[1]?.substring(0, 5) || '' 
-          : '',
-        arquivoLigacao: null
-      });
-      
+      const toInputDate = (d) => {
+        if (d == null || d === '') return '';
+        const s = typeof d === 'string' ? d : new Date(d).toISOString();
+        return s.includes('T') ? s.split('T')[0] : s.slice(0, 10);
+      };
+
+      if (avaliacao.tipoAvaliacao === 'ticket') {
+        const dataRef = avaliacao.dataChamado ?? avaliacao.dataLigacao;
+        setFormData({
+          colaboradorNome: avaliacao.colaboradorNome || '',
+          avaliador: isAvaliador ? nomeAvaliadorLogado : (avaliacao.avaliador || ''),
+          mes: avaliacao.mes,
+          ano: avaliacao.ano,
+          ...ligaCriteriosFalsos,
+          ProducaoTexto: Boolean(avaliacao.ProducaoTexto),
+          ClarezaObjetividade: Boolean(avaliacao.ClarezaObjetividade),
+          BoaResolucaoProcedimento: Boolean(avaliacao.BoaResolucaoProcedimento),
+          AderenciaEstruturaResposta: Boolean(avaliacao.AderenciaEstruturaResposta),
+          Tabulacao: Boolean(avaliacao.Tabulacao),
+          PassouPrazoResposta: Boolean(avaliacao.PassouPrazoResposta),
+          RepassouProcedimentoIncorreto: Boolean(avaliacao.RepassouProcedimentoIncorreto),
+          NaoUtilizouBotApoio: Boolean(avaliacao.NaoUtilizouBotApoio),
+          observacoes: avaliacao.observacoes || '',
+          dataLigacao: toInputDate(dataRef),
+          horaLigacao: '',
+          numeroTicket: avaliacao.numeroTicket != null ? String(avaliacao.numeroTicket) : '',
+          arquivoLigacao: null,
+          tipoAvaliacao: 'ticket'
+        });
+      } else {
+        setFormData({
+          colaboradorNome: avaliacao.colaboradorNome || '',
+          avaliador: isAvaliador ? nomeAvaliadorLogado : (avaliacao.avaliador || ''),
+          mes: avaliacao.mes,
+          ano: avaliacao.ano,
+          saudacaoAdequada: avaliacao.saudacaoAdequada,
+          escutaAtiva: avaliacao.escutaAtiva,
+          clarezaObjetividade: Boolean(avaliacao.clarezaObjetividade),
+          resolucaoQuestao: avaliacao.resolucaoQuestao,
+          registroAtendimento: Boolean(avaliacao.registroAtendimento),
+          empatiaCordialidade: avaliacao.empatiaCordialidade,
+          direcionouPesquisa: avaliacao.direcionouPesquisa,
+          naoConsultouBot: Boolean(avaliacao.naoConsultouBot),
+          conformidadeTicket: Boolean(avaliacao.conformidadeTicket),
+          procedimentoIncorreto: avaliacao.procedimentoIncorreto,
+          encerramentoBrusco: avaliacao.encerramentoBrusco,
+          ...ticketCriteriosFalsos,
+          observacoes: avaliacao.observacoes || '',
+          dataLigacao: avaliacao.dataLigacao
+            ? (String(avaliacao.dataLigacao).includes('T')
+                ? String(avaliacao.dataLigacao).split('T')[0]
+                : String(avaliacao.dataLigacao).slice(0, 10))
+            : '',
+          horaLigacao:
+            avaliacao.dataLigacao && String(avaliacao.dataLigacao).includes('T')
+              ? String(avaliacao.dataLigacao).split('T')[1]?.substring(0, 5) || ''
+              : '',
+          numeroTicket: '',
+          arquivoLigacao: null,
+          tipoAvaliacao: 'ligacao'
+        });
+      }
     } else {
       setAvaliacaoEditando(null);
 
       setFormData({
         colaboradorNome: '',
         avaliador: nomeAvaliadorLogado,
-        mes: new Date().toLocaleDateString('pt-BR', { month: 'long' }).replace(/^\w/, c => c.toUpperCase()),
+        mes: new Date().toLocaleDateString('pt-BR', { month: 'long' }).replace(/^\w/, (c) => c.toUpperCase()),
         ano: new Date().getFullYear(),
         saudacaoAdequada: false,
         escutaAtiva: false,
@@ -510,10 +1126,20 @@ const QualidadeModulePage = () => {
         conformidadeTicket: false,
         procedimentoIncorreto: false,
         encerramentoBrusco: false,
+        ProducaoTexto: false,
+        ClarezaObjetividade: false,
+        BoaResolucaoProcedimento: false,
+        AderenciaEstruturaResposta: false,
+        Tabulacao: false,
+        PassouPrazoResposta: false,
+        RepassouProcedimentoIncorreto: false,
+        NaoUtilizouBotApoio: false,
         observacoes: '',
         dataLigacao: '',
         horaLigacao: '',
-        arquivoLigacao: null
+        numeroTicket: '',
+        arquivoLigacao: null,
+        tipoAvaliacao: 'ligacao'
       });
     }
     setModalAvaliacaoAberto(true);
@@ -538,10 +1164,20 @@ const QualidadeModulePage = () => {
       direcionouPesquisa: false,
       procedimentoIncorreto: false,
       encerramentoBrusco: false,
+      ProducaoTexto: false,
+      ClarezaObjetividade: false,
+      BoaResolucaoProcedimento: false,
+      AderenciaEstruturaResposta: false,
+      Tabulacao: false,
+      PassouPrazoResposta: false,
+      RepassouProcedimentoIncorreto: false,
+      NaoUtilizouBotApoio: false,
       observacoes: '',
       dataLigacao: '',
       horaLigacao: '',
+      numeroTicket: '',
       arquivoLigacao: null,
+      tipoAvaliacao: 'ligacao'
     });
   };
 
@@ -568,28 +1204,44 @@ const QualidadeModulePage = () => {
         (f.colaboradorNome || f.nomeCompleto) === formData.colaboradorNome
       );
       
-      // Combinar data e hora em um único string datetime
+      // Combinar data/hora (ligação) ou data do chamado + número do ticket
       let dataLigacaoCombinada = '';
-      if (formData.dataLigacao) {
+      if (formData.tipoAvaliacao === 'ticket') {
+        if (!formData.dataLigacao) {
+          mostrarSnackbar('Informe a data do chamado', 'error');
+          return;
+        }
+        const nro = String(formData.numeroTicket || '').replace(/\D/g, '');
+        if (nro === '' || Number.isNaN(Number(nro))) {
+          mostrarSnackbar('Informe o número do ticket (apenas numérico)', 'error');
+          return;
+        }
+        dataLigacaoCombinada = formData.dataLigacao;
+      } else if (formData.dataLigacao) {
         if (formData.horaLigacao) {
-          // Combinar data e hora: "YYYY-MM-DDTHH:mm"
           dataLigacaoCombinada = `${formData.dataLigacao}T${formData.horaLigacao}`;
         } else {
-          // Apenas data: "YYYY-MM-DD"
           dataLigacaoCombinada = formData.dataLigacao;
         }
       }
-      
+
       const dadosParaEnvio = {
         ...formData,
         avaliador: avaliadorEfetivo,
-        colaboradorNome: formData.colaboradorNome, // colaboradorNome já é o nome agora
-        dataLigacao: dataLigacaoCombinada,
-        somenteAnaliseAudioIA: false
+        colaboradorNome: formData.colaboradorNome,
+        dataLigacao: formData.tipoAvaliacao === 'ticket' ? '' : dataLigacaoCombinada,
+        dataChamado: formData.tipoAvaliacao === 'ticket' ? dataLigacaoCombinada : undefined,
+        somenteAnaliseAudioIA: false,
+        numeroTicket:
+          formData.tipoAvaliacao === 'ticket'
+            ? Number(String(formData.numeroTicket || '').replace(/\D/g, ''))
+            : null
       };
-      
-      // Remover horaLigacao do objeto de envio (já foi combinado com dataLigacao)
+
       delete dadosParaEnvio.horaLigacao;
+      if (formData.tipoAvaliacao !== 'ticket') {
+        delete dadosParaEnvio.dataChamado;
+      }
       
       // Debug dos dados antes do envio
       console.log('🔍 DEBUG - Salvando avaliação:', avaliacaoEditando ? 'EDITANDO' : 'CRIANDO');
@@ -610,10 +1262,10 @@ const QualidadeModulePage = () => {
     }
   };
 
-  const excluirAvaliacao = async (id) => {
+  const excluirAvaliacao = async (id, isTicket = false) => {
     if (window.confirm('Tem certeza que deseja excluir esta avaliação?')) {
       try {
-        await deleteAvaliacao(id);
+        await deleteAvaliacao(id, { isTicket: isTicket === true });
         mostrarSnackbar('Avaliação excluída com sucesso!', 'success');
         await carregarDados();
       } catch (error) {
@@ -946,6 +1598,181 @@ const QualidadeModulePage = () => {
     setSnackbar({ open: true, message, severity });
   };
 
+  const carregarXpExcelenciaFeedback = useCallback(async () => {
+    const nome = (selectedColaborador || '').trim();
+    if (!nome) {
+      setXpExcelenciaTotal(0);
+      return;
+    }
+    const nLower = nome.toLowerCase();
+    const f = funcionarios.find(
+      (x) =>
+        String(x.colaboradorNome || x.nomeCompleto || '')
+          .trim()
+          .toLowerCase() === nLower
+    );
+    const em = String(f?.userMail || f?.email || '').trim().toLowerCase();
+
+    setXpExcelenciaLoading(true);
+    try {
+      const res = await getAtendimentoTrophyXpTotal({
+        email: em || undefined,
+        colaboradorNome: em ? undefined : nome
+      });
+      if (res?.success && res.totalXp != null) {
+        setXpExcelenciaTotal(Number(res.totalXp) || 0);
+      } else {
+        setXpExcelenciaTotal(0);
+      }
+    } catch {
+      setXpExcelenciaTotal(0);
+    } finally {
+      setXpExcelenciaLoading(false);
+    }
+  }, [selectedColaborador, funcionarios]);
+
+  useEffect(() => {
+    if (currentView !== 'relatorio-agente') return;
+    carregarXpExcelenciaFeedback();
+  }, [currentView, carregarXpExcelenciaFeedback]);
+
+  useEffect(() => {
+    if (fbTiposDisponiveis.includes(fbTipo)) return;
+    setFbTipo('Elogio');
+    setFbFeedbackGerado('');
+    setFbOportunidadesSelecionadas([]);
+    setFbApontamentosSelecionados([]);
+    setFbObservacao('');
+  }, [fbTiposDisponiveis, fbTipo]);
+
+  const montarPayloadGerarQaFeedback = () => {
+    const base = {
+      feedbackType: fbTipo,
+      colaboradorNome: nomeColaboradorFeedback,
+      avaliador: nomeAvaliadorLogado,
+      recomendacoesTexto: fbRecomendacoesTexto
+    };
+    if (fbTipo === 'Elogio') {
+      return { ...base, destaques: fbDestaquesSelecionados, observacoesIndividuais: fbObservacoesIndiv };
+    }
+    if (fbTipo === 'Oportunidade') {
+      return {
+        ...base,
+        destaques: fbDestaquesSelecionados,
+        oportunidade: fbOportunidadesSelecionadas.join('; '),
+        observacao: fbObservacao
+      };
+    }
+    return { ...base, apontamentos: fbApontamentosSelecionados, observacao: fbObservacao };
+  };
+
+  const handleFbGerar = async () => {
+    if (!fbTiposDisponiveis.includes(fbTipo)) {
+      mostrarSnackbar(
+        'Oportunidade e Apontamento exigem a função Auditoria no Config.',
+        'warning'
+      );
+      return;
+    }
+    if (!fbPodeGerar) {
+      mostrarSnackbar(
+        'Gere o relatório individual e preencha os campos obrigatórios deste tipo de feedback.',
+        'warning'
+      );
+      return;
+    }
+    setFbGerando(true);
+    try {
+      const res = await gerarQaFeedback(montarPayloadGerarQaFeedback());
+      if (res?.success && res.feedbackGerado != null) {
+        setFbFeedbackGerado(String(res.feedbackGerado));
+        mostrarSnackbar('Feedback gerado.', 'success');
+      } else {
+        mostrarSnackbar(res?.error || 'Não foi possível gerar o feedback.', 'error');
+      }
+    } catch (error) {
+      const msg =
+        error?.response?.data?.error || error?.message || 'Erro ao gerar feedback.';
+      mostrarSnackbar(msg, 'error');
+    } finally {
+      setFbGerando(false);
+    }
+  };
+
+  const handleFbSalvar = async () => {
+    if (!fbTiposDisponiveis.includes(fbTipo)) {
+      mostrarSnackbar(
+        'Oportunidade e Apontamento exigem a função Auditoria no Config.',
+        'warning'
+      );
+      return;
+    }
+    if (!fbPodeEnviar) {
+      mostrarSnackbar('Preencha mês, ano (referência) e o feedback gerado.', 'warning');
+      return;
+    }
+    setFbSalvando(true);
+    try {
+      const res = await salvarQaFeedback({
+        colaboradorNome: nomeColaboradorFeedback,
+        avaliador: nomeAvaliadorLogado,
+        mes: fbMes,
+        ano: Number(fbAno),
+        feedbackType: fbTipo,
+        feedbackBody: (fbFeedbackGerado || '').trim(),
+        feedbackRecomendacoes: fbRecomendacoesTexto
+      });
+      if (res?.success) {
+        mostrarSnackbar('Feedback enviado e gravado.', 'success');
+      } else {
+        mostrarSnackbar(res?.error || 'Não foi possível gravar.', 'error');
+      }
+    } catch (error) {
+      const msg =
+        error?.response?.data?.error || error?.message || 'Erro ao gravar feedback.';
+      mostrarSnackbar(msg, 'error');
+    } finally {
+      setFbSalvando(false);
+    }
+  };
+
+  const handleConcederTrofeuEnviar = async () => {
+    if (!concederTrofeuPodeEnviar || !trofeuConcederSelecionado) {
+      mostrarSnackbar(
+        'Gere o relatório individual, confirme o colaborador e selecione um troféu.',
+        'warning'
+      );
+      return;
+    }
+    setConcederTrofeuEnviando(true);
+    try {
+      const t = trofeuConcederSelecionado;
+      const payload = {
+        colaboradorNome: nomeColaboradorFeedback,
+        qaTrophyId: String(t.id || '').trim(),
+        colaboradorEmail: emailColaboradorFeedback || undefined,
+        conquista_titulo: String(t.conquista_titulo || '').trim() || undefined,
+        conquista_legenda: String(t.conquista_legenda || '').trim() || undefined,
+        trophy_url: String(t.trophy_url || '').trim() || undefined,
+        xpClass: t.xpClass != null && String(t.xpClass).trim() ? String(t.xpClass).trim() : undefined
+      };
+      const res = await salvarAtendimentoTrophy(payload);
+      if (res?.success) {
+        mostrarSnackbar('Troféu registrado na Academy (Excelência do Atendimento).', 'success');
+        setConcederTrofeuId('');
+        await carregarXpExcelenciaFeedback();
+      } else {
+        mostrarSnackbar(res?.error || 'Não foi possível gravar o troféu.', 'error');
+      }
+    } catch (error) {
+      const msg =
+        error?.response?.data?.error || error?.message || 'Erro ao gravar troféu de atendimento.';
+      mostrarSnackbar(msg, 'error');
+    } finally {
+      setConcederTrofeuEnviando(false);
+    }
+  };
+
   const fecharSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
   };
@@ -977,25 +1804,14 @@ const QualidadeModulePage = () => {
       maxWidth: '100%',
       fontSize: '0.8rem'
     }}>
-      {/* Header único - alinhamento central absoluto das abas */}
-      <Box sx={{ position: 'relative', mb: 3.2, minHeight: 40 }}>
-        <Box sx={{ position: 'absolute', left: 0, top: 0, bottom: 0, display: 'flex', alignItems: 'center' }}>
-          <BackButton />
-        </Box>
-        <Box sx={{
-          position: 'absolute',
-          left: '50%',
-          top: 0,
-          bottom: 0,
-          transform: 'translateX(-50%)',
-          display: 'flex',
-          alignItems: 'center',
-          width: 'max-content'
-        }}>
+      {/* Header único — faixa Voltar igual às demais páginas (VoltarHeaderRow) */}
+      <VoltarHeaderRow
+        left={<BackButton to="/qualidade" />}
+        center={
           <Tabs
             value={currentView}
             onChange={(e, newValue) => setCurrentView(newValue)}
-            aria-label="qualidade tabs"
+            aria-label="Avaliações, feedback e análise IA"
             sx={{
               borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
               '& .MuiTab-root': {
@@ -1025,7 +1841,7 @@ const QualidadeModulePage = () => {
             />
             <Tab 
               value="relatorio-agente" 
-              label="Relatório do Agente"
+              label="Feedback"
               id="qualidade-tab-1"
               aria-controls="qualidade-tabpanel-1"
             />
@@ -1036,20 +1852,203 @@ const QualidadeModulePage = () => {
               aria-controls="qualidade-tabpanel-2"
             />
           </Tabs>
-        </Box>
-      </Box>
+        }
+      />
 
       {/* Conteúdo das Abas */}
       {currentView === 'avaliacoes' && (
         <Box>
           {/* Toolbar */}
-          <Card sx={{ mb: 1.6, mt: 0.8, borderRadius: '12.8px', boxShadow: '0 3.2px 16px rgba(0, 0, 0, 0.1)', backgroundColor: 'var(--cor-card)' }}>
+          <Card
+            sx={{
+              mb: 1.6,
+              mt: 0.8,
+              borderRadius: '6px',
+              boxShadow: QM_SHADOW_SM,
+              backgroundColor: 'var(--cor-card)',
+              ...qmCardSemHoverSomra(QM_SHADOW_SM)
+            }}
+          >
             <CardContent sx={{ py: 0.6, px: 2, '&:last-child': { pb: 0.6 } }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
-                <Typography variant="h6" sx={{ fontFamily: 'Poppins', color: '#000058', fontWeight: 600, fontSize: '0.96rem' }}>
-                  Avaliações ({avaliacoesFiltradas.length})
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 0.8 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: 1.2,
+                  rowGap: 1,
+                  height: '100%'
+                }}
+              >
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: 1.2,
+                    rowGap: 0.8,
+                    minWidth: 0
+                  }}
+                >
+                  <Typography
+                    variant="h6"
+                    sx={{ fontFamily: 'Poppins', color: '#000058', fontWeight: 600, fontSize: '0.96rem' }}
+                  >
+                    Avaliações ({avaliacoesFiltradas.length})
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      flexShrink: 0,
+                      flexWrap: 'wrap'
+                    }}
+                    role="group"
+                    aria-label="Alternar listagem: Ligação, todos os tipos ou Ticket"
+                  >
+                    <Typography
+                      component="span"
+                      variant="body2"
+                      sx={{
+                        fontFamily: 'Poppins',
+                        fontWeight: seletorTipoListaAvaliacoes === 'ligacao' ? 600 : 500,
+                        color: seletorTipoListaAvaliacoes === 'ligacao' ? '#000058' : '#8a94a0',
+                        fontSize: '0.8rem'
+                      }}
+                    >
+                      Ligação
+                    </Typography>
+                    <Box
+                      sx={(theme) => ({
+                        position: 'relative',
+                        width: 52,
+                        height: 20,
+                        flexShrink: 0,
+                        borderRadius: '6px',
+                        backgroundColor:
+                          seletorTipoListaAvaliacoes === 'ticket'
+                            ? theme.palette.mode === 'dark'
+                              ? 'rgba(144, 202, 249, 0.45)'
+                              : 'rgba(25, 118, 210, 0.5)'
+                            : 'rgba(0, 0, 0, 0.2)',
+                        cursor: 'pointer',
+                        userSelect: 'none',
+                        outline: 0,
+                        '&:focus-visible': {
+                          outline: '2px solid #1694FF',
+                          outlineOffset: 2
+                        }
+                      })}
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        const ord = ['ligacao', 'todos', 'ticket'];
+                        const i = ord.indexOf(seletorTipoListaAvaliacoes);
+                        if (e.key === 'Home') {
+                          e.preventDefault();
+                          setSeletorTipoListaAvaliacoes('ligacao');
+                        } else if (e.key === 'End') {
+                          e.preventDefault();
+                          setSeletorTipoListaAvaliacoes('ticket');
+                        } else if (e.key === 'ArrowLeft' && i > 0) {
+                          e.preventDefault();
+                          setSeletorTipoListaAvaliacoes(ord[i - 1]);
+                        } else if (e.key === 'ArrowRight' && i < 2) {
+                          e.preventDefault();
+                          setSeletorTipoListaAvaliacoes(ord[i + 1]);
+                        }
+                      }}
+                    >
+                      <Box
+                        onClick={() => setSeletorTipoListaAvaliacoes('ligacao')}
+                        sx={{
+                          position: 'absolute',
+                          left: 0,
+                          top: 0,
+                          width: '33.33%',
+                          height: '100%',
+                          zIndex: 1,
+                          borderRadius: '6px 0 0 6px',
+                          cursor: 'pointer',
+                          opacity: 0
+                        }}
+                        aria-label="Só ligação"
+                        role="button"
+                        tabIndex={-1}
+                      />
+                      <Box
+                        onClick={() => setSeletorTipoListaAvaliacoes('todos')}
+                        sx={{
+                          position: 'absolute',
+                          left: '33.33%',
+                          top: 0,
+                          width: '33.34%',
+                          height: '100%',
+                          zIndex: 1,
+                          cursor: 'pointer',
+                          opacity: 0
+                        }}
+                        aria-label="Ligação e tickets"
+                        role="button"
+                        tabIndex={-1}
+                      />
+                      <Box
+                        onClick={() => setSeletorTipoListaAvaliacoes('ticket')}
+                        sx={{
+                          position: 'absolute',
+                          right: 0,
+                          top: 0,
+                          width: '33.33%',
+                          height: '100%',
+                          zIndex: 1,
+                          borderRadius: '0 6px 6px 0',
+                          cursor: 'pointer',
+                          opacity: 0
+                        }}
+                        aria-label="Só ticket"
+                        role="button"
+                        tabIndex={-1}
+                      />
+                      <Box
+                        aria-hidden
+                        sx={(theme) => ({
+                          position: 'absolute',
+                          top: 2,
+                          width: 16,
+                          height: 16,
+                          borderRadius: '50%',
+                          backgroundColor: '#fff',
+                          boxShadow: theme.palette.mode === 'dark'
+                            ? '0 1.6px 3.2px rgba(0,0,0,0.4)'
+                            : '0 1.6px 3.2px rgba(0,0,0,0.12), 0 0.8px 0.8px rgba(0,0,0,0.1)',
+                          transition: 'left 0.2s ease',
+                          pointerEvents: 'none',
+                          zIndex: 0,
+                          left:
+                            seletorTipoListaAvaliacoes === 'ligacao'
+                              ? 2
+                              : seletorTipoListaAvaliacoes === 'todos'
+                                ? 18
+                                : 34
+                        })}
+                      />
+                    </Box>
+                    <Typography
+                      component="span"
+                      variant="body2"
+                      sx={{
+                        fontFamily: 'Poppins',
+                        fontWeight: seletorTipoListaAvaliacoes === 'ticket' ? 600 : 500,
+                        color: seletorTipoListaAvaliacoes === 'ticket' ? '#000058' : '#8a94a0',
+                        fontSize: '0.8rem'
+                      }}
+                    >
+                      Ticket
+                    </Typography>
+                  </Box>
+                </Box>
+                <Box sx={{ display: 'flex', gap: 0.8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                   <Button
                     size="small"
                     startIcon={<FilterList />}
@@ -1130,12 +2129,15 @@ const QualidadeModulePage = () => {
           </Card>
 
           {/* Lista de Avaliações */}
-          <Card sx={{ 
-            borderRadius: '16px', 
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-            mt: 2,
-            backgroundColor: 'var(--cor-card)'
-          }}>
+          <Card
+            sx={{
+              borderRadius: '6px',
+              boxShadow: QM_SHADOW_LG,
+              mt: 2,
+              backgroundColor: 'var(--cor-card)',
+              ...qmCardSemHoverSomra(QM_SHADOW_LG)
+            }}
+          >
             <TableContainer className="qualidade-table" sx={{ maxHeight: '800px', overflowY: 'auto' }}>
               <Table size="small" stickyHeader>
                 <TableHead>
@@ -1215,7 +2217,38 @@ const QualidadeModulePage = () => {
                           </TableCell>
                           <TableCell align="center" sx={{ fontSize: '0.8rem', py: 0.8 }}>
                             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
-                              {renderAudioIcon(avaliacao)}
+                              {avaliacao.tipoAvaliacao === 'ticket' ? (
+                                <Tooltip title="Avaliação de ticket (sem fluxo de áudio)" arrow placement="top">
+                                  <Chip
+                                    label="Ticket"
+                                    size="small"
+                                    sx={{
+                                      width: larguraChipStatusTabela,
+                                      minWidth: larguraChipStatusTabela,
+                                      maxWidth: larguraChipStatusTabela,
+                                      height: 22,
+                                      backgroundColor: 'rgba(0, 0, 88, 0.1)',
+                                      color: '#000058',
+                                      border: '1px solid rgba(0, 0, 88, 0.2)',
+                                      fontFamily: 'Poppins',
+                                      fontWeight: 600,
+                                      fontSize: '0.64rem',
+                                      '& .MuiChip-label': {
+                                        px: 0.75,
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap',
+                                        display: 'block',
+                                        textAlign: 'center',
+                                        width: '100%',
+                                        boxSizing: 'border-box'
+                                      }
+                                    }}
+                                  />
+                                </Tooltip>
+                              ) : (
+                                renderAudioIcon(avaliacao)
+                              )}
                             </Box>
                           </TableCell>
                           <TableCell align="center" sx={{ fontSize: '0.8rem', py: 0.8 }}>
@@ -1269,7 +2302,7 @@ const QualidadeModulePage = () => {
                           <TableCell sx={{ fontSize: '0.8rem', py: 0.8 }}>
                             <IconButton
                               size="medium"
-                              onClick={() => excluirAvaliacao(avaliacao._id)}
+                              onClick={() => excluirAvaliacao(avaliacao._id, avaliacao.tipoAvaliacao === 'ticket')}
                               sx={{ color: '#EF4444', padding: '0.6rem' }}
                               aria-label="Excluir avaliação"
                             >
@@ -1322,22 +2355,28 @@ const QualidadeModulePage = () => {
 
       {currentView === 'relatorio-agente' && (
         <Box>
-          <Card sx={{ 
-            borderRadius: '12px', 
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-            backgroundColor: 'var(--cor-card)',
-            padding: '24px',
-            mt: 1
-          }}>
-            <CardContent sx={{ p: 0 }}>
-              {/* Header com título, botão, seletor e filtro de período - Tudo em uma única linha */}
-                <Box sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                alignItems: 'center',
-                gap: 1.6,
-                mb: 3,
-                flexWrap: 'wrap'
+          <Card
+            sx={{
+              borderRadius: '6px',
+              boxShadow: QM_SHADOW_LG,
+              backgroundColor: 'var(--cor-card)',
+              px: { xs: 1.5, sm: 2 },
+              pt: 1,
+              pb: 1,
+              mt: 1,
+              ...qmCardSemHoverSomra(QM_SHADOW_LG)
+            }}
+          >
+            <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
+              {/* Filtros: wrap compacto — space-between deixa «buracos» entre linhas; ml:auto empurra o grupo de controlos */}
+                <Box sx={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  alignItems: 'center',
+                  alignContent: 'flex-start',
+                  columnGap: 1.25,
+                  rowGap: 0.75,
+                  mb: 0
                 }}>
                   {/* Título */}
                   <Typography variant="h5" sx={{ 
@@ -1345,7 +2384,8 @@ const QualidadeModulePage = () => {
                     color: '#000058', 
                     fontWeight: 500,
                   fontSize: '1.2rem',
-                  flexShrink: 0
+                  flexShrink: 0,
+                  lineHeight: 1.2
                   }}>
                     Relatório Individual
                   </Typography>
@@ -1354,9 +2394,12 @@ const QualidadeModulePage = () => {
                   <Box sx={{ 
                     display: 'flex', 
                     alignItems: 'center',
-                  gap: 1.6,
+                  alignContent: 'flex-start',
+                  columnGap: 1,
+                  rowGap: 0.75,
                   flexWrap: 'wrap',
-                  flex: 1,
+                  flex: '1 1 0',
+                  minWidth: 0,
                   justifyContent: 'flex-end'
                   }}>
                     {/* Botão Gerar Relatório */}
@@ -1370,7 +2413,7 @@ const QualidadeModulePage = () => {
                         fontFamily: 'Poppins',
                         fontWeight: 600,
                         fontSize: '0.8rem',
-                        borderRadius: '6.4px',
+                        borderRadius: '4px',
                         px: 2.4,
                       py: 0.2,
                       height: '32px',
@@ -1388,72 +2431,55 @@ const QualidadeModulePage = () => {
                       {loading ? 'Gerando...' : 'Gerar'}
                     </Button>
                     
-                    {/* Seleção de Colaborador */}
-                  <FormControl size="small" sx={{ minWidth: 200, height: '32px' }} className="velohub-select-alinhado">
-                    <InputLabel 
-                      sx={{ 
-                        fontFamily: 'Poppins', 
-                        fontSize: '0.8rem',
-                        color: '#000058',
-                        '&.Mui-focused': {
-                          color: '#006AB9'
-                        }
-                      }}
-                    >
-                      Selecione o Colaborador
-                    </InputLabel>
-                    <Select
-                      value={selectedColaborador || ''}
-                      onChange={(e) => {
-                        console.log('🔍 DEBUG - Select onChange:', e.target.value);
-                        setSelectedColaborador(e.target.value);
-                      }}
-                      label="Selecione o Colaborador"
+                    {/* Seleção de Colaborador (Autocomplete: filtrar ao digitar, como no modal Nova Avaliação) */}
+                    <Autocomplete
                       size="small"
-                      sx={{ 
-                        fontFamily: 'Poppins',
-                        fontSize: '0.8rem',
-                        height: '32px',
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: '6.4px',
-                          height: '32px',
-                          '& fieldset': {
-                            borderColor: '#000058'
-                          },
-                          '&:hover fieldset': {
-                            borderColor: '#006AB9'
-                          },
-                          '&.Mui-focused fieldset': {
-                            borderColor: '#006AB9'
-                          }
-                        },
-                        '& .MuiSelect-select': {
-                          display: 'flex',
-                          alignItems: 'center',
-                          paddingTop: '6px !important',
-                          paddingBottom: '6px !important',
-                          boxSizing: 'border-box',
-                          height: '32px !important'
-                        },
-                        '& .MuiInputBase-input': {
-                          padding: '6px 14px !important',
-                          height: '32px !important',
-                          display: 'flex',
-                          alignItems: 'center'
-                        }
+                      className="velohub-select-alinhado"
+                      sx={{ minWidth: 200, maxWidth: 360, flex: '0 1 auto' }}
+                      options={opcoesColaboradorRelatorioAgente}
+                      value={selectedColaborador ? selectedColaborador : null}
+                      onChange={(_e, newValue) => {
+                        setSelectedColaborador(newValue || '');
                       }}
-                    >
-                      {funcionarios.map((funcionario) => (
-                        <MenuItem 
-                          key={funcionario.id} 
-                          value={funcionario.colaboradorNome || funcionario.nomeCompleto}
-                          sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}
-                        >
-                          {funcionario.colaboradorNome || funcionario.nomeCompleto}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                    </FormControl>
+                      isOptionEqualToValue={(option, value) => option === value}
+                      filterOptions={filterOptionsColaborador}
+                      noOptionsText="Nenhum colaborador encontrado"
+                      ListboxProps={{
+                        sx: { fontFamily: 'Poppins', fontSize: '0.8rem', maxHeight: 280 }
+                      }}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Selecione o Colaborador"
+                          InputLabelProps={{
+                            ...params.InputLabelProps,
+                            sx: {
+                              fontFamily: 'Poppins',
+                              fontSize: '0.8rem',
+                              color: '#000058',
+                              '&.Mui-focused': { color: '#006AB9' }
+                            }
+                          }}
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              fontFamily: 'Poppins',
+                              fontSize: '0.8rem',
+                              minHeight: 32,
+                              height: 32,
+                              borderRadius: '4px',
+                              paddingRight: '9px !important',
+                              '& fieldset': { borderColor: '#000058' },
+                              '&:hover fieldset': { borderColor: '#006AB9' },
+                              '&.Mui-focused fieldset': { borderColor: '#006AB9' }
+                            },
+                            '& .MuiInputBase-input': {
+                              padding: '4px 8px 4px 6px !important',
+                              minHeight: 0
+                            }
+                          }}
+                        />
+                      )}
+                    />
 
                   {/* Campo Data Início */}
                   <TextField
@@ -1550,7 +2576,7 @@ const QualidadeModulePage = () => {
                       fontFamily: 'Poppins',
                       fontWeight: 500,
                       fontSize: '0.8rem',
-                      borderRadius: '6.4px',
+                      borderRadius: '4px',
                       px: 1.6,
                       py: 0.2,
                       minWidth: 'auto',
@@ -1572,19 +2598,92 @@ const QualidadeModulePage = () => {
                   </Button>
                 </Box>
               </Box>
+            </CardContent>
+          </Card>
 
-              {/* Resultados do Relatório */}
+              {/* Stats + XP: cartão próprio, alinhado ao título «Resultados para…» */}
               {relatorioAgente && (
-                <Box sx={{ mt: 3 }}>
-                  <Typography variant="h6" sx={{ 
-                    fontFamily: 'Poppins', 
-                    color: '#000058', 
-                    fontWeight: 600, 
-                    mb: 3,
-                    textAlign: 'center'
-                  }}>
-                    Resultados para {relatorioAgente.colaboradorNome}
-                  </Typography>
+          <Card
+            sx={{
+              borderRadius: '6px',
+              boxShadow: QM_SHADOW_LG,
+              backgroundColor: 'var(--cor-card)',
+              px: { xs: 2, sm: 2.5 },
+              pt: 2,
+              pb: 2,
+              mt: 2,
+              ...qmCardSemHoverSomra(QM_SHADOW_LG)
+            }}
+          >
+            <CardContent sx={{ p: 0 }}>
+                <Box sx={{ mt: 0 }}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: 1.25,
+                      mb: 2
+                    }}
+                  >
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        fontFamily: 'Poppins',
+                        color: '#000058',
+                        fontWeight: 600,
+                        fontSize: { xs: '0.96rem', sm: '1.04rem' },
+                        flex: '1 1 auto',
+                        minWidth: 0
+                      }}
+                    >
+                      Resultados para {relatorioAgente.colaboradorNome}
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.6,
+                        flexShrink: 0,
+                        py: 0.25,
+                        px: 1,
+                        borderRadius: '4px',
+                        border: '1px solid rgba(22, 52, 255, 0.18)',
+                        backgroundColor: 'rgba(22, 52, 255, 0.04)'
+                      }}
+                    >
+                      <Typography
+                        component="span"
+                        variant="body2"
+                        sx={{
+                          fontFamily: 'Poppins',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          color: 'var(--blue-dark)',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        XP Excelência
+                      </Typography>
+                      {xpExcelenciaLoading ? (
+                        <CircularProgress size={16} sx={{ color: 'var(--blue-medium)' }} />
+                      ) : (
+                        <Typography
+                          component="span"
+                          sx={{
+                            fontFamily: 'Poppins',
+                            fontSize: '0.92rem',
+                            fontWeight: 700,
+                            color: 'var(--blue-medium)',
+                            minWidth: '1.5rem'
+                          }}
+                        >
+                          {(selectedColaborador || '').trim() ? xpExcelenciaTotal : '—'}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
 
                   {/* Cards de Métricas */}
                   <Grid container spacing={3} sx={{ mb: 3 }}>
@@ -1594,7 +2693,8 @@ const QualidadeModulePage = () => {
                         p: 2,
                         backgroundColor: 'var(--cor-card)',
                         border: '1.5px solid #000058',
-                        borderRadius: '8px'
+                        borderRadius: '6px',
+                        ...QM_METRICA_SEM_HOVER
                       }}>
                         <Typography variant="h4" sx={{ fontSize: '1.28rem', 
                           fontFamily: 'Poppins', 
@@ -1622,7 +2722,8 @@ const QualidadeModulePage = () => {
                           ? 'linear-gradient(135deg, rgba(22, 180, 255, 0.15) 0%, rgba(22, 180, 255, 0.05) 100%)'
                           : 'linear-gradient(135deg, rgba(220, 53, 69, 0.15) 0%, rgba(220, 53, 69, 0.05) 100%)',
                         border: '1.5px solid #000058',
-                        borderRadius: '8px'
+                        borderRadius: '6px',
+                        ...QM_METRICA_SEM_HOVER
                       }}>
                         <Typography variant="h4" sx={{ fontSize: '1.28rem', 
                           fontFamily: 'Poppins', 
@@ -1650,7 +2751,8 @@ const QualidadeModulePage = () => {
                         p: 2,
                         background: 'linear-gradient(135deg, rgba(252, 194, 0, 0.15) 0%, rgba(252, 194, 0, 0.05) 100%)',
                         border: '1.5px solid #000058',
-                        borderRadius: '8px'
+                        borderRadius: '6px',
+                        ...QM_METRICA_SEM_HOVER
                       }}>
                         <Typography variant="h4" sx={{ fontSize: '1.28rem', 
                           fontFamily: 'Poppins', 
@@ -1685,7 +2787,8 @@ const QualidadeModulePage = () => {
                           ? 'linear-gradient(135deg, rgba(220, 53, 69, 0.15) 0%, rgba(220, 53, 69, 0.05) 100%)'
                           : 'none',
                         border: '1.5px solid #000058',
-                        borderRadius: '8px'
+                        borderRadius: '6px',
+                        ...QM_METRICA_SEM_HOVER
                       }}>
                         <Typography variant="h4" sx={{ fontSize: '1.28rem', 
                           fontFamily: 'Poppins', 
@@ -1714,70 +2817,125 @@ const QualidadeModulePage = () => {
                     </Grid>
                   </Grid>
 
-                  {/* Melhor e Pior Nota */}
+                  {/* Melhor/Pior média mensal; melhor nota por canal (ligação / ticket) */}
                   <Grid container spacing={3}>
-                    <Grid item xs={12} sm={6}>
+                    <Grid item xs={12} sm={6} md={3}>
                       <Card sx={{ 
                         textAlign: 'center', 
                         p: 2,
                         background: 'linear-gradient(135deg, rgba(22, 180, 255, 0.15) 0%, rgba(22, 180, 255, 0.05) 100%)',
                         border: '1.5px solid #000058',
-                        borderRadius: '8px'
+                        borderRadius: '6px',
+                        ...QM_METRICA_SEM_HOVER
                       }}>
                         <Typography variant="h5" sx={{ fontSize: '1.2rem', 
                           fontFamily: 'Poppins', 
                           color: '#1694FF', 
                           fontWeight: 700 
                         }}>
-                          {relatorioAgente.melhorNota == null ? '—' : relatorioAgente.melhorNota}
+                          {relatorioAgente.melhorMedia == null ? '—' : relatorioAgente.melhorMedia}
                         </Typography>
                         <Typography variant="body2" sx={{ 
                           fontFamily: 'Poppins', 
                           color: '#1694FF'
                         }}>
-                          🏆 Melhor Nota
+                          Melhor Média
                         </Typography>
                       </Card>
                     </Grid>
 
-                    <Grid item xs={12} sm={6}>
+                    <Grid item xs={12} sm={6} md={3}>
                       <Card sx={{ 
                         textAlign: 'center', 
                         p: 2,
                         background: 'linear-gradient(135deg, rgba(220, 53, 69, 0.15) 0%, rgba(220, 53, 69, 0.05) 100%)',
                         border: '1.5px solid #000058',
-                        borderRadius: '8px'
+                        borderRadius: '6px',
+                        ...QM_METRICA_SEM_HOVER
                       }}>
                         <Typography variant="h5" sx={{ fontSize: '1.2rem', 
                           fontFamily: 'Poppins', 
                           color: '#dc3545', 
                           fontWeight: 700 
                         }}>
-                          {relatorioAgente.piorNota == null ? '—' : relatorioAgente.piorNota}
+                          {relatorioAgente.piorMedia == null ? '—' : relatorioAgente.piorMedia}
                         </Typography>
                         <Typography variant="body2" sx={{ 
                           fontFamily: 'Poppins', 
                           color: '#dc3545'
                         }}>
-                          ⚠️ Pior Nota
+                          Pior Média
+                        </Typography>
+                      </Card>
+                    </Grid>
+
+                    <Grid item xs={12} sm={6} md={3}>
+                      <Card sx={{ 
+                        textAlign: 'center', 
+                        p: 2,
+                        background: 'linear-gradient(135deg, rgba(22, 52, 255, 0.12) 0%, rgba(22, 52, 255, 0.04) 100%)',
+                        border: '1.5px solid #000058',
+                        borderRadius: '6px',
+                        ...QM_METRICA_SEM_HOVER
+                      }}>
+                        <Typography variant="h5" sx={{ fontSize: '1.2rem', 
+                          fontFamily: 'Poppins', 
+                          color: '#1634FF', 
+                          fontWeight: 700 
+                        }}>
+                          {relatorioAgente.melhorNotaLigacao == null ? '—' : relatorioAgente.melhorNotaLigacao}
+                        </Typography>
+                        <Typography variant="body2" sx={{ 
+                          fontFamily: 'Poppins', 
+                          color: '#1634FF'
+                        }}>
+                          Melhor Nota Ligação
+                        </Typography>
+                      </Card>
+                    </Grid>
+
+                    <Grid item xs={12} sm={6} md={3}>
+                      <Card sx={{ 
+                        textAlign: 'center', 
+                        p: 2,
+                        background: 'linear-gradient(135deg, rgba(252, 194, 0, 0.15) 0%, rgba(252, 194, 0, 0.05) 100%)',
+                        border: '1.5px solid #000058',
+                        borderRadius: '6px',
+                        ...QM_METRICA_SEM_HOVER
+                      }}>
+                        <Typography variant="h5" sx={{ fontSize: '1.2rem', 
+                          fontFamily: 'Poppins', 
+                          color: '#C49000', 
+                          fontWeight: 700 
+                        }}>
+                          {relatorioAgente.melhorNotaTicket == null ? '—' : relatorioAgente.melhorNotaTicket}
+                        </Typography>
+                        <Typography variant="body2" sx={{ 
+                          fontFamily: 'Poppins', 
+                          color: '#C49000'
+                        }}>
+                          Melhor Nota Ticket
                         </Typography>
                       </Card>
                     </Grid>
                   </Grid>
                 </Box>
-              )}
             </CardContent>
           </Card>
+              )}
 
           {/* Container do Gráfico de Histórico */}
           {relatorioAgente && (
-            <Card sx={{ 
-              borderRadius: '12px', 
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-              background: '#F3F7FC',
-              padding: '24px',
-              mt: 2
-            }}>
+            <Card
+              sx={{
+                borderRadius: '6px',
+                boxShadow: QM_SHADOW_LG,
+                background: '#F3F7FC',
+                padding: '24px',
+                mt: 2,
+                ...qmCardSemHoverSomra(QM_SHADOW_LG)
+              }}
+            >
               <CardContent sx={{ p: 0 }}>
                 <Typography variant="h6" sx={{ 
                   fontFamily: 'Poppins', 
@@ -1793,7 +2951,7 @@ const QualidadeModulePage = () => {
                   height: '300px', 
                   background: 'transparent',
                   border: '1.5px solid #000058',
-                  borderRadius: '8px',
+                  borderRadius: '4px',
                   p: 2
                 }}>
                   <ResponsiveContainer width="100%" height="100%">
@@ -1815,7 +2973,7 @@ const QualidadeModulePage = () => {
                         contentStyle={{
                           backgroundColor: '#F3F7FC',
                           border: '1px solid #000058',
-                          borderRadius: '8px',
+                          borderRadius: '4px',
                           fontFamily: 'Poppins',
                           fontSize: '12px'
                         }}
@@ -1834,7 +2992,7 @@ const QualidadeModulePage = () => {
                         stroke="#1694FF" 
                         strokeWidth={3}
                         dot={{ fill: '#1694FF', strokeWidth: 2, r: 4 }}
-                        name="Notas Reais"
+                        name="Média mensal"
                       />
                       <Line 
                         type="monotone" 
@@ -1863,13 +3021,650 @@ const QualidadeModulePage = () => {
               </CardContent>
             </Card>
           )}
+
+          {relatorioAgente && (
+          <Box
+            sx={{
+              mt: 3.2,
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', md: '7fr 3fr' },
+              gap: 2,
+              width: '100%',
+              minWidth: 0,
+              alignItems: 'stretch'
+            }}
+          >
+          <Card
+            sx={{
+              borderRadius: '6px',
+              boxShadow: QM_SHADOW_SM,
+              backgroundColor: 'var(--cor-card)',
+              minWidth: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              width: { xs: '100%', md: 'auto' },
+              ...qmCardSemHoverSomra(QM_SHADOW_SM)
+            }}
+          >
+            <CardContent sx={{ py: 2, px: 2, flex: 1, display: 'flex', flexDirection: 'column', '&:last-child': { pb: 2 } }}>
+              <Typography
+                variant="h6"
+                sx={{ fontFamily: 'Poppins', color: '#000058', fontWeight: 600, fontSize: '0.96rem', mb: 0.5 }}
+              >
+                Envio de Feedback
+              </Typography>
+
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexDirection: { xs: 'column', sm: 'row' },
+                      flexWrap: 'wrap',
+                      alignItems: { sm: 'flex-start' },
+                      gap: 1.25
+                    }}
+                  >
+                    <FormControl
+                      size="small"
+                      variant="outlined"
+                      sx={{
+                        width: { xs: '100%', sm: 200 },
+                        minWidth: 0,
+                        maxWidth: { sm: 220 }
+                      }}
+                    >
+                      <InputLabel sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>Tipo de feedback</InputLabel>
+                      <Select
+                        label="Tipo de feedback"
+                        value={fbTipo}
+                        onChange={(e) => {
+                          setFbTipo(e.target.value);
+                          setFbFeedbackGerado('');
+                        }}
+                        sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}
+                      >
+                        {fbTiposDisponiveis.map((tipo) => (
+                          <MenuItem key={tipo} value={tipo} sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
+                            {tipo}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <FormControl
+                      size="small"
+                      variant="outlined"
+                      sx={{
+                        width: { xs: '100%', sm: 144 },
+                        minWidth: 0,
+                        maxWidth: { sm: 160 }
+                      }}
+                    >
+                      <InputLabel sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>Mês (referência)</InputLabel>
+                      <Select
+                        label="Mês (referência)"
+                        value={fbMes}
+                        onChange={(e) => setFbMes(e.target.value)}
+                        sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}
+                      >
+                        {MESES.map((mes) => (
+                          <MenuItem key={mes} value={mes} sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
+                            {mes}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <FormControl
+                      size="small"
+                      variant="outlined"
+                      sx={{
+                        width: { xs: '100%', sm: 100 },
+                        minWidth: 0,
+                        maxWidth: { sm: 108 }
+                      }}
+                    >
+                      <InputLabel sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>Ano (referência)</InputLabel>
+                      <Select
+                        label="Ano (referência)"
+                        value={fbAno}
+                        onChange={(e) => setFbAno(e.target.value)}
+                        sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}
+                      >
+                        {ANOS.map((ano) => (
+                          <MenuItem key={ano} value={ano} sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
+                            {ano}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Box>
+                </Grid>
+
+                {(fbTipo === 'Elogio' || fbTipo === 'Oportunidade') && (
+                  <Grid item xs={12}>
+                    <Autocomplete
+                      multiple
+                      options={opcoesQaDestaques}
+                      getOptionLabel={(o) => o?.label || o?.value || ''}
+                      isOptionEqualToValue={(a, b) => a.value === b.value}
+                      value={fbDestaquesSelecionados
+                        .map((v) => opcoesQaDestaques.find((o) => o.value === v))
+                        .filter(Boolean)}
+                      onChange={(_e, newValue) => {
+                        setFbDestaquesSelecionados(newValue.map((o) => o.value));
+                      }}
+                      disableCloseOnSelect
+                      filterSelectedOptions
+                      filterOptions={filterOptionsQaValores}
+                      size="small"
+                      renderTags={(value, getTagProps) =>
+                        value.map((option, index) => (
+                          <Chip
+                            {...getTagProps({ index })}
+                            key={`${String(option.value)}-${index}`}
+                            size="small"
+                            label={option.label || option.value}
+                            variant="outlined"
+                            sx={{ fontFamily: 'Poppins', fontSize: '0.7rem' }}
+                          />
+                        ))
+                      }
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Destaques"
+                          InputLabelProps={{ ...params.InputLabelProps, sx: { fontFamily: 'Poppins', fontSize: '0.8rem' } }}
+                          inputProps={{ ...params.inputProps, sx: { fontFamily: 'Poppins', fontSize: '0.8rem' } }}
+                        />
+                      )}
+                      sx={{ '& .MuiAutocomplete-inputRoot': { fontFamily: 'Poppins', fontSize: '0.8rem' } }}
+                    />
+                  </Grid>
+                )}
+
+                {fbTipo === 'Elogio' && (
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      multiline
+                      minRows={3}
+                      size="small"
+                      label="Observações Individuais"
+                      value={fbObservacoesIndiv}
+                      onChange={(e) => setFbObservacoesIndiv(e.target.value)}
+                      InputLabelProps={{ sx: { fontFamily: 'Poppins', fontSize: '0.8rem' } }}
+                      inputProps={{ sx: { fontFamily: 'Poppins', fontSize: '0.8rem' } }}
+                    />
+                  </Grid>
+                )}
+
+                {fbTipo === 'Oportunidade' && (
+                  <>
+                    <Grid item xs={12} sm={6}>
+                      <Autocomplete
+                        multiple
+                        options={opcoesQaOportunidades}
+                        getOptionLabel={(o) => o?.label || o?.value || ''}
+                        isOptionEqualToValue={(a, b) => a.value === b.value}
+                        value={fbOportunidadesSelecionadas
+                          .map((v) => opcoesQaOportunidades.find((o) => o.value === v))
+                          .filter(Boolean)}
+                        onChange={(_e, newValue) => {
+                          setFbOportunidadesSelecionadas(newValue.map((o) => o.value));
+                        }}
+                        disableCloseOnSelect
+                        filterSelectedOptions
+                        filterOptions={filterOptionsQaValores}
+                        size="small"
+                        renderTags={(value, getTagProps) =>
+                          value.map((option, index) => (
+                            <Chip
+                              {...getTagProps({ index })}
+                              key={`${String(option.value)}-${index}`}
+                              size="small"
+                              label={option.label || option.value}
+                              variant="outlined"
+                              sx={{ fontFamily: 'Poppins', fontSize: '0.7rem' }}
+                            />
+                          ))
+                        }
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Oportunidades"
+                            InputLabelProps={{ ...params.InputLabelProps, sx: { fontFamily: 'Poppins', fontSize: '0.8rem' } }}
+                            inputProps={{ ...params.inputProps, sx: { fontFamily: 'Poppins', fontSize: '0.8rem' } }}
+                          />
+                        )}
+                        sx={{ '& .MuiAutocomplete-inputRoot': { fontFamily: 'Poppins', fontSize: '0.8rem' } }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        multiline
+                        minRows={2}
+                        size="small"
+                        label="Observação"
+                        value={fbObservacao}
+                        onChange={(e) => setFbObservacao(e.target.value)}
+                        InputLabelProps={{ sx: { fontFamily: 'Poppins', fontSize: '0.8rem' } }}
+                        inputProps={{ sx: { fontFamily: 'Poppins', fontSize: '0.8rem' } }}
+                      />
+                    </Grid>
+                  </>
+                )}
+
+                {fbTipo === 'Apontamento' && (
+                  <>
+                    <Grid item xs={12}>
+                      <Autocomplete
+                        multiple
+                        options={opcoesQaApontamentos}
+                        getOptionLabel={(o) => o?.label || o?.value || ''}
+                        isOptionEqualToValue={(a, b) => a.value === b.value}
+                        value={fbApontamentosSelecionados
+                          .map((v) => opcoesQaApontamentos.find((o) => o.value === v))
+                          .filter(Boolean)}
+                        onChange={(_e, newValue) => {
+                          setFbApontamentosSelecionados(newValue.map((o) => o.value));
+                        }}
+                        disableCloseOnSelect
+                        filterSelectedOptions
+                        filterOptions={filterOptionsQaValores}
+                        size="small"
+                        renderTags={(value, getTagProps) =>
+                          value.map((option, index) => (
+                            <Chip
+                              {...getTagProps({ index })}
+                              key={`${String(option.value)}-${index}`}
+                              size="small"
+                              label={option.label || option.value}
+                              variant="outlined"
+                              sx={{ fontFamily: 'Poppins', fontSize: '0.7rem' }}
+                            />
+                          ))
+                        }
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Apontamentos"
+                            InputLabelProps={{ ...params.InputLabelProps, sx: { fontFamily: 'Poppins', fontSize: '0.8rem' } }}
+                            inputProps={{ ...params.inputProps, sx: { fontFamily: 'Poppins', fontSize: '0.8rem' } }}
+                          />
+                        )}
+                        sx={{ '& .MuiAutocomplete-inputRoot': { fontFamily: 'Poppins', fontSize: '0.8rem' } }}
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        multiline
+                        minRows={3}
+                        size="small"
+                        label="Observação"
+                        value={fbObservacao}
+                        onChange={(e) => setFbObservacao(e.target.value)}
+                        InputLabelProps={{ sx: { fontFamily: 'Poppins', fontSize: '0.8rem' } }}
+                        inputProps={{ sx: { fontFamily: 'Poppins', fontSize: '0.8rem' } }}
+                      />
+                    </Grid>
+                  </>
+                )}
+
+                <Grid item xs={12}>
+                  <Autocomplete
+                    multiple
+                    options={opcoesRecomendacoesAcademy}
+                    value={fbRecomendacoesSelecionadas}
+                    onChange={(_e, newValue) => {
+                      setFbRecomendacoesSelecionadas(newValue);
+                    }}
+                    disableCloseOnSelect
+                    filterSelectedOptions
+                    isOptionEqualToValue={(a, b) => a === b}
+                    getOptionLabel={(o) => o}
+                    filterOptions={filterOptionsColaborador}
+                    size="small"
+                    renderTags={(value, getTagProps) =>
+                      value.map((option, index) => (
+                        <Chip
+                          {...getTagProps({ index })}
+                          key={`${option}-${index}`}
+                          size="small"
+                          label={option}
+                          variant="outlined"
+                          sx={{ fontFamily: 'Poppins', fontSize: '0.7rem' }}
+                        />
+                      ))
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        fullWidth
+                        label="Recomendações (módulos e temas do Academy)"
+                        InputLabelProps={{ ...params.InputLabelProps, sx: { fontFamily: 'Poppins', fontSize: '0.8rem' } }}
+                        inputProps={{ ...params.inputProps, sx: { fontFamily: 'Poppins', fontSize: '0.8rem' } }}
+                      />
+                    )}
+                    sx={{ '& .MuiAutocomplete-inputRoot': { fontFamily: 'Poppins', fontSize: '0.8rem' } }}
+                  />
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      onClick={handleFbGerar}
+                      disabled={!fbPodeGerar || fbGerando}
+                      className="velohub-btn-azul-opaco"
+                      sx={{
+                        fontFamily: 'Poppins',
+                        fontWeight: 600,
+                        fontSize: '0.8rem',
+                        textTransform: 'none',
+                        backgroundColor: '#006AB9 !important',
+                        color: '#F3F7FC !important'
+                      }}
+                    >
+                      {fbGerando ? 'Gerando…' : 'Gerar'}
+                    </Button>
+                  </Box>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    multiline
+                    minRows={6}
+                    size="small"
+                    label="Feedback Gerado"
+                    value={fbFeedbackGerado}
+                    onChange={(e) => setFbFeedbackGerado(e.target.value)}
+                    InputLabelProps={{ sx: { fontFamily: 'Poppins', fontSize: '0.8rem' } }}
+                    inputProps={{ sx: { fontFamily: 'Poppins', fontSize: '0.8rem' } }}
+                  />
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      onClick={handleFbSalvar}
+                      disabled={!fbPodeEnviar || fbSalvando}
+                      sx={{
+                        fontFamily: 'Poppins',
+                        fontWeight: 600,
+                        fontSize: '0.8rem',
+                        textTransform: 'none',
+                        backgroundColor: '#15A237 !important',
+                        color: '#F3F7FC !important',
+                        '&:disabled': { backgroundColor: '#B0BEC5 !important', color: '#F3F7FC !important' }
+                      }}
+                    >
+                      {fbSalvando ? 'Enviando…' : 'Enviar'}
+                    </Button>
+                  </Box>
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
+          <Card
+            sx={{
+              position: 'relative',
+              borderRadius: '6px',
+              boxShadow: QM_SHADOW_SM,
+              backgroundColor: 'var(--cor-card)',
+              minWidth: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              width: { xs: '100%', md: 'auto' },
+              overflow: 'hidden',
+              ...qmCardSemHoverSomra(QM_SHADOW_SM)
+            }}
+          >
+            <CardContent
+              sx={{
+                py: 2,
+                px: 2,
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                '&:last-child': { pb: 2 }
+              }}
+            >
+              <Typography
+                variant="h6"
+                sx={{ fontFamily: 'Poppins', color: '#000058', fontWeight: 600, fontSize: '0.96rem' }}
+              >
+                Conceder troféu
+              </Typography>
+              {concederTrofeusCatalogLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                  <CircularProgress size={28} sx={{ color: 'var(--blue-medium)' }} />
+                </Box>
+              ) : (
+                <Box sx={{ mt: 1.5, display: 'flex', flexDirection: 'column', gap: 1.5, flex: 1, minHeight: 0 }}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel id="qa-conceder-trofeu-label">Troféu</InputLabel>
+                    <Select
+                      labelId="qa-conceder-trofeu-label"
+                      label="Troféu"
+                      value={concederTrofeuId}
+                      onChange={(e) => setConcederTrofeuId(e.target.value)}
+                      sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}
+                    >
+                      <MenuItem value="">
+                        <em>Selecione…</em>
+                      </MenuItem>
+                      {qaTrophiesConcederLista.map((row) => (
+                        <MenuItem key={row.id} value={row.id} sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
+                          {row.conquista_titulo || row.id}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  {qaTrophiesConcederLista.length === 0 && (
+                    <Typography variant="body2" sx={{ fontFamily: 'Poppins', fontSize: '0.75rem', color: 'rgba(0,0,0,0.55)' }}>
+                      Nenhum troféu no catálogo. Cadastre em Gestão e Qualidade → Gerenciar → Troféus.
+                    </Typography>
+                  )}
+                  {trofeuConcederSelecionado && (
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        flex: 1,
+                        minHeight: 0,
+                        gap: 1.25,
+                        width: '100%'
+                      }}
+                    >
+                      <Divider sx={{ borderColor: 'rgba(22, 52, 255, 0.12)' }} />
+
+                      <Box>
+                        <Typography
+                          component="div"
+                          variant="caption"
+                          sx={{
+                            fontFamily: 'Poppins',
+                            fontWeight: 600,
+                            color: 'var(--blue-dark)',
+                            display: 'block',
+                            mb: 0.25,
+                            letterSpacing: '0.02em'
+                          }}
+                        >
+                          Título
+                        </Typography>
+                        <Typography
+                          sx={{ fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.88rem', color: '#000058', wordBreak: 'break-word' }}
+                        >
+                          {trofeuConcederSelecionado.conquista_titulo?.trim()
+                            ? trofeuConcederSelecionado.conquista_titulo
+                            : '—'}
+                        </Typography>
+                      </Box>
+
+                      <Box>
+                        <Typography
+                          component="div"
+                          variant="caption"
+                          sx={{
+                            fontFamily: 'Poppins',
+                            fontWeight: 600,
+                            color: 'var(--blue-dark)',
+                            display: 'block',
+                            mb: 0.25,
+                            letterSpacing: '0.02em'
+                          }}
+                        >
+                          Legenda
+                        </Typography>
+                        <Typography sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', color: 'var(--gray)', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                          {trofeuConcederSelecionado.conquista_legenda?.trim()
+                            ? trofeuConcederSelecionado.conquista_legenda
+                            : '—'}
+                        </Typography>
+                      </Box>
+
+                      <Box>
+                        <Typography
+                          component="div"
+                          variant="caption"
+                          sx={{
+                            fontFamily: 'Poppins',
+                            fontWeight: 600,
+                            color: 'var(--blue-dark)',
+                            display: 'block',
+                            mb: 0.25,
+                            letterSpacing: '0.02em'
+                          }}
+                        >
+                          Classe de XP
+                        </Typography>
+                        <Typography sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', color: '#000058' }}>
+                          {trofeuConcederSelecionado.xpClass != null && String(trofeuConcederSelecionado.xpClass).trim()
+                            ? String(trofeuConcederSelecionado.xpClass)
+                            : '—'}
+                        </Typography>
+                      </Box>
+
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          width: '100%',
+                          minHeight: 140,
+                          py: 1,
+                          px: 0.5,
+                          borderRadius: '4px',
+                          border: '1px dashed rgba(22, 52, 255, 0.2)',
+                          backgroundColor: 'rgba(0, 0, 0, 0.02)'
+                        }}
+                      >
+                        {trofeuConcederSelecionado.trophy_url ? (
+                          <Box
+                            component="img"
+                            alt={trofeuConcederSelecionado.conquista_titulo || 'Troféu'}
+                            src={getTrophyMediabankDisplayUrl(trofeuConcederSelecionado.trophy_url)}
+                            sx={{
+                              maxHeight: 200,
+                              maxWidth: '100%',
+                              width: 'auto',
+                              height: 'auto',
+                              objectFit: 'contain'
+                            }}
+                          />
+                        ) : (
+                          <Typography sx={{ fontFamily: 'Poppins', fontSize: '0.75rem', color: 'rgba(0,0,0,0.45)' }}>
+                            Sem imagem no catálogo
+                          </Typography>
+                        )}
+                      </Box>
+
+                      {!emailColaboradorFeedback && nomeColaboradorFeedback ? (
+                        <Typography variant="body2" sx={{ fontFamily: 'Poppins', fontSize: '0.72rem', color: 'rgba(179,96,0,0.95)' }}>
+                          Cadastro sem e-mail para este colaborador: o troféu será gravado; na Academy recomenda-se e-mail para filtrar por colaborador.
+                        </Typography>
+                      ) : null}
+
+                      <Box sx={{ mt: 'auto', pt: 1, display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          onClick={handleConcederTrofeuEnviar}
+                          disabled={!concederTrofeuPodeEnviar || concederTrofeuEnviando}
+                          sx={{
+                            fontFamily: 'Poppins',
+                            fontWeight: 600,
+                            fontSize: '0.8rem',
+                            textTransform: 'none',
+                            backgroundColor: '#1694FF !important',
+                            color: '#F3F7FC !important',
+                            '&:disabled': { backgroundColor: '#B0BEC5 !important', color: '#F3F7FC !important' }
+                          }}
+                        >
+                          {concederTrofeuEnviando ? 'Enviando…' : 'Enviar'}
+                        </Button>
+                      </Box>
+                    </Box>
+                  )}
+                </Box>
+              )}
+            </CardContent>
+            <Box
+              role="status"
+              aria-label="Conceder troféu em desenvolvimento"
+              sx={{
+                position: 'absolute',
+                inset: 0,
+                zIndex: 10,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexDirection: 'column',
+                gap: 0.75,
+                px: 2,
+                backgroundColor: 'rgba(243, 247, 252, 0.94)',
+                backdropFilter: 'blur(2px)',
+                borderRadius: '6px',
+                pointerEvents: 'all',
+                cursor: 'not-allowed'
+              }}
+            >
+              <Typography
+                sx={{
+                  fontFamily: 'Poppins',
+                  fontWeight: 600,
+                  fontSize: '0.9rem',
+                  color: '#000058',
+                  textAlign: 'center',
+                  letterSpacing: '0.02em'
+                }}
+              >
+                Em desenvolvimento
+              </Typography>
+            </Box>
+          </Card>
+          </Box>
+          )}
         </Box>
       )}
 
 
       {currentView === 'gpt' && (
         <Box>
-          <Card sx={{ borderRadius: '16px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}>
+          <Card
+            sx={{
+              borderRadius: '6px',
+              boxShadow: QM_SHADOW_LG,
+              ...qmCardSemHoverSomra(QM_SHADOW_LG)
+            }}
+          >
             <CardContent>
               <Box
                 sx={{
@@ -2079,81 +3874,171 @@ const QualidadeModulePage = () => {
 
       {/* Modal Avaliação */}
       <Dialog open={modalAvaliacaoAberto} onClose={fecharModalAvaliacao} maxWidth="md" fullWidth>
-        <DialogTitle sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', fontSize: '0.96rem', py: 1.6 }}>
-          {avaliacaoEditando ? 'Editar Avaliação' : 'Nova Avaliação'}
+        <DialogTitle
+          sx={{
+            fontFamily: 'Poppins',
+            fontWeight: 600,
+            color: '#000058',
+            fontSize: '0.96rem',
+            py: 1.6,
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'flex-start',
+            gap: 2,
+            columnGap: 2,
+            rowGap: 1
+          }}
+        >
+          <Typography
+            component="span"
+            sx={{
+              fontFamily: 'Poppins',
+              fontWeight: 600,
+              color: '#000058',
+              fontSize: '0.96rem',
+              flexShrink: 0
+            }}
+          >
+            {avaliacaoEditando ? 'Editar Avaliação' : 'Nova Avaliação'}
+          </Typography>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              flexShrink: 0,
+              flexWrap: 'wrap'
+            }}
+            aria-label="Alternar entre avaliação de ligação e de ticket"
+          >
+            <Typography
+              component="span"
+              variant="body2"
+              sx={{
+                fontFamily: 'Poppins',
+                fontWeight: formData.tipoAvaliacao === 'ligacao' ? 600 : 500,
+                color: formData.tipoAvaliacao === 'ligacao' ? '#000058' : '#8a94a0',
+                fontSize: '0.8rem'
+              }}
+            >
+              Ligação
+            </Typography>
+            <Switch
+              size="small"
+              checked={formData.tipoAvaliacao === 'ticket'}
+              onChange={(e) => {
+                const toTicket = e.target.checked;
+                setFormData((fd) => ({
+                  ...fd,
+                  tipoAvaliacao: toTicket ? 'ticket' : 'ligacao',
+                  ...Object.fromEntries(
+                    CAMPOS_CRITERIO_LIGACAO.map((k) => [k, toTicket ? false : fd[k] ?? false])
+                  ),
+                  ...Object.fromEntries(
+                    CAMPOS_CRITERIO_TICKET.map((k) => [k, !toTicket ? false : fd[k] ?? false])
+                  )
+                }));
+              }}
+              inputProps={{ 'aria-label': 'Ligação ou Ticket' }}
+            />
+            <Typography
+              component="span"
+              variant="body2"
+              sx={{
+                fontFamily: 'Poppins',
+                fontWeight: formData.tipoAvaliacao === 'ticket' ? 600 : 500,
+                color: formData.tipoAvaliacao === 'ticket' ? '#000058' : '#8a94a0',
+                fontSize: '0.8rem'
+              }}
+            >
+              Ticket
+            </Typography>
+          </Box>
         </DialogTitle>
         <DialogContent sx={{ fontSize: '0.8rem' }}>
           <Grid container spacing={1.6} sx={{ mt: 0.8 }}>
             <Grid item xs={12} md={6}>
-              <FormControl fullWidth required>
-                <InputLabel sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>Colaborador</InputLabel>
-                <Select
-                  value={formData.colaboradorNome}
-                  onChange={(e) => setFormData({ ...formData, colaboradorNome: e.target.value })}
-                  label="Colaborador"
-                  size="small"
-                  sx={{
-                    fontFamily: 'Poppins',
-                    fontSize: '0.8rem',
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#1694FF'
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#000058'
-                    }
-                  }}
-                >
-                  {funcionarios.map((funcionario) => {
-                    const nomeColaborador = funcionario.colaboradorNome || funcionario.nomeCompleto;
-                    return (
-                      <MenuItem key={funcionario._id || funcionario.id} value={nomeColaborador} sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
-                        {nomeColaborador}
-                      </MenuItem>
-                    );
-                  })}
-                </Select>
-              </FormControl>
+              <Autocomplete
+                fullWidth
+                size="small"
+                className="velohub-select-alinhado"
+                options={opcoesColaboradorModal}
+                value={formData.colaboradorNome ? formData.colaboradorNome : null}
+                onChange={(_e, newValue) => {
+                  setFormData({ ...formData, colaboradorNome: newValue || '' });
+                }}
+                isOptionEqualToValue={(option, value) => option === value}
+                filterOptions={filterOptionsColaborador}
+                noOptionsText="Nenhum colaborador encontrado"
+                ListboxProps={{
+                  sx: { fontFamily: 'Poppins', fontSize: '0.8rem', maxHeight: 280 }
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    required
+                    label="Colaborador"
+                    InputLabelProps={{
+                      ...params.InputLabelProps,
+                      sx: {
+                        fontFamily: 'Poppins',
+                        fontSize: '0.8rem',
+                        color: '#000058',
+                        '&.Mui-focused': { color: '#006AB9' }
+                      }
+                    }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        fontFamily: 'Poppins',
+                        fontSize: '0.8rem',
+                        borderRadius: '4px',
+                        '& fieldset': { borderColor: '#000058' },
+                        '&:hover fieldset': { borderColor: '#006AB9' },
+                        '&.Mui-focused fieldset': { borderColor: '#006AB9' }
+                      }
+                    }}
+                  />
+                )}
+              />
             </Grid>
-            <Grid item xs={12} md={6}>
-              {user?._funcoesAdministrativas?.avaliador === true ? (
-                <TextField
-                  value={nomeAvaliadorLogado}
-                  label="Avaliador"
-                  disabled
-                  fullWidth
-                  required
-                  size="small"
-                  sx={{
-                    fontFamily: 'Poppins',
-                    fontSize: '0.8rem',
-                    '& .MuiInputBase-input.Mui-disabled': {
-                      color: '#000058',
-                      fontWeight: 500
-                    },
-                    '& .MuiInputLabel-root.Mui-disabled': {
-                      color: '#666666'
-                    }
-                  }}
-                />
-              ) : (
-                <FormControl fullWidth required>
-                <InputLabel sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>Avaliador</InputLabel>
-                <Select
-                  value={formData.avaliador}
-                  onChange={(e) => setFormData({ ...formData, avaliador: e.target.value })}
-                  label="Avaliador"
-                  size="small"
-                  sx={{
-                    fontFamily: 'Poppins',
-                    fontSize: '0.8rem',
+            {user?._funcoesAdministrativas?.avaliador !== true ? (
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth required size="small">
+                  <InputLabel
+                    id="qualidade-modal-avaliador-label"
+                    shrink
+                    sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}
+                  >
+                    Avaliador
+                  </InputLabel>
+                  <Select
+                    labelId="qualidade-modal-avaliador-label"
+                    value={formData.avaliador}
+                    onChange={(e) => setFormData({ ...formData, avaliador: e.target.value })}
+                    label="Avaliador"
+                    size="small"
+                    displayEmpty
+                    renderValue={(selected) => {
+                      if (!selected) return '';
+                      return (
+                        <span style={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>Avaliador selecionado</span>
+                      );
+                    }}
+                    sx={{
+                      fontFamily: 'Poppins',
+                      fontSize: '0.8rem',
                       '&:hover .MuiOutlinedInput-notchedOutline': {
                         borderColor: '#1694FF'
                       },
                       '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
                         borderColor: '#000058'
                       }
-                  }}
-                >
+                    }}
+                  >
+                    <MenuItem value="" sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
+                      <em>Selecione</em>
+                    </MenuItem>
                     {opcoesAvaliadorModal.map((avaliador) => (
                       <MenuItem key={avaliador} value={avaliador} sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
                         {avaliador}
@@ -2161,8 +4046,8 @@ const QualidadeModulePage = () => {
                     ))}
                   </Select>
                 </FormControl>
-              )}
-            </Grid>
+              </Grid>
+            ) : null}
             <Grid item xs={12} md={6}>
               <FormControl fullWidth required>
                 <InputLabel sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>Mês</InputLabel>
@@ -2222,7 +4107,7 @@ const QualidadeModulePage = () => {
               <TextField
                 fullWidth
                 size="small"
-                label="Data da Ligação Avaliada"
+                label={formData.tipoAvaliacao === 'ticket' ? 'Data do Chamado' : 'Data da Ligação Avaliada'}
                 type="date"
                 value={formData.dataLigacao}
                 onChange={(e) => setFormData({ ...formData, dataLigacao: e.target.value })}
@@ -2244,35 +4129,89 @@ const QualidadeModulePage = () => {
                 }}
               />
             </Grid>
-            
+
             <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Hora da Ligação"
-                type="time"
-                value={formData.horaLigacao}
-                onChange={(e) => setFormData({ ...formData, horaLigacao: e.target.value })}
-                InputLabelProps={{
-                  shrink: true,
-                  style: { fontFamily: 'Poppins', fontSize: '0.8rem' }
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    fontFamily: 'Poppins',
-                fontSize: '0.8rem',
-                    '&:hover fieldset': {
-                      borderColor: '#1694FF'
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#000058'
+              {formData.tipoAvaliacao === 'ticket' ? (
+                <TextField
+                  fullWidth
+                  size="small"
+                  required
+                  label="Ticket nº"
+                  type="text"
+                  inputMode="numeric"
+                  value={formData.numeroTicket}
+                  onChange={(e) => {
+                    const digits = e.target.value.replace(/\D/g, '');
+                    setFormData({ ...formData, numeroTicket: digits });
+                  }}
+                  InputLabelProps={{
+                    shrink: true,
+                    style: { fontFamily: 'Poppins', fontSize: '0.8rem' }
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      fontFamily: 'Poppins',
+                      fontSize: '0.8rem',
+                      '&:hover fieldset': {
+                        borderColor: '#1694FF'
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#000058'
+                      }
                     }
-                  }
-                }}
-              />
+                  }}
+                />
+              ) : (
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Hora da Ligação"
+                  type="time"
+                  value={formData.horaLigacao}
+                  onChange={(e) => setFormData({ ...formData, horaLigacao: e.target.value })}
+                  InputLabelProps={{
+                    shrink: true,
+                    style: { fontFamily: 'Poppins', fontSize: '0.8rem' }
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      fontFamily: 'Poppins',
+                      fontSize: '0.8rem',
+                      '&:hover fieldset': {
+                        borderColor: '#1694FF'
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#000058'
+                      }
+                    }
+                  }}
+                />
+              )}
             </Grid>
             
-            {/* Critérios de Avaliação */}
+            {formData.tipoAvaliacao === 'ticket' ? (
+              <>
+                <Grid item xs={12}>
+                  <Divider sx={{ mt: 1.6, mb: 0.8, borderColor: 'rgba(0, 0, 88, 0.12)' }} />
+                </Grid>
+                <Grid item xs={12}>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      fontFamily: 'Poppins',
+                      fontWeight: 600,
+                      color: '#000058',
+                      mb: 1.6,
+                      fontSize: '0.96rem'
+                    }}
+                  >
+                    Critérios de Avaliação
+                  </Typography>
+                </Grid>
+                <CriteriosModalTicket formData={formData} setFormData={setFormData} />
+              </>
+            ) : (
+              <>
             <Grid item xs={12}>
               <Typography variant="subtitle1" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', mb: 1.6, fontSize: '0.96rem' }}>
                 Critérios de Avaliação
@@ -2293,7 +4232,7 @@ const QualidadeModulePage = () => {
                   border: criterio.isPositive 
                     ? (formData[criterio.key] ? '1px solid rgba(22, 148, 255, 0.75)' : '1px solid rgba(22, 148, 255, 0.5)')
                     : (formData[criterio.key] ? '1px solid #EF4444' : '1px solid rgba(255, 193, 7, 0.6)'),
-                  borderRadius: '6.4px',
+                  borderRadius: '4px',
                   backgroundColor: 'var(--cor-card)'
                 }}>
                   <Box>
@@ -2355,7 +4294,7 @@ const QualidadeModulePage = () => {
                   border: criterio.isPositive 
                     ? (formData[criterio.key] ? '1px solid rgba(22, 148, 255, 0.75)' : '1px solid rgba(22, 148, 255, 0.5)')
                     : (formData[criterio.key] ? '1px solid #EF4444' : '1px solid rgba(255, 193, 7, 0.6)'),
-                  borderRadius: '6.4px',
+                  borderRadius: '4px',
                   backgroundColor: 'var(--cor-card)'
                 }}>
                   <Box>
@@ -2417,7 +4356,7 @@ const QualidadeModulePage = () => {
                   border: criterio.isPositive 
                     ? (formData[criterio.key] ? '1px solid rgba(22, 148, 255, 0.75)' : '1px solid rgba(22, 148, 255, 0.5)')
                     : (formData[criterio.key] ? '1px solid #EF4444' : '1px solid rgba(255, 193, 7, 0.6)'),
-                  borderRadius: '6.4px',
+                  borderRadius: '4px',
                   backgroundColor: 'var(--cor-card)'
                 }}>
                   <Box>
@@ -2475,7 +4414,7 @@ const QualidadeModulePage = () => {
                 border: formData.direcionouPesquisa 
                   ? '1px solid rgba(22, 148, 255, 0.75)' 
                   : '1px solid rgba(22, 148, 255, 0.5)',
-                borderRadius: '6.4px',
+                borderRadius: '4px',
                 backgroundColor: 'var(--cor-card)'
               }}>
                 <Box>
@@ -2544,7 +4483,7 @@ const QualidadeModulePage = () => {
                   border: criterio.isPositive 
                     ? (formData[criterio.key] ? '1px solid rgba(22, 148, 255, 0.75)' : '1px solid rgba(22, 148, 255, 0.5)')
                     : (formData[criterio.key] ? '1px solid #EF4444' : '1px solid rgba(255, 193, 7, 0.6)'),
-                  borderRadius: '6.4px',
+                  borderRadius: '4px',
                   backgroundColor: 'var(--cor-card)'
                 }}>
                   <Box>
@@ -2602,7 +4541,7 @@ const QualidadeModulePage = () => {
                 border: formData.encerramentoBrusco 
                   ? '1px solid #EF4444' 
                   : '1px solid rgba(255, 193, 7, 0.6)',
-                borderRadius: '6.4px',
+                borderRadius: '4px',
                 backgroundColor: 'var(--cor-card)'
               }}>
                 <Box>
@@ -2653,7 +4592,7 @@ const QualidadeModulePage = () => {
                 justifyContent: 'space-between', 
                 p: 1.6, 
                 border: formData.procedimentoIncorreto ? '1px solid #EF4444' : '1px solid rgba(255, 193, 7, 0.6)',
-                borderRadius: '6.4px',
+                borderRadius: '4px',
                 backgroundColor: 'var(--cor-card)'
               }}>
                 <Box>
@@ -2691,6 +4630,8 @@ const QualidadeModulePage = () => {
                 </Button>
               </Box>
             </Grid>
+              </>
+            )}
             
             <Grid item xs={12}>
               <TextField
@@ -2763,7 +4704,7 @@ const QualidadeModulePage = () => {
                   <Typography variant="subtitle1" sx={{ fontFamily: 'Poppins', fontWeight: 600, color: '#000058', mb: 2 }}>
                     Informações da Avaliação
                   </Typography>
-                  <Box sx={{ p: 2, backgroundColor: 'var(--cor-container)', borderRadius: '8px' }}>
+                  <Box sx={{ p: 2, backgroundColor: 'var(--cor-container)', borderRadius: '4px' }}>
                     <Typography variant="body2" sx={{ fontFamily: 'Poppins', mb: 1 }}>
                       <strong>Colaborador:</strong> {avaliacaoSelecionada.colaboradorNome}
                     </Typography>
@@ -2790,7 +4731,7 @@ const QualidadeModulePage = () => {
                       </Typography>
                     </Box>
                   ) : gptResult ? (
-                    <Box sx={{ p: 2, backgroundColor: 'var(--cor-container)', borderRadius: '8px' }}>
+                    <Box sx={{ p: 2, backgroundColor: 'var(--cor-container)', borderRadius: '4px' }}>
                       <Typography variant="body2" sx={{ fontFamily: 'Poppins', mb: 1 }}>
                         <strong>Pontuação GPT:</strong> {gptResult.pontuacao} pontos
                       </Typography>
@@ -2900,25 +4841,48 @@ const QualidadeModulePage = () => {
           <Grid container spacing={2} sx={{ mt: 1 }}>
             {/* Colaborador */}
             <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
-                <InputLabel sx={{ fontFamily: 'Poppins' }}>Colaborador</InputLabel>
-                <Select
-                  value={filtros.colaborador}
-                  onChange={(e) => setFiltros({ ...filtros, colaborador: e.target.value })}
-                  label="Colaborador"
-                  sx={{ fontFamily: 'Poppins' }}
-                >
-                  <MenuItem value="" sx={{ fontFamily: 'Poppins' }}>Todos</MenuItem>
-                  {funcionarios.map((funcionario) => {
-                    const nomeColaborador = funcionario.colaboradorNome || funcionario.nomeCompleto;
-                    return (
-                      <MenuItem key={funcionario._id} value={nomeColaborador} sx={{ fontFamily: 'Poppins' }}>
-                        {nomeColaborador}
-                      </MenuItem>
-                    );
-                  })}
-                </Select>
-              </FormControl>
+              <Autocomplete
+                fullWidth
+                size="small"
+                className="velohub-select-alinhado"
+                options={opcoesColaboradorFiltrosLista}
+                value={filtros.colaborador ? filtros.colaborador : null}
+                onChange={(_e, newValue) => {
+                  setFiltros({ ...filtros, colaborador: newValue || '' });
+                }}
+                isOptionEqualToValue={(option, value) => option === value}
+                filterOptions={filterOptionsColaborador}
+                noOptionsText="Nenhum colaborador encontrado"
+                ListboxProps={{
+                  sx: { fontFamily: 'Poppins', fontSize: '0.8rem', maxHeight: 280 }
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Colaborador"
+                    placeholder="Todos"
+                    InputLabelProps={{
+                      ...params.InputLabelProps,
+                      sx: {
+                        fontFamily: 'Poppins',
+                        fontSize: '0.8rem',
+                        color: '#000058',
+                        '&.Mui-focused': { color: '#006AB9' }
+                      }
+                    }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        fontFamily: 'Poppins',
+                        fontSize: '0.8rem',
+                        borderRadius: '4px',
+                        '& fieldset': { borderColor: '#000058' },
+                        '&:hover fieldset': { borderColor: '#006AB9' },
+                        '&.Mui-focused fieldset': { borderColor: '#006AB9' }
+                      }
+                    }}
+                  />
+                )}
+              />
             </Grid>
 
             {/* Avaliador */}

@@ -92,7 +92,7 @@ const AnaliseGPTAccordion = ({
           sx={{
             background: 'transparent',
             border: '1.5px solid var(--blue-dark)',
-            borderRadius: '8px',
+            borderRadius: '4px',
             padding: '16px',
             margin: '8px 0',
             cursor: 'pointer',
@@ -250,7 +250,7 @@ const AnaliseGPTAccordion = ({
                             value={empatiaPercentual} 
                             sx={{ 
                               height: 8, 
-                              borderRadius: 4,
+                              borderRadius: '3.5px',
                               backgroundColor: '#e0e0e0',
                               '& .MuiLinearProgress-bar': {
                                 backgroundColor: '#1694FF'
@@ -277,7 +277,7 @@ const AnaliseGPTAccordion = ({
                             value={profissionalismoPercentual} 
                             sx={{ 
                               height: 8, 
-                              borderRadius: 4,
+                              borderRadius: '3.5px',
                               backgroundColor: '#e0e0e0',
                               '& .MuiLinearProgress-bar': {
                                 backgroundColor: '#15A237'
@@ -320,7 +320,7 @@ const AnaliseGPTAccordion = ({
                             value={clarezaPercentual} 
                             sx={{ 
                               height: 8, 
-                              borderRadius: 4,
+                              borderRadius: '3.5px',
                               backgroundColor: '#e0e0e0',
                               '& .MuiLinearProgress-bar': {
                                 backgroundColor: '#1694FF'
@@ -347,7 +347,7 @@ const AnaliseGPTAccordion = ({
                             value={tensaoPercentual} 
                             sx={{ 
                               height: 8, 
-                              borderRadius: 4,
+                              borderRadius: '3.5px',
                               backgroundColor: '#e0e0e0',
                               '& .MuiLinearProgress-bar': {
                                 backgroundColor: tensaoPercentual > 50 ? '#f44336' : '#FCC200'

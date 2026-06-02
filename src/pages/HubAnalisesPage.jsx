@@ -1,4 +1,13 @@
-// VERSION: v3.2.0 | DATE: 2026-03-11 | AUTHOR: VeloHub Development Team
+// VERSION: v3.3.0 | DATE: 2026-06-01 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v3.3.0 - Velonews: filtro de funcionários elegíveis compatível com atuacao [{ funcao }] (schema atual)
+// CHANGELOG: v3.2.9 - Cabeçalho Voltar/abas: VoltarHeaderRow (alinhamento global)
+// CHANGELOG: v3.2.7 - Hub: removido rótulo “Sessões Abertas” do primeiro card
+// CHANGELOG: v3.2.6 - Velonews declarações: data na mesma linha do título (accordion summary)
+// CHANGELOG: v3.2.5 - Sessões Abertas: excluir agentes desligado/afastado; totais no cabeçalho conforme lista filtrada
+// CHANGELOG: v3.2.4 - Sessões Abertas: Online/Offline em blocos separados; grid 4 cols; células reservadas vazias na última linha de cada bloco
+// CHANGELOG: v3.2.3 - Sessões Abertas: seções Online e Offline separadas (cada uma em até 4 colunas; sem misturar na mesma linha)
+// CHANGELOG: v3.2.2 - Sessões Abertas: grid em 4 colunas (md+)
+// CHANGELOG: v3.2.1 - Cards painel Hub/Velonews — sem hover/elevação do tema Card (CARD_PRINCIPAL_SX).
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,
@@ -34,8 +43,46 @@ import {
 } from '@mui/material';
 import { ExpandMore, Refresh, Download, ChevronLeft, ChevronRight } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
-import BackButton from '../components/common/BackButton';
+import BackButton, { VoltarHeaderRow } from '../components/common/BackButton';
 import { hubAnalisesAPI, qualidadeFuncionariosAPI, qualidadeFuncoesAPI } from '../services/api';
+
+const CARD_PRINCIPAL_SX = {
+  boxShadow: 'none',
+  transition: 'none',
+  '&:hover': {
+    boxShadow: 'none',
+    transform: 'none',
+  },
+};
+
+/** Sessões Abertas: última linha incompleta — células vazias até 4 posições (sem misturar online/offline). */
+const SESSOES_ABERTAS_COLunas = 4;
+
+/** Agentes com desligado ou afastado verdadeiros não entram na lista (sem card). */
+const manterAgenteSessoesHub = (usuario) => {
+  if (!usuario || typeof usuario !== 'object') return false;
+  return usuario.desligado !== true && usuario.afastado !== true;
+};
+
+const celulasVaziasParaLinhaCompleta = (itemCount) => {
+  if (itemCount <= 0) return 0;
+  const r = itemCount % SESSOES_ABERTAS_COLunas;
+  return r === 0 ? 0 : SESSOES_ABERTAS_COLunas - r;
+};
+
+/** Nome de atuação elegível para painel Velonews (ciência por notícia). */
+const nomeAtuacaoElegivelVelonews = (nomeRaw) => {
+  if (nomeRaw == null || nomeRaw === '') return false;
+  const funcaoLower = String(nomeRaw).toLowerCase().trim();
+  return (
+    funcaoLower.includes('atendimento') ||
+    funcaoLower.includes('redes sociais') ||
+    funcaoLower.includes('reclame aqui') ||
+    funcaoLower === 'n2' ||
+    funcaoLower === 'n 2' ||
+    /\bn2\b/.test(funcaoLower)
+  );
+};
 
 const HubAnalisesPage = () => {
   const [activeTab, setActiveTab] = useState(0);
@@ -423,39 +470,58 @@ const HubAnalisesPage = () => {
       });
       
       if (funcoesRelevantes.length === 0) {
-        console.warn('⚠️ Nenhuma função relevante encontrada para Velonews');
-        setFuncionariosVelonews([]);
-        return;
+        console.warn('⚠️ Nenhuma função em /qualidade/funcoes bateu o filtro Velonews; usando nomes em atuacao [{ funcao }]');
       }
-      
+
+      const idsFuncoesRelevantes = new Set(
+        funcoesRelevantes.map((f) => String(f._id))
+      );
+      const nomesFuncoesRelevantes = new Set(
+        funcoesRelevantes
+          .map((f) => (f.funcao != null ? String(f.funcao).toLowerCase().trim() : ''))
+          .filter(Boolean)
+      );
+
       // Buscar todos os funcionários
       const funcionariosResponse = await qualidadeFuncionariosAPI.getAll();
       const funcionariosData = funcionariosResponse?.data || funcionariosResponse || [];
       
-      // Filtrar funcionários com atuacao contendo uma das funções relevantes e desligado = false
-      const funcionariosFiltrados = funcionariosData.filter(func => {
-        // Filtrar desligados
-        if (func.desligado === true) return false;
-        
-        // Verificar se atuacao contém alguma das funções relevantes
-        if (Array.isArray(func.atuacao)) {
-          return func.atuacao.some(atuacaoId => 
-            funcoesRelevantes.some(funcao => 
-              atuacaoId === funcao._id || 
-              atuacaoId?.toString() === funcao._id?.toString()
-            )
+      // Filtrar funcionários: atuacao [{ funcao }], legado ObjectId ou string
+      const funcionariosFiltrados = funcionariosData.filter((func) => {
+        if (func.desligado === true || func.afastado === true) return false;
+
+        const atuacao = func.atuacao;
+        if (atuacao == null) return false;
+
+        if (Array.isArray(atuacao)) {
+          return atuacao.some((item) => {
+            if (item == null) return false;
+            if (typeof item === 'object' && item.funcao != null) {
+              const nome = String(item.funcao).trim();
+              if (nomeAtuacaoElegivelVelonews(nome)) return true;
+              return nomesFuncoesRelevantes.has(nome.toLowerCase());
+            }
+            const idStr =
+              typeof item === 'object' && item._id != null
+                ? String(item._id)
+                : String(item).trim();
+            if (idsFuncoesRelevantes.has(idStr)) return true;
+            if (typeof item === 'string') return nomeAtuacaoElegivelVelonews(item);
+            return false;
+          });
+        }
+
+        if (typeof atuacao === 'string') {
+          return nomeAtuacaoElegivelVelonews(atuacao);
+        }
+
+        if (typeof atuacao === 'object' && atuacao.funcao != null) {
+          const nome = String(atuacao.funcao).trim();
+          return (
+            nomeAtuacaoElegivelVelonews(nome) || nomesFuncoesRelevantes.has(nome.toLowerCase())
           );
         }
-        
-        // Formato antigo: string
-        if (typeof func.atuacao === 'string') {
-          const atuacaoLower = func.atuacao.toLowerCase();
-          return atuacaoLower.includes('atendimento') ||
-                 atuacaoLower.includes('redes sociais') ||
-                 atuacaoLower.includes('reclame aqui') ||
-                 atuacaoLower.includes('n2');
-        }
-        
+
         return false;
       });
       
@@ -581,53 +647,86 @@ const HubAnalisesPage = () => {
     }
   }, [isValidDate]);
 
-  // Combinar online e offline em um único array - COM INFORMAÇÕES DE HORÁRIO
-  const todosUsuarios = React.useMemo(() => {
-    // Debug: verificar estado atual
+  // Online e offline em listas separadas (ordenadas por nome) — grids distintos na UI
+  const { usuariosOnlineLista, usuariosOfflineLista } = React.useMemo(() => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('🔍 [todosUsuarios] Estado atual:', {
+      console.log('🔍 [sessões abertas] Estado atual:', {
         online: usuariosOnlineOffline.online?.length || 0,
         offline: usuariosOnlineOffline.offline?.length || 0,
         totalOnline: usuariosOnlineOffline.totalOnline,
-        totalOffline: usuariosOnlineOffline.totalOffline,
-        usuariosOnlineOffline
+        totalOffline: usuariosOnlineOffline.totalOffline
       });
     }
-    
+
     if (!usuariosOnlineOffline || (!usuariosOnlineOffline.online && !usuariosOnlineOffline.offline)) {
-      return [];
+      return { usuariosOnlineLista: [], usuariosOfflineLista: [] };
     }
-    
-    const combined = [
-      ...(usuariosOnlineOffline.online || []).map(u => ({ 
-        ...u, 
+
+    const usuariosOnlineLista = [...(usuariosOnlineOffline.online || [])]
+      .filter(manterAgenteSessoesHub)
+      .map((u) => ({
+        ...u,
         isActive: true,
         loginTimestamp: u.loginTimestamp || u.createdAt || null,
         lastActivity: u.lastActivity || u.updatedAt || null,
         tempoOnline: u.loginTimestamp ? calculateSessionDuration(u.loginTimestamp, null) : 'N/A'
-      })),
-      ...(usuariosOnlineOffline.offline || []).map(u => ({ 
-        ...u, 
+      }))
+      .sort((a, b) => (a.colaboradorNome || '').localeCompare(b.colaboradorNome || ''));
+
+    const usuariosOfflineLista = [...(usuariosOnlineOffline.offline || [])]
+      .filter(manterAgenteSessoesHub)
+      .map((u) => ({
+        ...u,
         isActive: false,
         logoutTimestamp: u.logoutTimestamp || u.updatedAt || null
       }))
-    ];
-    
-    const sorted = combined.sort((a, b) => {
-      // Online primeiro, depois offline
-      if (a.isActive !== b.isActive) {
-        return b.isActive ? 1 : -1;
-      }
-      // Depois ordenar por nome
-      return (a.colaboradorNome || '').localeCompare(b.colaboradorNome || '');
-    });
-    
+      .sort((a, b) => (a.colaboradorNome || '').localeCompare(b.colaboradorNome || ''));
+
     if (process.env.NODE_ENV === 'development') {
-      console.log('✅ [todosUsuarios] Array combinado:', sorted.length, 'usuários');
+      console.log(
+        '✅ [sessões abertas] Online:',
+        usuariosOnlineLista.length,
+        'Offline:',
+        usuariosOfflineLista.length
+      );
     }
-    
-    return sorted;
+
+    return { usuariosOnlineLista, usuariosOfflineLista };
   }, [usuariosOnlineOffline, calculateSessionDuration]);
+
+  const nenhumaSessaoAbertaLista =
+    usuariosOnlineLista.length === 0 && usuariosOfflineLista.length === 0;
+
+  /** Resumo contagens + botão atualizar (reutilizado na legenda Online e em loading/vazio). */
+  const hubResumoTotRefreshLinha = React.useMemo(
+    () => (
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+        <Typography variant="body2" sx={{ fontSize: '0.6rem', color: 'var(--gray)', fontFamily: 'Poppins', textAlign: 'right' }}>
+          Online: {usuariosOnlineLista.length} | Offline: {usuariosOfflineLista.length} | Total:{' '}
+          {usuariosOnlineLista.length + usuariosOfflineLista.length}
+        </Typography>
+        <Box
+          component="button"
+          type="button"
+          onClick={loadUsuariosOnlineOffline}
+          aria-label="Atualizar status online e offline"
+          sx={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            flexShrink: 0,
+            color: 'var(--blue-medium)',
+            '&:hover': { opacity: 0.7 }
+          }}
+        >
+          <Refresh sx={{ fontSize: '0.7rem' }} />
+        </Box>
+      </Box>
+    ),
+    [usuariosOnlineLista.length, usuariosOfflineLista.length, loadUsuariosOnlineOffline]
+  );
 
   // Formatar data - COM VALIDAÇÃO E PRECISÃO
   const formatDate = useCallback((date) => {
@@ -743,21 +842,9 @@ const HubAnalisesPage = () => {
 
   return (
     <Container maxWidth="xl" sx={{ py: 3.2, mb: 6.4, pb: 3.2 }}>
-      {/* Header com botão voltar e abas alinhadas */}
-      <Box sx={{ position: 'relative', mb: 3.2, minHeight: 40 }}>
-        <Box sx={{ position: 'absolute', left: 0, top: 0, bottom: 0, display: 'flex', alignItems: 'center' }}>
-          <BackButton />
-        </Box>
-        <Box sx={{
-          position: 'absolute',
-          left: '50%',
-          top: 0,
-          bottom: 0,
-          transform: 'translateX(-50%)',
-          display: 'flex',
-          alignItems: 'center',
-          width: 'max-content'
-        }}>
+      <VoltarHeaderRow
+        left={<BackButton />}
+        center={
           <Tabs
             value={activeTab}
             onChange={(e, v) => setActiveTab(v)}
@@ -786,108 +873,191 @@ const HubAnalisesPage = () => {
             <Tab label="Hub" />
             <Tab label="Velonews" />
           </Tabs>
-        </Box>
-      </Box>
+        }
+      />
 
       {/* Aba Hub */}
       {activeTab === 0 && (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {/* Quadro 1: Sessões Abertas */}
-          <Card sx={{ backgroundColor: 'var(--cor-card)' }}>
+          {/* Quadro 1: status online/offline (sem título de secção) */}
+          <Card sx={{ backgroundColor: 'var(--cor-card)', ...CARD_PRINCIPAL_SX }}>
             <CardContent sx={{ backgroundColor: 'var(--cor-card)' }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.6 }}>
-                <Typography variant="h6" sx={{ fontSize: '0.7rem', color: 'var(--blue-dark)', fontFamily: 'Poppins', fontWeight: 600 }}>
-                  Sessões Abertas
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                  <Typography variant="body2" sx={{ fontSize: '0.6rem', color: 'var(--gray)', fontFamily: 'Poppins' }}>
-                    Online: {usuariosOnlineOffline.totalOnline} | Offline: {usuariosOnlineOffline.totalOffline} | Total: {usuariosOnlineOffline.totalFuncionarios}
-                  </Typography>
-                  <Box
-                    component="button"
-                    onClick={loadUsuariosOnlineOffline}
-                    sx={{
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      color: 'var(--blue-medium)',
-                      '&:hover': { opacity: 0.7 }
-                    }}
-                  >
-                    <Refresh sx={{ fontSize: '0.7rem' }} />
-                  </Box>
-                </Box>
-              </Box>
-
               {loadingUsuarios ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                  <CircularProgress sx={{ color: 'var(--blue-medium)', size: '1rem' }} />
-                </Box>
-              ) : todosUsuarios.length === 0 ? (
-                <Alert severity="info" sx={{ fontFamily: 'Poppins', fontSize: '0.65rem' }}>
-                  Nenhum funcionário encontrado.
-                </Alert>
+                <>
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>{hubResumoTotRefreshLinha}</Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                    <CircularProgress sx={{ color: 'var(--blue-medium)', size: '1rem' }} />
+                  </Box>
+                </>
+              ) : nenhumaSessaoAbertaLista ? (
+                <>
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1.6 }}>{hubResumoTotRefreshLinha}</Box>
+                  <Alert severity="info" sx={{ fontFamily: 'Poppins', fontSize: '0.65rem' }}>
+                    Nenhum funcionário encontrado.
+                  </Alert>
+                </>
               ) : (
-                <Grid container spacing={1.6}>
-                  {todosUsuarios.map((usuario, index) => (
-                    <Grid item xs={12} sm={6} md={4} key={usuario.colaboradorNome || index}>
-                      <Box
-                        className={usuario.isActive ? 'hub-analises-sessao-card' : 'hub-analises-sessao-card-offline'}
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  <Box>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: 1.2,
+                        flexWrap: 'wrap',
+                        mb: 1.2,
+                        pb: 0.4,
+                        borderBottom: '1px solid rgba(21, 162, 55, 0.35)'
+                      }}
+                    >
+                      <Typography
+                        variant="subtitle2"
                         sx={{
-                          p: 1.2,
-                          border: '1px solid rgba(22, 52, 255, 0.1)',
-                          borderRadius: '6px',
-                          backgroundColor: usuario.isActive ? 'rgba(21, 162, 55, 0.20)' : 'rgba(255, 0, 0, 0.20)',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: 0.4
+                          fontSize: '0.68rem',
+                          fontFamily: 'Poppins',
+                          fontWeight: 600,
+                          color: 'var(--blue-dark)',
+                          flex: '1 1 auto',
+                          minWidth: 0
                         }}
                       >
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
-                          <Box
-                            sx={{
-                              width: 8,
-                              height: 8,
-                              borderRadius: '50%',
-                              backgroundColor: usuario.isActive ? '#15A237' : '#FF0000',
-                              flexShrink: 0
-                            }}
-                          />
-                          <Typography sx={{ fontSize: '0.7rem', fontFamily: 'Poppins', fontWeight: 600, color: 'var(--blue-dark)' }}>
-                            {usuario.colaboradorNome || 'N/A'}
-                          </Typography>
-                        </Box>
-                        {usuario.isActive && usuario.loginTimestamp && (
-                          <Box sx={{ pl: 1.6, display: 'flex', flexDirection: 'column', gap: 0.2 }}>
-                            <Typography sx={{ fontSize: '0.6rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
-                              Acesso: {formatDatePrecise(usuario.loginTimestamp)}
-                            </Typography>
-                            {usuario.tempoOnline && usuario.tempoOnline !== 'N/A' && (
-                              <Typography sx={{ fontSize: '0.6rem', fontFamily: 'Poppins', color: 'var(--blue-medium)', fontWeight: 500 }}>
-                                {usuario.tempoOnline}
-                              </Typography>
-                            )}
-                          </Box>
-                        )}
-                        {!usuario.isActive && usuario.logoutTimestamp && (
-                          <Box sx={{ pl: 1.6 }}>
-                            <Typography sx={{ fontSize: '0.6rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
-                              Fechamento: {formatDatePrecise(usuario.logoutTimestamp)}
-                            </Typography>
-                          </Box>
-                        )}
-                      </Box>
-                    </Grid>
-                  ))}
-                </Grid>
+                        Online
+                      </Typography>
+                      <Box sx={{ flexShrink: 0, minWidth: 'min(100%, 320px)' }}>{hubResumoTotRefreshLinha}</Box>
+                    </Box>
+                    {usuariosOnlineLista.length === 0 ? (
+                      <Typography sx={{ fontSize: '0.62rem', fontFamily: 'Poppins', color: 'rgba(0,0,0,0.5)' }}>
+                        Nenhum usuário online no momento.
+                      </Typography>
+                    ) : (
+                      <Grid container spacing={1.6}>
+                        {usuariosOnlineLista.map((usuario, index) => (
+                          <Grid item xs={12} sm={6} md={3} key={`sessao-online-${usuario.colaboradorNome || index}`}>
+                            <Box
+                              className="hub-analises-sessao-card"
+                              sx={{
+                                p: 1.2,
+                                border: '1px solid rgba(22, 52, 255, 0.1)',
+                                borderRadius: '6px',
+                                backgroundColor: 'rgba(21, 162, 55, 0.20)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 0.4
+                              }}
+                            >
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+                                <Box
+                                  sx={{
+                                    width: 8,
+                                    height: 8,
+                                    borderRadius: '50%',
+                                    backgroundColor: '#15A237',
+                                    flexShrink: 0
+                                  }}
+                                />
+                                <Typography sx={{ fontSize: '0.7rem', fontFamily: 'Poppins', fontWeight: 600, color: 'var(--blue-dark)' }}>
+                                  {usuario.colaboradorNome || 'N/A'}
+                                </Typography>
+                              </Box>
+                              {usuario.loginTimestamp && (
+                                <Box sx={{ pl: 1.6, display: 'flex', flexDirection: 'column', gap: 0.2 }}>
+                                  <Typography sx={{ fontSize: '0.6rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
+                                    Acesso: {formatDatePrecise(usuario.loginTimestamp)}
+                                  </Typography>
+                                  {usuario.tempoOnline && usuario.tempoOnline !== 'N/A' && (
+                                    <Typography sx={{ fontSize: '0.6rem', fontFamily: 'Poppins', color: 'var(--blue-medium)', fontWeight: 500 }}>
+                                      {usuario.tempoOnline}
+                                    </Typography>
+                                  )}
+                                </Box>
+                              )}
+                            </Box>
+                          </Grid>
+                        ))}
+                        {Array.from({ length: celulasVaziasParaLinhaCompleta(usuariosOnlineLista.length) }).map((__, idx) => (
+                          <Grid item xs={12} sm={6} md={3} key={`sessao-online-vazio-${idx}`} aria-hidden>
+                            <Box sx={{ minHeight: 1 }} />
+                          </Grid>
+                        ))}
+                      </Grid>
+                    )}
+                  </Box>
+
+                  <Box>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{
+                        fontSize: '0.68rem',
+                        fontFamily: 'Poppins',
+                        fontWeight: 600,
+                        color: 'var(--blue-dark)',
+                        mb: 1.2,
+                        pb: 0.4,
+                        borderBottom: '1px solid rgba(255, 0, 0, 0.35)'
+                      }}
+                    >
+                      Offline
+                    </Typography>
+                    {usuariosOfflineLista.length === 0 ? (
+                      <Typography sx={{ fontSize: '0.62rem', fontFamily: 'Poppins', color: 'rgba(0,0,0,0.5)' }}>
+                        Nenhum usuário offline listado no momento.
+                      </Typography>
+                    ) : (
+                      <Grid container spacing={1.6}>
+                        {usuariosOfflineLista.map((usuario, index) => (
+                          <Grid item xs={12} sm={6} md={3} key={`sessao-offline-${usuario.colaboradorNome || index}`}>
+                            <Box
+                              className="hub-analises-sessao-card-offline"
+                              sx={{
+                                p: 1.2,
+                                border: '1px solid rgba(22, 52, 255, 0.1)',
+                                borderRadius: '6px',
+                                backgroundColor: 'rgba(255, 0, 0, 0.20)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 0.4
+                              }}
+                            >
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+                                <Box
+                                  sx={{
+                                    width: 8,
+                                    height: 8,
+                                    borderRadius: '50%',
+                                    backgroundColor: '#FF0000',
+                                    flexShrink: 0
+                                  }}
+                                />
+                                <Typography sx={{ fontSize: '0.7rem', fontFamily: 'Poppins', fontWeight: 600, color: 'var(--blue-dark)' }}>
+                                  {usuario.colaboradorNome || 'N/A'}
+                                </Typography>
+                              </Box>
+                              {usuario.logoutTimestamp && (
+                                <Box sx={{ pl: 1.6 }}>
+                                  <Typography sx={{ fontSize: '0.6rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
+                                    Fechamento: {formatDatePrecise(usuario.logoutTimestamp)}
+                                  </Typography>
+                                </Box>
+                              )}
+                            </Box>
+                          </Grid>
+                        ))}
+                        {Array.from({ length: celulasVaziasParaLinhaCompleta(usuariosOfflineLista.length) }).map((__, idx) => (
+                          <Grid item xs={12} sm={6} md={3} key={`sessao-offline-vazio-${idx}`} aria-hidden>
+                            <Box sx={{ minHeight: 1 }} />
+                          </Grid>
+                        ))}
+                      </Grid>
+                    )}
+                  </Box>
+                </Box>
               )}
             </CardContent>
           </Card>
 
           {/* Quadro 2: Histórico de Sessões */}
-          <Card sx={{ backgroundColor: 'var(--cor-card)' }}>
+          <Card sx={{ backgroundColor: 'var(--cor-card)', ...CARD_PRINCIPAL_SX }}>
             <CardContent sx={{ backgroundColor: 'var(--cor-card)' }}>
               <Box sx={{ mb: 1.6 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.6 }}>
@@ -1301,7 +1471,7 @@ const HubAnalisesPage = () => {
 
       {/* Aba Velonews - Declarações de Ciência */}
       {activeTab === 1 && (
-        <Card sx={{ backgroundColor: 'var(--cor-card)' }}>
+        <Card sx={{ backgroundColor: 'var(--cor-card)', ...CARD_PRINCIPAL_SX }}>
           <CardContent>
             <Typography variant="h6" sx={{ mb: 2.4, fontSize: '0.7rem', color: 'var(--blue-dark)', fontFamily: 'Poppins', fontWeight: 600 }}>
               Declarações de Ciência
@@ -1327,7 +1497,7 @@ const HubAnalisesPage = () => {
                       '&:before': { display: 'none' },
                       backgroundColor: 'var(--cor-container)',
                       boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                      borderRadius: '8px !important',
+                      borderRadius: '4px !important',
                       border: '1px solid rgba(0, 0, 0, 0.12)',
                       '&.Mui-expanded': {
                         margin: '0 !important'
@@ -1344,11 +1514,33 @@ const HubAnalisesPage = () => {
                       }}
                     >
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', pr: 2 }}>
-                        <Box>
-                          <Typography sx={{ fontSize: '0.7rem', fontFamily: 'Poppins', fontWeight: 600, color: 'var(--blue-dark)' }}>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            alignItems: 'baseline',
+                            gap: 1,
+                            columnGap: 1.2,
+                            flex: '1 1 auto',
+                            minWidth: 0
+                          }}
+                        >
+                          <Typography
+                            component="span"
+                            sx={{ fontSize: '0.7rem', fontFamily: 'Poppins', fontWeight: 600, color: 'var(--blue-dark)' }}
+                          >
                             {noticia.titulo}
                           </Typography>
-                          <Typography variant="caption" sx={{ fontSize: '0.6rem', fontFamily: 'Poppins', color: 'var(--gray)' }}>
+                          <Typography
+                            component="span"
+                            variant="caption"
+                            sx={{
+                              fontSize: '0.6rem',
+                              fontFamily: 'Poppins',
+                              color: 'var(--gray)',
+                              flexShrink: 0
+                            }}
+                          >
                             {noticia.primeiraCiencia ? formatDatePrecise(noticia.primeiraCiencia) : 'N/A'}
                           </Typography>
                         </Box>

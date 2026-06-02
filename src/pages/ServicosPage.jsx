@@ -1,5 +1,5 @@
-// VERSION: v1.5.2 | DATE: 2026-03-25 | AUTHOR: VeloHub Development Team
-// CHANGELOG: v1.5.2 - Etiqueta do serviço seguro-credito exibida como Prestamista
+// VERSION: v1.5.3 | DATE: 2026-04-28 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.5.3 - Cabeçalho Voltar/título/Salvar: VoltarHeaderRow (alinhamento global)
 // CHANGELOG: v1.5.1 - Removido subtítulo (descrição) dos cards de serviços
 import React, { useState, useEffect } from 'react';
 import {
@@ -20,7 +20,7 @@ import {
   Warning as RevisaoIcon,
   Cancel as OffIcon
 } from '@mui/icons-material';
-import BackButton from '../components/common/BackButton';
+import BackButton, { VoltarHeaderRow } from '../components/common/BackButton';
 import { servicesAPI } from '../services/api';
 
 const FRONTEND_MODULE_KEYS = [
@@ -257,11 +257,9 @@ const ServicosPage = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: 3.2, pb: 6.4 }}>
-      {/* Header */}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', mb: 3.2 }}>
-        <Box sx={{ position: 'absolute', left: 0 }}>
-          <BackButton />
-        </Box>
+      <VoltarHeaderRow
+        left={<BackButton />}
+        center={
         <Typography 
           variant="h4" 
           component="h1"
@@ -274,7 +272,8 @@ const ServicosPage = () => {
         >
           Serviços
         </Typography>
-        <Box sx={{ position: 'absolute', right: 0 }}>
+        }
+        right={
           <Button
             variant="contained"
             size="small"
@@ -296,8 +295,8 @@ const ServicosPage = () => {
           >
             {saving ? 'Salvando...' : 'Salvar Alterações'}
           </Button>
-        </Box>
-      </Box>
+        }
+      />
 
       {/* Loading */}
       {loading && (

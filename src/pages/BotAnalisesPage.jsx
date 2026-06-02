@@ -1,4 +1,5 @@
-// VERSION: v2.13.0 | DATE: 2026-03-11 | AUTHOR: VeloHub Development Team
+// VERSION: v2.13.2 | DATE: 2026-04-28 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v2.13.2 - Cabeçalho Voltar/abas/export: VoltarHeaderRow (alinhamento global)
 import React, { useState, useCallback, useEffect } from 'react';
 import { Typography, Box, Tabs, Tab, Container, Grid, Card, CardContent, FormControl, InputLabel, Select, MenuItem, Button, Accordion, AccordionSummary, AccordionDetails, Chip, Alert, CircularProgress, Checkbox, FormControlLabel, TextField, InputAdornment } from '@mui/material';
 import { QuestionAnswer, People, Schedule, TrendingUp, TrendingDown, DateRange, Timeline, PieChart as PieChartIcon, ShowChart, Person, FileDownload, PictureAsPdf, ListAlt, EmojiEvents, Analytics, Psychology, Refresh, Search, ExpandMore } from '@mui/icons-material';
@@ -6,9 +7,31 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import BackButton from '../components/common/BackButton';
+import BackButton, { VoltarHeaderRow } from '../components/common/BackButton';
 import botAnalisesService from '../services/botAnalisesService';
 import { botFeedbackAPI } from '../services/api';
+
+const CARD_PRINCIPAL_SX = {
+  boxShadow: 'none',
+  transition: 'none',
+  '&:hover': {
+    boxShadow: 'none',
+    transform: 'none',
+  },
+};
+
+/** Painéis largos com sombra — mesma sombra no hover (sem lift do Card do tema). */
+const BOT_ANALISES_CARD_CONTAINER_SX = {
+  background: 'var(--cor-container)',
+  borderRadius: '6px',
+  border: '1px solid rgba(0, 0, 0, 0.12)',
+  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+  transition: 'none',
+  '&:hover': {
+    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+    transform: 'none',
+  },
+};
 
 const BotAnalisesPage = () => {
   const [activeTab, setActiveTab] = useState(0);
@@ -725,24 +748,9 @@ const BotAnalisesPage = () => {
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 8, pb: 4 }}>
-      {/* Header alinhado: Botão Voltar + Abas + Botões Exportação centralizados no frame */}
-      <Box sx={{ position: 'relative', mb: 3.2, minHeight: 40 }}>
-        {/* Botão Voltar alinhado à esquerda */}
-        <Box sx={{ position: 'absolute', left: 0, top: 0, bottom: 0, display: 'flex', alignItems: 'center' }}>
-          <BackButton />
-        </Box>
-        
-        {/* Abas centralizadas */}
-        <Box sx={{
-          position: 'absolute',
-          left: '50%',
-          top: 0,
-          bottom: 0,
-          transform: 'translateX(-50%)',
-          display: 'flex',
-          alignItems: 'center',
-          width: 'max-content'
-        }}>
+      <VoltarHeaderRow
+        left={<BackButton />}
+        center={
           <Tabs
           value={activeTab}
           onChange={handleTabChange}
@@ -779,22 +787,9 @@ const BotAnalisesPage = () => {
             aria-controls="bot-analises-tabpanel-1"
           />
         </Tabs>
-        </Box>
-
-        {/* Botões de Exportação alinhados à direita, mas centralizados no frame */}
-        <Box
-          sx={{
-            position: 'absolute',
-            right: 0,
-            top: 0,
-            bottom: 0,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-            pr: 2,
-            zIndex: 2,
-          }}
-        >
+        }
+        right={
+          <>
           <Button
             variant="outlined"
             startIcon={<FileDownload />}
@@ -825,8 +820,9 @@ const BotAnalisesPage = () => {
           >
             PDF
           </Button>
-        </Box>
-      </Box>
+          </>
+        }
+      />
       {/* Linha divisória abaixo do seletor */}
       <Box
         sx={{
@@ -840,13 +836,7 @@ const BotAnalisesPage = () => {
       {activeTab === 0 && (
         <Container maxWidth="xl" sx={{ pt: 3 }}>
           {/* Container Principal - Geral da Operação */}
-          <Card sx={{
-            background: 'var(--cor-container)',
-            borderRadius: '16px',
-            border: '1px solid rgba(0, 0, 0, 0.12)',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-            mb: 4
-          }}>
+          <Card sx={{ ...BOT_ANALISES_CARD_CONTAINER_SX, mb: 4 }}>
             <CardContent sx={{ p: 3.2 }}>
               {/* Filtro de Período na mesma linha */}
               <Box sx={{
@@ -910,7 +900,7 @@ const BotAnalisesPage = () => {
             <Grid item xs={12} sm={6} md={2.4}>
               <Card sx={{
                 background: 'transparent',
-                borderRadius: '8px',
+                borderRadius: '4px',
                 border: '1.5px solid var(--blue-dark)',
                 padding: '16px',
                 margin: '8px',
@@ -956,7 +946,7 @@ const BotAnalisesPage = () => {
             <Grid item xs={12} sm={6} md={2.4}>
               <Card sx={{
                 background: 'transparent',
-                borderRadius: '8px',
+                borderRadius: '4px',
                 border: '1.5px solid var(--blue-dark)',
                 padding: '16px',
                 margin: '8px',
@@ -1002,7 +992,7 @@ const BotAnalisesPage = () => {
             <Grid item xs={12} sm={6} md={2.4}>
               <Card sx={{
                 background: 'transparent',
-                borderRadius: '8px',
+                borderRadius: '4px',
                 border: '1.5px solid var(--blue-dark)',
                 padding: '16px',
                 margin: '8px',
@@ -1048,7 +1038,7 @@ const BotAnalisesPage = () => {
             <Grid item xs={12} sm={6} md={2.4}>
               <Card sx={{
                 background: 'transparent',
-                borderRadius: '8px',
+                borderRadius: '4px',
                 border: '1.5px solid var(--blue-dark)',
                 padding: '16px',
                 margin: '8px',
@@ -1110,7 +1100,7 @@ const BotAnalisesPage = () => {
             <Grid item xs={12} sm={6} md={2.4}>
               <Card sx={{
                 background: 'transparent',
-                borderRadius: '8px',
+                borderRadius: '4px',
                 border: '1.5px solid var(--blue-dark)',
                 padding: '16px',
                 margin: '8px',
@@ -1164,7 +1154,7 @@ const BotAnalisesPage = () => {
                 <Grid item xs={12}>
                   <Card sx={{
                     background: 'transparent',
-                    borderRadius: '8px',
+                    borderRadius: '4px',
                     border: '1.5px solid var(--blue-dark)',
                     padding: '16px',
                     margin: '8px',
@@ -1361,7 +1351,7 @@ const BotAnalisesPage = () => {
                             contentStyle={{
                               backgroundColor: 'var(--cor-card)',
                               border: '1px solid #ccc',
-                              borderRadius: '8px',
+                              borderRadius: '4px',
                               fontFamily: 'Poppins',
                               fontSize: '12px'
                             }}
@@ -1430,7 +1420,7 @@ const BotAnalisesPage = () => {
                 <Grid item xs={12} md={6}>
                   <Card sx={{
                     background: 'transparent',
-                    borderRadius: '8px',
+                    borderRadius: '4px',
                     border: '1.5px solid var(--blue-dark)',
                     padding: '16px',
                     margin: '8px',
@@ -1510,7 +1500,7 @@ const BotAnalisesPage = () => {
                             contentStyle={{
                               backgroundColor: 'var(--cor-card)',
                               border: '1px solid #ccc',
-                              borderRadius: '8px',
+                              borderRadius: '4px',
                               fontFamily: 'Poppins',
                               fontSize: '0.85rem'
                             }}
@@ -1530,7 +1520,7 @@ const BotAnalisesPage = () => {
                 <Grid item xs={12} md={6}>
                   <Card sx={{
                     background: 'transparent',
-                    borderRadius: '8px',
+                    borderRadius: '4px',
                     border: '1.5px solid var(--blue-dark)',
                     padding: '16px',
                     margin: '8px',
@@ -1574,7 +1564,7 @@ const BotAnalisesPage = () => {
                                    contentStyle={{
                                      backgroundColor: 'var(--cor-card)',
                                      border: '1px solid #ccc',
-                                     borderRadius: '8px',
+                                     borderRadius: '4px',
                                      fontFamily: 'Poppins',
                                      fontSize: '12px'
                                    }}
@@ -1591,20 +1581,14 @@ const BotAnalisesPage = () => {
           </Card>
 
           {/* Card Lista de Atividades e Ranking de Utilização */}
-          <Card sx={{
-            background: 'var(--cor-container)',
-            borderRadius: '16px',
-            border: '1px solid rgba(0, 0, 0, 0.12)',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-            mb: 4
-          }}>
+          <Card sx={{ ...BOT_ANALISES_CARD_CONTAINER_SX, mb: 4 }}>
             <CardContent sx={{ p: 3.2 }}>
               <Grid container spacing={3}>
                 {/* Lista de Atividades - Coluna Esquerda */}
                 <Grid item xs={12} md={6}>
                   <Card sx={{
                     background: 'transparent',
-                    borderRadius: '8px',
+                    borderRadius: '4px',
                     border: '1.5px solid var(--blue-dark)',
                     padding: '16px',
                     margin: '8px',
@@ -1789,7 +1773,7 @@ const BotAnalisesPage = () => {
                 <Grid item xs={12} md={6}>
                   <Card sx={{
                     background: 'transparent',
-                    borderRadius: '8px',
+                    borderRadius: '4px',
                     border: '1.5px solid var(--blue-dark)',
                     padding: '16px',
                     margin: '8px',
@@ -1917,14 +1901,7 @@ const BotAnalisesPage = () => {
           </Card>
 
           {/* Container Principal - Análise de Utilização */}
-          <Card sx={{
-            background: 'var(--cor-container)',
-            borderRadius: '16px',
-            border: '1px solid rgba(0, 0, 0, 0.12)',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-            mb: 4,
-            mt: 4
-          }}>
+          <Card sx={{ ...BOT_ANALISES_CARD_CONTAINER_SX, mb: 4, mt: 4 }}>
             <CardContent sx={{ p: 3.2 }}>
               {/* Título Análise de Utilização */}
               <Typography variant="h4" sx={{ 
@@ -1942,7 +1919,7 @@ const BotAnalisesPage = () => {
                 <Grid item xs={12}>
                   <Card sx={{
                     background: 'transparent',
-                    borderRadius: '8px',
+                    borderRadius: '4px',
                     border: '1.5px solid var(--blue-dark)',
                     padding: '16px',
                     margin: '8px',
@@ -2059,7 +2036,7 @@ const BotAnalisesPage = () => {
                                  <Box sx={{ 
                                    p: 2,
                                    border: '1px solid rgba(0, 0, 0, 0.12)',
-                                   borderRadius: '8px',
+                                   borderRadius: '4px',
                                    height: '100%',
                                    backgroundColor: 'rgba(22, 52, 255, 0.02)'
                                  }}>
@@ -2121,7 +2098,7 @@ const BotAnalisesPage = () => {
                                  <Box sx={{ 
                                    p: 2,
                                    border: '1px solid rgba(0, 0, 0, 0.12)',
-                                   borderRadius: '8px',
+                                   borderRadius: '4px',
                                    height: '100%',
                                    backgroundColor: 'rgba(21, 162, 55, 0.02)'
                                  }}>
@@ -2187,7 +2164,7 @@ const BotAnalisesPage = () => {
                                  <Box sx={{ 
                                    p: 2,
                                    border: '1px solid rgba(0, 0, 0, 0.12)',
-                                   borderRadius: '8px',
+                                   borderRadius: '4px',
                                    height: '100%',
                                    backgroundColor: 'rgba(255, 99, 132, 0.02)'
                                  }}>
@@ -2259,7 +2236,7 @@ const BotAnalisesPage = () => {
 
       {activeTab === 1 && (
         <Container maxWidth="xl" sx={{ pt: 3 }}>
-          <Card sx={{ backgroundColor: 'var(--cor-card)' }}>
+          <Card sx={{ backgroundColor: 'var(--cor-card)', ...CARD_PRINCIPAL_SX }}>
             <CardContent>
               <Typography variant="h6" sx={{ mb: 3, color: 'var(--blue-dark)', fontFamily: 'Poppins', fontWeight: 600 }}>
                 Feedback do Bot
@@ -2283,7 +2260,7 @@ const BotAnalisesPage = () => {
                       sx={{
                         '&:before': { display: 'none' },
                         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                        borderRadius: '8px !important',
+                        borderRadius: '4px !important',
                         '&.Mui-expanded': {
                           margin: '0 !important'
                         }

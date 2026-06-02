@@ -1,4 +1,7 @@
-// VERSION: v3.3.7 | DATE: 2025-02-02 | AUTHOR: VeloHub Development Team
+// VERSION: v3.3.11 | DATE: 2026-05-08 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v3.3.11 - Dialog somente leitura: cabeçalho id · solicitante · direcionamento · data; campos removidos do grid
+// CHANGELOG: v3.3.10 - Atualização pós-mensagem/status sem setLoading (modal permanece montado; selectedTicket sincronizado com GET /tickets)
+// CHANGELOG: v3.3.9 - Visibilidade: Gestão + direcionamento QA → permissão gestaoQa
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -36,7 +39,7 @@ import {
   Refresh,
   FilterList
 } from '@mui/icons-material';
-import BackButton from '../components/common/BackButton';
+import BackButton, { VoltarHeaderRow } from '../components/common/BackButton';
 import ModalAtribuido from '../components/ModalAtribuido';
 import { ticketsAPI } from '../services/ticketsAPI';
 import { useAuth } from '../contexts/AuthContext';
@@ -201,12 +204,12 @@ const ChamadosInternosPage = () => {
     return generosConteudo.includes(generoLower);
   };
 
-  // Função para mapear _genero do ticket para a chave de _userTickets
-  const mapGeneroToTicketType = (genero) => {
-    if (!genero) return null;
-    
-    const generoLower = genero.toLowerCase();
-    
+  // Função para mapear ticket (gênero + direcionamento Gestão) para a chave de _userTickets
+  const mapTicketToUserTicketType = (ticket) => {
+    if (!ticket?._genero) return null;
+
+    const generoLower = ticket._genero.toLowerCase();
+
     // Mapeamento para tk_conteudos
     const conteudosMap = {
       'artigo': 'artigos',
@@ -218,32 +221,33 @@ const ChamadosInternosPage = () => {
       'recurso adicional': 'recursos',
       'recurso': 'recursos'
     };
-    
-    // Mapeamento para tk_gestao
+
+    if (conteudosMap[generoLower]) {
+      return conteudosMap[generoLower];
+    }
+
+    if (generoLower === 'gestão' || generoLower === 'gestao') {
+      const dir = ticket._direcionamento != null ? String(ticket._direcionamento).toLowerCase().trim() : '';
+      if (dir === 'qa') {
+        return 'gestaoQa';
+      }
+      return 'gestao';
+    }
+
     const gestaoMap = {
-      'gestão': 'gestao',
-      'gestao': 'gestao',
       'rh e financeiro': 'rhFin',
       'rh & financeiro': 'rhFin',
       'facilities': 'facilities'
     };
-    
-    // Verificar primeiro em conteudos, depois em gestao
-    if (conteudosMap[generoLower]) {
-      return conteudosMap[generoLower];
-    }
-    if (gestaoMap[generoLower]) {
-      return gestaoMap[generoLower];
-    }
-    
-    return null;
+
+    return gestaoMap[generoLower] || null;
   };
 
   // Função para verificar se o usuário pode visualizar um ticket
   const canViewTicket = (ticket) => {
     if (!ticket || !ticket._genero) return true; // Se não tem gênero, permitir visualização
     
-    const ticketType = mapGeneroToTicketType(ticket._genero);
+    const ticketType = mapTicketToUserTicketType(ticket);
     if (!ticketType) return true; // Se não conseguiu mapear, permitir visualização
     
     return canViewTicketType(ticketType);
@@ -267,8 +271,6 @@ const ChamadosInternosPage = () => {
   };
 
   const handleTicketUpdate = async () => {
-    // Recarregar tickets após atualização
-    setLoading(true);
     try {
       const response = await ticketsAPI.getAll();
       const allTickets = [
@@ -276,12 +278,15 @@ const ChamadosInternosPage = () => {
         ...(response.data?.conteudos || [])
       ];
       setTickets(allTickets);
+      setSelectedTicket((prev) => {
+        if (!prev) return prev;
+        const fresh = allTickets.find((t) => t._id === prev._id);
+        return fresh !== undefined ? fresh : prev;
+      });
       setError(null);
     } catch (err) {
       console.error('Erro ao recarregar tickets:', err);
       setError('Erro ao recarregar tickets');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -354,12 +359,7 @@ const ChamadosInternosPage = () => {
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 8, pb: 4, fontSize: '0.8em' }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', mb: 4 }}>
-        <Box sx={{ position: 'absolute', left: 0 }}>
-          <BackButton />
-        </Box>
-        {/* Removido o título Chamados Internos */}
-      </Box>
+      <VoltarHeaderRow left={<BackButton />} />
 
       {/* Dashboard de Tickets */}
       <Card sx={{ mb: 4, backgroundColor: 'var(--cor-card)' }}>
@@ -644,7 +644,7 @@ const ChamadosInternosPage = () => {
                                 gap: '8px',
                                 padding: '4px 8px',
                                 backgroundColor: 'var(--cor-card)',
-                                borderRadius: '16px',
+                                borderRadius: '6px',
                                 border: '1px solid #e0e0e0',
                                 transition: 'all 0.3s ease',
                                 cursor: 'default',
@@ -695,7 +695,7 @@ const ChamadosInternosPage = () => {
                               justifyContent: 'center',
                               padding: '8px 12px',
                               backgroundColor: 'white',
-                              borderRadius: '16px',
+                              borderRadius: '6px',
                               border: '1px solid #e0e0e0',
                               transition: 'all 0.3s ease',
                               cursor: 'pointer',
@@ -941,7 +941,7 @@ const ChamadosInternosPage = () => {
                           fontFamily: 'Poppins',
                           fontSize: '0.75rem',
                           padding: '4px 12px',
-                          borderRadius: '8px',
+                          borderRadius: '4px',
                           borderColor: 'var(--gray)',
                           color: 'var(--gray)',
                           opacity: 0.6
@@ -988,40 +988,44 @@ const ChamadosInternosPage = () => {
               <DialogTitle sx={{
                 fontFamily: 'Poppins',
                 fontWeight: 600,
-                color: 'var(--blue-dark)'
+                color: 'var(--blue-dark)',
+                pb: 1
               }}>
-                {isTicketConteudo(selectedTicket) ?
-                  `${selectedTicket._id} - ${selectedTicket._tipo} - ${selectedTicket._assunto || selectedTicket._direcionamento || 'Não informado'}` :
-                  `${selectedTicket._id} - ${selectedTicket._tipo} - ${selectedTicket._direcionamento || 'Não informado'}`
-                }
+                <Box sx={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  alignItems: 'baseline',
+                  gap: 0.5,
+                  columnGap: 1
+                }}>
+                  <Typography component="span" sx={{ fontFamily: 'Poppins', fontWeight: 700, fontSize: '1rem', color: 'var(--blue-dark)' }}>
+                    {selectedTicket._id}
+                  </Typography>
+                  <Typography component="span" sx={{ color: 'text.secondary', userSelect: 'none', lineHeight: 1 }} aria-hidden>·</Typography>
+                  <Typography component="span" sx={{ fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.95rem' }}>
+                    {selectedTicket._corpo && selectedTicket._corpo.length > 0 ? selectedTicket._corpo[0].userName : 'Não informado'}
+                  </Typography>
+                  <Typography component="span" sx={{ color: 'text.secondary', userSelect: 'none', lineHeight: 1 }} aria-hidden>·</Typography>
+                  <Typography component="span" sx={{ fontFamily: 'Poppins', fontWeight: 500, fontSize: '0.9rem', wordBreak: 'break-word' }}>
+                    {isTicketConteudo(selectedTicket)
+                      ? (selectedTicket._assunto || selectedTicket._direcionamento || 'Não informado')
+                      : (selectedTicket._direcionamento || 'Não informado')}
+                  </Typography>
+                  <Typography component="span" sx={{ color: 'text.secondary', userSelect: 'none', lineHeight: 1 }} aria-hidden>·</Typography>
+                  <Typography component="span" sx={{ fontFamily: 'Poppins', fontWeight: 500, fontSize: '0.9rem' }}>
+                    {selectedTicket.createdAt ? new Date(selectedTicket.createdAt).toLocaleDateString('pt-BR') : 'Não informado'}
+                  </Typography>
+                </Box>
               </DialogTitle>
               <DialogContent>
                 <Box sx={{ mt: 2 }}>
                   <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 3 }}>
-                    {/* Linha 1 */}
-                    <Box>
-                      <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.75rem' }}>
-                        Solicitante:
-                      </Typography>
-                      <Typography sx={{ fontFamily: 'Poppins', fontSize: '0.7rem' }}>
-                        {selectedTicket._corpo && selectedTicket._corpo.length > 0 ? selectedTicket._corpo[0].userName : 'Não informado'}
-                      </Typography>
-                    </Box>
                     <Box>
                       <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.75rem' }}>
                         Email:
                       </Typography>
                       <Typography sx={{ fontFamily: 'Poppins', fontSize: '0.7rem' }}>
                         {selectedTicket._userEmail || 'Não informado'}
-                      </Typography>
-                    </Box>
-                    {/* Linha 2 */}
-                    <Box>
-                      <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.75rem' }}>
-                        Data:
-                      </Typography>
-                      <Typography sx={{ fontFamily: 'Poppins', fontSize: '0.7rem' }}>
-                        {selectedTicket.createdAt ? new Date(selectedTicket.createdAt).toLocaleDateString('pt-BR') : 'Não informado'}
                       </Typography>
                     </Box>
                     <Box>
@@ -1032,30 +1036,12 @@ const ChamadosInternosPage = () => {
                         {calculateSLA(selectedTicket.createdAt)}
                       </Typography>
                     </Box>
-                    {/* Linha 3 */}
-                    <Box>
-                      <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.75rem' }}>
-                        {isTicketConteudo(selectedTicket) ? 'Assunto/Direcionamento:' : 'Direcionamento:'}
-                      </Typography>
-                      <Typography sx={{ fontFamily: 'Poppins', fontSize: '0.7rem' }}>
-                        {isTicketConteudo(selectedTicket) ? (selectedTicket._assunto || selectedTicket._direcionamento || 'Não informado') : (selectedTicket._direcionamento || 'Não informado')}
-                      </Typography>
-                    </Box>
                     <Box>
                       <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.75rem' }}>
                         Atribuído:
                       </Typography>
                       <Typography sx={{ fontFamily: 'Poppins', fontSize: '0.7rem' }}>
                         {selectedTicket._atribuido || 'Não atribuído'}
-                      </Typography>
-                    </Box>
-                    {/* Linha 4 */}
-                    <Box>
-                      <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.75rem' }}>
-                        Processo em Andamento:
-                      </Typography>
-                      <Typography sx={{ fontFamily: 'Poppins', fontSize: '0.7rem' }}>
-                        {selectedTicket._processamento || 'Não informado'}
                       </Typography>
                     </Box>
                     <Box>
@@ -1066,7 +1052,14 @@ const ChamadosInternosPage = () => {
                         {selectedTicket._genero || 'Não informado'}
                       </Typography>
                     </Box>
-                    {/* Linha 5 */}
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.75rem' }}>
+                        Processo em Andamento:
+                      </Typography>
+                      <Typography sx={{ fontFamily: 'Poppins', fontSize: '0.7rem' }}>
+                        {selectedTicket._processamento || 'Não informado'}
+                      </Typography>
+                    </Box>
                     <Box>
                       <Typography variant="subtitle2" sx={{ fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.75rem' }}>
                         Status:
@@ -1086,9 +1079,6 @@ const ChamadosInternosPage = () => {
                         variant="filled"
                       />
                     </Box>
-                    <Box>
-                      {/* Vazio - coluna 2 da linha 5 */}
-                    </Box>
                   </Box>
 
                   <Box sx={{ mb: 3 }}>
@@ -1106,7 +1096,7 @@ const ChamadosInternosPage = () => {
                     </Typography>
                     {selectedTicket._corpo && selectedTicket._corpo.length > 0 ? (
                       selectedTicket._corpo.map((mensagem, index) => (
-                        <Box key={index} sx={{ mb: 1, p: 1.5, backgroundColor: 'var(--cor-container)', borderRadius: 1, borderBottom: index < selectedTicket._corpo.length - 1 ? '1px solid rgba(0, 0, 0, 0.1)' : 'none' }}>
+                        <Box key={index} sx={{ mb: 1, p: 1.5, backgroundColor: 'var(--cor-container)', borderRadius: '4px', borderBottom: index < selectedTicket._corpo.length - 1 ? '1px solid rgba(0, 0, 0, 0.1)' : 'none' }}>
                           <Typography
                             variant="h6"
                             sx={{

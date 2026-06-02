@@ -1,4 +1,5 @@
-// VERSION: v3.2.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// VERSION: v3.3.0 | DATE: 2026-04-28 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v3.3.0 - MuiCard/MuiButton: raios padronizados 6px (principal) e 4px (botões)
 import { createTheme } from '@mui/material/styles';
 
 // Verificar se tema escuro está ativo
@@ -51,7 +52,7 @@ export const velohubTheme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
+          borderRadius: '6px',
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
           transition: 'all 0.3s ease',
           '&:hover': {
@@ -66,7 +67,7 @@ export const velohubTheme = createTheme({
         root: {
           fontFamily: '"Poppins", "Roboto", "Helvetica", "Arial", sans-serif',
           fontWeight: 600,
-          borderRadius: '8px',
+          borderRadius: '4px',
           textTransform: 'none',
         },
         contained: {

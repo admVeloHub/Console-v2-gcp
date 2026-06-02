@@ -1,64 +1,139 @@
-// VERSION: v1.0.0 | DATE: 2025-01-30 | AUTHOR: VeloHub Development Team
+// VERSION: v1.1.0 | DATE: 2026-05-08 | AUTHOR: VeloHub Development Team
 /**
- * Utilitário para gerenciar imagens temporárias no localStorage
- * Armazena blob URLs e arquivos File para upload posterior
+ * Utilitário para gerenciar imagens temporárias
+ * — Metadados no localStorage (pequeno)
+ * — Binários no IndexedDB (evita QuotaExceededError do localStorage com base64)
  */
 
-/**
- * Obter chave do localStorage para uma página específica
- * @param {string} pageId - ID da página (ex: 'velonews', 'artigos')
- * @returns {string} Chave do localStorage
- */
 const getStorageKey = (pageId) => {
   return `velohub_temp_images_${pageId}`;
 };
 
-/**
- * Salvar imagem temporária no localStorage
- * @param {File} file - Arquivo de imagem
- * @param {string} uuid - UUID único da imagem
- * @param {string} blobUrl - URL do blob criado
- * @param {string} pageId - ID da página
- * @returns {Promise<void>}
- */
-export const saveTemporaryImage = async (file, uuid, blobUrl, pageId) => {
-  try {
-    const storageKey = getStorageKey(pageId);
-    const existingImages = getAllTemporaryImages(pageId);
-    
-    // Converter File para base64 para armazenar no localStorage
-    const base64 = await fileToBase64(file);
-    
-    const imageData = {
-      uuid,
-      blobUrl,
-      fileName: file.name,
-      fileType: file.type,
-      fileSize: file.size,
-      base64,
-      timestamp: Date.now()
-    };
-    
-    existingImages[uuid] = imageData;
-    
-    localStorage.setItem(storageKey, JSON.stringify(existingImages));
-    console.log(`✅ Imagem temporária salva: ${uuid} (${file.name})`);
-  } catch (error) {
-    console.error('❌ Erro ao salvar imagem temporária:', error);
-    throw error;
+const idbKey = (pageId, uuid) => `${pageId}::${uuid}`;
+
+const IDB_NAME = 'velohub_temp_image_blobs';
+const IDB_STORE = 'blobs';
+const IDB_VERSION = 1;
+
+/** @type {Promise<IDBDatabase> | null} */
+let dbPromise = null;
+
+function openImageBlobDB() {
+  if (typeof indexedDB === 'undefined') {
+    return Promise.reject(new Error('IndexedDB não disponível neste ambiente'));
   }
-};
+  if (!dbPromise) {
+    dbPromise = new Promise((resolve, reject) => {
+      const req = indexedDB.open(IDB_NAME, IDB_VERSION);
+      req.onerror = () => {
+        dbPromise = null;
+        reject(req.error);
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onupgradeneeded = (event) => {
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains(IDB_STORE)) {
+          db.createObjectStore(IDB_STORE);
+        }
+      };
+    });
+  }
+  return dbPromise;
+}
 
 /**
- * Converter File para base64
- * @param {File} file - Arquivo a ser convertido
- * @returns {Promise<string>} Base64 string
+ * @param {string} pageId
+ * @param {string} uuid
+ * @param {Blob} blob
+ */
+async function idbPutBlob(pageId, uuid, blob) {
+  const db = await openImageBlobDB();
+  const key = idbKey(pageId, uuid);
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE, 'readwrite');
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+    tx.objectStore(IDB_STORE).put(blob, key);
+  });
+}
+
+/**
+ * @param {string} pageId
+ * @param {string} uuid
+ * @returns {Promise<Blob | undefined>}
+ */
+async function idbGetBlob(pageId, uuid) {
+  try {
+    const db = await openImageBlobDB();
+    const key = idbKey(pageId, uuid);
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(IDB_STORE, 'readonly');
+      tx.onerror = () => reject(tx.error);
+      const request = tx.objectStore(IDB_STORE).get(key);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+    });
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * @param {string} pageId
+ * @param {string} uuid
+ */
+async function idbDeleteBlob(pageId, uuid) {
+  try {
+    const db = await openImageBlobDB();
+    const key = idbKey(pageId, uuid);
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(IDB_STORE, 'readwrite');
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+      tx.objectStore(IDB_STORE).delete(key);
+    });
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
+ * @param {string} pageId
+ */
+async function idbDeleteAllForPage(pageId) {
+  try {
+    const db = await openImageBlobDB();
+    const prefix = `${pageId}::`;
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(IDB_STORE, 'readwrite');
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+      const store = tx.objectStore(IDB_STORE);
+      const req = store.openKeyCursor();
+      req.onsuccess = (event) => {
+        const cursor = event.target.result;
+        if (cursor) {
+          if (typeof cursor.key === 'string' && cursor.key.startsWith(prefix)) {
+            cursor.delete();
+          }
+          cursor.continue();
+        }
+      };
+    });
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
+ * @param {File} file
+ * @returns {Promise<string>}
  */
 const fileToBase64 = (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
-      const base64 = reader.result.split(',')[1]; // Remove data:image/...;base64,
+      const base64 = reader.result.split(',')[1];
       resolve(base64);
     };
     reader.onerror = reject;
@@ -67,12 +142,66 @@ const fileToBase64 = (file) => {
 };
 
 /**
- * Converter base64 de volta para File
- * @param {string} base64 - String base64
- * @param {string} fileName - Nome do arquivo
- * @param {string} fileType - Tipo MIME
- * @returns {File} Objeto File
+ * Fallback legado: grava base64 no localStorage (pode estourar quota em imagens grandes).
  */
+async function saveTemporaryImageLegacyBase64(file, uuid, blobUrl, pageId, existingImages) {
+  const storageKey = getStorageKey(pageId);
+  const base64 = await fileToBase64(file);
+  const imageData = {
+    uuid,
+    blobUrl,
+    fileName: file.name,
+    fileType: file.type,
+    fileSize: file.size,
+    base64,
+    timestamp: Date.now(),
+    storage: 'localStorage_base64'
+  };
+  existingImages[uuid] = imageData;
+  localStorage.setItem(storageKey, JSON.stringify(existingImages));
+}
+
+/**
+ * Salvar imagem temporária (IndexedDB + metadados no localStorage)
+ * @param {File} file
+ * @param {string} uuid
+ * @param {string} blobUrl
+ * @param {string} pageId
+ * @returns {Promise<void>}
+ */
+export const saveTemporaryImage = async (file, uuid, blobUrl, pageId) => {
+  const storageKey = getStorageKey(pageId);
+  const existingImages = getAllTemporaryImages(pageId);
+
+  try {
+    await idbPutBlob(pageId, uuid, file);
+
+    const imageData = {
+      uuid,
+      blobUrl,
+      fileName: file.name,
+      fileType: file.type || 'application/octet-stream',
+      fileSize: file.size,
+      timestamp: Date.now(),
+      storage: 'idb'
+    };
+
+    existingImages[uuid] = imageData;
+    localStorage.setItem(storageKey, JSON.stringify(existingImages));
+    console.log(`✅ Imagem temporária salva (IndexedDB): ${uuid} (${file.name})`);
+  } catch (idbError) {
+    console.warn('⚠️ Armazenamento IndexedDB falhou, tentando legado (localStorage base64):', idbError?.message || idbError);
+    try {
+      await saveTemporaryImageLegacyBase64(file, uuid, blobUrl, pageId, existingImages);
+      console.log(`✅ Imagem temporária salva (legado base64): ${uuid} (${file.name})`);
+    } catch (LEGACY_ERROR) {
+      console.error('❌ Erro ao salvar imagem temporária:', LEGACY_ERROR);
+      await idbDeleteBlob(pageId, uuid).catch(() => {});
+      throw LEGACY_ERROR;
+    }
+  }
+};
+
 const base64ToFile = (base64, fileName, fileType) => {
   const byteCharacters = atob(base64);
   const byteNumbers = new Array(byteCharacters.length);
@@ -83,15 +212,8 @@ const base64ToFile = (base64, fileName, fileType) => {
   return new File([byteArray], fileName, { type: fileType });
 };
 
-/**
- * Recuperar imagem temporária do localStorage
- * @param {string} uuid - UUID da imagem
- * @param {string} pageId - ID da página
- * @returns {Object|null} Dados da imagem ou null se não encontrada
- */
 export const getTemporaryImage = (uuid, pageId) => {
   try {
-    const storageKey = getStorageKey(pageId);
     const allImages = getAllTemporaryImages(pageId);
     return allImages[uuid] || null;
   } catch (error) {
@@ -101,28 +223,31 @@ export const getTemporaryImage = (uuid, pageId) => {
 };
 
 /**
- * Recuperar arquivo File de uma imagem temporária
- * @param {string} uuid - UUID da imagem
- * @param {string} pageId - ID da página
- * @returns {File|null} Arquivo File ou null se não encontrado
+ * @param {string} uuid
+ * @param {string} pageId
+ * @returns {Promise<File | null>}
  */
-export const getTemporaryImageFile = (uuid, pageId) => {
+export const getTemporaryImageFile = async (uuid, pageId) => {
   try {
     const imageData = getTemporaryImage(uuid, pageId);
     if (!imageData) return null;
-    
-    return base64ToFile(imageData.base64, imageData.fileName, imageData.fileType);
+
+    if (imageData.base64) {
+      return base64ToFile(imageData.base64, imageData.fileName, imageData.fileType);
+    }
+
+    const blob = await idbGetBlob(pageId, uuid);
+    if (blob) {
+      return new File([blob], imageData.fileName, { type: imageData.fileType || blob.type || 'image/jpeg' });
+    }
+
+    return null;
   } catch (error) {
     console.error('❌ Erro ao recuperar arquivo da imagem temporária:', error);
     return null;
   }
 };
 
-/**
- * Listar todas imagens temporárias de uma página
- * @param {string} pageId - ID da página
- * @returns {Object} Objeto com todas imagens temporárias (chave: uuid, valor: imageData)
- */
 export const getAllTemporaryImages = (pageId) => {
   try {
     const storageKey = getStorageKey(pageId);
@@ -135,12 +260,13 @@ export const getAllTemporaryImages = (pageId) => {
 };
 
 /**
- * Remover imagem temporária do localStorage
- * @param {string} uuid - UUID da imagem
- * @param {string} pageId - ID da página
+ * @param {string} uuid
+ * @param {string} pageId
+ * @returns {Promise<void>}
  */
-export const removeTemporaryImage = (uuid, pageId) => {
+export const removeTemporaryImage = async (uuid, pageId) => {
   try {
+    await idbDeleteBlob(pageId, uuid);
     const storageKey = getStorageKey(pageId);
     const allImages = getAllTemporaryImages(pageId);
     delete allImages[uuid];
@@ -152,11 +278,12 @@ export const removeTemporaryImage = (uuid, pageId) => {
 };
 
 /**
- * Limpar todas imagens temporárias de uma página
- * @param {string} pageId - ID da página
+ * @param {string} pageId
+ * @returns {Promise<void>}
  */
-export const clearAllTemporaryImages = (pageId) => {
+export const clearAllTemporaryImages = async (pageId) => {
   try {
+    await idbDeleteAllForPage(pageId);
     const storageKey = getStorageKey(pageId);
     localStorage.removeItem(storageKey);
     console.log(`✅ Todas imagens temporárias removidas para: ${pageId}`);
@@ -167,25 +294,27 @@ export const clearAllTemporaryImages = (pageId) => {
 
 /**
  * Limpar imagens temporárias antigas (mais de 7 dias)
- * @param {string} pageId - ID da página
+ * @param {string} pageId
+ * @returns {Promise<void>}
  */
-export const cleanOldTemporaryImages = (pageId) => {
+export const cleanOldTemporaryImages = async (pageId) => {
   try {
     const allImages = getAllTemporaryImages(pageId);
-    const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
     const storageKey = getStorageKey(pageId);
-    
+
     const cleaned = {};
     let removedCount = 0;
-    
-    Object.keys(allImages).forEach(uuid => {
+
+    for (const uuid of Object.keys(allImages)) {
       if (allImages[uuid].timestamp > sevenDaysAgo) {
         cleaned[uuid] = allImages[uuid];
       } else {
         removedCount++;
+        await idbDeleteBlob(pageId, uuid);
       }
-    });
-    
+    }
+
     localStorage.setItem(storageKey, JSON.stringify(cleaned));
     if (removedCount > 0) {
       console.log(`✅ ${removedCount} imagens temporárias antigas removidas`);
@@ -204,4 +333,3 @@ export default {
   clearAllTemporaryImages,
   cleanOldTemporaryImages
 };
-
