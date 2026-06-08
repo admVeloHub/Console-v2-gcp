@@ -1,4 +1,6 @@
-// VERSION: v1.16.0 | DATE: 2026-04-27 | AUTHOR: VeloHub Development Team
+// VERSION: v1.17.1 | DATE: 2026-06-05 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.17.1 - dataLigacao String YYYY-MM-DD absoluta (sem Date/fuso)
+// CHANGELOG: v1.17.0 - Avaliacao: horaLigacao (String HH:mm absoluto, informado pelo monitor)
 // CHANGELOG: v1.16.0 - Relatório agente: melhor/pior média (entre médias mensais); melhor nota ligação e melhor nota ticket (em vez de melhor/pior nota única)
 // CHANGELOG: v1.15.0 - Relatório agente: nota do mês e média geral = média aritmética (soma/quantidade) de todas as avaliações do período (ligação + ticket; IA quando somente análise)
 // CHANGELOG: v1.14.0 - qualidade_ticket_avaliacoes: critérios com nomes PascalCase (FONTE LISTA_SCHEMAS), alinhado ao backend; calcularPontuacaoTotalTicket / hasAvaliacaoManualSupervisor
@@ -51,6 +53,8 @@
  * @property {string} mes
  * @property {number} ano
  * @property {string} dataAvaliacao
+ * @property {string} [dataLigacao] - Data da ligação YYYY-MM-DD (absoluta, informada pelo monitor)
+ * @property {string} [horaLigacao] - Hora da ligação HH:mm (absoluta, informada pelo monitor)
  * @property {string} [arquivoLigacao] - Base64 para arquivos pequenos
  * @property {DriveFile} [arquivoDrive] - Dados do Google Drive para arquivos grandes
  * @property {string} [nomeArquivo]

@@ -1,11 +1,35 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.54.0 | DATE: 2026-06-02 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.55.0 | DATE: 2026-06-05 | AUTHOR: VeloHub Development Team -->
 <!--
   REGRA (push GitHub): Preencher a nova entrada do DEPLOY_LOG (tipo, data, branch, repositório,
   arquivos, descrição) ANTES do `git commit`. Incluir DEPLOY_LOG no MESMO commit que o código.
   Não criar commit adicional só para corrigir hash, SHA ou “fechar” o log.
   Campo **Commit:** opcional; se não usar SHA aqui, consultar `git log -1 --oneline` no remoto.
 -->
+
+## Push GitHub — Qualidade: novo formato análise IA (LISTA dual) + data/hora ligação absoluta — 2026-06-05
+
+### **Tipo:** Push GitHub
+### **Data/Hora:** 2026-06-05
+### **Branch:** main
+### **Repositório:** https://github.com/admVeloHub/Console-v2-gcp.git
+
+### **Arquivos (principais):**
+- `src/components/qualidade/AnaliseGPTAccordion.jsx` v2.1.0 — Quadros IA: analiseDialogo, considerações, criteriosDetalhados, pontuacaoCalculada, observacaoGPT, palavras críticas, transcrição
+- `src/components/qualidade/TranscricaoIaModal.jsx` v1.0.0 — Modal diálogo scrollável + export PDF
+- `src/services/qualidadeTranscricaoExport.js` v1.0.0 — PDF jsPDF da transcrição
+- `src/utils/qualidadeAudioAnaliseNormalize.js` v1.1.0 — Normalizador dual legado/novo schema audio_analise_results
+- `src/utils/qualidadeDataLigacao.js` v1.2.0 — dataLigacao/horaLigacao absolutos (sem fuso)
+- `src/services/qualidadeAPI.js` v1.61.0 — mapAudioAnaliseResultDocToGptRow via normalizador
+- `src/services/qualidadeExport.js` v1.11.0 — XLSX análise IA: abas Diálogo e Critérios GPT
+- `src/pages/QualidadeModulePage.jsx` v1.49.1 — Remove DetalhesAnaliseModal; aba Análise IA
+- `src/components/qualidade/DetalhesAnaliseModal.jsx`, `LoteAudioModal.jsx`, `UploadAudioModal.jsx`, `qualidadeStorage.js`, `types/qualidade.js` — data/hora ligação absoluta
+- `DEPLOY_LOG.md` v1.55.0
+
+### **Descrição:**
+Console alinhado ao novo contrato `audio_analise_results` do worker (Gemini + GPT): painel expandido na aba Análise IA com cards de diálogo, considerações, critérios, pontuação/observação GPT, palavras críticas e modal de transcrição com PDF. Leitura dual legado/novo no frontend. Correção de exibição de data e hora da ligação sem conversão de fuso (`dataLigacao` + `horaLigacao`).
+
+---
 
 ## Push GitHub — Qualidade (feedback, colaboradores, auth) + Corporativo; remoção VeloInsights embarcado — 2026-06-02
 

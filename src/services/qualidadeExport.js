@@ -1,4 +1,6 @@
-// VERSION: v1.9.1 | DATE: 2026-04-10 | AUTHOR: VeloHub Development Team
+// VERSION: v1.11.0 | DATE: 2026-06-05 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.11.0 - exportAnaliseIAToXLSX: abas Análise do Diálogo e Critérios GPT (schema LISTA); remove Emoção/Nuance
+// CHANGELOG: v1.10.0 - Export: data/hora ligação via horaLigacao absoluta (formatDataHoraLigacao)
 // CHANGELOG: v1.9.1 - Release push GitHub 2026-04-10
 // CHANGELOG: v1.9.0 - Excel Nota IA: coluna a partir de qualidade_avaliacoes.avaliacaoIA (sem GET audio_analise)
 // CHANGELOG: v1.8.2 - Excel Nota IA: concorrência 2 + pausa entre lotes (mitiga 429 no /audio-analise/result)
@@ -10,6 +12,18 @@
 import * as XLSX from 'xlsx';
 import { getAvaliacoes } from './qualidadeAPI';
 import { getFuncionarios } from './qualidadeAPI';
+import { formatDataHoraLigacao } from '../utils/qualidadeDataLigacao';
+import {
+  normalizeAudioAnaliseResult,
+  CRITERIOS_IA_ORDEM,
+  CRITERIO_IA_LABELS
+} from '../utils/qualidadeAudioAnaliseNormalize';
+
+const boolExport = (v) => {
+  if (v === true) return 'Sim';
+  if (v === false) return 'Não';
+  return 'N/A';
+};
 
 const formatAudioPipelineTreated = (t) => {
   if (t === true || t === 'done') return 'Concluído';
@@ -51,7 +65,9 @@ export const exportAvaliacoesToExcel = async () => {
         avaliacao.avaliador || '',
         avaliacao.mes || '',
         avaliacao.ano || '',
-        avaliacao.dataLigacao ? new Date(avaliacao.dataLigacao).toLocaleDateString('pt-BR') : '',
+        avaliacao.dataLigacao
+          ? formatDataHoraLigacao(avaliacao.dataLigacao, avaliacao.horaLigacao, avaliacao)
+          : '',
         avaliacao.saudacaoAdequada ? 'Sim' : 'Não',
         avaliacao.escutaAtiva ? 'Sim' : 'Não',
         avaliacao.clarezaObjetividade !== undefined ? (avaliacao.clarezaObjetividade ? 'Sim' : 'Não') : '',
@@ -145,162 +161,143 @@ export const exportAnaliseIAToXLSX = async (analisesGPT, colaboradorNome, mes, a
 
     // === ABA 1: DADOS PRINCIPAIS ===
     const headersPrincipais = [
-      'ID', 'Colaborador', 'Data Ligação', 'Data Análise', 'Status',
-      'Pontuação Total', 'Confiança (%)', 'Duração (min)', 'Resolvido',
-      'Saudação Adequada', 'Escuta Ativa', 'Clareza/Objetividade', 
+      'ID', 'Colaborador', 'Data Ligação', 'Data Análise',
+      'Pontuação Calculada', 'Observação GPT', 'Palavras Críticas',
+      'Saudação Adequada', 'Escuta Ativa', 'Clareza/Objetividade',
       'Resolução Questão', 'Registro do Atendimento', 'Empatia/Cordialidade',
-      'Direcionou Pesquisa', 'Não Consultou Bot', 'Inconformidade no Ticket', 'Procedimento Incorreto', 'Encerramento Brusco'
+      'Direcionou Pesquisa', 'Não Consultou Bot', 'Inconformidade no Ticket',
+      'Procedimento Incorreto', 'Encerramento Brusco'
     ];
 
     const dadosPrincipais = [
       headersPrincipais,
-      ...analisesGPT.map(analise => {
-        const avaliacaoMonitor = analise.avaliacaoMonitorId || analise.avaliacaoOriginal || {};
-        const gptAnalysis = analise.gptAnalysis || analise.qualityAnalysis || {};
-        const criterios = gptAnalysis.criterios || {};
-        const resumoAtendimento = gptAnalysis.resumoAtendimento || {};
-        
-        // Pontuação pode estar em vários lugares
-        const pontuacao = analise.pontuacaoGPT || 
-                         analise.pontuacaoConsensual || 
-                         gptAnalysis.pontuacao || 
-                         avaliacaoMonitor.pontuacaoTotal || 
-                         0;
-        
-        // Confiança pode estar direto ou dentro de gptAnalysis
-        const confianca = analise.confianca !== undefined && analise.confianca !== null 
-          ? analise.confianca 
-          : (gptAnalysis.confianca !== undefined && gptAnalysis.confianca !== null 
-              ? Math.round(gptAnalysis.confianca * 100) 
-              : null);
-        
+      ...analisesGPT.map((analise) => {
+        const norm = normalizeAudioAnaliseResult(analise);
+        const criterios = norm.criteriosDetalhados || {};
+        const palavras = (norm.palavrasCriticas || []).join('; ');
+
         return [
-          analise._id || analise.avaliacaoId || '',
-          colaboradorNome || avaliacaoMonitor.colaboradorNome || analise.colaboradorNome || '',
-          analise.dataLigacao ? new Date(analise.dataLigacao).toLocaleDateString('pt-BR') : '',
-          analise.createdAt ? new Date(analise.createdAt).toLocaleDateString('pt-BR') : '',
-          analise.status || 'N/A',
-          pontuacao,
-          confianca !== null ? `${confianca}%` : 'N/A',
-          resumoAtendimento.duracao ? `${Math.round(resumoAtendimento.duracao / 60)}` : 'N/A',
-          resumoAtendimento.resolvido ? 'Sim' : 'Não',
-          criterios.saudacaoAdequada === true ? 'Sim' : (criterios.saudacaoAdequada === false ? 'Não' : 'N/A'),
-          criterios.escutaAtiva === true ? 'Sim' : (criterios.escutaAtiva === false ? 'Não' : 'N/A'),
-          criterios.clarezaObjetividade === true ? 'Sim' : (criterios.clarezaObjetividade === false ? 'Não' : 'N/A'),
-          criterios.resolucaoQuestao === true ? 'Sim' : (criterios.resolucaoQuestao === false ? 'Não' : 'N/A'),
-          criterios.registroAtendimento === true ? 'Sim' : (criterios.registroAtendimento === false ? 'Não' : 'N/A'),
-          criterios.empatiaCordialidade === true ? 'Sim' : (criterios.empatiaCordialidade === false ? 'Não' : 'N/A'),
-          criterios.direcionouPesquisa === true ? 'Sim' : (criterios.direcionouPesquisa === false ? 'Não' : 'N/A'),
-          criterios.naoConsultouBot === true ? 'Sim' : (criterios.naoConsultouBot === false ? 'Não' : 'N/A'),
-          criterios.conformidadeTicket === true ? 'Sim' : (criterios.conformidadeTicket === false ? 'Não' : 'N/A'),
-          criterios.procedimentoIncorreto === true ? 'Sim' : (criterios.procedimentoIncorreto === false ? 'Não' : 'N/A'),
-          criterios.encerramentoBrusco === true ? 'Sim' : (criterios.encerramentoBrusco === false ? 'Não' : 'N/A')
+          norm._id || norm.avaliacaoId || '',
+          colaboradorNome || norm.colaboradorNome || '',
+          norm.dataLigacao
+            ? formatDataHoraLigacao(norm.dataLigacao, norm.horaLigacao, analise.avaliacaoMonitorId || analise)
+            : '',
+          norm.createdAt ? new Date(norm.createdAt).toLocaleDateString('pt-BR') : '',
+          norm.pontuacaoCalculada != null ? norm.pontuacaoCalculada : 'N/A',
+          norm.observacaoGPT || 'N/A',
+          palavras || 'N/A',
+          boolExport(criterios.saudacaoAdequada),
+          boolExport(criterios.escutaAtiva),
+          boolExport(criterios.clarezaObjetividade),
+          boolExport(criterios.resolucaoQuestao),
+          boolExport(criterios.registroAtendimento),
+          boolExport(criterios.empatiaCordialidade),
+          boolExport(criterios.direcionouPesquisa),
+          boolExport(criterios.naoConsultouBot),
+          boolExport(criterios.conformidadeTicket),
+          boolExport(criterios.procedimentoIncorreto),
+          boolExport(criterios.encerramentoBrusco)
         ];
       })
     ];
 
     const worksheetPrincipais = XLSX.utils.aoa_to_sheet(dadosPrincipais);
     const colWidthsPrincipais = [
-      { wch: 25 }, { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 12 },
-      { wch: 15 }, { wch: 12 }, { wch: 12 }, { wch: 10 },
-      { wch: 18 }, { wch: 12 }, { wch: 18 }, { wch: 18 }, { wch: 25 },
+      { wch: 25 }, { wch: 20 }, { wch: 18 }, { wch: 14 },
+      { wch: 16 }, { wch: 50 }, { wch: 30 },
+      { wch: 18 }, { wch: 12 }, { wch: 18 }, { wch: 18 }, { wch: 22 },
       { wch: 20 }, { wch: 18 }, { wch: 18 }, { wch: 22 }, { wch: 20 }, { wch: 18 }
     ];
     worksheetPrincipais['!cols'] = colWidthsPrincipais;
     XLSX.utils.book_append_sheet(workbook, worksheetPrincipais, 'Dados Principais');
 
-    // === ABA 2: ANÁLISE EMOCIONAL ===
-    const headersEmocional = [
-      'ID', 'Colaborador', 'Empatia (%)', 'Tom', 'Sentimento', 'Confiança (%)'
+    // === ABA 2: ANÁLISE DO DIÁLOGO (Gemini) ===
+    const headersDialogo = [
+      'ID', 'Colaborador',
+      'Temperatura Nota', 'Temperatura Classificação', 'Temperatura Avaliação',
+      'Tensão Nota', 'Tensão Classificação', 'Tensão Avaliação',
+      'Comportamento Vocal Nota', 'Comportamento Vocal Classificação', 'Comportamento Vocal Avaliação',
+      'Considerações Classificação', 'Considerações Avaliação'
     ];
 
-    const dadosEmocional = [
-      headersEmocional,
-      ...analisesGPT.map(analise => {
-        const gptAnalysis = analise.gptAnalysis || analise.qualityAnalysis || {};
-        // Emotion pode estar direto ou dentro de gptAnalysis
-        const emotion = analise.emotion || gptAnalysis.emotion || {};
-        
-        // Confiança pode estar direto ou dentro de gptAnalysis
-        const confianca = analise.confianca !== undefined && analise.confianca !== null 
-          ? analise.confianca 
-          : (gptAnalysis.confianca !== undefined && gptAnalysis.confianca !== null 
-              ? Math.round(gptAnalysis.confianca * 100) 
-              : null);
-        
+    const dadosDialogo = [
+      headersDialogo,
+      ...analisesGPT.map((analise) => {
+        const norm = normalizeAudioAnaliseResult(analise);
+        const d = norm.analiseDialogo || {};
+        const t = d.temperatura || {};
+        const tn = d.tensao || {};
+        const cv = d.comportamentoVocal || {};
+        const cons = d.consideracoes || {};
         return [
-          analise._id || analise.avaliacaoId || '',
-          colaboradorNome || analise.colaboradorNome || '',
-          emotion.empatia !== null && emotion.empatia !== undefined ? `${Math.round(emotion.empatia * 100)}%` : 'N/A',
-          emotion.tom || 'N/A',
-          emotion.sentimento || 'N/A',
-          confianca !== null ? `${confianca}%` : 'N/A'
+          norm._id || norm.avaliacaoId || '',
+          colaboradorNome || norm.colaboradorNome || '',
+          t.nota != null ? t.nota : 'N/A',
+          t.classificacao || 'N/A',
+          t.avaliacao || 'N/A',
+          tn.nota != null ? tn.nota : 'N/A',
+          tn.classificacao || 'N/A',
+          tn.avaliacao || 'N/A',
+          cv.nota != null ? cv.nota : 'N/A',
+          cv.classificacao || 'N/A',
+          cv.avaliacao || 'N/A',
+          cons.classificacao || 'N/A',
+          cons.avaliacao || 'N/A'
         ];
       })
     ];
 
-    const worksheetEmocional = XLSX.utils.aoa_to_sheet(dadosEmocional);
-    const colWidthsEmocional = [
-      { wch: 25 }, { wch: 20 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 12 }
+    const worksheetDialogo = XLSX.utils.aoa_to_sheet(dadosDialogo);
+    worksheetDialogo['!cols'] = [
+      { wch: 25 }, { wch: 20 },
+      { wch: 14 }, { wch: 22 }, { wch: 40 },
+      { wch: 14 }, { wch: 22 }, { wch: 40 },
+      { wch: 18 }, { wch: 28 }, { wch: 40 },
+      { wch: 28 }, { wch: 50 }
     ];
-    worksheetEmocional['!cols'] = colWidthsEmocional;
-    XLSX.utils.book_append_sheet(workbook, worksheetEmocional, 'Análise Emocional');
+    XLSX.utils.book_append_sheet(workbook, worksheetDialogo, 'Análise do Diálogo');
 
-    // === ABA 3: NUANCE ===
-    const headersNuance = [
-      'ID', 'Colaborador', 'Clareza (%)', 'Tensão (%)'
-    ];
+    // === ABA 3: CRITÉRIOS GPT ===
+    const headersCriterios = ['ID', 'Colaborador', ...CRITERIOS_IA_ORDEM.map((k) => CRITERIO_IA_LABELS[k] || k)];
 
-    const dadosNuance = [
-      headersNuance,
-      ...analisesGPT.map(analise => {
-        // Nuance pode estar direto ou dentro de gptAnalysis
-        const nuance = analise.nuance || (analise.gptAnalysis || analise.qualityAnalysis || {}).nuance || {};
-        
+    const dadosCriterios = [
+      headersCriterios,
+      ...analisesGPT.map((analise) => {
+        const norm = normalizeAudioAnaliseResult(analise);
+        const c = norm.criteriosDetalhados || {};
         return [
-          analise._id || analise.avaliacaoId || '',
-          colaboradorNome || analise.colaboradorNome || '',
-          nuance.clareza !== null && nuance.clareza !== undefined ? `${Math.round(nuance.clareza * 100)}%` : 'N/A',
-          nuance.tensao !== null && nuance.tensao !== undefined ? `${Math.round(nuance.tensao * 100)}%` : 'N/A'
+          norm._id || norm.avaliacaoId || '',
+          colaboradorNome || norm.colaboradorNome || '',
+          ...CRITERIOS_IA_ORDEM.map((k) => boolExport(c[k]))
         ];
       })
     ];
 
-    const worksheetNuance = XLSX.utils.aoa_to_sheet(dadosNuance);
-    const colWidthsNuance = [
-      { wch: 25 }, { wch: 20 }, { wch: 12 }, { wch: 12 }
-    ];
-    worksheetNuance['!cols'] = colWidthsNuance;
-    XLSX.utils.book_append_sheet(workbook, worksheetNuance, 'Nuance');
+    const worksheetCriterios = XLSX.utils.aoa_to_sheet(dadosCriterios);
+    worksheetCriterios['!cols'] = [{ wch: 25 }, { wch: 20 }, ...CRITERIOS_IA_ORDEM.map(() => ({ wch: 22 }))];
+    XLSX.utils.book_append_sheet(workbook, worksheetCriterios, 'Critérios GPT');
 
     // === ABA 4: RESUMO ESTATÍSTICO ===
     const totalAnalises = analisesGPT.length;
     const pontuacoes = analisesGPT
-      .map(a => {
-        return a.pontuacaoGPT || 
-               a.pontuacaoConsensual || 
-               (a.gptAnalysis || a.qualityAnalysis || {}).pontuacao || 
-               ((a.avaliacaoMonitorId || {}).pontuacaoTotal) || 
-               0;
-      })
-      .filter(p => p > 0);
-    
-    const mediaPontuacao = pontuacoes.length > 0 
+      .map((a) => normalizeAudioAnaliseResult(a).pontuacaoCalculada)
+      .filter((p) => p != null && !Number.isNaN(Number(p)));
+
+    const mediaPontuacao = pontuacoes.length > 0
       ? (pontuacoes.reduce((sum, p) => sum + p, 0) / pontuacoes.length).toFixed(2)
       : 0;
-    
-    const resolvidos = analisesGPT.filter(a => {
-      const gptAnalysis = a.gptAnalysis || a.qualityAnalysis || {};
-      const resumoAtendimento = gptAnalysis.resumoAtendimento || {};
-      return resumoAtendimento.resolvido === true;
+
+    const comPalavrasCriticas = analisesGPT.filter((a) => {
+      const norm = normalizeAudioAnaliseResult(a);
+      return Array.isArray(norm.palavrasCriticas) && norm.palavrasCriticas.length > 0;
     }).length;
 
     const dadosResumo = [
       ['Métrica', 'Valor'],
       ['Total de Análises', totalAnalises],
-      ['Média de Pontuação', mediaPontuacao],
-      ['Análises Resolvidas', resolvidos],
-      ['Taxa de Resolução', totalAnalises > 0 ? `${((resolvidos / totalAnalises) * 100).toFixed(2)}%` : '0%'],
+      ['Média de Pontuação Calculada', mediaPontuacao],
+      ['Análises com Palavras Críticas', comPalavrasCriticas],
+      ['Taxa Palavras Críticas', totalAnalises > 0 ? `${((comPalavrasCriticas / totalAnalises) * 100).toFixed(2)}%` : '0%'],
       ['Colaborador', colaboradorNome || 'N/A'],
       ['Período', mes && ano ? `${mes}/${ano}` : 'Todos'],
       ['Data de Exportação', new Date().toLocaleDateString('pt-BR')],
@@ -566,7 +563,7 @@ export const exportAvaliacoesToPDF = async () => {
                                 avaliacao.pontuacaoTotal >= 60 ? 'status-bom' : 
                                 avaliacao.pontuacaoTotal >= 40 ? 'status-regular' : 'status-ruim';
               const dataLig = avaliacao.dataLigacao
-                ? new Date(avaliacao.dataLigacao).toLocaleDateString('pt-BR')
+                ? formatDataHoraLigacao(avaliacao.dataLigacao, avaliacao.horaLigacao, avaliacao)
                 : '—';
               
               return `

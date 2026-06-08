@@ -1,4 +1,6 @@
-// VERSION: v1.1.2 | DATE: 2026-04-27 | AUTHOR: VeloHub Development Team
+// VERSION: v1.2.1 | DATE: 2026-06-05 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.2.1 - dataLigacao String YYYY-MM-DD absoluta (sem toISOString/Date)
+// CHANGELOG: v1.2.0 - addAvaliacao local: dataLigacao só data + horaLigacao String HH:mm
 // CHANGELOG: v1.1.2 - addAvaliacao local: numeroTicket quando modo ticket
 // CHANGELOG: v1.1.1 - addAvaliacao local: persiste tipoAvaliacao (ligacao|ticket)
 
@@ -16,6 +18,11 @@ import {
   getPerformanceText,
   formatDate
 } from '../types/qualidade';
+import {
+  normalizeDataLigacaoInput,
+  normalizeHoraLigacaoInput,
+  normalizarAvaliacaoDataLigacaoLegado
+} from '../utils/qualidadeDataLigacao';
 
 const STORAGE_KEY = 'funcionarios_velotax';
 const QUALIDADE_STORAGE_KEY = 'qualidade_avaliacoes';
@@ -184,7 +191,7 @@ export const getAvaliacoes = () => {
   try {
     const data = localStorage.getItem(QUALIDADE_STORAGE_KEY);
     if (data) {
-      const avaliacoes = JSON.parse(data);
+      const avaliacoes = JSON.parse(data).map(normalizarAvaliacaoDataLigacaoLegado);
       console.log(`📊 Avaliações carregadas: ${avaliacoes.length}`);
       return avaliacoes;
     }
@@ -240,7 +247,8 @@ export const addAvaliacao = async (avaliacaoData) => {
       encerramentoBrusco: avaliacaoData.encerramentoBrusco || false,
       pontuacaoTotal: 0, // Será calculado
       observacoes: avaliacaoData.observacoes || '',
-      dataLigacao: avaliacaoData.dataLigacao ? new Date(avaliacaoData.dataLigacao).toISOString() : new Date().toISOString(),
+      dataLigacao: normalizeDataLigacaoInput(avaliacaoData.dataLigacao),
+      horaLigacao: normalizeHoraLigacaoInput(avaliacaoData.horaLigacao),
       tipoAvaliacao: avaliacaoData.tipoAvaliacao === 'ticket' ? 'ticket' : 'ligacao',
       numeroTicket:
         avaliacaoData.tipoAvaliacao === 'ticket' &&

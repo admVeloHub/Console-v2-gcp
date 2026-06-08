@@ -1,4 +1,10 @@
-// VERSION: v1.47.3 | DATE: 2026-06-02 | AUTHOR: VeloHub Development Team
+// VERSION: v1.49.1 | DATE: 2026-06-05 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.49.1 - Fix runtime: confirma remoção total de DetalhesAnaliseModal (import, estado e JSX)
+// CHANGELOG: v1.49.0 - Análise IA: novo schema LISTA no acordeão; remove DetalhesAnaliseModal e modal Ver Detalhes
+// CHANGELOG: v1.48.3 - Aba Análise IA: fontes reduzidas no panorama (título, filtros, alertas)
+// CHANGELOG: v1.48.2 - Aba «Feedback» → «Resultado Individual»; quadro «Envio de Feedback» → «Mensagem ao Agente»
+// CHANGELOG: v1.48.1 - dataLigacao String YYYY-MM-DD absoluta; filtros/ordenação sem new Date()
+// CHANGELOG: v1.48.0 - dataLigacao só data + horaLigacao persistido (HH:mm absoluto); exibição/edição sem conversão de fuso
 // CHANGELOG: v1.47.3 - Tipos de feedback: só flag Auditoria (sem bypass por papel Administrador)
 // CHANGELOG: v1.47.2 - Envio de Feedback: só Avaliador → Elogio; Auditoria → Elogio + Oportunidade + Apontamento
 // CHANGELOG: v1.47.1 - Conceder troféu: tampão opaco «Em desenvolvimento» sobre o quadro (bloqueia interação)
@@ -157,7 +163,6 @@ import {
   ANOS, 
   getStatusPontuacao, 
   generateId,
-  formatDate,
   isSomenteAnaliseAudioIA,
   hasAvaliacaoManualSupervisor
 } from '../types/qualidade';
@@ -166,10 +171,16 @@ import {
   findRegistroFuncaoAtendimento,
   filtrarFuncionariosComFuncaoAtendimento
 } from '../utils/qualidadeFuncionariosAtendimento';
+import {
+  toDataLigacaoInputValue,
+  resolveHoraLigacao,
+  formatDataHoraLigacao,
+  normalizeDataLigacaoInput,
+  dataLigacaoSortKey
+} from '../utils/qualidadeDataLigacao';
 import UploadAudioModal from '../components/qualidade/UploadAudioModal';
 import LoteAudioModal from '../components/qualidade/LoteAudioModal';
 import AnaliseGPTAccordion from '../components/qualidade/AnaliseGPTAccordion';
-import DetalhesAnaliseModal from '../components/qualidade/DetalhesAnaliseModal';
 import { uploadAudioParaAnalise, listarAnalisesPorColaborador } from '../services/qualidadeAudioService';
 import { useAuth } from '../contexts/AuthContext';
 import BackButton, { VoltarHeaderRow } from '../components/common/BackButton';
@@ -529,8 +540,6 @@ const QualidadeModulePage = () => {
   });
   const [analisesGPT, setAnalisesGPT] = useState([]);
   const [loadingAnalisesGPT, setLoadingAnalisesGPT] = useState(false);
-  const [modalDetalhesAberto, setModalDetalhesAberto] = useState(false);
-  const [analiseSelecionada, setAnaliseSelecionada] = useState(null);
 
   const [avaliacoesPage, setAvaliacoesPage] = useState(0);
   const [avaliacoesRowsPerPage, setAvaliacoesRowsPerPage] = useState(25);
@@ -735,16 +744,16 @@ const QualidadeModulePage = () => {
     }
 
     if (filtros.dataLigacaoInicio) {
-      filtrados = filtrados.filter(
-        (a) =>
-          a.dataLigacao && new Date(a.dataLigacao) >= new Date(filtros.dataLigacaoInicio)
-      );
+      filtrados = filtrados.filter((a) => {
+        const ymd = normalizeDataLigacaoInput(a.dataLigacao);
+        return ymd && ymd >= filtros.dataLigacaoInicio;
+      });
     }
     if (filtros.dataLigacaoFim) {
-      filtrados = filtrados.filter(
-        (a) =>
-          a.dataLigacao && new Date(a.dataLigacao) <= new Date(filtros.dataLigacaoFim)
-      );
+      filtrados = filtrados.filter((a) => {
+        const ymd = normalizeDataLigacaoInput(a.dataLigacao);
+        return ymd && ymd <= filtros.dataLigacaoFim;
+      });
     }
 
     if (filtros.mes) {
@@ -774,19 +783,13 @@ const QualidadeModulePage = () => {
     }
     // seletor 'todos': sem filtro de tipo (ligações + tickets)
 
-    const dataMs = (a) => {
-      const raw = a?.dataLigacao ?? a?.dataChamado;
-      if (raw) {
-        const t = new Date(raw).getTime();
-        if (!Number.isNaN(t)) return t;
-      }
-      if (a?.createdAt) {
-        const t = new Date(a.createdAt).getTime();
-        if (!Number.isNaN(t)) return t;
-      }
-      return 0;
+    const sortKey = (a) => {
+      const atendimento = dataLigacaoSortKey(a);
+      if (atendimento) return atendimento;
+      if (a?.createdAt) return String(a.createdAt);
+      return '';
     };
-    return [...filtrados].sort((a, b) => dataMs(b) - dataMs(a));
+    return [...filtrados].sort((a, b) => sortKey(b).localeCompare(sortKey(a)));
   }, [avaliacoes, filtros, seletorTipoListaAvaliacoes]);
 
   const avaliacoesPagina = useMemo(() => {
@@ -1045,12 +1048,6 @@ const QualidadeModulePage = () => {
         CAMPOS_CRITERIO_TICKET.map((k) => [k, false])
       );
 
-      const toInputDate = (d) => {
-        if (d == null || d === '') return '';
-        const s = typeof d === 'string' ? d : new Date(d).toISOString();
-        return s.includes('T') ? s.split('T')[0] : s.slice(0, 10);
-      };
-
       if (avaliacao.tipoAvaliacao === 'ticket') {
         const dataRef = avaliacao.dataChamado ?? avaliacao.dataLigacao;
         setFormData({
@@ -1068,7 +1065,7 @@ const QualidadeModulePage = () => {
           RepassouProcedimentoIncorreto: Boolean(avaliacao.RepassouProcedimentoIncorreto),
           NaoUtilizouBotApoio: Boolean(avaliacao.NaoUtilizouBotApoio),
           observacoes: avaliacao.observacoes || '',
-          dataLigacao: toInputDate(dataRef),
+          dataLigacao: toDataLigacaoInputValue(dataRef),
           horaLigacao: '',
           numeroTicket: avaliacao.numeroTicket != null ? String(avaliacao.numeroTicket) : '',
           arquivoLigacao: null,
@@ -1093,15 +1090,8 @@ const QualidadeModulePage = () => {
           encerramentoBrusco: avaliacao.encerramentoBrusco,
           ...ticketCriteriosFalsos,
           observacoes: avaliacao.observacoes || '',
-          dataLigacao: avaliacao.dataLigacao
-            ? (String(avaliacao.dataLigacao).includes('T')
-                ? String(avaliacao.dataLigacao).split('T')[0]
-                : String(avaliacao.dataLigacao).slice(0, 10))
-            : '',
-          horaLigacao:
-            avaliacao.dataLigacao && String(avaliacao.dataLigacao).includes('T')
-              ? String(avaliacao.dataLigacao).split('T')[1]?.substring(0, 5) || ''
-              : '',
+          dataLigacao: toDataLigacaoInputValue(avaliacao.dataLigacao),
+          horaLigacao: resolveHoraLigacao(avaliacao),
           numeroTicket: '',
           arquivoLigacao: null,
           tipoAvaliacao: 'ligacao'
@@ -1204,8 +1194,6 @@ const QualidadeModulePage = () => {
         (f.colaboradorNome || f.nomeCompleto) === formData.colaboradorNome
       );
       
-      // Combinar data/hora (ligação) ou data do chamado + número do ticket
-      let dataLigacaoCombinada = '';
       if (formData.tipoAvaliacao === 'ticket') {
         if (!formData.dataLigacao) {
           mostrarSnackbar('Informe a data do chamado', 'error');
@@ -1216,21 +1204,18 @@ const QualidadeModulePage = () => {
           mostrarSnackbar('Informe o número do ticket (apenas numérico)', 'error');
           return;
         }
-        dataLigacaoCombinada = formData.dataLigacao;
-      } else if (formData.dataLigacao) {
-        if (formData.horaLigacao) {
-          dataLigacaoCombinada = `${formData.dataLigacao}T${formData.horaLigacao}`;
-        } else {
-          dataLigacaoCombinada = formData.dataLigacao;
-        }
+      } else if (!formData.dataLigacao) {
+        mostrarSnackbar('Informe a data da ligação', 'error');
+        return;
       }
 
       const dadosParaEnvio = {
         ...formData,
         avaliador: avaliadorEfetivo,
         colaboradorNome: formData.colaboradorNome,
-        dataLigacao: formData.tipoAvaliacao === 'ticket' ? '' : dataLigacaoCombinada,
-        dataChamado: formData.tipoAvaliacao === 'ticket' ? dataLigacaoCombinada : undefined,
+        dataLigacao: formData.tipoAvaliacao === 'ticket' ? '' : formData.dataLigacao,
+        horaLigacao: formData.tipoAvaliacao === 'ticket' ? '' : (formData.horaLigacao || ''),
+        dataChamado: formData.tipoAvaliacao === 'ticket' ? formData.dataLigacao : undefined,
         somenteAnaliseAudioIA: false,
         numeroTicket:
           formData.tipoAvaliacao === 'ticket'
@@ -1238,8 +1223,10 @@ const QualidadeModulePage = () => {
             : null
       };
 
-      delete dadosParaEnvio.horaLigacao;
-      if (formData.tipoAvaliacao !== 'ticket') {
+      if (formData.tipoAvaliacao === 'ticket') {
+        delete dadosParaEnvio.horaLigacao;
+        delete dadosParaEnvio.dataLigacao;
+      } else {
         delete dadosParaEnvio.dataChamado;
       }
       
@@ -1516,22 +1503,6 @@ const QualidadeModulePage = () => {
     } finally {
       setLoadingAnalisesGPT(false);
     }
-  };
-
-  const abrirModalDetalhesGPT = (analise) => {
-    setAnaliseSelecionada(analise);
-    setModalDetalhesAberto(true);
-  };
-
-  const fecharModalDetalhes = () => {
-    setModalDetalhesAberto(false);
-    setAnaliseSelecionada(null);
-  };
-
-  const abrirModalAuditoria = (analise) => {
-    // TODO: Implementar modal de auditoria
-    console.log('Abrir modal de auditoria para:', analise);
-    mostrarSnackbar('Modal de auditoria será implementado na próxima fase', 'info');
   };
 
   // ===== FUNÇÕES DOS RELATÓRIOS =====
@@ -1811,7 +1782,7 @@ const QualidadeModulePage = () => {
           <Tabs
             value={currentView}
             onChange={(e, newValue) => setCurrentView(newValue)}
-            aria-label="Avaliações, feedback e análise IA"
+            aria-label="Avaliações, resultado individual e análise IA"
             sx={{
               borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
               '& .MuiTab-root': {
@@ -1841,7 +1812,7 @@ const QualidadeModulePage = () => {
             />
             <Tab 
               value="relatorio-agente" 
-              label="Feedback"
+              label="Resultado Individual"
               id="qualidade-tab-1"
               aria-controls="qualidade-tabpanel-1"
             />
@@ -2172,7 +2143,9 @@ const QualidadeModulePage = () => {
                           </TableCell>
                           <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', py: 0.8, color: 'inherit' }}>{avaliacao.avaliador ?? '—'}</TableCell>
                           <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', py: 0.8, color: 'inherit' }}>
-                            {avaliacao.dataLigacao ? formatDate(avaliacao.dataLigacao) : '-'}
+                            {avaliacao.dataLigacao
+                              ? formatDataHoraLigacao(avaliacao.dataLigacao, avaliacao.horaLigacao, avaliacao)
+                              : '-'}
                           </TableCell>
                           <TableCell align="center" sx={{ py: 0.8 }}>
                             <IconButton
@@ -3051,7 +3024,7 @@ const QualidadeModulePage = () => {
                 variant="h6"
                 sx={{ fontFamily: 'Poppins', color: '#000058', fontWeight: 600, fontSize: '0.96rem', mb: 0.5 }}
               >
-                Envio de Feedback
+                Mensagem ao Agente
               </Typography>
 
               <Grid container spacing={2}>
@@ -3672,11 +3645,21 @@ const QualidadeModulePage = () => {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   gap: 2,
-                  mb: 3,
+                  mb: 2,
                   flexWrap: 'wrap'
                 }}
               >
-                <Typography variant="h6" sx={{ fontFamily: 'Poppins', color: '#000058', fontWeight: 600, flex: '1 1 auto', minWidth: 0 }}>
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    fontFamily: 'Poppins',
+                    color: '#000058',
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    flex: '1 1 auto',
+                    minWidth: 0
+                  }}
+                >
                   Avaliações de Performance por IA
                 </Typography>
                 <Button
@@ -3687,7 +3670,7 @@ const QualidadeModulePage = () => {
                   sx={{
                     fontFamily: 'Poppins',
                     fontWeight: 600,
-                    fontSize: '0.8rem',
+                    fontSize: '0.75rem',
                     flexShrink: 0,
                     alignSelf: { xs: 'flex-end', sm: 'center' },
                     borderColor: 'var(--blue-medium)',
@@ -3703,15 +3686,15 @@ const QualidadeModulePage = () => {
               </Box>
 
               {/* Filtros */}
-              <Box sx={{ 
-                display: 'flex', 
-                gap: 2, 
-                mb: 3, 
+              <Box sx={{
+                display: 'flex',
+                gap: 1.5,
+                mb: 2,
                 flexWrap: 'wrap',
                 alignItems: 'center'
               }}>
                 <FormControl size="small" sx={{ minWidth: 160 }}>
-                  <InputLabel sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>Colaborador *</InputLabel>
+                  <InputLabel sx={{ fontFamily: 'Poppins', fontSize: '0.75rem' }}>Colaborador *</InputLabel>
                   <Select
                     value={filtrosGPT.colaborador}
                     onChange={(e) => setFiltrosGPT({ ...filtrosGPT, colaborador: e.target.value })}
@@ -3719,7 +3702,7 @@ const QualidadeModulePage = () => {
                     size="small"
                     sx={{
                       fontFamily: 'Poppins',
-                      fontSize: '0.8rem',
+                      fontSize: '0.75rem',
                       '&:hover .MuiOutlinedInput-notchedOutline': {
                         borderColor: '#1694FF'
                       },
@@ -3731,7 +3714,7 @@ const QualidadeModulePage = () => {
                     {funcionarios.map((funcionario) => {
                       const nomeColaborador = funcionario.colaboradorNome || funcionario.nomeCompleto;
                       return (
-                        <MenuItem key={funcionario._id} value={nomeColaborador} sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
+                        <MenuItem key={funcionario._id} value={nomeColaborador} sx={{ fontFamily: 'Poppins', fontSize: '0.75rem' }}>
                           {nomeColaborador}
                         </MenuItem>
                       );
@@ -3740,7 +3723,7 @@ const QualidadeModulePage = () => {
                 </FormControl>
 
                 <FormControl size="small" sx={{ minWidth: 120 }}>
-                  <InputLabel sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>Mês</InputLabel>
+                  <InputLabel sx={{ fontFamily: 'Poppins', fontSize: '0.75rem' }}>Mês</InputLabel>
                   <Select
                     value={filtrosGPT.mes}
                     onChange={(e) => setFiltrosGPT({ ...filtrosGPT, mes: e.target.value })}
@@ -3748,7 +3731,7 @@ const QualidadeModulePage = () => {
                     size="small"
                     sx={{
                       fontFamily: 'Poppins',
-                      fontSize: '0.8rem',
+                      fontSize: '0.75rem',
                       '&:hover .MuiOutlinedInput-notchedOutline': {
                         borderColor: '#1694FF'
                       },
@@ -3758,7 +3741,7 @@ const QualidadeModulePage = () => {
                     }}
                   >
                     {MESES.map((mes) => (
-                      <MenuItem key={mes} value={mes} sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
+                      <MenuItem key={mes} value={mes} sx={{ fontFamily: 'Poppins', fontSize: '0.75rem' }}>
                         {mes}
                       </MenuItem>
                     ))}
@@ -3766,7 +3749,7 @@ const QualidadeModulePage = () => {
                 </FormControl>
 
                 <FormControl size="small" sx={{ minWidth: 96 }}>
-                  <InputLabel sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>Ano</InputLabel>
+                  <InputLabel sx={{ fontFamily: 'Poppins', fontSize: '0.75rem' }}>Ano</InputLabel>
                   <Select
                     value={filtrosGPT.ano}
                     onChange={(e) => setFiltrosGPT({ ...filtrosGPT, ano: e.target.value })}
@@ -3774,7 +3757,7 @@ const QualidadeModulePage = () => {
                     size="small"
                     sx={{
                       fontFamily: 'Poppins',
-                      fontSize: '0.8rem',
+                      fontSize: '0.75rem',
                       '&:hover .MuiOutlinedInput-notchedOutline': {
                         borderColor: '#1694FF'
                       },
@@ -3784,7 +3767,7 @@ const QualidadeModulePage = () => {
                     }}
                   >
                     {ANOS.map((ano) => (
-                      <MenuItem key={ano} value={ano} sx={{ fontFamily: 'Poppins', fontSize: '0.8rem' }}>
+                      <MenuItem key={ano} value={ano} sx={{ fontFamily: 'Poppins', fontSize: '0.75rem' }}>
                         {ano}
                       </MenuItem>
                     ))}
@@ -3799,7 +3782,7 @@ const QualidadeModulePage = () => {
                   sx={{
                     fontFamily: 'Poppins',
                     fontWeight: 600,
-                    fontSize: '0.8rem',
+                    fontSize: '0.75rem',
                     py: 0.4,
                     px: 1.2,
                     bgcolor: 'var(--blue-medium)',
@@ -3823,7 +3806,7 @@ const QualidadeModulePage = () => {
                   sx={{
                     fontFamily: 'Poppins',
                     fontWeight: 500,
-                    fontSize: '0.8rem',
+                    fontSize: '0.75rem',
                     py: 0.4,
                     px: 1.2,
                     backgroundColor: '#15A237',
@@ -3843,7 +3826,16 @@ const QualidadeModulePage = () => {
 
               {/* Mensagem de instrução */}
               {!filtrosGPT.colaborador && (
-                <Alert severity="info" sx={{ fontFamily: 'Poppins', mb: 3 }}>
+                <Alert
+                  severity="info"
+                  sx={{
+                    fontFamily: 'Poppins',
+                    fontSize: '0.75rem',
+                    py: 0.5,
+                    mb: 2,
+                    '& .MuiAlert-message': { fontSize: '0.75rem', py: 0.25 }
+                  }}
+                >
                   Selecione um colaborador para visualizar as análises GPT.
                 </Alert>
               )}
@@ -3854,15 +3846,14 @@ const QualidadeModulePage = () => {
                   {loadingAnalisesGPT && (
                     <Box sx={{ textAlign: 'center', py: 4 }}>
                       <LinearProgress sx={{ mb: 2 }} />
-                        <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666', fontSize: '0.8rem' }}>
+                        <Typography variant="body2" sx={{ fontFamily: 'Poppins', color: '#666666', fontSize: '0.75rem' }}>
                         Carregando análises GPT...
                       </Typography>
                     </Box>
                   )}
                   
-                  <AnaliseGPTAccordion 
+                  <AnaliseGPTAccordion
                     analises={analisesGPT}
-                    onVerDetalhes={abrirModalDetalhesGPT}
                     loading={loadingAnalisesGPT}
                   />
                 </Box>
@@ -4800,19 +4791,6 @@ const QualidadeModulePage = () => {
         onUpload={handleUploadAudio}
         avaliacaoId={avaliacaoParaUpload?._id}
         avaliacao={avaliacaoParaUpload}
-      />
-
-      {/* Modal Detalhes da Análise GPT */}
-      <DetalhesAnaliseModal
-        open={modalDetalhesAberto}
-        onClose={fecharModalDetalhes}
-        analise={analiseSelecionada}
-        onAuditar={abrirModalAuditoria}
-        podeAuditar={
-          user?._funcoesAdministrativas?.auditoria === true || 
-          user?._funcoesAdministrativas?.auditor === true ||
-          (user?.email === 'lucas.gravina@velotax.com.br' || user?._userMail === 'lucas.gravina@velotax.com.br')
-        }
       />
 
       {/* Snackbar */}

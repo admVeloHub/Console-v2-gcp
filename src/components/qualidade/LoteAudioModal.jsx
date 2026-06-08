@@ -2,8 +2,9 @@
 
  * Modal: lote de áudios para análise IA sem avaliação manual prévia.
 
- * VERSION: v1.1.2 | DATE: 2026-04-10
+ * VERSION: v1.2.0 | DATE: 2026-06-05
 
+ * CHANGELOG: v1.2.0 - dataLigacao só data + horaLigacao String HH:mm (campo separado, hora absoluta)
  * CHANGELOG: v1.1.2 - Release push GitHub 2026-04-10
 
  * CHANGELOG: v1.1.1 - Campos data/hora da ligação: fonte menor no input
@@ -238,18 +239,6 @@ const LoteAudioModal = ({
 
 
 
-  const buildDataLigacaoIso = (data, hora) => {
-
-    if (!data) return '';
-
-    if (hora) return `${data}T${hora.length === 5 ? hora : hora.substring(0, 5)}`;
-
-    return data;
-
-  };
-
-
-
   const abrirSeletorArquivo = (localKey) => {
 
     pickTargetKeyRef.current = localKey;
@@ -344,10 +333,6 @@ const LoteAudioModal = ({
 
         const { mes, ano } = mesAnoFromYmd(linha.dataLigacao);
 
-        const dataLigacao = buildDataLigacaoIso(linha.dataLigacao, linha.horaLigacao);
-
-
-
         let avaliacaoId = linha.avaliacaoId;
 
         if (!avaliacaoId) {
@@ -388,7 +373,9 @@ const LoteAudioModal = ({
 
             observacoes: '',
 
-            dataLigacao,
+            dataLigacao: linha.dataLigacao,
+
+            horaLigacao: linha.horaLigacao || '',
 
             somenteAnaliseAudioIA: true
 

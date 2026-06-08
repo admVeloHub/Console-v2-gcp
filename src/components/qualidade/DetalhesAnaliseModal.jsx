@@ -2,9 +2,10 @@
  * DetalhesAnaliseModal.jsx
  * Modal para exibir detalhes completos da análise GPT
  * 
- * VERSION: v1.6.3
- * DATE: 2026-03-19
+ * VERSION: v1.6.4
+ * DATE: 2026-06-05
  * AUTHOR: VeloHub Development Team
+ * CHANGELOG: v1.6.4 - Data da ligação: horaLigacao absoluta (sem toLocaleString / conversão de fuso)
  * CHANGELOG: v1.6.3 - Botão Auditoria e Salvar: cores via var(--green|--yellow|--white|--blue-dark|--green-hover|--yellow-hover) alinhadas a LAYOUT_GUIDELINES / globals.css
  * CHANGELOG: v1.6.2 - Botão Auditoria: !important em .MuiButton-contained (theme.js define contained → #1634FF e anulava verde/amarelo)
  * CHANGELOG: v1.6.1 - Sempre GET /result ao abrir (não pular quando há populate); verde = presença no doc (corpo ou auditoriaFeita); salvar usa auditoria devolvida pela API; ícone ✓ no botão
@@ -50,6 +51,7 @@ import {
 } from '@mui/icons-material';
 import { editarAuditoria, obterResultadoAnalise } from '../../services/qualidadeAudioService';
 import { calcularPontuacaoTotal, PONTUACAO } from '../../types/qualidade';
+import { formatDataHoraLigacao } from '../../utils/qualidadeDataLigacao';
 
 /**
  * Alinha com o backend: auditoria pode ser string (legado), ou { auditoriaFeita, corpoAuditoria }.
@@ -390,13 +392,11 @@ const DetalhesAnaliseModal = ({
                   fontFamily: 'Poppins',
                   color: '#000058'
                 }}>
-                  {new Date(analiseExibida?.dataLigacao || analiseExibida?.avaliacaoMonitorId?.dataLigacao).toLocaleString('pt-BR', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
+                  {formatDataHoraLigacao(
+                    analiseExibida?.dataLigacao || analiseExibida?.avaliacaoMonitorId?.dataLigacao,
+                    analiseExibida?.horaLigacao || analiseExibida?.avaliacaoMonitorId?.horaLigacao,
+                    analiseExibida?.avaliacaoMonitorId || analiseExibida
+                  )}
                 </Typography>
               </Box>
             )}

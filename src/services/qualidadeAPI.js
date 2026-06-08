@@ -1,4 +1,8 @@
-// VERSION: v1.59.0 | DATE: 2026-05-28 | AUTHOR: VeloHub Development Team
+// VERSION: v1.61.0 | DATE: 2026-06-05 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.61.0 - mapAudioAnaliseResultDocToGptRow: normalizador dual LISTA+legado (analiseDialogo, criteriosDetalhados, pontuacaoCalculada, observacaoGPT)
+// CHANGELOG: v1.60.2 - getAvaliacoes: normalizar legado dataLigacao/horaLigacao absolutos na leitura
+// CHANGELOG: v1.60.1 - dataLigacao String YYYY-MM-DD absoluta (sem Date/UTC) + horaLigacao HH:mm
+// CHANGELOG: v1.60.0 - dataLigacao só data (UTC) + horaLigacao String HH:mm absoluto em add/update avaliação ligação
 // CHANGELOG: v1.59.0 - addFuncionario/updateFuncionario: campo departamento (qualidade_funcionarios)
 // CHANGELOG: v1.58.0 - CRUD qa_resgate_items (GET/POST/PUT/DELETE /qualidade/qa-resgate-items)
 // CHANGELOG: v1.57.0 - getAtendimentoTrophyXpTotal: GET /atendimento-trophy/xp-total (Quadro XP Excelência)
@@ -37,6 +41,12 @@
 import { qualidadeFuncionariosAPI, qualidadeAvaliacoesAPI, qualidadeTicketAvaliacoesAPI, qualidadeFuncoesAPI, qualidadeQaResgateItemsAPI, getResolvedApiOrigin } from './api';
 import axios from 'axios';
 import { generateId, calcularPontuacaoTotal, calcularPontuacaoTotalTicket } from '../types/qualidade';
+import {
+  normalizeDataLigacaoInput,
+  normalizeHoraLigacaoInput,
+  normalizarAvaliacaoDataLigacaoLegado
+} from '../utils/qualidadeDataLigacao';
+import { normalizeAudioAnaliseResult, hasConteudoIa } from '../utils/qualidadeAudioAnaliseNormalize';
 import { getAvaliadoresValidos as getUserAvaliadoresValidos, getAllAuthorizedUsers } from './userService';
 import { 
   getAvaliacoes as getAvaliacoesLocalStorage,
@@ -528,7 +538,9 @@ const buscarStatusAudio = async (avaliacaoId) => {
  * @param {any[]} ticket
  */
 const mergeAvaliacoesLigaETicket = (liga, ticket) => {
-  const l = (liga || []).map((a) => ({ ...a, tipoAvaliacao: 'ligacao' }));
+  const l = (liga || []).map((a) =>
+    normalizarAvaliacaoDataLigacaoLegado({ ...a, tipoAvaliacao: 'ligacao' })
+  );
   const t = (ticket || []).map((a) => ({
     ...a,
     tipoAvaliacao: 'ticket',
@@ -672,7 +684,8 @@ export const addAvaliacao = async (avaliacaoData) => {
       encerramentoBrusco: Boolean(avaliacaoData.encerramentoBrusco), // Boolean
       pontuacaoTotal: 0, // Será calculado
       observacoes: avaliacaoData.observacoes || '', // String
-      dataLigacao: avaliacaoData.dataLigacao ? new Date(avaliacaoData.dataLigacao) : new Date(), // Date
+      dataLigacao: normalizeDataLigacaoInput(avaliacaoData.dataLigacao), // String YYYY-MM-DD absoluta
+      horaLigacao: normalizeHoraLigacaoInput(avaliacaoData.horaLigacao), // String HH:mm absoluta
       somenteAnaliseAudioIA: avaliacaoData.somenteAnaliseAudioIA === true,
       createdAt: new Date(), // Date
       updatedAt: new Date() // Date
@@ -713,7 +726,7 @@ export const addAvaliacao = async (avaliacaoData) => {
       throw new Error('Resposta da API sem id da avaliação.');
     }
     console.log(`✅ Avaliação adicionada via API: ${created._id || created.id}`);
-    return created;
+    return normalizarAvaliacaoDataLigacaoLegado(created);
   } catch (error) {
     console.error('❌ Erro ao adicionar avaliação via API:', error);
     
@@ -791,7 +804,8 @@ export const updateAvaliacao = async (id, avaliacaoData) => {
       encerramentoBrusco: Boolean(avaliacaoData.encerramentoBrusco), // Boolean
       pontuacaoTotal: 0, // Será calculado
       observacoes: avaliacaoData.observacoes || '', // String
-      dataLigacao: avaliacaoData.dataLigacao ? new Date(avaliacaoData.dataLigacao) : new Date(), // Date
+      dataLigacao: normalizeDataLigacaoInput(avaliacaoData.dataLigacao), // String YYYY-MM-DD absoluta
+      horaLigacao: normalizeHoraLigacaoInput(avaliacaoData.horaLigacao), // String HH:mm absoluta
       somenteAnaliseAudioIA: avaliacaoData.somenteAnaliseAudioIA === true,
       // Campos obrigatórios para atualização
       _id: id,
@@ -807,7 +821,7 @@ export const updateAvaliacao = async (id, avaliacaoData) => {
     const updated = unwrapQualidadeAvaliacaoDoc(raw) || raw;
     const uid = updated?._id ?? updated?.id ?? id;
     console.log(`✅ Avaliação atualizada via API: ${uid}`);
-    return updated;
+    return normalizarAvaliacaoDataLigacaoLegado(updated);
   } catch (error) {
     console.error('❌ Erro ao atualizar avaliação via API:', error);
     // Não fazer fallback - apenas propagar erro da API
@@ -1128,83 +1142,45 @@ export const getAvaliacaoGPTById = async (id) => {
 
 function listaIaValorFromGptRow(g) {
   if (!g) return false;
-  const temNota = g.pontuacaoGPT != null && !Number.isNaN(Number(g.pontuacaoGPT));
-  const temTexto = g.analiseGPT && String(g.analiseGPT).trim().length > 0;
+  if (!hasConteudoIa(g)) return false;
+  const temNota = g.pontuacaoCalculada != null && !Number.isNaN(Number(g.pontuacaoCalculada));
+  const temTexto = (g.observacaoGPT && String(g.observacaoGPT).trim().length > 0)
+    || (g.analiseGPT && String(g.analiseGPT).trim().length > 0);
+  const temDialogo = g.analiseDialogo != null;
+  const temCriterios = g.criteriosDetalhados && Object.keys(g.criteriosDetalhados).length > 0;
   const temParcial = typeof g._iaParcial === 'string' && g._iaParcial.length > 0;
-  return temNota || temTexto || temParcial ? g : false;
+  return temNota || temTexto || temDialogo || temCriterios || temParcial ? g : false;
 }
 
 /** Mapeia documento de audio_analise (GET /result ou item do lote) para o formato usado na UI. */
 function mapAudioAnaliseResultDocToGptRow(d) {
   if (!d) return null;
+  const norm = normalizeAudioAnaliseResult(d);
+  if (!norm) return null;
+
   const g = d.gptAnalysis;
   const q = d.qualityAnalysis;
-
-  const asNum = (x) => {
-    if (typeof x === 'number' && !Number.isNaN(x)) return x;
-    if (typeof x === 'string' && x.trim() !== '') {
-      const n = Number(x);
-      return Number.isNaN(n) ? null : n;
-    }
-    return null;
-  };
-
-  let pontuacaoGPT = asNum(d.pontuacaoConsensual);
-  if (pontuacaoGPT == null && g) pontuacaoGPT = asNum(g.pontuacao);
-  if (pontuacaoGPT == null && q) pontuacaoGPT = asNum(q.pontuacao);
-
-  const pickAnaliseText = () => {
-    const candidates = [
-      g?.analysis,
-      q?.analysis,
-      d.analysis,
-      g?.analiseGPT,
-      q?.analiseGPT,
-      d.analiseGPT,
-      d.resumoAnalise,
-      d.resumo
-    ];
-    for (let i = 0; i < candidates.length; i += 1) {
-      const c = candidates[i];
-      if (c != null && String(c).trim()) return String(c).trim();
-    }
-    return '';
-  };
-  const analiseGPT = pickAnaliseText();
-
-  const criteriosGPT = (g && g.criterios) || (q && q.criterios) || {};
   const hasCriteriosBlock =
-    criteriosGPT && typeof criteriosGPT === 'object' && Object.keys(criteriosGPT).length > 0;
-  const hasTranscription = typeof d.transcription === 'string' && d.transcription.trim().length > 0;
+    norm.criteriosDetalhados && Object.keys(norm.criteriosDetalhados).length > 0;
+  const hasTranscription = Array.isArray(norm.transcricao) && norm.transcricao.length > 0;
   const hasCalculo = Array.isArray(q?.calculoDetalhado) && q.calculoDetalhado.length > 0;
-  const hasPalavras =
-    (Array.isArray(g?.palavrasCriticas) && g.palavrasCriticas.length > 0) ||
-    (Array.isArray(q?.palavrasCriticas) && q.palavrasCriticas.length > 0);
+  const hasPalavras = Array.isArray(norm.palavrasCriticas) && norm.palavrasCriticas.length > 0;
 
   let _iaParcial = null;
-  if (pontuacaoGPT == null && !analiseGPT) {
+  if (norm.pontuacaoCalculada == null && !norm.observacaoGPT) {
     if (hasCriteriosBlock) _iaParcial = 'criterios';
     else if (hasTranscription) _iaParcial = 'transcricao';
     else if (hasCalculo || hasPalavras) _iaParcial = 'metadados';
+    else if (norm.analiseDialogo) _iaParcial = 'dialogo';
     else if (g || q) _iaParcial = 'estrutura';
     else _iaParcial = 'resultado';
   }
 
-  const rawMon = d.avaliacaoMonitorId;
-  const avaliacao_id =
-    rawMon && typeof rawMon === 'object' && rawMon._id != null ? rawMon._id : rawMon;
-
   const out = {
-    _id: d._id,
-    avaliacao_id,
-    analiseGPT,
-    pontuacaoGPT,
-    criteriosGPT,
-    confianca: (g && g.confianca) ?? (q && q.confianca) ?? 0,
-    palavrasCriticas: (g && g.palavrasCriticas) || (q && q.palavrasCriticas) || [],
+    ...norm,
+    avaliacao_id: norm.avaliacaoId,
     calculoDetalhado: (q && q.calculoDetalhado) || [],
-    createdAt: d.createdAt,
-    updatedAt: d.updatedAt,
+    confianca: (g && g.confianca) ?? (q && q.confianca) ?? null,
     recomendacoes: (g && g.recomendacoes) || [],
     validacaoGemini: g && g.validacaoGemini != null ? g.validacaoGemini : null
   };

@@ -2,9 +2,10 @@
  * UploadAudioModal.jsx
  * Modal para upload de arquivos de áudio para análise GPT
  * 
- * VERSION: v2.5.0
- * DATE: 2026-04-15
+ * VERSION: v2.6.0
+ * DATE: 2026-06-05
  * AUTHOR: VeloHub Development Team
+ * CHANGELOG: v2.6.0 - Data/hora da ligação: horaLigacao absoluta (sem conversão de fuso)
  * CHANGELOG: v2.5.0 - fetch status/reenvio: base via getResolvedApiOrigin (dev → localhost)
  * CHANGELOG: v2.4.1 - Release push GitHub 2026-04-10
  * CHANGELOG: v2.4.0 - Status do modal alinhado à linha da tabela (fallback se GET status-por-avaliacao falhar ou data null); normalizeAvaliacaoIdForFetch para URL ($oid / ObjectId)
@@ -45,6 +46,7 @@ import {
   reenviarAudioPubSub
 } from '../../services/qualidadeAudioService';
 import { getResolvedApiOrigin } from '../../services/api';
+import { formatDataHoraLigacao } from '../../utils/qualidadeDataLigacao';
 
 /** ID seguro para path da API (evita [object Object] quando _id vem como objeto Mongo). */
 const normalizeAvaliacaoIdForFetch = (raw) => {
@@ -577,19 +579,7 @@ const UploadAudioModal = ({
                       Data e Hora da Ligação:
                     </Typography>
                     <Typography variant="body1" sx={{ fontFamily: 'Poppins', color: 'var(--blue-dark)' }}>
-                      {(() => {
-                        try {
-                          const dataLigacao = new Date(avaliacao.dataLigacao);
-                          const dia = String(dataLigacao.getDate()).padStart(2, '0');
-                          const mes = String(dataLigacao.getMonth() + 1).padStart(2, '0');
-                          const ano = dataLigacao.getFullYear();
-                          const horas = String(dataLigacao.getHours()).padStart(2, '0');
-                          const minutos = String(dataLigacao.getMinutes()).padStart(2, '0');
-                          return `${dia}/${mes}/${ano} ${horas}:${minutos}`;
-                        } catch (e) {
-                          return avaliacao.dataLigacao;
-                        }
-                      })()}
+                      {formatDataHoraLigacao(avaliacao.dataLigacao, avaliacao.horaLigacao, avaliacao)}
                     </Typography>
                   </Box>
                 )}
