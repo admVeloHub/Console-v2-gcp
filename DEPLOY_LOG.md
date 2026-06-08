@@ -1,11 +1,29 @@
 # Deploy Log - Console de Conteúdo VeloHub
-<!-- VERSION: v1.55.0 | DATE: 2026-06-05 | AUTHOR: VeloHub Development Team -->
+<!-- VERSION: v1.56.0 | DATE: 2026-06-08 | AUTHOR: VeloHub Development Team -->
 <!--
   REGRA (push GitHub): Preencher a nova entrada do DEPLOY_LOG (tipo, data, branch, repositório,
   arquivos, descrição) ANTES do `git commit`. Incluir DEPLOY_LOG no MESMO commit que o código.
   Não criar commit adicional só para corrigir hash, SHA ou “fechar” o log.
   Campo **Commit:** opcional; se não usar SHA aqui, consultar `git log -1 --oneline` no remoto.
 -->
+
+## Push GitHub — Qualidade: coluna Atendimento (dataLigacao LISTA + legado BSON Date) — 2026-06-08
+
+### **Tipo:** Push GitHub
+### **Data/Hora:** 2026-06-08
+### **Branch:** main
+### **Repositório:** https://github.com/admVeloHub/Console-v2-gcp.git
+
+### **Arquivos (principais):**
+- `src/utils/qualidadeDataLigacao.js` v1.3.0 — Normalização legado BSON Date/ISO/$date → YYYY-MM-DD; ticket via dataChamado
+- `src/services/qualidadeAPI.js` v1.61.1 — merge liga+ticket com normalização unificada
+- `src/pages/QualidadeModulePage.jsx` v1.49.2 — Coluna Atendimento usa formatDataHoraLigacao (fonte dataLigacao LISTA)
+- `DEPLOY_LOG.md` v1.56.0
+
+### **Descrição:**
+Correção da coluna Atendimento em branco: exibição alinhada a `dataLigacao` (YYYY-MM-DD absoluto, LISTA_SCHEMAS) com conversão de legado BSON Date na leitura; tickets usam `dataChamado` normalizado na UI.
+
+---
 
 ## Push GitHub — Qualidade: novo formato análise IA (LISTA dual) + data/hora ligação absoluta — 2026-06-05
 

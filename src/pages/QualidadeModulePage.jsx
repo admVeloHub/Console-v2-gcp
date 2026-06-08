@@ -1,4 +1,5 @@
-// VERSION: v1.49.1 | DATE: 2026-06-05 | AUTHOR: VeloHub Development Team
+// VERSION: v1.49.2 | DATE: 2026-06-08 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.49.2 - Coluna Atendimento: dataLigacao (LISTA) via formatDataHoraLigacao com legado BSON Date/dataChamado
 // CHANGELOG: v1.49.1 - Fix runtime: confirma remoção total de DetalhesAnaliseModal (import, estado e JSX)
 // CHANGELOG: v1.49.0 - Análise IA: novo schema LISTA no acordeão; remove DetalhesAnaliseModal e modal Ver Detalhes
 // CHANGELOG: v1.48.3 - Aba Análise IA: fontes reduzidas no panorama (título, filtros, alertas)
@@ -2143,9 +2144,11 @@ const QualidadeModulePage = () => {
                           </TableCell>
                           <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', py: 0.8, color: 'inherit' }}>{avaliacao.avaliador ?? '—'}</TableCell>
                           <TableCell sx={{ fontFamily: 'Poppins', fontSize: '0.8rem', py: 0.8, color: 'inherit' }}>
-                            {avaliacao.dataLigacao
-                              ? formatDataHoraLigacao(avaliacao.dataLigacao, avaliacao.horaLigacao, avaliacao)
-                              : '-'}
+                            {formatDataHoraLigacao(
+                              avaliacao.dataLigacao ?? avaliacao.dataChamado,
+                              avaliacao.horaLigacao,
+                              avaliacao
+                            ) || '-'}
                           </TableCell>
                           <TableCell align="center" sx={{ py: 0.8 }}>
                             <IconButton

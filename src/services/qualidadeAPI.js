@@ -1,4 +1,5 @@
-// VERSION: v1.61.0 | DATE: 2026-06-05 | AUTHOR: VeloHub Development Team
+// VERSION: v1.61.1 | DATE: 2026-06-08 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.61.1 - mergeAvaliacoes: normalizar dataLigacao/dataChamado legado (BSON Date→YYYY-MM-DD) em liga e ticket
 // CHANGELOG: v1.61.0 - mapAudioAnaliseResultDocToGptRow: normalizador dual LISTA+legado (analiseDialogo, criteriosDetalhados, pontuacaoCalculada, observacaoGPT)
 // CHANGELOG: v1.60.2 - getAvaliacoes: normalizar legado dataLigacao/horaLigacao absolutos na leitura
 // CHANGELOG: v1.60.1 - dataLigacao String YYYY-MM-DD absoluta (sem Date/UTC) + horaLigacao HH:mm
@@ -541,11 +542,9 @@ const mergeAvaliacoesLigaETicket = (liga, ticket) => {
   const l = (liga || []).map((a) =>
     normalizarAvaliacaoDataLigacaoLegado({ ...a, tipoAvaliacao: 'ligacao' })
   );
-  const t = (ticket || []).map((a) => ({
-    ...a,
-    tipoAvaliacao: 'ticket',
-    dataLigacao: a.dataLigacao != null ? a.dataLigacao : a.dataChamado
-  }));
+  const t = (ticket || []).map((a) =>
+    normalizarAvaliacaoDataLigacaoLegado({ ...a, tipoAvaliacao: 'ticket' })
+  );
   return [...l, ...t];
 };
 

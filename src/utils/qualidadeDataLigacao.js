@@ -1,4 +1,5 @@
-// VERSION: v1.2.0 | DATE: 2026-06-05 | AUTHOR: VeloHub Development Team
+// VERSION: v1.3.0 | DATE: 2026-06-08 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v1.3.0 - coerceToDate: number, $date, prefixo ISO; fallback utcDateYmd; normalizar inclui dataChamado (ticket)
 // CHANGELOG: v1.2.0 - Legado BSON Date: meia-noite UTC = só data; com hora = parede America/Sao_Paulo; normalizarAvaliacaoDataLigacaoLegado
 // CHANGELOG: v1.1.0 - dataLigacao String YYYY-MM-DD absoluta (sem Date/UTC); horaLigacao HH:mm absoluta
 // CHANGELOG: v1.0.0 - dataLigacao (só data, UTC) + horaLigacao (HH:mm absoluto); leitura legada embutida em dataLigacao
@@ -8,13 +9,35 @@ const HORA_LIGACAO_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
 /** Fuso dos monitores no fluxo legado (data/hora informadas em horário local da operação). */
 const LEGACY_WALL_CLOCK_TZ = 'America/Sao_Paulo';
 
+const extractYmdPrefix = (s) => {
+  if (!s || s.length < 10) return null;
+  const prefix = s.substring(0, 10);
+  return DATA_LIGACAO_REGEX.test(prefix) ? prefix : null;
+};
+
 const coerceToDate = (value) => {
   if (value instanceof Date) {
     return Number.isNaN(value.getTime()) ? null : value;
   }
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  if (value != null && typeof value === 'object') {
+    if (value.$date != null) {
+      const d = new Date(value.$date);
+      return Number.isNaN(d.getTime()) ? null : d;
+    }
+    if (typeof value.toISOString === 'function') {
+      const d = new Date(value.toISOString());
+      return Number.isNaN(d.getTime()) ? null : d;
+    }
+  }
   if (value == null || value === '') return null;
   const s = String(value).trim();
   if (DATA_LIGACAO_REGEX.test(s)) return null;
+  const prefix = extractYmdPrefix(s);
+  if (prefix) return new Date(`${prefix}T12:00:00.000Z`);
   const d = new Date(s);
   return Number.isNaN(d.getTime()) ? null : d;
 };
@@ -33,38 +56,46 @@ const utcDateYmd = (d) => {
 };
 
 const wallClockParts = (d, timeZone = LEGACY_WALL_CLOCK_TZ) => {
-  const fmt = new Intl.DateTimeFormat('en-CA', {
-    timeZone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
-  });
-  const parts = fmt.formatToParts(d);
-  const get = (type) => parts.find((p) => p.type === type)?.value || '';
-  let hour = get('hour');
-  if (hour === '24') hour = '00';
-  return {
-    y: get('year'),
-    m: get('month'),
-    d: get('day'),
-    h: hour,
-    min: get('minute')
-  };
+  try {
+    const fmt = new Intl.DateTimeFormat('en-CA', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+    const parts = fmt.formatToParts(d);
+    const get = (type) => parts.find((p) => p.type === type)?.value || '';
+    let hour = get('hour');
+    if (hour === '24') hour = '00';
+    return {
+      y: get('year'),
+      m: get('month'),
+      d: get('day'),
+      h: hour,
+      min: get('minute')
+    };
+  } catch {
+    return { y: '', m: '', d: '', h: '', min: '' };
+  }
 };
 
 /**
- * Normaliza data para YYYY-MM-DD absoluto.
+ * Normaliza data para YYYY-MM-DD absoluto (fonte: LISTA_SCHEMAS dataLigacao).
  * Legado BSON Date: meia-noite UTC → dia UTC; com horário → dia em America/Sao_Paulo.
  * @param {string|Date|null|undefined} value
  * @returns {string}
  */
 export const normalizeDataLigacaoInput = (value) => {
   if (value == null || value === '') return '';
-  const s = typeof value === 'string' ? value.trim() : '';
-  if (DATA_LIGACAO_REGEX.test(s)) return s;
+  if (typeof value === 'string') {
+    const s = value.trim();
+    if (DATA_LIGACAO_REGEX.test(s)) return s;
+    const prefix = extractYmdPrefix(s);
+    if (prefix) return prefix;
+  }
 
   const d = coerceToDate(value);
   if (!d) return '';
@@ -72,8 +103,9 @@ export const normalizeDataLigacaoInput = (value) => {
   if (isUtcMidnight(d)) return utcDateYmd(d);
 
   const { y, m, day } = wallClockParts(d);
-  if (!y || !m || !day) return '';
-  return `${y}-${m}-${day}`;
+  if (y && m && day) return `${y}-${m}-${day}`;
+
+  return utcDateYmd(d);
 };
 
 /** @deprecated Use normalizeDataLigacaoInput */
@@ -96,7 +128,8 @@ export const resolveHoraLigacao = (avaliacao) => {
   const persisted = normalizeHoraLigacaoInput(avaliacao.horaLigacao);
   if (persisted) return persisted;
 
-  const d = coerceToDate(avaliacao.dataLigacao);
+  const rawData = avaliacao.dataLigacao ?? avaliacao.dataChamado;
+  const d = coerceToDate(rawData);
   if (!d || isUtcMidnight(d)) return '';
 
   const { h, min } = wallClockParts(d);
@@ -105,20 +138,24 @@ export const resolveHoraLigacao = (avaliacao) => {
 };
 
 /**
- * Normaliza avaliação ligação para leitura absoluta (inclui legado BSON Date).
+ * Normaliza avaliação para leitura absoluta (liga: dataLigacao; ticket: dataChamado → dataLigacao na UI).
  */
 export const normalizarAvaliacaoDataLigacaoLegado = (avaliacao) => {
   if (!avaliacao || typeof avaliacao !== 'object') return avaliacao;
-  if (avaliacao.tipoAvaliacao === 'ticket') return avaliacao;
+
+  const rawData = avaliacao.dataLigacao ?? avaliacao.dataChamado;
+  const dataLigacao = normalizeDataLigacaoInput(rawData);
+  const horaLigacao = resolveHoraLigacao({ ...avaliacao, dataLigacao: rawData });
 
   return {
     ...avaliacao,
-    dataLigacao: normalizeDataLigacaoInput(avaliacao.dataLigacao),
-    horaLigacao: resolveHoraLigacao(avaliacao)
+    dataLigacao,
+    horaLigacao
   };
 };
 
-export const toDataLigacaoInputValue = (dataLigacao) => normalizeDataLigacaoInput(dataLigacao);
+export const toDataLigacaoInputValue = (dataLigacao) =>
+  normalizeDataLigacaoInput(dataLigacao);
 
 export const formatDataLigacaoDate = (dataLigacao) => {
   const ymd = normalizeDataLigacaoInput(dataLigacao);
@@ -136,7 +173,8 @@ export const dataLigacaoSortKey = (avaliacao) => {
 
 export const formatDataHoraLigacao = (dataLigacao, horaLigacao, avaliacao) => {
   const ctx = avaliacao || { dataLigacao, horaLigacao };
-  const dateStr = formatDataLigacaoDate(ctx.dataLigacao ?? dataLigacao);
+  const rawData = ctx.dataLigacao ?? ctx.dataChamado ?? dataLigacao;
+  const dateStr = formatDataLigacaoDate(rawData);
   if (!dateStr) return '';
   const hora =
     horaLigacao != null && horaLigacao !== ''
