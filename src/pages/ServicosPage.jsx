@@ -1,6 +1,6 @@
-// VERSION: v1.5.3 | DATE: 2026-04-28 | AUTHOR: VeloHub Development Team
-// CHANGELOG: v1.5.3 - Cabeçalho Voltar/título/Salvar: VoltarHeaderRow (alinhamento global)
-// CHANGELOG: v1.5.1 - Removido subtítulo (descrição) dos cards de serviços
+// VERSION: v2.0.0 | DATE: 2026-09-10 | AUTHOR: VeloHub Development Team
+// CHANGELOG: v2.0.0 - Serviços viram lista dinâmica vinda do backend (array `servicos`);
+// incluir/remover um serviço gera/some um card automaticamente, sem deploy.
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -13,180 +13,114 @@ import {
   CircularProgress,
   Snackbar,
   Alert,
-  Chip
+  Chip,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField
 } from '@mui/material';
 import {
   CheckCircle as OnIcon,
   Warning as RevisaoIcon,
-  Cancel as OffIcon
+  Cancel as OffIcon,
+  Add as AddIcon,
+  Delete as DeleteIcon
 } from '@mui/icons-material';
 import BackButton, { VoltarHeaderRow } from '../components/common/BackButton';
 import { servicesAPI } from '../services/api';
 
-const FRONTEND_MODULE_KEYS = [
-  'credito-pessoal',
-  'antecipacao',
-  'pagamento-antecipado',
-  'seguro-credito',
-  'seguro-celular',
-  'perda-renda',
-  'cupons',
-  'seguro-pessoal'
-];
-
-const emptyFrontendStatus = () =>
-  Object.fromEntries(FRONTEND_MODULE_KEYS.map((k) => [k, 'off']));
-
 const ServicosPage = () => {
-  const [localStatus, setLocalStatus] = useState({});
+  const [servicos, setServicos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [novoServico, setNovoServico] = useState({ key: '', nome: '' });
 
-  // Oito serviços conforme console_config.module_status (LISTA_SCHEMAS)
-  const services = [
-    { key: 'credito-pessoal', name: 'Crédito pessoal' },
-    { key: 'antecipacao', name: 'Antecipação' },
-    { key: 'pagamento-antecipado', name: 'Pagamento antecipado' },
-    { key: 'seguro-credito', name: 'Prestamista' },
-    { key: 'seguro-celular', name: 'Seguro celular' },
-    { key: 'perda-renda', name: 'Perda de renda' },
-    { key: 'cupons', name: 'Cupons' },
-    { key: 'seguro-pessoal', name: 'Seguro pessoal' }
-  ];
-
-  // Função auxiliar para obter valor válido ou 'off' como padrão
-  const getValue = (value) => {
-    // Se o valor for null, undefined ou string vazia, retornar 'off'
-    if (value === null || value === undefined || value === '') {
-      return 'off';
-    }
-    // Se o valor for válido ('on', 'off', 'revisao'), retornar ele
-    if (['on', 'off', 'revisao'].includes(value)) {
-      return value;
-    }
-    // Caso contrário, retornar 'off' como padrão seguro
-    return 'off';
+  const showToast = (message, severity = 'success') => {
+    setToast({ open: true, message, severity });
   };
 
-  // Função para converter dados do backend (formato schema) para formato interno do frontend
-  const convertBackendToFrontend = (backendData) => {
-    if (!backendData || typeof backendData !== 'object') {
-      console.warn('⚠️ Dados inválidos recebidos:', backendData);
-      return emptyFrontendStatus();
-    }
-
-    const hasFrontendShape = FRONTEND_MODULE_KEYS.some((k) => Object.prototype.hasOwnProperty.call(backendData, k));
-    if (hasFrontendShape) {
-      console.log('📊 Dados já estão no formato frontend');
-      return Object.fromEntries(
-        FRONTEND_MODULE_KEYS.map((k) => [k, getValue(backendData[k])])
-      );
-    }
-
-    // Converter do formato schema MongoDB para formato frontend
-    const converted = {
-      'credito-pessoal': getValue(backendData._pessoal),
-      'antecipacao': getValue(backendData._antecipacao),
-      'pagamento-antecipado': getValue(backendData._pgtoAntecip),
-      'seguro-credito': getValue(backendData._seguroCred),
-      'seguro-celular': getValue(backendData._seguroCel),
-      'perda-renda': getValue(backendData._perdaRenda),
-      'cupons': getValue(backendData._cupons),
-      'seguro-pessoal': getValue(backendData._seguroPessoal)
-    };
-
-    console.log('📊 Dados convertidos do schema:', converted);
-    return converted;
+  const handleCloseToast = () => {
+    setToast({ open: false, message: '', severity: 'success' });
   };
 
-  // Buscar status atual dos módulos
-  const fetchModuleStatus = async () => {
+  // Buscar lista atual de serviços
+  const fetchServicos = async () => {
     try {
       setLoading(true);
-      console.log('🔍 Fazendo requisição para /api/module-status');
       const response = await servicesAPI.getModuleStatus();
-      console.log('✅ Resposta completa recebida:', JSON.stringify(response, null, 2));
-      
-      // Extrair dados do objeto de resposta
-      // O servicesAPI.getModuleStatus() já retorna response.data, então response já é os dados
-      let backendData = response;
-      
-      // Se response tiver uma propriedade data, usar ela
-      if (response && typeof response === 'object' && 'data' in response) {
-        backendData = response.data;
-      }
-      
-      // Se ainda tiver uma propriedade que parece ser os dados do módulo
-      if (backendData && typeof backendData === 'object') {
-        // Verificar se há um objeto aninhado com os dados
-        const possibleDataKeys = ['moduleStatus', 'status', 'modules', 'data'];
-        for (const key of possibleDataKeys) {
-          if (backendData[key] && typeof backendData[key] === 'object') {
-            console.log(`📊 Encontrado dados aninhados em '${key}':`, backendData[key]);
-            backendData = backendData[key];
-            break;
-          }
-        }
-      }
-      
-      console.log('📊 Dados extraídos do backend:', JSON.stringify(backendData, null, 2));
-      
-      // Converter dados do formato schema para formato interno do frontend
-      const frontendData = convertBackendToFrontend(backendData);
-      console.log('📊 Dados finais convertidos (formato frontend):', JSON.stringify(frontendData, null, 2));
-      
-      setLocalStatus(frontendData);
+      const data = Array.isArray(response?.data) ? response.data : [];
+      setServicos(data);
     } catch (error) {
-      console.error('❌ Erro ao buscar status dos módulos:', error);
-      console.error('❌ Detalhes do erro:', error.response?.data || error.message);
-      showToast('Erro ao carregar status dos módulos', 'error');
+      console.error('❌ Erro ao buscar serviços:', error);
+      showToast('Erro ao carregar serviços', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  // Atualizar status local de um módulo (sem enviar para backend)
-  const updateLocalStatus = (moduleKey, newStatus) => {
-    setLocalStatus(prev => ({
-      ...prev,
-      [moduleKey]: newStatus
-    }));
+  useEffect(() => {
+    fetchServicos();
+  }, []);
+
+  // Atualizar status local de um serviço (sem enviar para backend ainda)
+  const updateLocalStatus = (key, newStatus) => {
+    setServicos((prev) => prev.map((s) => (s.key === key ? { ...s, status: newStatus } : s)));
   };
 
-  // Salvar todos os status para o backend
+  // Salvar todos os status para o backend de uma vez
   const saveAllStatus = async () => {
     try {
       setSaving(true);
-      
-      // Mapear dados para o formato esperado pelo backend (chaves frontend = contrato GET/PUT)
-      const modulesData = Object.fromEntries(
-        FRONTEND_MODULE_KEYS.map((k) => [k, localStatus[k] || 'off'])
-      );
-
-      console.log('🔍 Enviando dados para o backend:', modulesData);
-      await servicesAPI.updateMultipleModules(modulesData);
-      
+      await servicesAPI.updateMultipleModules(servicos);
       showToast('Status de todos os serviços atualizados com sucesso!', 'success');
     } catch (error) {
-      console.error('❌ Erro ao salvar status dos módulos:', error);
-      showToast('Erro ao salvar status dos módulos', 'error');
+      console.error('❌ Erro ao salvar status dos serviços:', error);
+      showToast('Erro ao salvar status dos serviços', 'error');
     } finally {
       setSaving(false);
     }
   };
 
-  // Função para mostrar toast
-  const showToast = (message, severity = 'success') => {
-    setToast({ open: true, message, severity });
+  // Adicionar um novo serviço - gera um card novo automaticamente, sem deploy
+  const handleAddServico = async () => {
+    const key = novoServico.key.trim();
+    const nome = novoServico.nome.trim();
+    if (!key || !nome) {
+      showToast('Preencha a chave e o nome do serviço', 'error');
+      return;
+    }
+    try {
+      const response = await servicesAPI.addServico({ key, nome, status: 'off' });
+      setServicos(Array.isArray(response?.data) ? response.data : servicos);
+      setAddDialogOpen(false);
+      setNovoServico({ key: '', nome: '' });
+      showToast(`Serviço "${nome}" criado com sucesso!`, 'success');
+    } catch (error) {
+      console.error('❌ Erro ao criar serviço:', error);
+      const msg = error.response?.data?.error || 'Erro ao criar serviço';
+      showToast(msg, 'error');
+    }
   };
 
-  // Função para fechar toast
-  const handleCloseToast = () => {
-    setToast({ open: false, message: '', severity: 'success' });
+  // Remover um serviço - o card some automaticamente, sem deploy
+  const handleRemoveServico = async (key, nome) => {
+    if (!window.confirm(`Remover o serviço "${nome}"? Essa ação não pode ser desfeita.`)) {
+      return;
+    }
+    try {
+      const response = await servicesAPI.removeServico(key);
+      setServicos(Array.isArray(response?.data) ? response.data : servicos.filter((s) => s.key !== key));
+      showToast(`Serviço "${nome}" removido com sucesso!`, 'success');
+    } catch (error) {
+      console.error('❌ Erro ao remover serviço:', error);
+      showToast('Erro ao remover serviço', 'error');
+    }
   };
 
-  // Obter label do status
   const getStatusLabel = (status) => {
     switch (status) {
       case 'on': return 'Ativo';
@@ -196,7 +130,6 @@ const ServicosPage = () => {
     }
   };
 
-  // Obter cor do status
   const getStatusColor = (status) => {
     switch (status) {
       case 'on': return 'success';
@@ -206,7 +139,6 @@ const ServicosPage = () => {
     }
   };
 
-  // Obter ícone do status
   const getStatusIcon = (status) => {
     switch (status) {
       case 'on': return <OnIcon />;
@@ -216,8 +148,7 @@ const ServicosPage = () => {
     }
   };
 
-  // Renderizar botões de status
-  const renderStatusButtons = (moduleKey, currentStatus) => {
+  const renderStatusButtons = (key, currentStatus) => {
     const statuses = [
       { key: 'on', label: 'Ativo', color: 'success', icon: <OnIcon /> },
       { key: 'revisao', label: 'Revisão', color: 'warning', icon: <RevisaoIcon /> },
@@ -233,7 +164,7 @@ const ServicosPage = () => {
             color={status.color}
             size="small"
             startIcon={status.icon}
-            onClick={() => updateLocalStatus(moduleKey, status.key)}
+            onClick={() => updateLocalStatus(key, status.key)}
             sx={{
               minWidth: '80px',
               textTransform: 'none',
@@ -250,51 +181,65 @@ const ServicosPage = () => {
     );
   };
 
-  // Carregar status inicial apenas uma vez
-  useEffect(() => {
-    fetchModuleStatus();
-  }, []);
-
   return (
     <Container maxWidth="lg" sx={{ py: 3.2, pb: 6.4 }}>
       <VoltarHeaderRow
         left={<BackButton />}
         center={
-        <Typography 
-          variant="h4" 
-          component="h1"
-          sx={{ 
-            fontFamily: 'Poppins',
-            fontWeight: 700,
-            color: 'var(--blue-dark)',
-            fontSize: '1.92rem'
-          }}
-        >
-          Serviços
-        </Typography>
-        }
-        right={
-          <Button
-            variant="contained"
-            size="small"
-            onClick={saveAllStatus}
-            disabled={saving || loading}
+          <Typography
+            variant="h4"
+            component="h1"
             sx={{
-              backgroundColor: 'var(--green)',
-              fontFamily: 'Poppins, sans-serif',
-              fontWeight: 600,
-              fontSize: '0.64rem',
-              padding: '3.2px 9.6px',
-              minWidth: 'auto',
-              height: '28.8px',
-              '&:hover': {
-                backgroundColor: 'var(--green)',
-                opacity: 0.9
-              }
+              fontFamily: 'Poppins',
+              fontWeight: 700,
+              color: 'var(--blue-dark)',
+              fontSize: '1.92rem'
             }}
           >
-            {saving ? 'Salvando...' : 'Salvar Alterações'}
-          </Button>
+            Serviços
+          </Typography>
+        }
+        right={
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<AddIcon />}
+              onClick={() => setAddDialogOpen(true)}
+              disabled={loading}
+              sx={{
+                fontFamily: 'Poppins, sans-serif',
+                fontWeight: 600,
+                fontSize: '0.64rem',
+                padding: '3.2px 9.6px',
+                minWidth: 'auto',
+                height: '28.8px'
+              }}
+            >
+              Adicionar Serviço
+            </Button>
+            <Button
+              variant="contained"
+              size="small"
+              onClick={saveAllStatus}
+              disabled={saving || loading}
+              sx={{
+                backgroundColor: 'var(--green)',
+                fontFamily: 'Poppins, sans-serif',
+                fontWeight: 600,
+                fontSize: '0.64rem',
+                padding: '3.2px 9.6px',
+                minWidth: 'auto',
+                height: '28.8px',
+                '&:hover': {
+                  backgroundColor: 'var(--green)',
+                  opacity: 0.9
+                }
+              }}
+            >
+              {saving ? 'Salvando...' : 'Salvar Alterações'}
+            </Button>
+          </Box>
         }
       />
 
@@ -305,67 +250,99 @@ const ServicosPage = () => {
         </Box>
       )}
 
-      {/* Grid de Serviços */}
+      {/* Grid de Serviços - gerado dinamicamente a partir da lista vinda do backend */}
       {!loading && (
-        <>
-          <Grid container spacing={2.4}>
-            {services.map((service) => {
-              const currentStatus = localStatus[service.key] || 'off';
-              
-              return (
-                <Grid item xs={12} md={6} lg={4} key={service.key}>
-                  <Card 
-                    className="servico-card"
-                    sx={{ 
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      backgroundColor: 'var(--cor-card)', /* Usa variável CSS que muda com tema */
-                      border: '1px solid transparent !important',
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        transform: 'translateY(-4px)',
-                        boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
-                        border: '1px solid var(--blue-medium) !important'
-                      }
-                    }}
-                  >
-                    <CardContent sx={{ flexGrow: 1, p: 1.6 }}>
-                      {/* Header do Card */}
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2.4 }}>
-                        <Typography 
-                          variant="h6" 
-                          component="h3" 
-                          sx={{ 
-                            flexGrow: 1,
-                            color: 'var(--blue-dark)',
-                            fontWeight: 600,
-                            fontFamily: 'Poppins, sans-serif',
-                            fontSize: '0.96rem'
-                          }}
-                        >
-                          {service.name}
-                        </Typography>
-                        <Chip
-                          icon={getStatusIcon(currentStatus)}
-                          label={getStatusLabel(currentStatus)}
-                          color={getStatusColor(currentStatus)}
-                          size="small"
-                          variant="outlined"
-                          sx={{ fontSize: '0.64rem', height: '20px' }}
-                        />
-                      </Box>
+        <Grid container spacing={2.4}>
+          {servicos.map((service) => {
+            const currentStatus = service.status || 'off';
 
-                      {/* Botões de Status */}
-                      {renderStatusButtons(service.key, currentStatus)}
-                    </CardContent>
-                  </Card>
-                </Grid>
-              );
-            })}
-          </Grid>
-        </>
+            return (
+              <Grid item xs={12} md={6} lg={4} key={service.key}>
+                <Card
+                  className="servico-card"
+                  sx={{
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    backgroundColor: 'var(--cor-card)',
+                    border: '1px solid transparent !important',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+                      border: '1px solid var(--blue-medium) !important'
+                    }
+                  }}
+                >
+                  <CardContent sx={{ flexGrow: 1, p: 1.6 }}>
+                    {/* Header do Card */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2.4 }}>
+                      <Typography
+                        variant="h6"
+                        component="h3"
+                        sx={{
+                          flexGrow: 1,
+                          color: 'var(--blue-dark)',
+                          fontWeight: 600,
+                          fontFamily: 'Poppins, sans-serif',
+                          fontSize: '0.96rem'
+                        }}
+                      >
+                        {service.nome}
+                      </Typography>
+                      <Chip
+                        icon={getStatusIcon(currentStatus)}
+                        label={getStatusLabel(currentStatus)}
+                        color={getStatusColor(currentStatus)}
+                        size="small"
+                        variant="outlined"
+                        sx={{ fontSize: '0.64rem', height: '20px', mr: 0.5 }}
+                      />
+                      <IconButton
+                        size="small"
+                        onClick={() => handleRemoveServico(service.key, service.nome)}
+                        title="Remover serviço"
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+
+                    {/* Botões de Status */}
+                    {renderStatusButtons(service.key, currentStatus)}
+                  </CardContent>
+                </Card>
+              </Grid>
+            );
+          })}
+        </Grid>
       )}
+
+      {/* Dialog de Adicionar Serviço */}
+      <Dialog open={addDialogOpen} onClose={() => setAddDialogOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Adicionar Serviço</DialogTitle>
+        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+          <TextField
+            label="Chave (identificador único)"
+            placeholder="ex: novo-produto"
+            value={novoServico.key}
+            onChange={(e) => setNovoServico((prev) => ({ ...prev, key: e.target.value }))}
+            fullWidth
+            size="small"
+          />
+          <TextField
+            label="Nome exibido no card"
+            placeholder="ex: Novo Produto"
+            value={novoServico.nome}
+            onChange={(e) => setNovoServico((prev) => ({ ...prev, nome: e.target.value }))}
+            fullWidth
+            size="small"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddDialogOpen(false)}>Cancelar</Button>
+          <Button onClick={handleAddServico} variant="contained">Adicionar</Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Toast de Notificação */}
       <Snackbar
@@ -374,8 +351,8 @@ const ServicosPage = () => {
         onClose={handleCloseToast}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        <Alert 
-          onClose={handleCloseToast} 
+        <Alert
+          onClose={handleCloseToast}
           severity={toast.severity}
           sx={{ width: '100%' }}
         >

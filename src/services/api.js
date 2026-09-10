@@ -493,32 +493,35 @@ export const healthAPI = {
   }
 };
 
-// API de Serviços
+// API de Serviços - lista dinâmica (adicionar/remover serviço não exige deploy)
 export const servicesAPI = {
-  // Buscar status atual dos módulos
+  // Buscar lista atual de serviços
   getModuleStatus: async () => {
     const response = await api.get('/module-status');
     return response.data;
   },
 
-  // Atualizar status de um módulo específico
-  updateModuleStatus: async (moduleKey, status) => {
-    const response = await api.post('/module-status', {
-      moduleKey,
-      status
-    });
+  // Substituir a lista inteira de uma vez ("Salvar Alterações")
+  updateMultipleModules: async (servicos) => {
+    const response = await api.put('/module-status', { servicos });
     return response.data;
   },
 
-  // Atualizar múltiplos módulos
-  updateMultipleModules: async (modules) => {
-    const response = await api.put('/module-status', modules);
+  // Criar um novo serviço (novo card, sem deploy)
+  addServico: async ({ key, nome, status, ordem }) => {
+    const response = await api.post('/module-status/servicos', { key, nome, status, ordem });
     return response.data;
   },
 
-  // Atualizar todos os status dos módulos (seguindo estratégia do backend)
-  updateAllModuleStatus: async (schemaData) => {
-    const response = await api.post('/module-status', schemaData);
+  // Atualizar nome/status/ordem de um serviço existente
+  updateServico: async (key, { nome, status, ordem }) => {
+    const response = await api.patch(`/module-status/servicos/${encodeURIComponent(key)}`, { nome, status, ordem });
+    return response.data;
+  },
+
+  // Remover um serviço (some o card, sem deploy)
+  removeServico: async (key) => {
+    const response = await api.delete(`/module-status/servicos/${encodeURIComponent(key)}`);
     return response.data;
   }
 };
